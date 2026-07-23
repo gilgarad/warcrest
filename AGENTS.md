@@ -3,6 +3,10 @@
 This is the first file agents should read in this repository. Keep it short and
 route deeper context through `docs/index.md`.
 
+**Resuming this project after a break?** Read `project_development.md` (repo
+root) first — a maintained snapshot of current architecture, status, and
+next steps, distinct from this file's process rules.
+
 ## The One Rule
 
 Do not change files without leaving a record.

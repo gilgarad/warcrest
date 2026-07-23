@@ -103,6 +103,17 @@ GitHub Issues own task status. This file owns planning context.
   playthrough exercising movement, combat (HP drops on attack, squad loses
   members on unguarded enemy hits), and a clean game-over transition. No
   GitHub Issue yet; same fallback recording as above.
+- **`project_development.md` status hub** (2026-07-23) — user asked whether
+  a single document exists that a new session could read to get fully
+  oriented and start the next task; none did. Added
+  `project_development.md` at repo root as a maintained snapshot
+  (architecture, how-to-run, file map, work-so-far summary emphasizing the
+  three visual/UX correction rounds, active queue, gotchas, doc map) —
+  supplements rather than replaces `AGENTS.md`. Linked from `AGENTS.md` and
+  `docs/index.md` with one-line pointers. Also found and deleted
+  `src/systems/runGenerator.ts`, dead code left over from the deleted
+  menu-based `RunScene`. No GitHub Issue yet; same fallback recording as
+  above.
 
 ## Cross-Issue Themes
 

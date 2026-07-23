@@ -6,6 +6,9 @@ sections relevant to the current task.
 These are the authoritative local rules for this repository once the harness is
 copied here.
 
+**Resuming after a break?** Read `../project_development.md` (repo root)
+first — a maintained snapshot of current status/architecture/next-steps.
+
 ## Rules
 
 - [Workflow](rules/workflow.md)
