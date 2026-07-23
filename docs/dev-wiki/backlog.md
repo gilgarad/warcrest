@@ -14,11 +14,11 @@ GitHub Issues own task status. This file owns planning context.
 
 ## Active Queue
 
-- **Tech stack selection** — no GitHub Issue yet (no GitHub repo exists for
-  this project). Game concept is decided (see `docs/dev-wiki/game-concept.md`);
-  next is picking a web framework that fits a side-view/parallax,
-  procedural-branching, command-timer-combat game, then filling in
-  `docs/rules/testing.md` and `docs/patterns/README.md` for real.
+- **Core loop implementation** — no GitHub Issue yet (no GitHub repo exists
+  for this project). Next real feature work: fork/choice traversal, a single
+  combat encounter with the Patapon-style command/timer system, and squad
+  rescue/attrition, per the MVP staging in `docs/dev-wiki/game-concept.md`.
+  Should get a real GitHub Issue + branch as soon as the repo exists.
 - **GitHub repo linkage** — user will create the GitHub repo separately and
   hand it over. When received: add `remote.origin` reusing the credential
   pattern from `/data/projects/stock_predict` (see
@@ -39,6 +39,13 @@ GitHub Issues own task status. This file owns planning context.
   completeness/polish as the judging impact angle. Full writeup in
   `docs/dev-wiki/game-concept.md`. No GitHub Issue yet; same fallback
   recording as above.
+- **Tech stack + scaffold** (2026-07-23) — Phaser 3 + TypeScript + Vite.
+  Manually scaffolded (the `npm create vite` CLI wouldn't run non-interactively
+  in a non-empty dir), added a placeholder `BootScene` with programmer-art
+  parallax + a moving placeholder soldier, verified `npm run build` and a
+  Playwright screenshot of `npm run dev` both work. Real commands now live in
+  `docs/rules/testing.md`; first pattern notes in `docs/patterns/README.md`.
+  No GitHub Issue yet; same fallback recording as above.
 
 ## Cross-Issue Themes
 

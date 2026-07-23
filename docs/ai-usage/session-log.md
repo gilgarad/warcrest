@@ -69,3 +69,32 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
     점을 문서에 명시적으로 남기고, MVP 단계 축소안을 제시함.
   - 결정하지 않은 것: 게임 제목, 기술 스택/프레임워크, 병종·커맨드
     구체 목록, 미션 구조. 다음 턴에 기술 스택부터 상의 예정.
+
+## 2026-07-23 (3) — 기술 스택 확정 및 최소 스캐폴드
+
+- **사용 도구**: Claude Code (Sonnet 5), Playwright(브라우저 검증용)
+- **사용자 지시 요약**: AI가 Phaser 3 + TypeScript + Vite를 추천 근거와
+  함께 제시(순수 코드 기반이라 AI 에이전트 협업 마찰이 적음, GitHub
+  Pages 배포 용이)하자 그대로 승인.
+- **AI 산출물 요약**:
+  - Node/npm 버전 확인 후 `npm create vite` 시도했으나 비어있지 않은
+    디렉터리라 비대화형 모드에서 prompt가 취소됨을 확인 → 수동
+    스캐폴드로 전환(패키지 매니저 CLI 대신 직접 파일 작성).
+  - `package.json`, `tsconfig.json`, `index.html`, `src/main.ts`,
+    `src/scenes/BootScene.ts` 작성. BootScene은 실제 아트 없이
+    `Graphics.generateTexture`로 만든 패럴랙스 줄무늬 2겹 + 자동 이동
+    사각형 "병사" + 제목 텍스트만 있는 파이프라인 검증용 placeholder.
+  - `npm install` 후 `npm run build`(tsc --noEmit + vite build) 성공
+    확인. `npm audit`에서 esbuild/vite 관련 moderate 취약점 발견,
+    dev 서버 전용이라 지금 단계에서는 강제 업그레이드 보류하기로 결정.
+  - `npm run dev`를 백그라운드로 띄운 뒤 Playwright로 실제 렌더링
+    스크린샷을 찍어 육안으로 확인(제목/패럴랙스/병사 사각형 모두 정상
+    렌더링), 확인 후 dev 서버 프로세스 종료.
+  - `docs/rules/testing.md`(실제 npm 명령/검증 표준),
+    `docs/patterns/README.md`(programmer-art placeholder 패턴, headless
+    시각 검증 패턴)를 실제 스택 기준으로 재작성.
+  - `docs/dev-wiki/backlog.md`, `docs/dev-wiki/log.md`에 진행 상황 기록,
+    git에 두 번째 커밋으로 반영 예정.
+  - 결정하지 않은 것: 게임 제목, 병종·커맨드 구체 목록, 미션 구조,
+    procedural 갈림길 생성 알고리즘 세부. 다음은 핵심 루프(갈림길 선택
+    → 전투 조우 1종)부터 구현.

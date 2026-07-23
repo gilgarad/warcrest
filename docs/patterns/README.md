@@ -1,8 +1,21 @@
 # Patterns Overview
 
-Recurring implementation approaches for `game_project1`. Empty until the
-first real pattern emerges from actual work — do not pre-write patterns for
-a stack that hasn't been chosen.
+Recurring implementation approaches for `game_project1`. Stack: Phaser 3 +
+TypeScript + Vite.
+
+## Established So Far
+
+- **Programmer-art placeholders via `Phaser.GameObjects.Graphics.generateTexture`**:
+  the boot scaffold (`src/scenes/BootScene.ts`) draws simple rectangles/stripe
+  textures at runtime instead of loading image assets, so gameplay/rendering
+  code can be built and verified before the AI-generated pixel art pipeline
+  exists. Keep doing this for new mechanics — swap in real sprites later
+  without changing scene logic.
+- **Headless visual verification**: launch `npm run dev` in the background,
+  hit it with a Playwright screenshot, inspect the image, then kill the dev
+  server. Used to confirm the Phaser canvas actually renders (not just that
+  the build compiles). Repeat this for any change that affects what's drawn
+  on screen.
 
 Expected future pattern files, once relevant:
 

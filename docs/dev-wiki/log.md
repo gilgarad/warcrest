@@ -47,3 +47,25 @@ Use consistent headings so entries are easy to grep.
   "기술 스택 선택"으로 갱신.
 - 아직 GitHub 저장소/이슈가 없어 이 결정도 백로그+로그 기록으로만
   남김.
+
+## [2026-07-23] setup | 기술 스택 확정 및 최소 스캐폴드 검증
+
+- Phaser 3 + TypeScript + Vite로 확정. `npm create vite`가 비어있지 않은
+  디렉터리에서 비대화형으로 진행되지 않아(prompt 취소) 수동으로
+  `package.json`/`tsconfig.json`/`index.html`/`src/main.ts`/
+  `src/scenes/BootScene.ts`를 작성.
+- `BootScene`은 실제 아트/전투 없이 파이프라인만 검증하는 placeholder:
+  `Graphics.generateTexture`로 만든 줄무늬 패럴랙스 2겹, 자동 이동하는
+  사각형 "병사", 제목 텍스트.
+- 검증: `npm run build`(tsc --noEmit + vite build) 성공, `npm run dev`를
+  백그라운드로 띄운 뒤 Playwright로 스크린샷 촬영해 실제 캔버스 렌더링을
+  육안 확인, 확인 후 dev 서버 종료. 두 검증 방식 모두
+  `docs/rules/testing.md`에 기본 검증 표준으로 기록.
+- `npm audit`에서 esbuild/vite 관련 moderate 취약점 1건 발견(dev 서버
+  전용 CORS 이슈, breaking major 업그레이드 필요) — 로컬 개발 서버에만
+  영향이라 지금 단계에서는 강제 업그레이드하지 않고 인지만 해둠.
+- `docs/rules/testing.md`, `docs/patterns/README.md`를 실제 스택 기준으로
+  재작성(placeholder 문구 제거).
+- `docs/dev-wiki/backlog.md` Active Queue를 "기술 스택 선택"에서
+  "핵심 루프 구현"으로 갱신.
+- 여전히 GitHub 저장소/이슈가 없어 백로그+로그 기록으로만 남김.

@@ -1,37 +1,45 @@
 # Testing Rules
 
-**Stack not chosen yet.** This file is a placeholder until the game engine /
-framework is decided (see `docs/knowledge/index.md`). Whoever makes that
-decision must fill in real commands below in the same change.
+Stack: Phaser 3 + TypeScript + Vite (decided 2026-07-23, see
+`docs/dev-wiki/game-concept.md` and the bootstrap commits in
+`docs/dev-wiki/log.md`).
 
-## Default Harness (TBD)
+## Default Harness
 
-No automated test command exists yet. Until one does, the baseline
-verification is: **run the build/dev server and actually play it in a
-browser** (or on a device/emulator for a mobile build) before calling
-anything done. This repo has a CLAUDE.md rule of thumb already: for UI/game
-changes, don't claim success without exercising the feature.
+```bash
+npm run build   # tsc --noEmit && vite build — type-checks + production bundle
+npm run dev     # local dev server with HMR, for manual playtesting
+```
 
-Candidates once the stack is picked:
+There is no automated unit-test runner yet (no `npm test`). Until game logic
+has enough non-visual complexity to warrant one (e.g. the branching-path
+generator, squad attrition math), the baseline verification is:
 
-- Web (JS/TS, e.g. Phaser/PixiJS/plain canvas): `npm test` for unit logic +
-  manual playtest in browser; add a smoke check that the build output
-  actually boots (no console errors) before it's considered shippable.
-- Godot/Unity export: engine's built-in test runner if used, plus a manual
-  playtest of the exported build (not just the editor).
+1. `npm run build` must succeed (type errors + bundle errors both fail this).
+2. **Actually play the change in a browser** via `npm run dev`, or verify
+   with a Playwright screenshot for headless checks — see
+   `docs/dev-wiki/log.md` bootstrap entry for the pattern (launch dev server
+   in background, `playwright` screenshot, confirm visually, kill the
+   server). Type checks and a clean build verify code correctness, not
+   whether the game looks/plays right.
+
+If/when pure-logic modules appear (procedural generation, combat resolution)
+that are worth unit testing without a browser, add `vitest` and a `test`
+script at that point — don't add it speculatively now.
 
 ## Test Placement
 
-- safe automated tests should live in a predictable place (e.g. `test/` or
-  `tests/` at repo root once the stack exists)
-- integration/playtest scripts should be explicitly marked and documented
-- manual scripts should not be collected by default
+- once unit tests exist, put them next to the module they cover as
+  `*.test.ts`, or under `src/**/__tests__/`
+- Playwright/manual playtest scripts are verification aids, not part of the
+  build — keep them out of `src/`
+- manual scratch scripts should not be collected by default
 
 ## Verification Standard
 
 - run the narrowest useful check for the changed surface
-- for gameplay/UI changes, actually play the change — type checks and unit
-  tests verify code correctness, not fun or playability
+- for gameplay/UI changes, actually play the change — `npm run build`
+  passing is necessary but not sufficient
 - for docs-only changes, run `python3 scripts/check_docs_links.py` if/when
   this repo adds one (not present yet)
 - if a command cannot run, report why
