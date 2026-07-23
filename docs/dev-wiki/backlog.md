@@ -14,11 +14,13 @@ GitHub Issues own task status. This file owns planning context.
 
 ## Active Queue
 
-- **Core loop implementation** — no GitHub Issue yet (no GitHub repo exists
-  for this project). Next real feature work: fork/choice traversal, a single
-  combat encounter with the Patapon-style command/timer system, and squad
-  rescue/attrition, per the MVP staging in `docs/dev-wiki/game-concept.md`.
-  Should get a real GitHub Issue + branch as soon as the repo exists.
+- **User playtest / change requests** — MVP loop is playable end-to-end
+  (fork -> combat -> rescue -> mission -> gameover -> retry). Waiting on the
+  user to actually play it (`npm run dev`) and give change directions
+  before doing more. Likely next real content: unit-type variety (more
+  entries in `src/data/unitTypes.ts`) and more commands (`src/data/commands.ts`)
+  per the MVP staging in `docs/dev-wiki/game-concept.md`. No GitHub Issue
+  yet — should get one + a branch as soon as the repo exists.
 - **GitHub repo linkage** — user will create the GitHub repo separately and
   hand it over. When received: add `remote.origin` reusing the credential
   pattern from `/data/projects/stock_predict` (see
@@ -46,6 +48,15 @@ GitHub Issues own task status. This file owns planning context.
   Playwright screenshot of `npm run dev` both work. Real commands now live in
   `docs/rules/testing.md`; first pattern notes in `docs/patterns/README.md`.
   No GitHub Issue yet; same fallback recording as above.
+- **MVP core loop implemented** (2026-07-23) — full fork -> combat -> rescue
+  -> mission -> gameover loop, built on data-driven registries
+  (`src/data/unitTypes.ts`, `commands.ts`, `encounterTypes.ts`) so new unit
+  types/commands/fork-kinds can be added without touching scene code.
+  Chibi ("가분수") characters procedurally drawn via `src/gfx/chibi.ts`
+  (no image-gen tool available in this environment). Verified with
+  `npm run build` and a full headless Playwright playthrough driven by a
+  `window.__gameDebug` hook (see `docs/patterns/README.md`). No GitHub
+  Issue yet; same fallback recording as above.
 
 ## Cross-Issue Themes
 

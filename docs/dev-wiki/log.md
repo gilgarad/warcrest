@@ -69,3 +69,34 @@ Use consistent headings so entries are easy to grep.
 - `docs/dev-wiki/backlog.md` Active Queue를 "기술 스택 선택"에서
   "핵심 루프 구현"으로 갱신.
 - 여전히 GitHub 저장소/이슈가 없어 백로그+로그 기록으로만 남김.
+
+## [2026-07-23] feature | MVP 핵심 루프 첫 구현
+
+- 사용자 지시: 병종 등 디테일 추가는 나중으로 미루고, 확장 가능한
+  구조로 가볍게 한 판 플레이 가능한 수준까지 끝까지 구현해서 화면으로
+  직접 확인 후 변경 지시를 하겠다고 함. 그래픽은 "예쁜 가분수 캐릭터"
+  요청.
+- 확장 지점을 데이터 레지스트리로 분리: `src/data/unitTypes.ts`
+  (병종), `src/data/commands.ts`(전투 커맨드), `src/data/encounterTypes.ts`
+  (갈림길 결과 종류). RunScene/시스템 코드는 이 레지스트리를 순회/조회만
+  할 뿐 특정 항목을 하드코딩하지 않음 — 새 병종/커맨드 추가는 레지스트리에
+  엔트리 하나 넣는 것으로 끝나도록 설계.
+- UI 없는 순수 로직 계층 `src/systems/`(squad.ts, runGenerator.ts,
+  combat.ts)와 Phaser 종속 렌더링 계층(`src/scenes/`, `src/gfx/`)을 분리.
+- 이미지 생성 도구가 이 환경에 없어서, `src/gfx/chibi.ts`가 Phaser
+  Graphics API로 직접 그리는 "가분수"(큰 머리/작은 몸) 캐릭터로 실제
+  픽셀아트를 대체. Playwright로 고해상도 확대 스크린샷을 찍어 눈·블러셔·
+  모자 디테일을 확인하며 반복 조정.
+- `RunScene`에 갈림길 선택 → 전투(파타퐁식 커맨드+타이머 바) → 구출 →
+  미션 → `GameOverScene`까지 전체 루프 구현. `BootScene`을 타이틀
+  화면으로 재구성(패럴랙스 배경 + 미리보기 대열 + 시작 프롬프트).
+- 검증: `npm run build` 통과. `window.__gameDebug`(현재 phase/진행도/
+  전투 상태를 매 프레임 노출하는 디버그 전용 훅, 게임플레이 로직에서는
+  읽지 않음)를 만들어 Playwright 스크립트가 랜덤 분기(전투/구출)를 실제
+  상태 기반으로 판단하며 클릭하도록 구성, 갈림길 5회 전부를 거쳐 미션
+  성공 화면까지 헤드리스로 완주 확인. 승리 화면 스크린샷도 별도로 확보.
+- `docs/patterns/README.md`, `docs/rules/testing.md`,
+  `docs/dev-wiki/game-concept.md`에 구조/검증 방식/MVP 진행 상태 반영.
+- 다음 단계는 사용자가 직접 플레이해보고 주는 변경 지시를 기다리는 것 —
+  병종 다양화, 커맨드 확장, 난이도 곡선 등은 의도적으로 보류.
+- 여전히 GitHub 저장소/이슈가 없어 백로그+로그 기록으로만 남김.

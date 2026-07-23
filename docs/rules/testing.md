@@ -17,11 +17,16 @@ generator, squad attrition math), the baseline verification is:
 
 1. `npm run build` must succeed (type errors + bundle errors both fail this).
 2. **Actually play the change in a browser** via `npm run dev`, or verify
-   with a Playwright screenshot for headless checks — see
-   `docs/dev-wiki/log.md` bootstrap entry for the pattern (launch dev server
-   in background, `playwright` screenshot, confirm visually, kill the
-   server). Type checks and a clean build verify code correctness, not
-   whether the game looks/plays right.
+   headlessly with Playwright — see `docs/dev-wiki/log.md` for the pattern
+   (launch dev server in background, drive it with Playwright, screenshot,
+   confirm visually, kill the server). Type checks and a clean build verify
+   code correctness, not whether the game looks/plays right.
+3. For a full-run smoke check, RunScene exposes `window.__gameDebug`
+   (`{ phase, forkIndex, forksTotal, squadSize, combatIndex, combatLength }`)
+   every frame. A Playwright script can poll it to branch its clicks by
+   phase (fork/combat/rescue/mission) instead of guessing coordinates blind,
+   which is what makes it possible to script a full random-branching run
+   headlessly. See `docs/patterns/README.md` for the rationale.
 
 If/when pure-logic modules appear (procedural generation, combat resolution)
 that are worth unit testing without a browser, add `vitest` and a `test`

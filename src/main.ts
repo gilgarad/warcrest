@@ -1,5 +1,7 @@
 import Phaser from "phaser";
 import { BootScene } from "./scenes/BootScene";
+import { RunScene } from "./scenes/RunScene";
+import { GameOverScene } from "./scenes/GameOverScene";
 
 new Phaser.Game({
   type: Phaser.AUTO,
@@ -7,5 +9,5 @@ new Phaser.Game({
   width: 960,
   height: 540,
   backgroundColor: "#111111",
-  scene: [BootScene],
+  scene: [BootScene, RunScene, GameOverScene],
 });

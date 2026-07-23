@@ -17,6 +17,28 @@ TypeScript + Vite.
   the build compiles). Repeat this for any change that affects what's drawn
   on screen.
 
+- **Data registries as the extension point** (`src/data/`): `unitTypes.ts`,
+  `commands.ts`, `encounterTypes.ts` are plain arrays of config objects.
+  Systems and scenes only ever read these registries generically (loop over
+  them, look up by id) — they never hardcode a specific unit/command/kind.
+  Adding content (a new unit type, a new "방어" command, a new fork-outcome
+  kind) means adding one entry to the relevant registry; RunScene's UI
+  (button rows, sequence icons) renders itself from whatever is in the
+  registry at the time. Adding a genuinely new *kind* of fork outcome still
+  needs one new `start*` handler method in `RunScene` — that dispatch is
+  intentionally a plain switch, not further abstracted, because there are
+  only 3 kinds so far.
+- **Systems are UI-free** (`src/systems/`): `Squad`, `runGenerator`,
+  `combat` know nothing about Phaser. RunScene is the only place that turns
+  their state into GameObjects. Keeps game logic testable without a canvas
+  if/when real unit tests get added.
+- **`window.__gameDebug`**: `RunScene.update()` writes the current phase/
+  progress/combat state to `window.__gameDebug` every frame. It's not read
+  by any gameplay code — it exists purely so a headless Playwright script
+  can drive/verify the full fork→combat→rescue→mission loop without needing
+  a real test framework yet (see `docs/rules/testing.md`). Harmless to leave
+  in; remove it if a proper test harness replaces this pattern later.
+
 Expected future pattern files, once relevant:
 
 - `game-loop.md` — core loop / state machine / scene management approach
