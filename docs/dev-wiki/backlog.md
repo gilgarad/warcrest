@@ -14,10 +14,11 @@ GitHub Issues own task status. This file owns planning context.
 
 ## Active Queue
 
-- **Game concept selection** — no GitHub Issue yet (no GitHub repo exists
-  for this project). Decide game concept, target platform (web vs. web+APK),
-  and tech stack with the user before writing any game code. Blocks: tech
-  stack decision in `docs/knowledge/index.md`, `docs/rules/testing.md` fill-in.
+- **Tech stack selection** — no GitHub Issue yet (no GitHub repo exists for
+  this project). Game concept is decided (see `docs/dev-wiki/game-concept.md`);
+  next is picking a web framework that fits a side-view/parallax,
+  procedural-branching, command-timer-combat game, then filling in
+  `docs/rules/testing.md` and `docs/patterns/README.md` for real.
 - **GitHub repo linkage** — user will create the GitHub repo separately and
   hand it over. When received: add `remote.origin` reusing the credential
   pattern from `/data/projects/stock_predict` (see
@@ -32,6 +33,12 @@ GitHub Issues own task status. This file owns planning context.
   `docs/ai-usage/session-log.md` for contest AI-usage tracking. No GitHub
   Issue (repo doesn't exist yet); recorded via this backlog entry +
   `docs/dev-wiki/log.md` per the fallback rule in `AGENTS.md`.
+- **Game concept decided** (2026-07-23) — settled on "갈림길 정찰대":
+  roguelite branching-path squad game with Patapon-style command/timer
+  combat, rescue-to-grow squad mechanic, AI-generated pixel art, web-only,
+  completeness/polish as the judging impact angle. Full writeup in
+  `docs/dev-wiki/game-concept.md`. No GitHub Issue yet; same fallback
+  recording as above.
 
 ## Cross-Issue Themes
 

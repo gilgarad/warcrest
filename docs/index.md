@@ -19,6 +19,7 @@ copied here.
 - [Backlog](dev-wiki/backlog.md)
 - [Log](dev-wiki/log.md)
 - [Index](dev-wiki/index.md)
+- [Game Concept](dev-wiki/game-concept.md)
 
 ## Patterns
 

@@ -9,6 +9,8 @@ repository work.
 - `backlog.md`: active planning context
 - `log.md`: append-only chronology
 - `index.md`: routing and authority map
+- `game-concept.md`: synthesized game design doc (genre, core loop, combat,
+  scope risk) — this project's main wiki content page
 - `../knowledge/`: durable project knowledge
 - `../patterns/`: reusable implementation patterns
 - `../wiki/`: human-facing documentation and wiki policy
