@@ -16,7 +16,7 @@ export const UNIT_TYPES: UnitTypeDef[] = [
   {
     id: "soldier",
     name: "병사",
-    palette: { skin: 0xf2c299, outfit: 0x3d5a80, accent: 0xf2c14e },
+    palette: { skin: 0xffcc99, outfit: 0x2f6fe0, accent: 0xffd23f },
   },
 ];
 

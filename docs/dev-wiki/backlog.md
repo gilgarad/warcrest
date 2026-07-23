@@ -14,15 +14,15 @@ GitHub Issues own task status. This file owns planning context.
 
 ## Active Queue
 
-- **User playtest / change requests** — dungeon-exploration MVP is playable
-  end-to-end (walk the corridors -> bump combat -> touch-to-rescue -> reach
-  exit -> gameover -> retry). Waiting on the user to actually play it
-  (`npm run dev`, or via the SSH tunnel — see `docs/dev-wiki/log.md`) and
-  give change directions before doing more. Likely next real content:
-  unit-type variety (`src/data/unitTypes.ts`) and more commands
-  (`src/data/commands.ts`) per the MVP staging in
-  `docs/dev-wiki/game-concept.md`. No GitHub Issue yet — should get one + a
-  branch as soon as the repo exists.
+- **User playtest / change requests** — isometric dungeon-exploration MVP is
+  playable end-to-end (walk the corridors -> bump combat -> touch-to-rescue
+  -> reach exit -> gameover -> retry). Waiting on the user to actually play
+  it (`npm run dev`, or via the SSH tunnel — see `docs/dev-wiki/log.md`) and
+  give change directions before doing more. Likely next: combat balance
+  tuning (cooldowns/enemy attack interval), unit-type variety
+  (`src/data/unitTypes.ts`) and more commands (`src/data/commands.ts`) per
+  the MVP staging in `docs/dev-wiki/game-concept.md`. No GitHub Issue yet —
+  should get one + a branch as soon as the repo exists.
 - **GitHub repo linkage** — user will create the GitHub repo separately and
   hand it over. When received: add `remote.origin` reusing the credential
   pattern from `/data/projects/stock_predict` (see
@@ -73,6 +73,36 @@ GitHub Issues own task status. This file owns planning context.
   BFS-pathfound headless Playwright playthrough (movement, combat, rescue,
   exit, win screen all confirmed). No GitHub Issue yet; same fallback
   recording as above.
+- **Visual/UI/camera correction pass** (2026-07-23) — user feedback: tiles
+  too flat/80s, combat should live in a persistent right-side slot panel
+  not a popup, camera too close. Added highlight/shadow character shading,
+  wall-adjacent floor contact shadows (after two failed banding attempts —
+  see `docs/patterns/README.md`), a persistent `setupActionPanel()`, and
+  pulled the camera back (smaller tiles, wider vision radius, bigger
+  dungeon). Verified with `npm run build` + BFS playthrough. **Superseded
+  the same day** by the isometric rewrite below — still top-down, not the
+  diagonal Diablo view the user actually wanted. No GitHub Issue yet; same
+  fallback recording as above.
+- **Isometric rewrite + MMO-hotbar combat** (2026-07-23) — user feedback
+  (explicitly asked for a confirm-understanding-then-plan step first, given
+  two prior misses): true isometric projection (Diablo-style diagonal
+  view), a brighter/chunkier Clash-of-Clans-ish tone, and cooldown-gated
+  hotbar combat instead of a scripted sequence. Added `src/gfx/iso.ts`
+  (projection math, wall-block/floor-diamond textures); logic
+  (movement/collision/fog/minimap) stayed on the existing orthogonal grid,
+  only draw positions changed, via paired invisible-physics-body +
+  visible-iso-sprite objects. Walls depth-sort per-tile against moving
+  characters; floor is one baked texture. Camera now follows the player
+  (`startFollow`) instead of showing the whole map at once; HUD/minimap/
+  panel pinned via `setScrollFactor(0)`. `systems/combat.ts` rewritten
+  around enemy HP + independent per-slot cooldowns + an enemy attack timer
+  (`commands.ts` gained `role`/`cooldownMs`). Chibi art redrawn
+  brighter/chunkier with a bold outline; squad now clusters loosely around
+  the leader instead of single-file. Verified with `npm run build`, a
+  console/pageerror-listening Playwright run, and a BFS-pathfound
+  playthrough exercising movement, combat (HP drops on attack, squad loses
+  members on unguarded enemy hits), and a clean game-over transition. No
+  GitHub Issue yet; same fallback recording as above.
 
 ## Cross-Issue Themes
 

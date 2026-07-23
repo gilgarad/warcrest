@@ -93,11 +93,49 @@ TypeScript + Vite.
   UI was a center-screen box that appeared/disappeared per encounter — user
   feedback: attack/defense should live in an always-visible slot panel (like
   an equipped action bar) that the player interacts with, not a box that
-  pops up. Fixed layout now: `setupActionPanel()` builds the panel and one
-  button per `COMMANDS` entry *once* in `create()`; combat only toggles
-  their active/dim styling (`refreshSlotStyles`) and fills in the
-  per-encounter sequence-preview icons and timer bar, it never
-  creates/destroys the panel itself.
+  pops up. `setupActionPanel()` builds the panel and one button per
+  `COMMANDS` entry *once* in `create()`; combat only toggles active/dim
+  styling and fills in per-encounter content (HP bar, cooldown overlays), it
+  never creates/destroys the panel itself.
+- **Isometric rendering, orthogonal logic — never merge the two.**
+  (`src/gfx/iso.ts`, `DungeonScene`.) User feedback asked for a genuine
+  Diablo-style diagonal view; converting movement/collision itself to an iso
+  coordinate system would have re-risked the collision bugs already fixed
+  once. Instead: movement, Arcade Physics bodies, fog radius, and the
+  minimap all stay in the exact same orthogonal tile grid as the flat
+  top-down version. Only *drawing position* goes through
+  `isoProject(tx, ty, originX, originY)`. Every moving/placed thing gets an
+  invisible ortho physics body plus a separate visible `Image` kept in sync
+  every frame via `syncVisual()` — see `playerBody`/`playerVisual` and the
+  enemy/captive body↔visual `Map`s. This means collision code was never
+  touched during the iso rewrite and needed no new debugging.
+- **Iso depth sorting: bake the floor, but never bake the walls.** Floor
+  tiles have no height, so they're baked into one static texture at a fixed
+  low depth — cheapest option, never needs sorting. Walls *do* have visible
+  height (a top face + two side faces), so a wall in front of the player
+  must draw over them and one behind must draw under them; that only works
+  if each wall tile is its own `Image` with `depth = isoDepth(tileX, tileY)`
+  set once at creation, and every dynamic sprite (player, enemies, squad)
+  gets `depth = isoDepth(...)` recomputed every frame from its *current*
+  fractional tile position. Both use the same depth formula
+  (`(tx + ty) * 10`), which is what makes static walls and moving
+  characters interleave correctly.
+- **Wall culling by floor-adjacency.** Only wall tiles with at least one
+  floor neighbor get an iso block `Image` — deep interior rock is never
+  rendered. (This reuses the "surface wall" adjacency check from the earlier
+  flat top-down tile-shading attempt, just repurposed from a shading
+  decision into a draw-call-count decision.)
+- **MMO-hotbar combat replaced a scripted command sequence.** First combat
+  model required entering a fixed sequence of commands before a shared timer
+  ran out. User feedback: it should feel like pressing cooldown-gated
+  ability slots at the right moment, not filling in a queue — closer to an
+  MMORPG hotbar. `systems/combat.ts` now tracks enemy HP, a per-slot
+  cooldown, and an independent enemy attack timer; `pressSlot()` either
+  damages the enemy (offense) or opens a brief guard window (defense),
+  `tickCombat()` advances cooldowns and fires the enemy's own attack (a miss
+  during a guard window is negated, otherwise the squad loses its front
+  member). The panel shows this as an HP bar plus a cooldown wipe overlay
+  per slot rather than a sequence-of-icons queue.
 
 Expected future pattern files, once relevant:
 
