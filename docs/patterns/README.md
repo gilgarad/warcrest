@@ -61,6 +61,43 @@ TypeScript + Vite.
   otherwise). Recomputed only when the player crosses into a new tile, not
   every frame. The minimap (`minimapGfx`) redraws off the same `revealed`
   grid at the same time, so the two never disagree.
+- **Pseudo-3D tiles via wall-cast contact shadows, not per-tile banding.**
+  First attempt shaded every tile individually (light band top, dark band
+  bottom) — repeated across many stacked tiles it just produced a
+  venetian-blinds pattern, not depth. What actually reads as "walls have
+  height": (1) only bevel *surface* wall tiles (the ones bordering a
+  corridor) with a lighter top face + dark bottom edge — tiles fully
+  surrounded by other walls stay a flat dark mass, or the same blinds
+  problem reappears at a bigger scale; (2) draw a soft multi-band contact
+  shadow on floor tiles adjacent to a wall, fading out a few pixels in. The
+  shadow correlates with actual grid geometry instead of being decorative
+  per-tile noise, which is what sells the illusion. See
+  `DungeonScene.buildTilemapVisual()`.
+- **Character shading via `shade()`** (`src/gfx/chibi.ts`, exported): a
+  small helper that lightens/darkens a hex color toward white/black.
+  `drawChibiTexture` uses it for a highlight/shadow pass on the head and
+  body (plus a thin outline stroke) instead of flat single-tone fills — a
+  cheap way to make procedurally-drawn sprites read as less flat without
+  needing real art. All proportions are expressed as fractions of a
+  `BASE_W`/`BASE_H` scaled by `s = width / BASE_W`, so requesting a smaller
+  texture (`{ width, height }` opts) stays self-similar instead of just
+  cropping — used to draw a second, smaller sprite set for the dungeon's
+  pulled-back camera without duplicating the drawing code.
+- **Texture keys are global, not per-scene.** Phaser's texture manager is
+  shared across the whole game, so `BootScene`'s full-size preview sprites
+  and `DungeonScene`'s smaller gameplay sprites need *different* texture
+  keys (`chibi-soldier` vs `chibi-soldier-sm`) even though both call
+  `drawChibiTexture` with the same unit — reusing a key silently returns
+  whichever size was generated first, from either scene.
+- **Persistent side panel instead of a modal popup for combat.** First combat
+  UI was a center-screen box that appeared/disappeared per encounter — user
+  feedback: attack/defense should live in an always-visible slot panel (like
+  an equipped action bar) that the player interacts with, not a box that
+  pops up. Fixed layout now: `setupActionPanel()` builds the panel and one
+  button per `COMMANDS` entry *once* in `create()`; combat only toggles
+  their active/dim styling (`refreshSlotStyles`) and fills in the
+  per-encounter sequence-preview icons and timer bar, it never
+  creates/destroys the panel itself.
 
 Expected future pattern files, once relevant:
 

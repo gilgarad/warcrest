@@ -96,10 +96,10 @@ function walkCorridor(
  * data-driven in one place.
  */
 export function generateDungeon(
-  width = 34,
-  height = 20,
-  mainRoomCount = 5,
-  segmentLength = 7
+  width = 58,
+  height = 34,
+  mainRoomCount = 6,
+  segmentLength = 9
 ): DungeonResult {
   const grid: string[][] = Array.from({ length: height }, () => Array(width).fill(TILE.WALL));
 
@@ -118,9 +118,11 @@ export function generateDungeon(
   );
 
   const branchRooms: TileCoord[] = [];
-  const branchOrigins = [mainRooms[1], mainRooms[Math.floor(mainRooms.length / 2)]].filter(
-    (r): r is TileCoord => Boolean(r)
-  );
+  const branchOrigins = [
+    mainRooms[1],
+    mainRooms[Math.floor(mainRooms.length / 2)],
+    mainRooms[mainRooms.length - 2],
+  ].filter((r): r is TileCoord => Boolean(r));
   for (const origin of branchOrigins) {
     const branchDir = DIRS[Math.floor(Math.random() * DIRS.length)];
     const rooms = walkCorridor(grid, origin, branchDir, 2, segmentLength, width, height);
