@@ -1,0 +1,16 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Env / secrets — never commit these
+.env
+.env.*
+*.pem
+*.key
+
+# Build output (placeholder until stack is chosen)
+dist/
+build/
+node_modules/
