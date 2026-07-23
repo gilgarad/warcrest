@@ -21,12 +21,22 @@ generator, squad attrition math), the baseline verification is:
    (launch dev server in background, drive it with Playwright, screenshot,
    confirm visually, kill the server). Type checks and a clean build verify
    code correctness, not whether the game looks/plays right.
-3. For a full-run smoke check, RunScene exposes `window.__gameDebug`
-   (`{ phase, forkIndex, forksTotal, squadSize, combatIndex, combatLength }`)
-   every frame. A Playwright script can poll it to branch its clicks by
-   phase (fork/combat/rescue/mission) instead of guessing coordinates blind,
-   which is what makes it possible to script a full random-branching run
-   headlessly. See `docs/patterns/README.md` for the rationale.
+3. For a full-run smoke check, `DungeonScene` exposes `window.__gameDebug`
+   every frame — phase, squad/enemy/captive counts, player world position,
+   combat progress, and the full generated dungeon grid (`dungeon.grid`,
+   `tileSize`, `offsetX/Y`, `playerStart`, `exit`). A Playwright script can
+   BFS-pathfind the grid to the exit, drive the player there tile-by-tile
+   with a closed-loop position controller (compare `playerWorld` to the next
+   waypoint, toggle arrow keys, repeat), pause and click the attack button
+   whenever `phase === "combat"`, and confirm `GameOverScene`'s
+   `{phase:"gameover", win, squadSize}`. This is how the dungeon rewrite was
+   verified end-to-end without a human clicking through it. See
+   `docs/patterns/README.md` for the exact mechanics.
+4. If collision/movement looks wrong but the grid data looks right, set
+   `physics: { arcade: { debug: true } }` in `main.ts` and screenshot —
+   don't guess. This caught a real body-offset bug (see
+   `docs/patterns/README.md`) that a screenshot without debug bodies
+   wouldn't have made obvious.
 
 If/when pure-logic modules appear (procedural generation, combat resolution)
 that are worth unit testing without a browser, add `vitest` and a `test`

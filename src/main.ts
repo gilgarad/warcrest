@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { BootScene } from "./scenes/BootScene";
-import { RunScene } from "./scenes/RunScene";
+import { DungeonScene } from "./scenes/DungeonScene";
 import { GameOverScene } from "./scenes/GameOverScene";
 
 new Phaser.Game({
@@ -9,5 +9,9 @@ new Phaser.Game({
   width: 960,
   height: 540,
   backgroundColor: "#111111",
-  scene: [BootScene, RunScene, GameOverScene],
+  physics: {
+    default: "arcade",
+    arcade: { debug: false },
+  },
+  scene: [BootScene, DungeonScene, GameOverScene],
 });

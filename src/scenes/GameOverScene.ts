@@ -20,6 +20,9 @@ export class GameOverScene extends Phaser.Scene {
     const win = Boolean(data?.win);
     const squadSize = data?.squadSize ?? 0;
 
+    // Debug hook for headless/Playwright smoke checks — see docs/rules/testing.md.
+    (window as unknown as { __gameDebug: unknown }).__gameDebug = { phase: "gameover", win, squadSize };
+
     this.add
       .text(width / 2, height / 2 - 60, win ? "미션 성공!" : "전멸...", {
         fontFamily: "sans-serif",

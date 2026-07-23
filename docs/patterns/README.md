@@ -21,23 +21,46 @@ TypeScript + Vite.
   `commands.ts`, `encounterTypes.ts` are plain arrays of config objects.
   Systems and scenes only ever read these registries generically (loop over
   them, look up by id) — they never hardcode a specific unit/command/kind.
-  Adding content (a new unit type, a new "방어" command, a new fork-outcome
-  kind) means adding one entry to the relevant registry; RunScene's UI
-  (button rows, sequence icons) renders itself from whatever is in the
-  registry at the time. Adding a genuinely new *kind* of fork outcome still
-  needs one new `start*` handler method in `RunScene` — that dispatch is
-  intentionally a plain switch, not further abstracted, because there are
-  only 3 kinds so far.
-- **Systems are UI-free** (`src/systems/`): `Squad`, `runGenerator`,
-  `combat` know nothing about Phaser. RunScene is the only place that turns
-  their state into GameObjects. Keeps game logic testable without a canvas
-  if/when real unit tests get added.
-- **`window.__gameDebug`**: `RunScene.update()` writes the current phase/
-  progress/combat state to `window.__gameDebug` every frame. It's not read
-  by any gameplay code — it exists purely so a headless Playwright script
-  can drive/verify the full fork→combat→rescue→mission loop without needing
-  a real test framework yet (see `docs/rules/testing.md`). Harmless to leave
-  in; remove it if a proper test harness replaces this pattern later.
+  Adding content (a new unit type, a new "방어" command) means adding one
+  entry to the relevant registry; `DungeonScene`'s combat UI (button rows,
+  sequence icons) renders itself from whatever is in the registry at the
+  time.
+- **Systems are UI-free** (`src/systems/`): `Squad`, `combat`,
+  `dungeonGenerator` know nothing about Phaser. `DungeonScene` is the only
+  place that turns their state into GameObjects/physics bodies. Keeps game
+  logic testable without a canvas if/when real unit tests get added.
+- **`window.__gameDebug`**: `DungeonScene.update()` writes the current
+  phase/squad/combat/player-position/dungeon-grid state to
+  `window.__gameDebug` every frame (`GameOverScene` writes a terminal
+  `{phase:"gameover", win, squadSize}` on the way out). Not read by any
+  gameplay code — it exists purely so a headless Playwright script can
+  BFS-pathfind the generated grid and drive a full playthrough without a
+  real test framework yet (see `docs/rules/testing.md`).
+- **Random-walk dungeon carving** (`src/systems/dungeonGenerator.ts`):
+  walks a corridor of straight-ish segments (small per-step turn chance,
+  forced turn only at map edges), dropping a small room every segment, plus
+  1-2 short side branches off the main path. Reachability from the start is
+  guaranteed by construction — every carved tile sits on a walk, so there's
+  no separate connectivity check needed. Room content (combat vs. rescue)
+  reuses the same weighted picker (`pickRandomForkKind`) the old fork system
+  used, so that balance knob lives in one place regardless of how it's
+  presented to the player.
+- **Arcade physics body offset is relative to the frame's top-left, not the
+  sprite's display origin.** Cost real debugging time: chibi textures are
+  drawn with a default (0.5, 0.5) origin, and a body `setOffset()` computed
+  as if origin were (0,0) silently shifted the player's hitbox down into the
+  tile row below, making movement stall a couple tiles in (looked like a
+  "wall" that wasn't in the grid data). Fix: for a top-down footprint box,
+  center it in frame space — `offset = (frameSize - boxSize) / 2` on both
+  axes — rather than reasoning about "where the feet are." When collision
+  looks wrong but the grid/logic looks right, render with
+  `physics: { arcade: { debug: true } }` before doubting the data.
+- **Fog-of-war + minimap**: one `Rectangle` per tile (`fogTiles`), alpha set
+  per-tile from Chebyshev distance to the player's current tile (0 = fully
+  visible inside `VISION_RADIUS`, dim if previously revealed, opaque black
+  otherwise). Recomputed only when the player crosses into a new tile, not
+  every frame. The minimap (`minimapGfx`) redraws off the same `revealed`
+  grid at the same time, so the two never disagree.
 
 Expected future pattern files, once relevant:
 

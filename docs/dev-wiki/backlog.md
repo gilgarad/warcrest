@@ -14,13 +14,15 @@ GitHub Issues own task status. This file owns planning context.
 
 ## Active Queue
 
-- **User playtest / change requests** — MVP loop is playable end-to-end
-  (fork -> combat -> rescue -> mission -> gameover -> retry). Waiting on the
-  user to actually play it (`npm run dev`) and give change directions
-  before doing more. Likely next real content: unit-type variety (more
-  entries in `src/data/unitTypes.ts`) and more commands (`src/data/commands.ts`)
-  per the MVP staging in `docs/dev-wiki/game-concept.md`. No GitHub Issue
-  yet — should get one + a branch as soon as the repo exists.
+- **User playtest / change requests** — dungeon-exploration MVP is playable
+  end-to-end (walk the corridors -> bump combat -> touch-to-rescue -> reach
+  exit -> gameover -> retry). Waiting on the user to actually play it
+  (`npm run dev`, or via the SSH tunnel — see `docs/dev-wiki/log.md`) and
+  give change directions before doing more. Likely next real content:
+  unit-type variety (`src/data/unitTypes.ts`) and more commands
+  (`src/data/commands.ts`) per the MVP staging in
+  `docs/dev-wiki/game-concept.md`. No GitHub Issue yet — should get one + a
+  branch as soon as the repo exists.
 - **GitHub repo linkage** — user will create the GitHub repo separately and
   hand it over. When received: add `remote.origin` reusing the credential
   pattern from `/data/projects/stock_predict` (see
@@ -56,7 +58,21 @@ GitHub Issues own task status. This file owns planning context.
   (no image-gen tool available in this environment). Verified with
   `npm run build` and a full headless Playwright playthrough driven by a
   `window.__gameDebug` hook (see `docs/patterns/README.md`). No GitHub
-  Issue yet; same fallback recording as above.
+  Issue yet; same fallback recording as above. **Superseded the same day**
+  by the dungeon-exploration rewrite below — the menu/fork UI didn't match
+  what the user actually asked for.
+- **Dungeon-exploration rewrite** (2026-07-23) — user feedback: the fork-menu
+  MVP lost the "actually move through a Diablo-style dungeon" core of the
+  concept. Replaced `RunScene` (menu/cards) with `DungeonScene` (real-time
+  top-down movement, fog-of-war + minimap, bump-to-fight /
+  touch-to-rescue, procedurally carved corridors via
+  `src/systems/dungeonGenerator.ts`). Kept the combat/squad/registry systems
+  from the previous implementation, only replaced the interaction layer.
+  Fixed a real Arcade-physics body-offset bug found along the way (see
+  `docs/patterns/README.md`). Verified with `npm run build` and a
+  BFS-pathfound headless Playwright playthrough (movement, combat, rescue,
+  exit, win screen all confirmed). No GitHub Issue yet; same fallback
+  recording as above.
 
 ## Cross-Issue Themes
 
