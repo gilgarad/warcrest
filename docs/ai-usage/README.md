@@ -28,6 +28,17 @@ Keep entries brief — a few lines each. This is a log, not a transcript. If a
 turn is unusually significant (e.g. it decided the game concept or the tech
 stack), say so explicitly so it's easy to find when compiling the final PDF.
 
+**Quote pivotal instructions verbatim, not just paraphrased.**
+`docs/knowledge/contest-requirements.md` (submission item 4) explicitly
+asks for "AI 대상 주요 프롬프트 및 지시 사항" — the actual prompts, not a
+summary of them. For turns where the user gives a *creative direction* or a
+*correction* (a reference like "Diablo's isometric view," a tone like
+"Clash of Clans," a rejection like "이거 너무 추상적으로 말한 것 같다") —
+pull the exact Korean phrasing into the entry in quotes. That's the
+evidence of *directing* skill the contest is scoring, and a paraphrase
+flattens exactly the part that shows it. Routine/mechanical turns (build
+fixes, doc housekeeping) don't need this — summary is fine there.
+
 ## Cadence
 
 Update after any session that produces a meaningful design decision,

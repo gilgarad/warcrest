@@ -36,6 +36,11 @@
 - 이 저장소는 대회 제출물 5종 중 **"1. 플레이 가능한 빌드 및 소스 코드"**만
   담당. 나머지(플레이 영상, 게임 소개서, AI 활용 문서, 팀원 롤 문서)는
   이 저장소의 문서/이력을 근거로 나중에 별도로 만듦.
+- **공식 제출 요건 전문**은 `docs/knowledge/contest-requirements.md`에
+  원문 그대로 저장돼 있음 — 제출물 4번(AI 활용 기술 문서)이 "AI 대상
+  주요 프롬프트 및 지시 사항"을 명시적으로 요구하므로,
+  `docs/ai-usage/session-log.md`는 요약뿐 아니라 방향 전환/피드백 turn의
+  **원문 인용**도 남기는 중(`docs/ai-usage/README.md` 참고).
 - 게임: **"갈림길 정찰대"(가제)** — 등각(디아블로류 대각선 시점) 던전을
   실시간으로 걸어다니며 적과는 부딪혀서 MMO 핫바식으로 전투하고, 감옥에
   갇힌 동료는 닿으면 자동 구출해 대열을 늘리는 로그라이트 탐험 액션.
@@ -170,6 +175,7 @@ gfx/                        렌더링 헬퍼
 | `docs/dev-wiki/backlog.md` | 할 일(Active Queue)/최근 완료 이력 |
 | `docs/dev-wiki/log.md` | 전체 작업 이력(append-only, 제일 상세함) |
 | `docs/ai-usage/session-log.md` | 대회 제출용 AI 활용 기록 — dev-wiki log와 별개 트랙 |
+| `docs/knowledge/contest-requirements.md` | 대회 공식 제출 요건 원문 |
 | `docs/patterns/README.md` | 구현 패턴 + 삽질/교훈 모음 |
 | `docs/rules/testing.md` | 검증 표준(빌드/Playwright/BFS 테스트 패턴) |
 

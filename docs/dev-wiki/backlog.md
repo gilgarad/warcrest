@@ -114,6 +114,13 @@ GitHub Issues own task status. This file owns planning context.
   `src/systems/runGenerator.ts`, dead code left over from the deleted
   menu-based `RunScene`. No GitHub Issue yet; same fallback recording as
   above.
+- **Contest requirements saved verbatim + AI-usage log now quotes directly**
+  (2026-07-24) — added `docs/knowledge/contest-requirements.md` (full
+  official submission rules, unparaphrased). Submission item 4 explicitly
+  asks for the actual prompts/instructions given to AI, not a summary, so
+  `docs/ai-usage/README.md` now asks for verbatim quotes on
+  direction/correction turns specifically (routine turns still just get a
+  summary). No GitHub Issue yet; same fallback recording as above.
 
 ## Cross-Issue Themes
 
@@ -121,4 +128,4 @@ GitHub Issues own task status. This file owns planning context.
   playable web/mobile build + full source (this repo), a play video, a game
   intro PDF, an AI-usage PDF, and (if team-based) a role PDF. Only item 1
   lives in this repo as code; the rest are compiled from this repo's docs
-  and history later.
+  and history later. Full official rules: `docs/knowledge/contest-requirements.md`.
