@@ -255,3 +255,30 @@ Use consistent headings so entries are easy to grep.
   남아있었음(`grep`으로 아무 데서도 import 안 되는 것 확인 후 삭제,
   `npm run build` 통과 재확인).
 - 여전히 GitHub 저장소/이슈가 없어 백로그+로그 기록으로만 남김.
+
+## [2026-07-23] docs | AI 활용 로그를 "두 번째 필수 규칙"으로 격상
+
+- 사용자 질문: 다른 세션이 "하네스 규약대로 작업해, AGENTS.md ->
+  docs/index.md -> docs/dev-wiki/contract.md 순서로 읽고 시작해"라고만
+  지시해도 `docs/ai-usage/session-log.md` 매 턴 기록이 자동으로 이어질지
+  판단해달라는 요청. 판단 결과: 아니오 — 이번 세션에서 계속된 건 첫 턴에
+  사용자가 직접 지시했고 대화 컨텍스트 안에서 제가 기억하고 있었기
+  때문이며, 하네스의 하드 룰은 backlog.md/log.md 기록 하나뿐이라
+  ai-usage 로깅은 강제되지 않았음. 자동화(훅)는 이 프로젝트가 처음부터
+  "런타임 하네스/추가 자동화 금지"라고 못박아서 쓸 수 없음.
+- 문서만으로 강제 가능한 최대치를 적용: 사용자가 항상 쓰는 정확한 3파일
+  읽기 순서(`AGENTS.md` -> `docs/index.md` ->
+  `docs/dev-wiki/contract.md`) 안에 규칙을 박아넣음.
+  - `docs/dev-wiki/contract.md`(정확히 그 순서의 세 번째 파일)에 "The
+    Second Rule" 신설 — 이 프로젝트 전용 필수 규칙으로 명문화, "하네스
+    규약대로만 작업해"라는 말에도 이미 포함된 지시임을 명시. Source Of
+    Truth Map에도 `docs/ai-usage/`를 "mandatory" 표기로 추가.
+  - `AGENTS.md`의 "This is the only hard process rule" 문구를 "이 파일
+    안에서는 유일하지만, `docs/dev-wiki/contract.md`가 프로젝트별 추가
+    필수 규칙을 정의할 수 있다"로 수정 — "AGENTS.md는 범용으로 유지"
+    원칙은 지키면서 정확성 확보.
+  - `docs/index.md`의 AI Usage 섹션 헤딩을 "MANDATORY every turn"으로
+    강조.
+  - `project_development.md`에 "0. 세션 시작 시 반드시 할 일" 체크리스트
+    신설, ai-usage 기록을 3번 항목으로 명시.
+- 여전히 GitHub 저장소/이슈가 없어 백로그+로그 기록으로만 남김.

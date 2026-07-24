@@ -20,7 +20,9 @@ Minimum fallback record:
 
 - one entry in `docs/dev-wiki/log.md`
 
-This is the only hard process rule. Everything else is guidance.
+This is the only hard process rule defined in this file. This repository's
+`docs/dev-wiki/contract.md` may define additional project-specific mandatory
+rules — read it before starting work, not just when convenient.
 
 Security is a separate standing guardrail: never commit secrets, credentials,
 tokens, runtime config, production data, or private user data.

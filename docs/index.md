@@ -36,7 +36,7 @@ first — a maintained snapshot of current status/architecture/next-steps.
 
 - [Wiki Management](wiki/index.md)
 
-## AI Usage (contest deliverable, separate from dev-wiki log)
+## AI Usage — MANDATORY every turn (see dev-wiki/contract.md "Second Rule")
 
 - [AI Usage Log](ai-usage/README.md)
 

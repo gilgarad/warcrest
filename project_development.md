@@ -14,6 +14,20 @@
 
 ---
 
+## 0. 세션 시작 시 반드시 할 일 (체크리스트)
+
+1. `AGENTS.md` → `docs/index.md` → `docs/dev-wiki/contract.md` 순서로 읽기
+   (사용자가 "하네스 규약대로 작업해"라고만 말해도 이 순서는 항상 적용).
+2. 이 문서(`project_development.md`)의 4·5번 섹션으로 현재 상태 파악.
+3. **매 턴 `docs/ai-usage/session-log.md`에 기록 남기기.** 이건
+   `docs/dev-wiki/contract.md`의 "The Second Rule"(이 프로젝트 전용
+   필수 규칙)이자 대회 제출물 4번(AI 활용 기술 문서)의 원본 자료입니다.
+   "하네스 규약대로 작업해"라는 말 안에 이미 포함된 지시이므로, 사용자가
+   따로 언급하지 않아도 지킬 것 — `docs/ai-usage/README.md`에 형식/주기
+   설명이 있음.
+
+---
+
 ## 1. 프로젝트가 뭔가
 
 - **NHN `nan2026` AI 게임잼** 출품작. AI 코딩 에이전트(Claude Code 등)로
