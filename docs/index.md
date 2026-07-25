@@ -23,6 +23,7 @@ first — a maintained snapshot of current status/architecture/next-steps.
 - [Log](dev-wiki/log.md)
 - [Index](dev-wiki/index.md)
 - [Game Concept](dev-wiki/game-concept.md)
+- [Concept Pivot: Lane Siege](dev-wiki/concept-pivot-lane-siege.md)
 
 ## Patterns
 

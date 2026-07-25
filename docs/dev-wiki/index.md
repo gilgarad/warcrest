@@ -11,6 +11,8 @@ repository work.
 - `index.md`: routing and authority map
 - `game-concept.md`: synthesized game design doc (genre, core loop, combat,
   scope risk) — this project's main wiki content page
+- `concept-pivot-lane-siege.md`: research and transition plan for the
+  proposed pivot from dungeon squad action to a lane-based siege/economy game
 - `../knowledge/`: durable project knowledge
 - `../patterns/`: reusable implementation patterns
 - `../wiki/`: human-facing documentation and wiki policy

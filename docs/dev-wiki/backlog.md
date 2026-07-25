@@ -14,6 +14,19 @@ GitHub Issues own task status. This file owns planning context.
 
 ## Active Queue
 
+- **Concept pivot planning: lane siege / hiring / tech / fortress economy game** —
+  the user has now clarified that the target is no longer a dungeon squad
+  action roguelite. The new target is a mobile-friendly lane-based siege game
+  inspired by DotA/LoL lane structure plus Civilization Wars-style tech
+  progression, unit unlocks, and economy. Before rewriting code, capture the
+  structural shift precisely: opposing corner bases (up to 4 players),
+  recruitable units with ongoing wages, capturable mid-map strongholds,
+  buildable forts, and base-only tech unlocks/upgrades. Working doc:
+  `docs/dev-wiki/concept-pivot-lane-siege.md`. Immediate next step is user
+  consultation to lock MVP shape (2p vs 4p, lane count, recruit flow, leader
+  role), then replace dungeon generation/combat/inventory systems in planned
+  phases. No GitHub Issue yet — should get one + a branch as soon as the repo
+  exists.
 - **Field-combat rewrite polishing / feedback** — the old "접촉 시 고정 전투"
   모델 has been replaced with a first-pass continuous field-combat model in
   `DungeonScene`: leader + follower squad state, auto basic attacks, melee +
