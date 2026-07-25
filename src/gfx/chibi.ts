@@ -54,21 +54,38 @@ export function drawChibiTexture(
   g.fillStyle(0x000000, 0.3);
   g.fillEllipse(cx, h - 2 * s, w * 0.6, 6 * s);
 
-  // legs — thick and rounded
+  // boots / legs
+  g.fillStyle(shade(outfitDark, -0.18), 1);
+  g.fillRoundedRect(cx - 12 * s, h - 8 * s, 11 * s, 5 * s, 2 * s);
+  g.fillRoundedRect(cx + 1 * s, h - 8 * s, 11 * s, 5 * s, 2 * s);
   g.fillStyle(outfitDark, 1);
   g.fillRoundedRect(cx - 10 * s, h - 18 * s, 8 * s, 15 * s, 4 * s);
   g.fillStyle(palette.outfit, 1);
   g.fillRoundedRect(cx + 2 * s, h - 18 * s, 8 * s, 15 * s, 4 * s);
 
-  // body — big rounded blob, strong top-left gloss highlight
+  // body / chest
+  g.fillStyle(shade(palette.outfit, -0.1), 1);
+  g.fillRoundedRect(cx - 15 * s, h - 35 * s, 30 * s, 21 * s, 10 * s);
   g.fillStyle(palette.outfit, 1);
   g.fillRoundedRect(cx - 14 * s, h - 34 * s, 28 * s, 20 * s, 10 * s);
   g.fillStyle(0xffffff, 0.32);
   g.fillEllipse(cx - 4 * s, h - 28 * s, 14 * s, 9 * s);
   g.fillStyle(outfitDark, 0.3);
   g.fillRoundedRect(cx - 2 * s, h - 20 * s, 15 * s, 6 * s, 5 * s);
+  g.fillStyle(accentDark, 0.8);
+  g.fillRoundedRect(cx - 14 * s, h - 23 * s, 28 * s, 3 * s, 1.5 * s);
+  g.fillStyle(palette.accent, 1);
+  g.fillCircle(cx, h - 21.5 * s, 3.1 * s);
   g.lineStyle(lw, outline, 0.9);
   g.strokeRoundedRect(cx - 14 * s, h - 34 * s, 28 * s, 20 * s, 10 * s);
+
+  // shoulder pads
+  g.fillStyle(shade(palette.accent, -0.12), 1);
+  g.fillRoundedRect(cx - 18 * s, h - 33 * s, 9 * s, 7 * s, 3 * s);
+  g.fillRoundedRect(cx + 9 * s, h - 33 * s, 9 * s, 7 * s, 3 * s);
+  g.lineStyle(Math.max(0.8, lw * 0.6), outline, 0.65);
+  g.strokeRoundedRect(cx - 18 * s, h - 33 * s, 9 * s, 7 * s, 3 * s);
+  g.strokeRoundedRect(cx + 9 * s, h - 33 * s, 9 * s, 7 * s, 3 * s);
 
   // arms — thick, rounded ends
   g.fillStyle(skinShadow, 1);
@@ -87,7 +104,7 @@ export function drawChibiTexture(
   g.fillStyle(0xffffff, 0.4);
   g.fillEllipse(cx - headR * 0.38, headCy - headR * 0.42, headR * 0.7, headR * 0.5);
 
-  // cap: a colored ellipse sitting on the upper head, with a bold brim strip
+  // helm / cap
   g.fillStyle(palette.accent, 1);
   g.fillEllipse(cx, headCy - headR * 0.55, headR * 1.4, headR * 0.9);
   g.fillStyle(0xffffff, 0.3);
@@ -120,6 +137,16 @@ export function drawChibiTexture(
   // smile
   g.fillStyle(outline, 0.75);
   g.fillRoundedRect(cx - 2.8 * s, headCy + headR * 0.44, 5.6 * s, 1.8 * s, 0.9 * s);
+
+  // cape / back cloth
+  g.fillStyle(shade(palette.outfit, -0.22), 0.92);
+  g.beginPath();
+  g.moveTo(cx - 10 * s, h - 33 * s);
+  g.lineTo(cx - 14 * s, h - 17 * s);
+  g.lineTo(cx - 6 * s, h - 14 * s);
+  g.lineTo(cx - 1 * s, h - 24 * s);
+  g.closePath();
+  g.fillPath();
 
   g.generateTexture(key, w, h);
   g.destroy();

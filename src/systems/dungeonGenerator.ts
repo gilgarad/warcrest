@@ -32,14 +32,21 @@ function carve(grid: string[][], x: number, y: number): void {
   grid[y][x] = TILE.FLOOR;
 }
 
-function carveRoom(grid: string[][], cx: number, cy: number, w: number, h: number, radius = 1): void {
-  for (let dy = -radius; dy <= radius; dy++) {
-    for (let dx = -radius; dx <= radius; dx++) {
+function carveDisk(grid: string[][], cx: number, cy: number, w: number, h: number, radiusX: number, radiusY: number): void {
+  for (let dy = -radiusY; dy <= radiusY; dy++) {
+    for (let dx = -radiusX; dx <= radiusX; dx++) {
       const x = cx + dx;
       const y = cy + dy;
-      if (inBounds(x, y, w, h)) carve(grid, x, y);
+      if (!inBounds(x, y, w, h)) continue;
+      const nx = dx / Math.max(1, radiusX);
+      const ny = dy / Math.max(1, radiusY);
+      if (nx * nx + ny * ny <= 1.15) carve(grid, x, y);
     }
   }
+}
+
+function carveRoom(grid: string[][], cx: number, cy: number, w: number, h: number, radius = 1): void {
+  carveDisk(grid, cx, cy, w, h, radius + 1, radius);
 }
 
 function distance(a: TileCoord, b: TileCoord): number {
@@ -60,7 +67,8 @@ function walkCorridor(
   steps: number,
   segmentLength: number,
   width: number,
-  height: number
+  height: number,
+  corridorRadius = 2
 ): TileCoord[] {
   const rooms: TileCoord[] = [];
   let x = start.x;
@@ -77,10 +85,10 @@ function walkCorridor(
       }
       x = nx;
       y = ny;
-      carve(grid, x, y);
+      carveDisk(grid, x, y, width, height, corridorRadius, corridorRadius);
       if (Math.random() < 0.12) dir = DIRS[Math.floor(Math.random() * DIRS.length)];
     }
-    carveRoom(grid, x, y, width, height, 1);
+    carveRoom(grid, x, y, width, height, 3);
     rooms.push({ x, y });
   }
   return rooms;
@@ -96,16 +104,16 @@ function walkCorridor(
  * data-driven in one place.
  */
 export function generateDungeon(
-  width = 58,
-  height = 34,
-  mainRoomCount = 6,
-  segmentLength = 9
+  width = 86,
+  height = 50,
+  mainRoomCount = 7,
+  segmentLength = 12
 ): DungeonResult {
   const grid: string[][] = Array.from({ length: height }, () => Array(width).fill(TILE.WALL));
 
   const startX = 2;
   const startY = Math.floor(height / 2);
-  carveRoom(grid, startX, startY, width, height, 1);
+  carveRoom(grid, startX, startY, width, height, 3);
 
   const mainRooms = walkCorridor(
     grid,
@@ -114,7 +122,8 @@ export function generateDungeon(
     mainRoomCount,
     segmentLength,
     width,
-    height
+    height,
+    2
   );
 
   const branchRooms: TileCoord[] = [];
@@ -125,7 +134,7 @@ export function generateDungeon(
   ].filter((r): r is TileCoord => Boolean(r));
   for (const origin of branchOrigins) {
     const branchDir = DIRS[Math.floor(Math.random() * DIRS.length)];
-    const rooms = walkCorridor(grid, origin, branchDir, 2, segmentLength, width, height);
+    const rooms = walkCorridor(grid, origin, branchDir, 2, Math.max(8, segmentLength - 2), width, height, 2);
     branchRooms.push(...rooms.filter((r) => distance(r, origin) > 1));
   }
 
