@@ -25,8 +25,8 @@ GitHub Issues own task status. This file owns planning context.
   `docs/dev-wiki/concept-pivot-lane-siege.md`. Immediate next step is user
   consultation to lock MVP shape (2p vs 4p, lane count, recruit flow, leader
   role), then replace dungeon generation/combat/inventory systems in planned
-  phases. No GitHub Issue yet — should get one + a branch as soon as the repo
-  exists.
+  phases. GitHub repo now exists and `origin` is connected; next process step
+  is opening the first real Issue for the pivot and moving work off `master`.
 - **Field-combat rewrite polishing / feedback** — the old "접촉 시 고정 전투"
   모델 has been replaced with a first-pass continuous field-combat model in
   `DungeonScene`: leader + follower squad state, auto basic attacks, melee +
@@ -34,13 +34,8 @@ GitHub Issues own task status. This file owns planning context.
   loop, and a 9-slot shared inventory. This is intentionally a baseline
   implementation from the newly agreed plan, not final balance. Next step is
   user playtest feedback (`npm run dev`) on feel/readability/rough edges,
-  then iterate rather than widening scope blindly. No GitHub Issue yet —
-  should get one + a branch as soon as the repo exists.
-- **GitHub repo linkage** — user will create the GitHub repo separately and
-  hand it over. When received: add `remote.origin` reusing the credential
-  pattern from `/data/projects/stock_predict` (see
-  `docs/knowledge/index.md#github--remote`), then start using real Issues
-  for backlog entries going forward.
+  then iterate rather than widening scope blindly. This is likely to be
+  superseded by the lane-siege pivot rather than expanded much further.
 
 ## Recently Closed
 
@@ -134,6 +129,12 @@ GitHub Issues own task status. This file owns planning context.
   `docs/ai-usage/README.md` now asks for verbatim quotes on
   direction/correction turns specifically (routine turns still just get a
   summary). No GitHub Issue yet; same fallback recording as above.
+- **GitHub repo linkage** (2026-07-26) — connected local repo to
+  `https://github.com/gilgarad/game_project1.git` using the same credential
+  pattern as `/data/projects/stock_predict`, pushed `master`, and set upstream
+  tracking to `origin/master`. The next discipline improvement is to stop
+  continuing on `master` and open real GitHub Issues/branches for subsequent
+  work units.
 
 ## Cross-Issue Themes
 

@@ -45,9 +45,10 @@
   실시간으로 걸어다니며 적과는 부딪혀서 MMO 핫바식으로 전투하고, 감옥에
   갇힌 동료는 닿으면 자동 구출해 대열을 늘리는 로그라이트 탐험 액션.
 - **stock_predict_rev 등 다른 프로젝트와 완전히 무관한 독립 저장소.**
-  GitHub 저장소는 아직 없음(로컬 git만) — 사용자가 나중에 만들어서 알려주면
-  그때 `remote.origin` 연동(자격증명은 `/data/projects/stock_predict` 패턴
-  재사용 예정, `docs/knowledge/index.md` 참고).
+  GitHub 저장소는 이제 연결되어 있음:
+  `https://github.com/gilgarad/game_project1.git`
+  (`origin` configured, `master` pushed on 2026-07-26). 자격증명 패턴은
+  `/data/projects/stock_predict`와 같은 계정을 재사용.
 
 ## 2. 지금 당장 실행하는 법
 

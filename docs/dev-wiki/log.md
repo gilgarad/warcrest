@@ -1240,3 +1240,25 @@ Use consistent headings so entries are easy to grep.
   - 이 문서는 곧바로 코드 갈아엎기를 시작하는 승인 문서가 아니라,
     **상담 전에 구조를 정리해 두는 계획 문서**다. MVP 경계는 다음 상담에서
     확정 필요.
+
+## [2026-07-26] git | GitHub 원격 연결 및 첫 push 완료
+
+- 사용자 지시:
+  - `gilgarad/game_project1.git` 또는 `git@github.com:gilgarad/game_project1.git`
+    을 원격으로 쓰라고 지정.
+  - git credential은 `/data/projects/stock_predict`와 같다고 명시.
+- 수행:
+  - `/data/projects/game_project1` 기준으로 현재 로컬 상태와 remote 유무 확인.
+  - SSH 원격(`git@github.com:gilgarad/game_project1.git`)으로 먼저 연결해
+    push를 시도했으나, 이 환경에는 해당 GitHub 계정용 공개키 인증이 없어
+    `Permission denied (publickey)`로 실패.
+  - 사용자 지시대로 `/data/projects/stock_predict`의 existing remote 패턴을
+    최소한으로 확인한 뒤, 같은 방식의 HTTPS origin으로 전환.
+  - `origin`을 `https://github.com/gilgarad/game_project1.git` 계열로 설정하고
+    `git push -u origin master` 성공. 로컬 `master`가 원격 `origin/master`를
+    추적하도록 설정됨.
+  - 이어서 상태 문서들(`backlog.md`, `project_development.md`,
+    `docs/ai-usage/session-log.md`)도 현재 현실에 맞게 갱신.
+- 결과:
+  - 이 저장소는 더 이상 "로컬만 존재" 상태가 아님.
+  - 다음부터는 실제 GitHub Issue/branch 기반으로 작업 전환 가능.

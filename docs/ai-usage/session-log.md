@@ -1148,3 +1148,21 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - `docs/index.md`, `docs/dev-wiki/index.md`, `docs/dev-wiki/backlog.md`,
     `project_development.md`도 함께 갱신해 이 피벗이 문서 네비게이션과 상태
     요약에 반영되도록 맞췄다.
+
+## 2026-07-26 (73) — GitHub 원격 연결과 첫 push
+
+- **사용 도구**: Codex (GPT-5)
+- **사용자 지시 원문**:
+  - "git 레파지토리: gilgarad/game_project1.git 또는 git@github.com:gilgarad/game_project1.git"
+  - "git credential은 /data/projects/stock_predict와 같음. 이거 같은 깃헙 계정임."
+- **AI 산출물 요약**:
+  - `/data/projects/game_project1`에서 현재 remote 유무를 확인한 뒤,
+    먼저 SSH 원격으로 push를 시도했다.
+  - 이 환경에는 해당 GitHub 계정용 SSH 공개키 인증이 없어
+    `Permission denied (publickey)`로 실패했다.
+  - 사용자가 지정한 `/data/projects/stock_predict`의 remote 패턴을 최소한으로
+    확인해 같은 HTTPS credential 방식을 재사용했다.
+  - `origin`을 GitHub 저장소로 연결하고 `git push -u origin master` 성공.
+  - 이어서 `docs/dev-wiki/log.md`, `docs/dev-wiki/backlog.md`,
+    `project_development.md`에 "이 저장소는 이제 GitHub와 연결됐고 push까지
+    끝났다"는 사실을 반영했다.
