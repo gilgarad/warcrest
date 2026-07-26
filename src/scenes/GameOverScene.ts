@@ -1,9 +1,11 @@
 import Phaser from "phaser";
 import { createParallaxBackground, type ParallaxBackground } from "../gfx/parallax";
+import { getMusicController } from "../systems/musicController";
 
 interface GameOverData {
   win: boolean;
   squadSize: number;
+  summary?: string;
 }
 
 export class GameOverScene extends Phaser.Scene {
@@ -14,36 +16,30 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   preload(): void {
-    if (!this.textures.exists("fantasy-hud-panel")) {
-      this.load.image("fantasy-hud-panel", "/assets/fantasy-hud-panel.png");
-    }
-    if (!this.textures.exists("victory-illustration")) {
-      this.load.image("victory-illustration", "/assets/results/victory-illustration.png");
-    }
-    if (!this.textures.exists("defeat-illustration")) {
-      this.load.image("defeat-illustration", "/assets/results/defeat-illustration.png");
-    }
+    if (!this.textures.exists("lane-battlefield-bg")) this.load.image("lane-battlefield-bg", "/assets/battle/lane-battlefield-bg-wide-v2.png");
+    if (!this.textures.exists("war-table-hud")) this.load.image("war-table-hud", "/assets/battle/war-table-hud.png");
   }
 
   create(data: GameOverData): void {
     const { width, height } = this.scale;
+    getMusicController().setMode("gameover");
     this.bg = createParallaxBackground(this);
-    this.bg.far.setAlpha(0.16);
-    this.bg.near.setAlpha(0.16);
+    this.bg.far.setAlpha(0.08);
+    this.bg.near.setAlpha(0.08);
     const win = Boolean(data?.win);
     const squadSize = data?.squadSize ?? 0;
-    const backdropKey = win ? "victory-illustration" : "defeat-illustration";
+    const summary = data?.summary;
 
-    this.add.image(width / 2, height / 2, backdropKey).setDisplaySize(width, height);
-    this.add.rectangle(width / 2, height / 2, width, height, win ? 0x081018 : 0x050913, win ? 0.34 : 0.5);
+    this.add.image(width / 2, height / 2, "lane-battlefield-bg").setDisplaySize(width, height);
+    this.add.rectangle(width / 2, height / 2, width, height, win ? 0x081018 : 0x140810, win ? 0.42 : 0.58);
+    this.add.image(width / 2, height / 2, "war-table-hud").setDisplaySize(width, height).setAlpha(0.92);
 
     // Debug hook for headless/Playwright smoke checks — see docs/rules/testing.md.
     (window as unknown as { __gameDebug: unknown }).__gameDebug = { phase: "gameover", win, squadSize };
 
-    this.add.image(width / 2, height / 2 + 8, "fantasy-hud-panel").setDisplaySize(456, 286);
-    this.add.rectangle(width / 2, height / 2, 392, 212, win ? 0x101a2a : 0x111521, 0.58);
+    this.add.rectangle(width / 2, height / 2, 418, 228, win ? 0x0f1a29 : 0x1c1218, 0.72).setStrokeStyle(2, 0xd8b26e, 0.72);
     this.add
-      .text(width / 2, height / 2 - 76, win ? "미션 성공!" : "정찰 실패", {
+      .text(width / 2, height / 2 - 76, win ? "전선 승리" : "전선 붕괴", {
         fontFamily: "Georgia, serif",
         fontSize: "42px",
         color: win ? "#fff2c6" : "#ffd6d6",
@@ -53,14 +49,14 @@ export class GameOverScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.add
-      .text(width / 2, height / 2 - 14, win ? `생존 전력 ${squadSize}명` : "리더를 잃고 정찰대가 무너졌습니다.", {
+      .text(width / 2, height / 2 - 12, summary ?? (win ? `생존 전력 ${squadSize}명` : "적의 파상 공세를 막지 못했습니다."), {
         fontFamily: "sans-serif",
         fontSize: "18px",
         color: "#cfd3e6",
       })
       .setOrigin(0.5);
     this.add
-      .text(width / 2, height / 2 + 20, win ? "깃발은 다음 층으로 나아갈 준비를 마쳤다." : "다시 대열을 정비하고 던전으로 향하십시오.", {
+      .text(width / 2, height / 2 + 20, win ? "다음 시대와 다음 레인 구조를 위한 지휘 설계를 이어갈 수 있습니다." : "경제 배치와 웨이브 타이밍을 다시 조정해 반격하십시오.", {
         fontFamily: "sans-serif",
         fontSize: "14px",
         color: "#aeb8d1",
