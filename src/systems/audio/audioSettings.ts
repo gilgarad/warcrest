@@ -1,7 +1,7 @@
 import type { AudioSettingsData } from "./types";
 
 const STORAGE_KEY = "warcrest.audioSettings";
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
 
 export const DEFAULT_AUDIO_SETTINGS: AudioSettingsData = {
   version: CURRENT_VERSION,
@@ -10,7 +10,7 @@ export const DEFAULT_AUDIO_SETTINGS: AudioSettingsData = {
   sfxVolume: 0.9,
   mute: false,
   muteWhenUnfocused: true,
-  reducedAudio: false,
+  combatSfxMode: "reduced",
   crossfadeDurationMs: 1200,
 };
 
@@ -28,7 +28,7 @@ function isValidSettingsShape(data: unknown): data is AudioSettingsData {
     isFiniteInRange(d.sfxVolume, 0, 1) &&
     typeof d.mute === "boolean" &&
     typeof d.muteWhenUnfocused === "boolean" &&
-    typeof d.reducedAudio === "boolean" &&
+    (d.combatSfxMode === "off" || d.combatSfxMode === "reduced" || d.combatSfxMode === "full") &&
     isFiniteInRange(d.crossfadeDurationMs, 0, 5000)
   );
 }
@@ -39,7 +39,17 @@ function migrate(data: Record<string, unknown>): AudioSettingsData | null {
   if (version === CURRENT_VERSION && isValidSettingsShape(data)) {
     return { ...data, version: CURRENT_VERSION } as AudioSettingsData;
   }
-  // No prior versions exist yet (this is v1) — nothing to migrate from.
+  if (version === 1) {
+    const { reducedAudio: _legacyReducedAudio, ...legacy } = data;
+    const candidate = {
+      ...legacy,
+      version: CURRENT_VERSION,
+      // The old boolean affected all SFX. Preserve the safe, non-fatiguing
+      // behavior by migrating both values to the new combat-only default.
+      combatSfxMode: "reduced",
+    };
+    return isValidSettingsShape(candidate) ? candidate as AudioSettingsData : null;
+  }
   return null;
 }
 

@@ -1,9 +1,4 @@
-/**
- * Shared types for the independent audio system prototype. Nothing in this
- * directory imports from or modifies `src/systems/musicController.ts` — see
- * `docs/dev-wiki/audio-system-prototype.md` for why this is a parallel
- * system rather than a replacement.
- */
+/** Shared types for the game-wide AudioSystem. */
 
 export type BgmStateId =
   | "menu"
@@ -40,6 +35,7 @@ export interface BgmAssetDef {
 }
 
 export type SfxCategory = "ui" | "wave" | "combat" | "capture" | "construction" | "state";
+export type CombatSfxMode = "off" | "reduced" | "full";
 
 export interface SfxAssetDef {
   id: string; // e.g. "sfx.ui.confirm"
@@ -70,17 +66,37 @@ export interface AudioSettingsData {
   sfxVolume: number;
   mute: boolean;
   muteWhenUnfocused: boolean;
-  reducedAudio: boolean;
+  combatSfxMode: CombatSfxMode;
   crossfadeDurationMs: number;
 }
 
-/** What DungeonScene/LaneBattleScene would eventually query via AudioSystem.getState(). */
+export interface SfxPlaybackOptions {
+  /** Stable identity for one gameplay event. Duplicate paths within 80ms are rejected. */
+  eventKey?: string;
+  highFrequency?: boolean;
+  volumeMultiplier?: number;
+  pan?: number;
+}
+
+export interface AudioEventTrace {
+  id: string;
+  result: string;
+  atMs: number;
+}
+
 export interface AudioSystemState {
+  initialized: boolean;
   unlocked: boolean;
+  contextState: string;
   currentBgmId: string | null;
   bgmState: BgmStateId | null;
   activeBgmVoices: number;
   activeSfxVoices: number;
   settings: AudioSettingsData;
+  recentEvents: AudioEventTrace[];
+  skippedEventCount: number;
+  unlockAttemptCount: number;
+  missingAssetFallback: boolean;
+  focusMuted: boolean;
   lastError: string | null;
 }

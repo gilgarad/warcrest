@@ -69,4 +69,31 @@ describe("AudioSettings", () => {
     settings.update({ bgmVolume: 0.2 });
     expect(settings.get().version).toBe(DEFAULT_AUDIO_SETTINGS.version);
   });
+
+  it("migrates v1 reducedAudio settings to the safe combat mode", () => {
+    const storage = fakeStorage();
+    storage.setItem("warcrest.audioSettings", JSON.stringify({
+      version: 1,
+      masterVolume: 0.4,
+      bgmVolume: 0.5,
+      sfxVolume: 0.6,
+      mute: false,
+      muteWhenUnfocused: true,
+      reducedAudio: false,
+      crossfadeDurationMs: 800,
+    }));
+    const settings = new AudioSettings(storage);
+    expect(settings.get().version).toBe(2);
+    expect(settings.get().masterVolume).toBe(0.4);
+    expect(settings.get().combatSfxMode).toBe("reduced");
+  });
+
+  it("recovers when combatSfxMode contains an unknown value", () => {
+    const storage = fakeStorage();
+    storage.setItem("warcrest.audioSettings", JSON.stringify({
+      ...DEFAULT_AUDIO_SETTINGS,
+      combatSfxMode: "maximum",
+    }));
+    expect(new AudioSettings(storage).get()).toEqual(DEFAULT_AUDIO_SETTINGS);
+  });
 });

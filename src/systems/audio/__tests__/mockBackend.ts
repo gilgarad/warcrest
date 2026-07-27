@@ -27,6 +27,11 @@ export class MockAudioBackend implements AudioBackend {
   bgmVoices: MockVoice[] = [];
   warningVoices: MockVoice[] = [];
   sfxVoices: MockVoice[] = [];
+  unlockCallCount = 0;
+
+  get contextState(): string {
+    return this.unlockedFlag ? "running" : "not-created";
+  }
 
   get nowMs(): number {
     return this.time;
@@ -37,6 +42,7 @@ export class MockAudioBackend implements AudioBackend {
   }
 
   async unlock(): Promise<void> {
+    this.unlockCallCount += 1;
     this.unlockedFlag = true;
   }
 
@@ -52,8 +58,9 @@ export class MockAudioBackend implements AudioBackend {
     return v;
   }
 
-  playSfxVoice(_asset: SfxAssetDef, _volume: number, _pitchMultiplier: number): VoiceHandle {
+  playSfxVoice(_asset: SfxAssetDef, volume: number, _pitchMultiplier: number, _pan?: number): VoiceHandle {
     const v = new MockVoice();
+    v.lastVolume = volume;
     this.sfxVoices.push(v);
     return v;
   }

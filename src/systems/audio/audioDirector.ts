@@ -25,13 +25,15 @@ const STATE_TO_BGM: Partial<Record<BgmStateId, string>> = {
 /**
  * Situational music state machine. NOT wired into any scene yet — see the
  * integration guide in docs/dev-wiki/audio-system-prototype.md for where
- * `setState()` calls would go once a follow-up session connects it.
+ * Scene-facing state changes are routed through AudioSystem so terminal-state
+ * locking and warning-layer cleanup remain centralized.
  */
 export class AudioDirector {
   private currentState: BgmStateId | null = null;
   /** Set once victory/defeat is reached; blocks any lower-priority state until reset(). */
   private locked = false;
   private crossfadeDurationMs = 1200;
+  private warningTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private readonly bgm: BgmManager) {}
 
@@ -51,14 +53,9 @@ export class AudioDirector {
       return;
     }
 
-    if (next === "fortress-under-attack") {
-      // No dedicated track — layer a warning sting on top of whatever's
-      // already playing instead of switching the main BGM.
-      this.bgm.setWarningLayer(true);
-      this.currentState = next;
-      return;
-    }
+    if (next === "fortress-under-attack") return this.triggerFortressWarning("battle-low");
 
+    this.clearWarningTimer();
     this.bgm.setWarningLayer(false);
 
     const bgmId = STATE_TO_BGM[next];
@@ -73,10 +70,36 @@ export class AudioDirector {
     if (next === "victory" || next === "defeat") this.locked = true;
   }
 
+  triggerFortressWarning(returnState: Extract<BgmStateId, "preparation" | "battle-low" | "battle-high">): void {
+    if (this.locked) return;
+    this.clearWarningTimer();
+    this.bgm.setWarningLayer(true);
+    this.currentState = "fortress-under-attack";
+    this.warningTimer = setTimeout(() => {
+      this.warningTimer = null;
+      this.bgm.setWarningLayer(false);
+      this.currentState = null;
+      this.setState(returnState);
+    }, 1800);
+  }
+
   /** Clears the victory/defeat lock and moves to `next` (default: menu). */
   reset(next: BgmStateId = "menu"): void {
+    this.clearWarningTimer();
+    this.bgm.setWarningLayer(false);
     this.locked = false;
     this.currentState = null;
     this.setState(next);
+  }
+
+  destroy(): void {
+    this.clearWarningTimer();
+    this.bgm.setWarningLayer(false);
+  }
+
+  private clearWarningTimer(): void {
+    if (this.warningTimer === null) return;
+    clearTimeout(this.warningTimer);
+    this.warningTimer = null;
   }
 }

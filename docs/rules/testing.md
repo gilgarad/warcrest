@@ -8,12 +8,14 @@ Stack: Phaser 3 + TypeScript + Vite (decided 2026-07-23, see
 
 ```bash
 npm run build   # tsc --noEmit && vite build — type-checks + production bundle
+npm test        # Vitest unit suite
+npm run test:e2e # Playwright game/audio lifecycle checks on Chromium
 npm run dev     # local dev server with HMR, for manual playtesting
 ```
 
-There is no automated unit-test runner yet (no `npm test`). Until game logic
-has enough non-visual complexity to warrant one (e.g. the branching-path
-generator, squad attrition math), the baseline verification is:
+Vitest covers pure audio state, settings, deduplication, and spatial helpers.
+Playwright covers browser-policy and scene-lifecycle behavior that cannot be
+proved by unit tests alone. The baseline verification is:
 
 1. `npm run build` must succeed (type errors + bundle errors both fail this).
 2. **Actually play the change in a browser** via `npm run dev`, or verify
@@ -21,33 +23,23 @@ generator, squad attrition math), the baseline verification is:
    (launch dev server in background, drive it with Playwright, screenshot,
    confirm visually, kill the server). Type checks and a clean build verify
    code correctness, not whether the game looks/plays right.
-3. For a full-run smoke check, `DungeonScene` exposes `window.__gameDebug`
-   every frame — phase, squad/enemy/captive counts, player world position,
-   combat progress, and the full generated dungeon grid (`dungeon.grid`,
-   `tileSize`, `offsetX/Y`, `playerStart`, `exit`). A Playwright script can
-   BFS-pathfind the grid to the exit, drive the player there tile-by-tile
-   with a closed-loop position controller (compare `playerWorld` to the next
-   waypoint, toggle arrow keys, repeat), pause and click the attack button
-   whenever `phase === "combat"`, and confirm `GameOverScene`'s
-   `{phase:"gameover", win, squadSize}`. This is how the dungeon rewrite was
-   verified end-to-end without a human clicking through it. See
-   `docs/patterns/README.md` for the exact mechanics.
-4. If collision/movement looks wrong but the grid data looks right, set
-   `physics: { arcade: { debug: true } }` in `main.ts` and screenshot —
-   don't guess. This caught a real body-offset bug (see
-   `docs/patterns/README.md`) that a screenshot without debug bodies
-   wouldn't have made obvious.
-
-If/when pure-logic modules appear (procedural generation, combat resolution)
-that are worth unit testing without a browser, add `vitest` and a `test`
-script at that point — don't add it speculatively now.
+3. For the current lane battle, use the stable query and debug controls
+   documented in the relevant validation page. `window.__gameDebug`,
+   `window.__terrainPrototypeControl`, and `window.__audioDebugControl` expose
+   controlled setup and read-only snapshots for browser verification.
+4. Audio integration changes must run the complete Playwright lifecycle in
+   `tools/validation/audio-integration.spec.ts`: pre-input lock, unlock,
+   dynamic battle states, fortress warning, settings, focus, terminal states,
+   and restart.
+5. Keep screenshot and JSON evidence under a named `artifacts/` directory;
+   do not treat generated Playwright `test-results/` as durable evidence.
 
 ## Test Placement
 
-- once unit tests exist, put them next to the module they cover as
+- put unit tests next to the module they cover as
   `*.test.ts`, or under `src/**/__tests__/`
-- Playwright/manual playtest scripts are verification aids, not part of the
-  build — keep them out of `src/`
+- keep Playwright/manual playtest scripts out of `src/`; this repository
+  type-checks `tools/`, so validation code must also pass `npm run build`
 - manual scratch scripts should not be collected by default
 
 ## Verification Standard

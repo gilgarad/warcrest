@@ -42,6 +42,7 @@ export class BgmManager {
     if (this.active) {
       this.active.voice.setVolume(this.effectiveVolume(this.currentAssetBaseVolume()));
     }
+    this.warningLayer?.setVolume(this.effectiveVolume(0.5));
   }
 
   /** Instant switch, no fade. */
@@ -65,10 +66,12 @@ export class BgmManager {
 
   pause(): void {
     this.active?.voice.setVolume(0);
+    this.warningLayer?.setVolume(0);
   }
 
   resume(): void {
     if (this.active) this.active.voice.setVolume(this.effectiveVolume(this.currentAssetBaseVolume()));
+    this.warningLayer?.setVolume(this.effectiveVolume(0.5));
   }
 
   setWarningLayer(active: boolean): void {

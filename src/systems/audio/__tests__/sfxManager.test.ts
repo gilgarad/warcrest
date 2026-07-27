@@ -55,7 +55,7 @@ describe("SfxManager", () => {
   it("mute silences all future plays via effective volume 0", () => {
     const backend = new MockAudioBackend();
     const sfx = new SfxManager(backend);
-    sfx.setVolumes(1, 1, true, false);
+    sfx.setVolumes(1, 1, true, "full");
     sfx.play("sfx.ui.confirm");
     expect(backend.sfxVoices[0].lastVolume).toBe(0);
   });

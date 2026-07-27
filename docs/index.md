@@ -29,6 +29,8 @@ first — a maintained snapshot of current status/architecture/next-steps.
 - [Central Terrain Prototype Validation](dev-wiki/terrain-prototype-validation.md)
 - [Central Terrain Prototype V2 Validation](dev-wiki/terrain-prototype-v2-validation.md)
 - [Central Terrain Prototype V3 Validation](dev-wiki/terrain-prototype-v3-validation.md)
+- [Audio System Prototype](dev-wiki/audio-system-prototype.md)
+- [Audio Integration Validation](dev-wiki/audio-integration-validation.md)
 
 ## Patterns
 

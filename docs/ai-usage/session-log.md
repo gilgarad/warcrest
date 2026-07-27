@@ -1904,3 +1904,24 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - `npm run build`, `git diff --check` 통과. 링크 검사 스크립트는 저장소에
     존재하지 않아 실행하지 못했다. 전체 결과는
     `docs/dev-wiki/terrain-prototype-v3-validation.md`에 기록했다.
+
+## 2026-07-27 (109) - 동적 오디오 시스템 실게임 통합
+
+- **사용 도구**: Codex (GPT-5), Vitest, Playwright/Chromium
+- **사용자 지시 원문**:
+  - "현재 프로젝트의 직전 유닛·타워·애니메이션·거점 작업을 최종 마무리한 뒤, Claude Code가 구현하고 커밋한 독립 오디오 시스템을 실제 게임에 완전히 통합해라."
+  - "분석 문서만 작성하고 멈추지 말고 실제 구현, 테스트, 비교 자료, 문서화와 커밋까지 완료해라."
+  - "새 AudioSystem을 우회하여 별도의 세 번째 음악 시스템을 만들지 마라."
+  - "고빈도 SFX는 설정에서 다음 모드를 지원하게 해라. - off - reduced - full"
+  - "단순히 ‘AudioSystem을 연결했다’는 보고로 끝내지 말고, 실제 준비→전투→격화→요새 위험→승리/패배→재시작의 전체 흐름에서 음악과 효과음, 설정 저장, 중복 방지가 동작하는 것을 증명해라."
+- **AI 산출물 요약**:
+  - 직전 시각 작업을 독립 커밋 `91fb6c0`으로 고정한 뒤 f57303b의
+    `AudioSystem`을 세 게임 씬의 유일한 오디오 경로로 통합했다.
+  - 최초 입력 unlock, 전투 강도 hysteresis, 요새 경고 레이어,
+    terminal-state lock/reset, 이벤트 dedupe/sampling/concurrency, 거리 감쇠,
+    포커스 음소거를 구현했다.
+  - 상태별 절차형 score와 실제 게임용 Phaser 설정 모달을 구현하고
+    v1 설정 migration 및 off/reduced/full 전투음 모드를 추가했다.
+  - Vitest 42개와 Playwright 3개로 전체 생명주기, 세 해상도, 콘솔 0오류,
+    컨텍스트/BGM 비누적, 설정 변경 전후 gameplay snapshot 정확 일치를
+    검증하고 캡처·JSON·42항목 보고서를 저장했다.

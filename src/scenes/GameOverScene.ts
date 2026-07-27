@@ -1,6 +1,6 @@
 import Phaser from "phaser";
 import { createParallaxBackground, type ParallaxBackground } from "../gfx/parallax";
-import { getMusicController } from "../systems/musicController";
+import { getAudioSystem } from "../systems/audio";
 
 interface GameOverData {
   win: boolean;
@@ -22,13 +22,18 @@ export class GameOverScene extends Phaser.Scene {
 
   create(data: GameOverData): void {
     const { width, height } = this.scale;
-    getMusicController().setMode("gameover");
+    const audio = getAudioSystem();
+    void audio.initialize();
     this.bg = createParallaxBackground(this);
     this.bg.far.setAlpha(0.08);
     this.bg.near.setAlpha(0.08);
     const win = Boolean(data?.win);
     const squadSize = data?.squadSize ?? 0;
     const summary = data?.summary;
+    audio.setDirectorState(win ? "victory" : "defeat");
+    audio.playSfx(win ? "sfx.state.victory" : "sfx.state.defeat", {
+      eventKey: `gameover:${win ? "victory" : "defeat"}`,
+    });
 
     this.add.image(width / 2, height / 2, "lane-battlefield-bg").setDisplaySize(width, height);
     this.add.rectangle(width / 2, height / 2, width, height, win ? 0x081018 : 0x140810, win ? 0.42 : 0.58);
@@ -74,9 +79,16 @@ export class GameOverScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     retryRect.setInteractive({ useHandCursor: true });
-    retryRect.on("pointerover", () => retryRect.setFillStyle(0xf2c14e, 0.8));
+    retryRect.on("pointerover", () => {
+      retryRect.setFillStyle(0xf2c14e, 0.8);
+      audio.playSfx("sfx.ui.hover", { eventKey: "gameover:retry:hover" });
+    });
     retryRect.on("pointerout", () => retryRect.setFillStyle(0xf2c14e, 1));
-    retryRect.on("pointerdown", () => this.scene.start("boot"));
+    retryRect.on("pointerdown", () => {
+      audio.playSfx("sfx.ui.confirm", { eventKey: "gameover:retry" });
+      audio.resetDirector("menu");
+      this.scene.start("boot");
+    });
   }
 
   update(): void {

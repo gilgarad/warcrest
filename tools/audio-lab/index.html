@@ -147,7 +147,13 @@
       <label>SFX <input id="sfxRange" type="range" min="0" max="1" step="0.01" /> <span id="sfxValue"></span></label>
       <label><input id="muteCheck" type="checkbox" /> 전체 음소거</label>
       <label><input id="unfocusCheck" type="checkbox" /> 탭 비활성화 시 음소거</label>
-      <label><input id="reducedCheck" type="checkbox" /> 효과음 축소(reducedAudio)</label>
+      <label>전투 효과음
+        <select id="combatSfxMode">
+          <option value="off">끔</option>
+          <option value="reduced">축소</option>
+          <option value="full">전체</option>
+        </select>
+      </label>
       <div class="row">
         <button id="resetSettingsBtn">설정 초기화</button>
         <button id="reloadBtn">🔄 새로고침해서 설정 복원 확인</button>

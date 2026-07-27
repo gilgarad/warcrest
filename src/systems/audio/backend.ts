@@ -14,6 +14,7 @@ export interface VoiceHandle {
 
 export interface AudioBackend {
   readonly nowMs: number;
+  readonly contextState: string;
   isUnlocked(): boolean;
   unlock(): Promise<void>;
   /**
@@ -25,12 +26,8 @@ export interface AudioBackend {
   /** A supplementary loop layered on top of the current BGM (e.g. a fortress warning sting), independent of the main track. */
   playWarningLayer(volume: number): VoiceHandle;
   /** One-shot. */
-  playSfxVoice(asset: SfxAssetDef, volume: number, pitchMultiplier: number): VoiceHandle;
+  playSfxVoice(asset: SfxAssetDef, volume: number, pitchMultiplier: number, pan?: number): VoiceHandle;
   destroy(): void;
-}
-
-function padDetunesCents(profile: { kind: string }): number[] {
-  return profile.kind === "chime" ? [0, 400, 700] : [0, 5, -6];
 }
 
 /**
@@ -44,6 +41,10 @@ export class WebAudioBackend implements AudioBackend {
 
   get nowMs(): number {
     return this.ctx ? this.ctx.currentTime * 1000 : performance.now();
+  }
+
+  get contextState(): string {
+    return this.ctx?.state ?? "not-created";
   }
 
   isUnlocked(): boolean {
@@ -72,7 +73,7 @@ export class WebAudioBackend implements AudioBackend {
     if (!asset.missingAsset) {
       return this.playFileLoop(asset.filePath, volume, asset.loop, fadeInMs);
     }
-    return this.playSynthPadLoop(ctx, asset.synth, volume, fadeInMs);
+    return this.playSynthScore(ctx, asset, volume, fadeInMs);
   }
 
   playWarningLayer(volume: number): VoiceHandle {
@@ -80,12 +81,12 @@ export class WebAudioBackend implements AudioBackend {
     return this.playSynthPulseLayer(ctx, volume);
   }
 
-  playSfxVoice(asset: SfxAssetDef, volume: number, pitchMultiplier: number): VoiceHandle {
+  playSfxVoice(asset: SfxAssetDef, volume: number, pitchMultiplier: number, pan = 0): VoiceHandle {
     const ctx = this.requireCtx();
     if (!asset.missingAsset) {
-      return this.playFileOneShot(asset.filePath, volume);
+      return this.playFileOneShot(asset.filePath, volume, pan);
     }
-    return this.playSynthOneShot(ctx, asset.synth, volume, pitchMultiplier);
+    return this.playSynthOneShot(ctx, asset.synth, volume, pitchMultiplier, pan);
   }
 
   destroy(): void {
@@ -158,11 +159,14 @@ export class WebAudioBackend implements AudioBackend {
     };
   }
 
-  private playFileOneShot(path: string, volume: number): VoiceHandle {
+  private playFileOneShot(path: string, volume: number, pan: number): VoiceHandle {
     const ctx = this.requireCtx();
     const gainNode = ctx.createGain();
     gainNode.gain.value = volume;
-    gainNode.connect(ctx.destination);
+    const panner = ctx.createStereoPanner();
+    panner.pan.value = pan;
+    gainNode.connect(panner);
+    panner.connect(ctx.destination);
     let playing = true;
     void this.loadBuffer(ctx, path).then((buffer) => {
       if (!buffer) {
@@ -192,7 +196,7 @@ export class WebAudioBackend implements AudioBackend {
 
   // ---- synthesized fallback voices ----------------------------------------
 
-  private playSynthPadLoop(ctx: AudioContext, profile: BgmAssetDef["synth"], volume: number, fadeInMs = 500): VoiceHandle {
+  private playSynthScore(ctx: AudioContext, asset: BgmAssetDef, volume: number, fadeInMs = 500): VoiceHandle {
     const master = ctx.createGain();
     master.gain.value = 0;
     master.connect(ctx.destination);
@@ -200,29 +204,34 @@ export class WebAudioBackend implements AudioBackend {
 
     const filter = ctx.createBiquadFilter();
     filter.type = "lowpass";
-    filter.frequency.value = profile.kind === "chime" ? 2200 : 850;
+    filter.frequency.value = asset.id === "bgm.battle.high" ? 1700 : asset.id === "bgm.victory" ? 2300 : 1100;
+    filter.Q.value = 0.55;
     filter.connect(master);
 
-    const oscs: OscillatorNode[] = [];
-    padDetunesCents(profile).forEach((cents) => {
-      const osc = ctx.createOscillator();
-      osc.type = profile.kind === "chime" ? "sine" : "sawtooth";
-      osc.frequency.value = profile.frequency;
-      osc.detune.value = cents;
-      osc.connect(filter);
-      osc.start();
-      oscs.push(osc);
-    });
-
-    const lfo = ctx.createOscillator();
-    lfo.frequency.value = 0.06;
-    const lfoGain = ctx.createGain();
-    lfoGain.gain.value = 220;
-    lfo.connect(lfoGain);
-    lfoGain.connect(filter.frequency);
-    lfo.start();
-
+    const profile = this.getScoreProfile(asset.id, asset.synth.frequency);
+    const sources = new Set<OscillatorNode>();
+    let nextStepAt = ctx.currentTime + 0.05;
+    let step = 0;
     let playing = true;
+
+    const scheduleAhead = () => {
+      if (!playing) return;
+      const horizon = ctx.currentTime + 0.8;
+      while (nextStepAt < horizon && (asset.loop || step < profile.phraseSteps)) {
+        this.scheduleScoreStep(ctx, filter, sources, profile, nextStepAt, step);
+        nextStepAt += profile.beatSec;
+        step += 1;
+      }
+    };
+
+    scheduleAhead();
+    const schedulerId = asset.loop ? setInterval(scheduleAhead, 120) : null;
+    const completionId = asset.loop
+      ? null
+      : setTimeout(() => {
+          playing = false;
+        }, (profile.beatSec * profile.phraseSteps + 1.2) * 1000);
+
     return {
       get isPlaying() {
         return playing;
@@ -232,26 +241,96 @@ export class WebAudioBackend implements AudioBackend {
       },
       stop(fadeMs = 500) {
         playing = false;
+        if (schedulerId !== null) clearInterval(schedulerId);
+        if (completionId !== null) clearTimeout(completionId);
         const t = ctx.currentTime;
         master.gain.cancelScheduledValues(t);
         master.gain.setValueAtTime(master.gain.value, t);
         master.gain.linearRampToValueAtTime(0, t + fadeMs / 1000);
         setTimeout(() => {
-          oscs.forEach((o) => {
+          sources.forEach((source) => {
             try {
-              o.stop();
+              source.stop();
             } catch {
               // already stopped
             }
           });
-          try {
-            lfo.stop();
-          } catch {
-            // already stopped
-          }
         }, fadeMs + 60);
       },
     };
+  }
+
+  private getScoreProfile(assetId: string, root: number): {
+    root: number;
+    beatSec: number;
+    phraseSteps: number;
+    bass: number[];
+    lead: number[];
+    chord: number[][];
+    pulseEvery: number;
+  } {
+    switch (assetId) {
+      case "bgm.menu":
+        return { root, beatSec: 0.52, phraseSteps: 16, bass: [0, 0, 5, 3], lead: [12, 14, 15, 10, 12, 7, 10, 14], chord: [[0, 3, 7], [0, 5, 8], [0, 3, 7], [0, 2, 7]], pulseEvery: 0 };
+      case "bgm.preparation":
+        return { root, beatSec: 0.4, phraseSteps: 16, bass: [0, 3, 5, 7], lead: [7, 10, 12, 10, 14, 12, 10, 7], chord: [[0, 3, 7], [0, 5, 8], [0, 4, 7], [0, 5, 10]], pulseEvery: 4 };
+      case "bgm.battle.low":
+        return { root, beatSec: 0.32, phraseSteps: 16, bass: [0, 0, 3, 5, 0, 7, 5, 3], lead: [12, 10, 12, 15, 17, 15, 12, 10], chord: [[0, 3, 7], [0, 3, 8], [0, 5, 10], [0, 3, 7]], pulseEvery: 4 };
+      case "bgm.battle.high":
+        return { root, beatSec: 0.24, phraseSteps: 24, bass: [0, 0, 3, 5, 7, 5, 3, 0], lead: [12, 15, 17, 19, 17, 15, 22, 19], chord: [[0, 3, 7], [0, 5, 8], [0, 3, 10], [0, 5, 10]], pulseEvery: 2 };
+      case "bgm.victory":
+        return { root, beatSec: 0.34, phraseSteps: 12, bass: [0, 5, 7, 12], lead: [0, 4, 7, 12, 16, 19, 24, 19], chord: [[0, 4, 7], [0, 5, 9], [0, 4, 7], [0, 7, 12]], pulseEvery: 0 };
+      default:
+        return { root, beatSec: 0.46, phraseSteps: 10, bass: [7, 5, 3, 0], lead: [12, 10, 7, 5, 3, 0, -2, -5], chord: [[0, 3, 7], [0, 3, 8], [0, 2, 7], [0, 3, 6]], pulseEvery: 0 };
+    }
+  }
+
+  private scheduleScoreStep(
+    ctx: AudioContext,
+    destination: AudioNode,
+    sources: Set<OscillatorNode>,
+    profile: ReturnType<WebAudioBackend["getScoreProfile"]>,
+    time: number,
+    step: number,
+  ): void {
+    const ratio = (semitones: number) => 2 ** (semitones / 12);
+    const scheduleTone = (
+      frequency: number,
+      duration: number,
+      gainValue: number,
+      type: OscillatorType,
+      attack = 0.025,
+    ) => {
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(frequency, time);
+      gain.gain.setValueAtTime(0.0001, time);
+      gain.gain.exponentialRampToValueAtTime(Math.max(0.001, gainValue), time + attack);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+      oscillator.connect(gain);
+      gain.connect(destination);
+      oscillator.onended = () => sources.delete(oscillator);
+      oscillator.start(time);
+      oscillator.stop(time + duration + 0.02);
+      sources.add(oscillator);
+    };
+
+    const bassInterval = profile.bass[step % profile.bass.length];
+    scheduleTone(profile.root / 2 * ratio(bassInterval), profile.beatSec * 0.92, 0.055, "triangle", 0.04);
+
+    if (step % 2 === 0) {
+      const chord = profile.chord[Math.floor(step / 4) % profile.chord.length];
+      chord.forEach((interval, index) => {
+        scheduleTone(profile.root * ratio(interval), profile.beatSec * 2.8, 0.018 / (index + 1), "sine", 0.09);
+      });
+      const leadInterval = profile.lead[step % profile.lead.length];
+      scheduleTone(profile.root * ratio(leadInterval), profile.beatSec * 0.72, 0.028, "triangle", 0.012);
+    }
+
+    if (profile.pulseEvery > 0 && step % profile.pulseEvery === profile.pulseEvery - 1) {
+      scheduleTone(profile.root * 2, profile.beatSec * 0.24, 0.012, "square", 0.004);
+    }
   }
 
   private playSynthPulseLayer(ctx: AudioContext, volume: number): VoiceHandle {
@@ -297,11 +376,15 @@ export class WebAudioBackend implements AudioBackend {
     ctx: AudioContext,
     profile: SfxAssetDef["synth"],
     volume: number,
-    pitchMultiplier: number
+    pitchMultiplier: number,
+    pan: number,
   ): VoiceHandle {
     const durationS = Math.max(0.05, profile.durationMs / 1000);
     const g = ctx.createGain();
-    g.connect(ctx.destination);
+    const panner = ctx.createStereoPanner();
+    panner.pan.value = pan;
+    g.connect(panner);
+    panner.connect(ctx.destination);
     const baseFreq = profile.frequency * pitchMultiplier;
     const t0 = ctx.currentTime;
     let node: AudioScheduledSourceNode;

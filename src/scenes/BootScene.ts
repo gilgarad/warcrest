@@ -1,7 +1,7 @@
 import Phaser from "phaser";
 import { GAME_SUBTITLE, GAME_TAGLINE, GAME_TITLE } from "../data/gameMeta";
 import { createParallaxBackground, type ParallaxBackground } from "../gfx/parallax";
-import { getMusicController } from "../systems/musicController";
+import { getAudioSystem } from "../systems/audio";
 
 export class BootScene extends Phaser.Scene {
   private bg!: ParallaxBackground;
@@ -17,7 +17,10 @@ export class BootScene extends Phaser.Scene {
 
   create(): void {
     const { width, height } = this.scale;
-    getMusicController().setMode("boot");
+    const audio = getAudioSystem();
+    void audio.initialize();
+    audio.resetDirector("menu");
+    (window as unknown as { __gameDebug: unknown }).__gameDebug = { phase: "boot" };
     this.bg = createParallaxBackground(this);
     this.bg.far.setAlpha(0.03);
     this.bg.near.setAlpha(0.05);
@@ -83,8 +86,13 @@ export class BootScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5);
     this.tweens.add({ targets: prompt, alpha: 0.3, duration: 700, yoyo: true, repeat: -1 });
 
+    let starting = false;
     const startRun = async () => {
-      await getMusicController().unlockAndStart("battle");
+      if (starting) return;
+      starting = true;
+      await audio.unlock();
+      audio.playSfx("sfx.ui.confirm", { eventKey: "boot:start" });
+      audio.resetDirector("preparation");
       this.scene.start("run");
     };
 

@@ -27,7 +27,7 @@ const sfxRange = $<HTMLInputElement>("sfxRange");
 const sfxValue = $<HTMLSpanElement>("sfxValue");
 const muteCheck = $<HTMLInputElement>("muteCheck");
 const unfocusCheck = $<HTMLInputElement>("unfocusCheck");
-const reducedCheck = $<HTMLInputElement>("reducedCheck");
+const combatSfxMode = $<HTMLSelectElement>("combatSfxMode");
 const resetSettingsBtn = $<HTMLButtonElement>("resetSettingsBtn");
 const reloadBtn = $<HTMLButtonElement>("reloadBtn");
 const sfxContainerEl = $<HTMLDivElement>("sfxContainer");
@@ -98,7 +98,7 @@ function syncSettingsUi(): void {
   sfxValue.textContent = s.sfxVolume.toFixed(2);
   muteCheck.checked = s.mute;
   unfocusCheck.checked = s.muteWhenUnfocused;
-  reducedCheck.checked = s.reducedAudio;
+  combatSfxMode.value = s.combatSfxMode;
   crossfadeRange.value = String(s.crossfadeDurationMs);
   crossfadeValue.textContent = String(s.crossfadeDurationMs);
 }
@@ -117,7 +117,9 @@ sfxRange.addEventListener("input", () => {
 });
 muteCheck.addEventListener("change", () => audio.setMuted(muteCheck.checked));
 unfocusCheck.addEventListener("change", () => audio.setMuteWhenUnfocused(unfocusCheck.checked));
-reducedCheck.addEventListener("change", () => audio.setReducedAudio(reducedCheck.checked));
+combatSfxMode.addEventListener("change", () => {
+  audio.setCombatSfxMode(combatSfxMode.value as "off" | "reduced" | "full");
+});
 resetSettingsBtn.addEventListener("click", () => {
   audio.resetSettings();
   syncSettingsUi();

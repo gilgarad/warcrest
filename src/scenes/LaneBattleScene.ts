@@ -41,7 +41,12 @@ import {
   type StructureGroundPresentation,
 } from "../gfx/battlefieldPrototypeRenderer";
 import { generateBattlefield, type BattlefieldResult } from "../systems/battlefieldGenerator";
-import { getMusicController } from "../systems/musicController";
+import {
+  BattleAudioStateMachine,
+  calculateSpatialAudio,
+  getAudioSystem,
+} from "../systems/audio";
+import { AudioSettingsPanel } from "../ui/AudioSettingsPanel";
 
 const CANVAS_W = 1600;
 const CANVAS_H = 900;
@@ -334,6 +339,13 @@ export class LaneBattleScene extends Phaser.Scene {
   private readonly worldObjects: Phaser.GameObjects.GameObject[] = [];
   private readonly uiObjects: Phaser.GameObjects.GameObject[] = [];
   private readonly activeProjectiles = new Set<Phaser.GameObjects.Image>();
+  private readonly audio = getAudioSystem();
+  private readonly battleAudioState = new BattleAudioStateMachine();
+  private readonly combatAudioEventTimes: number[] = [];
+  private audioSettingsPanel!: AudioSettingsPanel;
+  private audioSettingsOpen = false;
+  private audioDebugText?: Phaser.GameObjects.Text;
+  private nextAudioStateCheckSec = 0;
   private readonly laneObstacles: LaneObstacle[] = [
     { textureKey: "rock-cluster", progress: 0.20, laneRow: -10.2, radiusProgress: 0.03, radiusRows: 1.2, width: 176, height: 132 },
     { textureKey: "tree-cluster", progress: 0.32, laneRow: 10.4, radiusProgress: 0.035, radiusRows: 1.4, width: 144, height: 190 },
@@ -393,8 +405,9 @@ export class LaneBattleScene extends Phaser.Scene {
 
   create(): void {
     Phaser.Math.RND.sow([this.verificationSeed]);
-    getMusicController().setMode("battle");
-    void getMusicController().unlockAndStart("battle").catch(() => undefined);
+    void this.audio.initialize();
+    this.audio.resetDirector("preparation");
+    this.battleAudioState.reset();
     this.battlefield = generateBattlefield();
     this.cameras.main.setBackgroundColor(0x081018);
     this.cameras.main.setBounds(0, 0, WORLD_W, WORLD_H);
@@ -434,6 +447,11 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   update(_time: number, deltaMs: number): void {
+    if (this.audioSettingsOpen) {
+      this.publishDebug();
+      this.updateAudioDebugOverlay();
+      return;
+    }
     const deltaSec = deltaMs / 1000;
     this.elapsedSec += deltaSec;
     this.tickEconomy(deltaSec);
@@ -441,8 +459,10 @@ export class LaneBattleScene extends Phaser.Scene {
     this.tickWaves(deltaSec);
     this.tickCombat(deltaSec);
     this.tickCapturePoints(deltaSec);
+    this.updateAudioState();
     this.refreshUi();
     this.publishDebug();
+    this.updateAudioDebugOverlay();
   }
 
   private createTeamState(id: TeamId, resources: Record<ResourceId, number>): TeamState {
@@ -668,6 +688,12 @@ export class LaneBattleScene extends Phaser.Scene {
           this.scene.resume();
         }
       },
+      openAudioSettings: () => this.audioSettingsPanel.open(),
+      forceGameOver: (win: boolean) => this.scene.start("gameover", {
+        win,
+        squadSize: this.units.filter((unit) => unit.team === "player").length,
+        summary: win ? "오디오 통합 승리 검증" : "오디오 통합 패배 검증",
+      }),
       snapshot: () => this.createVerificationSnapshot(),
       selectCapturePoint: (id: number) => this.selectCapturePoint(id),
       setCentralFortressHpRatio: (ratio: number) => {
@@ -759,7 +785,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private isPointerOnUi(pointer: Phaser.Input.Pointer): boolean {
-    return pointer.y <= 250 || pointer.y >= CANVAS_H - 260;
+    return this.audioSettingsOpen || pointer.y <= 250 || pointer.y >= CANVAS_H - 260;
   }
 
   private drawBattlefield(): void {
@@ -1043,6 +1069,23 @@ export class LaneBattleScene extends Phaser.Scene {
     this.add.rectangle(1218, 228, 220, 12, 0, 0).setOrigin(0, 0.5).setStrokeStyle(2, 0xd6e3f1, 0.4).setDepth(DEPTH_UI + 1);
     this.add.text(160, 204, "아군 본진", { fontFamily: "sans-serif", fontSize: "12px", color: "#c7e5ff" }).setDepth(DEPTH_UI + 2);
     this.add.text(1218, 204, "적 본진", { fontFamily: "sans-serif", fontSize: "12px", color: "#ffd0d0" }).setDepth(DEPTH_UI + 2);
+
+    this.audioSettingsPanel = new AudioSettingsPanel(this, {
+      depth: DEPTH_UI + 60,
+      onVisibilityChange: (visible) => {
+        this.audioSettingsOpen = visible;
+      },
+    });
+    if (QUERY_PARAMS.get("audioDebug") === "1") {
+      this.audioDebugText = this.add.text(1160, 116, "", {
+        fontFamily: "monospace",
+        fontSize: "11px",
+        color: "#d9f2ff",
+        backgroundColor: "rgba(4, 13, 22, 0.84)",
+        padding: { x: 9, y: 7 },
+        lineSpacing: 2,
+      }).setDepth(DEPTH_UI + 50).setScrollFactor(0);
+    }
   }
 
   private createWorkerRow(role: WorkerRole, y: number): WorkerUiRow {
@@ -1079,7 +1122,10 @@ export class LaneBattleScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(DEPTH_UI + 3).setScrollFactor(0);
 
     rect.setInteractive({ useHandCursor: true });
-    rect.on("pointerover", () => rect.setFillStyle(0x274165, 0.98));
+    rect.on("pointerover", () => {
+      rect.setFillStyle(0x274165, 0.98);
+      this.audio.playSfx("sfx.ui.hover", { eventKey: `button:hover:${label}` });
+    });
     rect.on("pointerout", () => rect.setFillStyle(0x1d2d47, 0.95));
     rect.on("pointerdown", () => {
       rect.setFillStyle(0x37567f, 1);
@@ -1087,7 +1133,6 @@ export class LaneBattleScene extends Phaser.Scene {
       onClick();
     });
 
-    text.setInteractive({ useHandCursor: true }).on("pointerdown", onClick);
     return { rect, text };
   }
 
@@ -1096,7 +1141,7 @@ export class LaneBattleScene extends Phaser.Scene {
     button.text.setVisible(visible);
     if (visible) {
       button.rect.setInteractive({ useHandCursor: true });
-      button.text.setInteractive({ useHandCursor: true });
+      button.text.disableInteractive();
     } else {
       button.rect.disableInteractive();
       button.text.disableInteractive();
@@ -1106,6 +1151,83 @@ export class LaneBattleScene extends Phaser.Scene {
   private getSelectedCaptureActions(): CapturePointAction[] {
     const point = this.capturePoints.find((entry) => entry.id === this.selectedCapturePointId);
     return point ? getCapturePointActions(point.definition, point) : [];
+  }
+
+  private updateAudioState(): void {
+    if (this.elapsedSec < this.nextAudioStateCheckSec) return;
+    this.nextAudioStateCheckSec = this.elapsedSec + 0.45;
+    const nowMs = this.elapsedSec * 1000;
+    while (this.combatAudioEventTimes[0] !== undefined && this.combatAudioEventTimes[0] < nowMs - 3000) {
+      this.combatAudioEventTimes.shift();
+    }
+    const engagedUnits = this.units.filter((unit) => {
+      const nearest = this.findNearestEnemy(unit);
+      if (!nearest) return false;
+      const engagementDistance = Math.max(ENGAGE_GAP * 2.6, unit.range * RANGE_TO_PROGRESS * 1.35);
+      return this.unitDistance(unit, nearest) <= engagementDistance;
+    }).length;
+    const fixedFortress = this.capturePoints.find((point) =>
+      point.definition.pointType === "fixed-fortress" && point.owner === "player",
+    );
+    const decision = this.battleAudioState.update({
+      nowMs,
+      engagedUnits,
+      activeProjectiles: this.activeProjectiles.size,
+      recentAttackEvents: this.combatAudioEventTimes.length,
+      playerBaseHpRatio: this.player.baseHp / PLAYER_BASE_HP,
+      playerFortressHpRatio: fixedFortress
+        ? fixedFortress.towerBuilt ? fixedFortress.towerHp / fixedFortress.towerMaxHp : 0
+        : 1,
+    });
+
+    if (this.audio.getState().bgmState !== "fortress-under-attack") {
+      this.audio.setDirectorState(decision.state);
+    }
+    if (decision.triggerFortressWarning) {
+      this.audio.playSfx("sfx.fortress.warning", { eventKey: "fortress:danger-entry" });
+      this.audio.triggerFortressWarning(decision.state);
+    }
+  }
+
+  private playWorldSfx(
+    assetId: string,
+    x: number,
+    y: number,
+    eventKey: string,
+    highFrequency = true,
+  ): void {
+    const camera = this.cameras.main;
+    const mix = calculateSpatialAudio(
+      { x, y },
+      {
+        centerX: camera.midPoint.x,
+        centerY: camera.midPoint.y,
+        width: camera.width,
+        height: camera.height,
+        zoom: camera.zoom,
+      },
+    );
+    this.audio.playSfx(assetId, {
+      eventKey,
+      highFrequency,
+      volumeMultiplier: mix.audible ? mix.volumeMultiplier : 0,
+      pan: mix.pan,
+    });
+    if (highFrequency) this.combatAudioEventTimes.push(this.elapsedSec * 1000);
+  }
+
+  private updateAudioDebugOverlay(): void {
+    if (!this.audioDebugText) return;
+    const state = this.audio.getState();
+    this.audioDebugText.setText([
+      `AUDIO ${state.contextState} ${state.unlocked ? "unlocked" : "locked"}`,
+      `state ${state.bgmState ?? "-"} | ${state.currentBgmId ?? "queued"}`,
+      `voices bgm ${state.activeBgmVoices} / sfx ${state.activeSfxVoices}`,
+      `vol ${state.settings.masterVolume.toFixed(2)} · ${state.settings.bgmVolume.toFixed(2)} · ${state.settings.sfxVolume.toFixed(2)}`,
+      `mute ${state.settings.mute} | combat ${state.settings.combatSfxMode}`,
+      `fallback ${state.missingAssetFallback} | skipped ${state.skippedEventCount}`,
+      ...state.recentEvents.slice(-4).map((event) => `${event.id.replace("sfx.", "")} ${event.result}`),
+    ]);
   }
 
   private getResourceIconKey(resourceId: ResourceId): string {
@@ -1171,8 +1293,12 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private tickWaves(deltaSec: number): void {
+    const previousPlayerWaveSec = this.player.nextWaveInSec;
     this.player.nextWaveInSec -= deltaSec;
     this.player.lastWaveElapsedSec += deltaSec;
+    if (previousPlayerWaveSec > 10 && this.player.nextWaveInSec <= 10) {
+      this.audio.playSfx("sfx.wave.prepare", { eventKey: `wave:prepare:${Math.floor(this.elapsedSec)}` });
+    }
     if (this.player.nextWaveInSec <= 0) this.trySpawnWave(this.player, false);
     if (this.enemy.nextWaveInSec <= 0) this.trySpawnWave(this.enemy, false);
   }
@@ -1211,6 +1337,12 @@ export class LaneBattleScene extends Phaser.Scene {
         if (unit.attackTimerSec <= 0) {
           unit.attackTimerSec = unit.attackCooldownSec;
           this.beginAttackPresentation(unit, enemyTower.towerSprite.x);
+          this.playWorldSfx(
+            this.isRangedUnit(unit) ? "sfx.combat.rangedFire" : "sfx.combat.meleeAttack",
+            unit.sprite.x,
+            unit.sprite.y,
+            `attack:${unit.id}:tower:${enemyTower.id}:${Math.round(this.elapsedSec * 1000)}`,
+          );
           const damageBase = unit.attack * (1 - unit.attrition);
           const damage = Math.max(1, Math.round(damageBase));
           if (this.isRangedUnit(unit)) {
@@ -1236,6 +1368,12 @@ export class LaneBattleScene extends Phaser.Scene {
       if (unit.attackTimerSec <= 0) {
         unit.attackTimerSec = unit.attackCooldownSec;
         this.beginAttackPresentation(unit, nearest.sprite.x);
+        this.playWorldSfx(
+          this.isRangedUnit(unit) ? "sfx.combat.rangedFire" : "sfx.combat.meleeAttack",
+          unit.sprite.x,
+          unit.sprite.y,
+          `attack:${unit.id}:unit:${nearest.id}:${Math.round(this.elapsedSec * 1000)}`,
+        );
         const damageBase = unit.attack * (1 - unit.attrition);
         const damage = Math.max(1, Math.round(damageBase - nearest.defense * 0.35));
         if (this.isRangedUnit(unit)) {
@@ -1244,6 +1382,12 @@ export class LaneBattleScene extends Phaser.Scene {
           this.launchProjectile(start, end, this.getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToUnit(nearest, damage, unit.team === "player" ? "#ffd67a" : "#ff8f8f"), 1.04);
         } else {
           nearest.hp -= damage;
+          this.playWorldSfx(
+            "sfx.combat.meleeHit",
+            nearest.sprite.x,
+            nearest.sprite.y,
+            `impact:melee:${unit.id}:${nearest.id}:${Math.round(this.elapsedSec * 1000)}`,
+          );
           this.playImpactFeedback(unit, nearest, damage);
           this.spawnToast(`${damage}`, nearest.sprite.x, nearest.sprite.y - 26, unit.team === "player" ? "#ffd67a" : "#ff8f8f");
           if (nearest.hp <= 0) deaths.add(nearest);
@@ -1479,6 +1623,13 @@ export class LaneBattleScene extends Phaser.Scene {
       if (prevOwner !== point.owner && prevOwner !== "neutral" && point.owner !== "neutral") {
         this.resolveCapturedStructure(point, point.owner);
       }
+      if (prevOwner !== point.owner) {
+        if (point.owner === "player") {
+          this.audio.playSfx("sfx.capture.complete", { eventKey: `capture:${point.id}:player` });
+        } else if (prevOwner === "player") {
+          this.audio.playSfx("sfx.capture.lost", { eventKey: `capture:${point.id}:lost` });
+        }
+      }
 
       this.tickWatchtower(point, deltaSec);
       if (point.buildingId === "supply_depot") this.tickSupplyDepot(point, deltaSec);
@@ -1498,6 +1649,10 @@ export class LaneBattleScene extends Phaser.Scene {
         point.towerHp = point.towerMaxHp;
         point.towerTimerSec = 0.3;
         if (point.owner === "player") this.infoText.setText("타워 재건축 완료");
+        if (point.owner === "player") {
+          this.audio.playSfx("sfx.construction.complete", { eventKey: `tower:${point.id}:complete` });
+          this.audio.playSfx("sfx.fortress.rebuilt", { eventKey: `tower:${point.id}:rebuilt` });
+        }
       }
       return;
     }
@@ -1511,6 +1666,12 @@ export class LaneBattleScene extends Phaser.Scene {
     if (!target) return;
     point.towerTimerSec = spec.cooldownSec;
     const start = this.getTowerProjectileAnchor(point, true);
+    this.playWorldSfx(
+      "sfx.combat.towerAttack",
+      start.x,
+      start.y,
+      `tower-attack:${point.id}:${target.id}:${Math.round(this.elapsedSec * 1000)}`,
+    );
     const offsets = [-12, 12];
     offsets.forEach((offset, idx) => {
       const aim = this.getUnitProjectileAnchor(target).add(new Phaser.Math.Vector2(offset, idx * 3));
@@ -1543,6 +1704,7 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private selectCapturePoint(id: number): void {
     this.selectedCapturePointId = id;
+    this.audio.playSfx("sfx.ui.buildSelect", { eventKey: `capture:select:${id}` });
     this.refreshCapturePointVisuals();
     if (this.capturePanelTitle) this.refreshUi();
   }
@@ -1551,14 +1713,17 @@ export class LaneBattleScene extends Phaser.Scene {
     const point = this.capturePoints.find((entry) => entry.id === this.selectedCapturePointId);
     if (!point) {
       this.infoText.setText("먼저 거점을 선택하십시오");
+      this.audio.playSfx("sfx.ui.cancel", { eventKey: "build:no-point" });
       return;
     }
     if (point.owner !== "player") {
       this.infoText.setText("아군 점령 거점에서만 건설 가능합니다");
+      this.audio.playSfx("sfx.ui.hireFail", { eventKey: `build:${point.id}:not-owned` });
       return;
     }
     if (!point.definition.allowedBuildingTypes.includes(buildingId)) {
       this.infoText.setText("이 거점에는 해당 건물을 건설할 수 없습니다");
+      this.audio.playSfx("sfx.ui.hireFail", { eventKey: `build:${point.id}:not-allowed:${buildingId}` });
       return;
     }
     if (point.definition.pointType === "fixed-fortress") {
@@ -1571,25 +1736,30 @@ export class LaneBattleScene extends Phaser.Scene {
       const towerCost = this.getTowerBuildCost(this.player.ageId);
       if (point.towerBuilt || point.towerBuildRemainingSec > 0) {
         this.infoText.setText("이 거점의 타워는 이미 존재하거나 재건 중입니다");
+        this.audio.playSfx("sfx.ui.cancel", { eventKey: `tower:${point.id}:busy` });
         return;
       }
       if (!canAfford(this.player.resources, towerCost)) {
         this.infoText.setText("타워 재건 자원 부족");
+        this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `tower:${point.id}:shortage` });
         return;
       }
       payCost(this.player.resources, towerCost);
       point.towerBuildRemainingSec = 10;
       point.towerTimerSec = 0;
       this.infoText.setText("타워 재건축을 시작했습니다 (10초)");
+      this.audio.playSfx("sfx.construction.start", { eventKey: `tower:${point.id}:start` });
       this.refreshCapturePointVisuals();
       return;
     }
     if (point.buildingId) {
       this.infoText.setText("이미 건설된 거점입니다");
+      this.audio.playSfx("sfx.ui.cancel", { eventKey: `build:${point.id}:occupied` });
       return;
     }
     if (!canAfford(this.player.resources, building.cost)) {
       this.infoText.setText(`${building.label} 건설 자원 부족`);
+      this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `build:${point.id}:shortage:${buildingId}` });
       return;
     }
     payCost(this.player.resources, building.cost);
@@ -1599,6 +1769,10 @@ export class LaneBattleScene extends Phaser.Scene {
     point.towerTimerSec = 0.4;
     point.supplyTimerSec = 0.4;
     this.infoText.setText(`${building.label} 건설 완료`);
+    this.audio.playSfx("sfx.construction.start", { eventKey: `build:${point.id}:start:${buildingId}` });
+    this.time.delayedCall(180, () => {
+      this.audio.playSfx("sfx.construction.complete", { eventKey: `build:${point.id}:complete:${buildingId}` });
+    });
     this.refreshCapturePointVisuals();
   }
 
@@ -1641,16 +1815,19 @@ export class LaneBattleScene extends Phaser.Scene {
     const point = this.capturePoints.find((entry) => entry.id === this.selectedCapturePointId);
     if (!point || point.owner !== "player" || !point.definition.canDemolish || !point.buildingId) {
       this.infoText.setText("폐기할 아군 거점 건물이 없습니다");
+      this.audio.playSfx("sfx.ui.cancel", { eventKey: "dismantle:invalid" });
       return;
     }
     if (this.player.resources.gold < DISMANTLE_COST_GOLD) {
       this.infoText.setText("폐기 비용이 부족합니다");
+      this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `dismantle:${point.id}:shortage` });
       return;
     }
     this.player.resources.gold -= DISMANTLE_COST_GOLD;
     point.buildingId = undefined;
     point.buildingLevel = 0;
     this.infoText.setText(`거점 건물을 폐기했습니다 (-${DISMANTLE_COST_GOLD}G)`);
+    this.audio.playSfx("sfx.ui.confirm", { eventKey: `dismantle:${point.id}:complete` });
     this.refreshCapturePointVisuals();
   }
 
@@ -1658,25 +1835,30 @@ export class LaneBattleScene extends Phaser.Scene {
     const point = this.capturePoints.find((entry) => entry.id === this.selectedCapturePointId);
     if (!point || point.definition.pointType !== "fixed-fortress" || point.owner !== "player") {
       this.infoText.setText("수리할 아군 고정 요새가 없습니다");
+      this.audio.playSfx("sfx.ui.hireFail", { eventKey: "fortress:maintain:invalid" });
       return;
     }
     if (point.towerBuildRemainingSec > 0) {
       this.infoText.setText(`요새 재건 중 (${Math.ceil(point.towerBuildRemainingSec)}초)`);
+      this.audio.playSfx("sfx.ui.cancel", { eventKey: `fortress:${point.id}:busy` });
       return;
     }
     const rebuildCost = this.getTowerBuildCost(this.player.ageId);
     if (!point.towerBuilt) {
       if (!canAfford(this.player.resources, rebuildCost)) {
         this.infoText.setText("요새 재건 자원 부족");
+        this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `fortress:${point.id}:rebuild-shortage` });
         return;
       }
       payCost(this.player.resources, rebuildCost);
       point.towerBuildRemainingSec = 10;
       this.infoText.setText("고정 요새 재건을 시작했습니다 (10초)");
+      this.audio.playSfx("sfx.construction.start", { eventKey: `fortress:${point.id}:rebuild-start` });
       return;
     }
     if (point.towerHp >= point.towerMaxHp) {
       this.infoText.setText("고정 요새가 최대 HP입니다");
+      this.audio.playSfx("sfx.ui.cancel", { eventKey: `fortress:${point.id}:full` });
       return;
     }
     const repairCost: ResourceCost = {
@@ -1685,11 +1867,13 @@ export class LaneBattleScene extends Phaser.Scene {
     };
     if (!canAfford(this.player.resources, repairCost)) {
       this.infoText.setText("요새 수리 자원 부족");
+      this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `fortress:${point.id}:repair-shortage` });
       return;
     }
     payCost(this.player.resources, repairCost);
     point.towerHp = point.towerMaxHp;
     this.infoText.setText("고정 요새 수리 완료");
+    this.audio.playSfx("sfx.construction.repair", { eventKey: `fortress:${point.id}:repair` });
     this.refreshCapturePointVisuals();
   }
 
@@ -2025,6 +2209,12 @@ export class LaneBattleScene extends Phaser.Scene {
   private applyDamageToUnit(target: LaneUnit, damage: number, color: string, label?: string): void {
     if (!this.units.includes(target)) return;
     target.hp -= damage;
+    this.playWorldSfx(
+      "sfx.combat.projectileHit",
+      target.sprite.x,
+      target.sprite.y,
+      `impact:projectile:${target.id}:${Math.round(this.elapsedSec * 1000)}`,
+    );
     target.sprite.setTintFill(0xffffff);
     this.time.delayedCall(80, () => {
       if (!target.sprite.active) return;
@@ -2049,6 +2239,12 @@ export class LaneBattleScene extends Phaser.Scene {
   private applyDamageToTower(point: CapturePointState, damage: number, attackerTeam: TeamId): void {
     if (!point.towerBuilt) return;
     point.towerHp = Math.max(0, point.towerHp - damage);
+    this.playWorldSfx(
+      "sfx.combat.towerHit",
+      point.towerSprite.x,
+      point.towerSprite.y,
+      `impact:tower:${point.id}:${Math.round(this.elapsedSec * 1000)}`,
+    );
     this.tweens.add({
       targets: point.towerSprite,
       alpha: 0.45,
@@ -2060,6 +2256,7 @@ export class LaneBattleScene extends Phaser.Scene {
       point.towerBuilt = false;
       point.towerTimerSec = 0;
       point.towerBuildRemainingSec = 0;
+      this.audio.playSfx("sfx.fortress.destroyed", { eventKey: `tower:${point.id}:destroyed` });
       if (attackerTeam === "player") this.infoText.setText("적 타워를 파괴했습니다");
     }
   }
@@ -2077,6 +2274,12 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private killUnit(unit: LaneUnit): void {
     if (!this.units.includes(unit)) return;
+    this.playWorldSfx(
+      "sfx.combat.unitDeath",
+      unit.sprite.x,
+      unit.sprite.y,
+      `death:${unit.id}`,
+    );
     this.units = this.units.filter((entry) => entry.id !== unit.id);
     this.destroyUnitPresentation(unit);
 
@@ -2096,6 +2299,7 @@ export class LaneBattleScene extends Phaser.Scene {
     const foodCost = Math.round(ageBalance.baseWaveFoodCost * scale.foodCostMultiplier);
     if (team.resources.food < foodCost) {
       if (team.id === "player") this.infoText.setText("식량 부족으로 웨이브 출전 실패");
+      if (team.id === "player") this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "wave:food-shortage" });
       team.nextWaveInSec = WAVE_INTERVAL_SEC;
       return false;
     }
@@ -2106,6 +2310,11 @@ export class LaneBattleScene extends Phaser.Scene {
     this.spawnWaveUnits(team, roster);
 
     if (team.id === "player") this.infoText.setText(forced ? "즉시 웨이브를 투입했습니다" : "정규 웨이브가 출전했습니다");
+    if (team.id === "player") {
+      this.audio.playSfx("sfx.wave.start", { eventKey: `wave:start:${Math.round(this.elapsedSec * 10)}` });
+      this.audio.setDirectorState("battle-low");
+      this.combatAudioEventTimes.push(this.elapsedSec * 1000);
+    }
     return true;
   }
 
@@ -2113,6 +2322,11 @@ export class LaneBattleScene extends Phaser.Scene {
     this.spawnWaveUnits(team, getWaveRoster(team.ageId), team.id === "player" ? 0.12 : 0.88);
     team.nextWaveInSec = WAVE_INTERVAL_SEC;
     team.lastWaveElapsedSec = 0;
+    if (team.id === "player") {
+      this.audio.playSfx("sfx.wave.start", { eventKey: "wave:opening" });
+      this.audio.setDirectorState("battle-low");
+      this.combatAudioEventTimes.push(this.elapsedSec * 1000);
+    }
   }
 
   private setupVisualValidationScenario(): void {
@@ -2529,26 +2743,38 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private shiftWorker(role: WorkerRole, delta: 1 | -1): void {
-    if (role === "idle") return;
+    if (role === "idle") {
+      this.audio.playSfx("sfx.ui.cancel", { eventKey: `worker:${role}:${delta}` });
+      return;
+    }
     if (delta > 0) {
-      if (this.player.workers.idle <= 0) return;
+      if (this.player.workers.idle <= 0) {
+        this.audio.playSfx("sfx.ui.hireFail", { eventKey: `worker:${role}:no-idle` });
+        return;
+      }
       this.player.workers.idle -= 1;
       this.player.workers[role] += 1;
     } else {
-      if (this.player.workers[role] <= 0) return;
+      if (this.player.workers[role] <= 0) {
+        this.audio.playSfx("sfx.ui.cancel", { eventKey: `worker:${role}:empty` });
+        return;
+      }
       this.player.workers[role] -= 1;
       this.player.workers.idle += 1;
     }
+    this.audio.playSfx("sfx.ui.confirm", { eventKey: `worker:${role}:${delta}:${this.player.workers[role]}` });
   }
 
   private hireWorker(): void {
     if (!canAfford(this.player.resources, BASE_WORKER_COST)) {
       this.infoText.setText("일꾼 고용 실패: 금/목재/식량 부족");
+      this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "hire:worker:shortage" });
       return;
     }
     payCost(this.player.resources, BASE_WORKER_COST);
     this.player.workers.idle += 1;
     this.infoText.setText("일꾼 1명을 고용했습니다");
+    this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:worker:${this.player.workers.idle}` });
   }
 
   private hireResearchWorker(): void {
@@ -2556,6 +2782,7 @@ export class LaneBattleScene extends Phaser.Scene {
       payCost(this.player.resources, RESEARCH_WORKER_DIRECT_COST);
       this.player.workers.research += 1;
       this.infoText.setText("연구 일꾼을 직접 고용했습니다");
+      this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:research:direct:${this.player.workers.research}` });
       return;
     }
 
@@ -2569,10 +2796,12 @@ export class LaneBattleScene extends Phaser.Scene {
       });
       this.player.workers.research += RESEARCH_WORKER_CONVERSION.resultCount;
       this.infoText.setText("일반 일꾼 10명을 연구 일꾼으로 전환했습니다");
+      this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:research:convert:${this.player.workers.research}` });
       return;
     }
 
     this.infoText.setText("연구 일꾼 조건 미달");
+    this.audio.playSfx("sfx.ui.hireFail", { eventKey: "hire:research:failed" });
   }
 
   private totalConvertibleWorkers(): number {
@@ -2582,10 +2811,12 @@ export class LaneBattleScene extends Phaser.Scene {
   private tryUseInstantWaveToken(team: TeamState): void {
     if (team.instantWaveTokens <= 0) {
       if (team.id === "player") this.infoText.setText("즉시 웨이브 토큰이 없습니다");
+      if (team.id === "player") this.audio.playSfx("sfx.ui.hireFail", { eventKey: "wave:instant:no-token" });
       return;
     }
     if (team.lastWaveElapsedSec < INSTANT_WAVE_TOKEN_COOLDOWN_AFTER_WAVE_SEC) {
       if (team.id === "player") this.infoText.setText("직전 웨이브 후 10초 뒤 사용 가능");
+      if (team.id === "player") this.audio.playSfx("sfx.ui.cancel", { eventKey: "wave:instant:cooldown" });
       return;
     }
     if (this.trySpawnWave(team, true)) team.instantWaveTokens -= 1;
@@ -2595,16 +2826,19 @@ export class LaneBattleScene extends Phaser.Scene {
     const idx = AGES.findIndex((age) => age.id === this.player.ageId);
     if (idx >= AGES.length - 1) {
       this.infoText.setText("이미 최종 시대입니다");
+      this.audio.playSfx("sfx.ui.cancel", { eventKey: "age:max" });
       return;
     }
     const cost = this.getAgeUpCost(idx);
     if (!canAfford(this.player.resources, cost)) {
       this.infoText.setText("시대 업 실패: 금/목재/금속 부족");
+      this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "age:shortage" });
       return;
     }
     payCost(this.player.resources, cost);
     this.advanceAge(this.player);
     this.infoText.setText(`${getAge(this.player.ageId).label} 도달`);
+    this.audio.playSfx("sfx.ui.confirm", { eventKey: `age:${this.player.ageId}` });
   }
 
   private getAgeUpCost(ageIndex: number): ResourceCost {

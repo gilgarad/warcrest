@@ -2093,3 +2093,33 @@ Use consistent headings so entries are easy to grep.
 - 상세 결과와 24개 요구 항목은
   `docs/dev-wiki/terrain-prototype-v3-validation.md`, 캡처/JSON은
   `artifacts/terrain-prototype-scale-v3/`에 저장했다.
+
+## [2026-07-27] feature | 동적 오디오 실게임 통합과 설정 UI
+
+- 브랜치 `terrain-prototype-central`에서 작업했다. 별도 GitHub Issue를
+  만들지 않았으며 이 항목을 의무 fallback 작업 기록으로 사용한다.
+- 직전 시각 변경은 오디오와 분리해 `91fb6c0`으로 먼저 커밋했다. 출처가
+  불명확한 `project_development.md` 변경은 수정·스테이징하지 않았다.
+- f57303b의 독립 `AudioSystem`을 Boot/LaneBattle/GameOver에 연결하고 기존
+  `musicController` 직접 호출을 모두 제거했다. 단일 싱글턴, 최초 사용자
+  입력 unlock, 상태 대기, 포커스 음소거, victory/defeat 잠금과 재시작
+  reset을 구현했다.
+- 준비/저강도/고강도 전투 hysteresis와 고정 요새 위험 재무장·cooldown을
+  별도 상태 머신으로 구현했다. 요새 경고는 현재 곡을 교체하지 않는
+  1.8초 레이어다.
+- 실제 전투/UI/웨이브/점령/건설 이벤트에 SFX를 연결했다. 고빈도 전투음은
+  off/reduced/full을 지원하며 reduced 기본값은 3회 중 1회 샘플링과 0.46
+  gain을 적용한다. 월드 전투음은 카메라 상대 거리 감쇠와 제한된 stereo
+  pan을 사용한다.
+- 절차형 BGM은 단일 지속음에서 상태별 bass/chord/lead/pulse phrase로
+  확장했다. 실제 파일은 여전히 0개이며 manifest의 `missingAsset: true`와
+  라이선스 메타데이터 교체 지점은 유지했다.
+- Phaser 기반 오디오 설정 모달을 추가했다. master/BGM/SFX, mute,
+  unfocused mute, combat mode, reset/test를 마우스·터치·키보드로 조작하며
+  Esc/M 단축키와 localStorage 복원을 지원한다.
+- 검증: `npm run build`, Vitest 42/42, Playwright 3/3, `git diff --check`
+  통과. 최초 입력 전 AudioContext 미생성, unlock 1회, 반복 재시작 뒤 BGM
+  voice 1개, 콘솔/page/HTTP 오류 0건, 설정 변경 전후 gameplay snapshot
+  정확 일치를 확인했다.
+- 캡처와 JSON은 `artifacts/audio-integration/`, 상세 42항목 결과는
+  `docs/dev-wiki/audio-integration-validation.md`에 기록했다.

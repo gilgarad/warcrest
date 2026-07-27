@@ -1,8 +1,13 @@
 import type { AudioBackend, VoiceHandle } from "./backend";
 import { getSfxAsset } from "./assetManifest";
-import type { SfxCategory } from "./types";
+import type { CombatSfxMode, SfxCategory } from "./types";
 
-export type SfxPlayResult = "played" | "cooldown" | "limit" | "missing";
+export type SfxPlayResult = "played" | "cooldown" | "limit" | "missing" | "mode-off";
+
+export interface SfxManagerPlayOptions {
+  volumeMultiplier?: number;
+  pan?: number;
+}
 
 /**
  * One-shot SFX playback with per-id cooldown (prevents machine-gun spam)
@@ -24,7 +29,7 @@ export class SfxManager {
   private masterVolume = 1;
   private sfxVolume = 1;
   private muted = false;
-  private reducedAudio = false;
+  private combatSfxMode: CombatSfxMode = "reduced";
 
   constructor(private readonly backend: AudioBackend) {}
 
@@ -36,20 +41,21 @@ export class SfxManager {
     return count;
   }
 
-  setVolumes(masterVolume: number, sfxVolume: number, muted: boolean, reducedAudio: boolean): void {
+  setVolumes(masterVolume: number, sfxVolume: number, muted: boolean, combatSfxMode: CombatSfxMode): void {
     this.masterVolume = masterVolume;
     this.sfxVolume = sfxVolume;
     this.muted = muted;
-    this.reducedAudio = reducedAudio;
+    this.combatSfxMode = combatSfxMode;
   }
 
   setCategoryVolume(category: SfxCategory, volume: number): void {
     this.categoryVolumes[category] = volume;
   }
 
-  play(assetId: string): SfxPlayResult {
+  play(assetId: string, options: SfxManagerPlayOptions = {}): SfxPlayResult {
     const asset = getSfxAsset(assetId);
     if (!asset) return "missing";
+    if (asset.category === "combat" && this.combatSfxMode === "off") return "mode-off";
 
     const now = this.backend.nowMs;
     const lastPlayed = this.lastPlayedAtMs.get(assetId) ?? -Infinity;
@@ -61,9 +67,16 @@ export class SfxManager {
     this.lastPlayedAtMs.set(assetId, now);
     const pitchMultiplier = 1 + (Math.random() * 2 - 1) * asset.pitchVariation;
     const volumeMultiplier = 1 + (Math.random() * 2 - 1) * asset.volumeVariation;
-    const volume = this.effectiveVolume(asset.baseVolume, asset.category) * volumeMultiplier;
+    const volume = this.effectiveVolume(asset.baseVolume, asset.category)
+      * volumeMultiplier
+      * Math.max(0, options.volumeMultiplier ?? 1);
 
-    const voice = this.backend.playSfxVoice(asset, Math.max(0, volume), Math.max(0.5, pitchMultiplier));
+    const voice = this.backend.playSfxVoice(
+      asset,
+      Math.max(0, volume),
+      Math.max(0.5, pitchMultiplier),
+      Math.max(-0.8, Math.min(0.8, options.pan ?? 0)),
+    );
     active.push(voice);
     this.activeVoicesById.set(assetId, active);
     return "played";
@@ -76,7 +89,7 @@ export class SfxManager {
 
   private effectiveVolume(baseVolume: number, category: SfxCategory): number {
     if (this.muted) return 0;
-    const reduceFactor = this.reducedAudio ? 0.6 : 1;
+    const reduceFactor = category === "combat" && this.combatSfxMode === "reduced" ? 0.46 : 1;
     return baseVolume * this.sfxVolume * this.masterVolume * (this.categoryVolumes[category] ?? 1) * reduceFactor;
   }
 }

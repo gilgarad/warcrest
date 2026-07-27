@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { AudioDirector } from "../audioDirector";
 import { BgmManager } from "../bgmManager";
 import { MockAudioBackend } from "./mockBackend";
@@ -11,6 +11,8 @@ function setup() {
 }
 
 describe("AudioDirector", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
   it("ignores a repeated request for the same state", () => {
     const { backend, director } = setup();
     director.setState("menu");
@@ -42,6 +44,16 @@ describe("AudioDirector", () => {
     director.setState("battle-low");
     director.setState("fortress-under-attack");
     director.setState("battle-high");
+    expect(backend.warningVoices[0].stopped).toBe(true);
+  });
+
+  it("warning sting returns to the supplied battle state without changing the main track twice", () => {
+    const { backend, director } = setup();
+    director.setState("battle-low");
+    director.triggerFortressWarning("battle-low");
+    vi.advanceTimersByTime(1800);
+    expect(director.state).toBe("battle-low");
+    expect(backend.bgmVoices).toHaveLength(1);
     expect(backend.warningVoices[0].stopped).toBe(true);
   });
 
