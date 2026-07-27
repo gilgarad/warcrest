@@ -12,6 +12,14 @@ export interface VoiceHandle {
   readonly isPlaying: boolean;
 }
 
+export interface AudioSignalMeasurement {
+  rms: number;
+  peak: number;
+  frameRms: number[];
+  waveform: number[];
+  contextState: string;
+}
+
 export interface AudioBackend {
   readonly nowMs: number;
   readonly contextState: string;
@@ -27,6 +35,7 @@ export interface AudioBackend {
   playWarningLayer(volume: number): VoiceHandle;
   /** One-shot. */
   playSfxVoice(asset: SfxAssetDef, volume: number, pitchMultiplier: number, pan?: number): VoiceHandle;
+  measureOutputSignal(durationMs?: number): Promise<AudioSignalMeasurement>;
   destroy(): void;
 }
 
@@ -37,6 +46,8 @@ export interface AudioBackend {
  */
 export class WebAudioBackend implements AudioBackend {
   private ctx: AudioContext | null = null;
+  private outputBus: GainNode | null = null;
+  private outputAnalyser: AnalyserNode | null = null;
   private unlocked = false;
 
   get nowMs(): number {
@@ -64,6 +75,57 @@ export class WebAudioBackend implements AudioBackend {
   private requireCtx(): AudioContext {
     if (!this.ctx) this.ctx = new AudioContext();
     return this.ctx;
+  }
+
+  private getOutputDestination(ctx: AudioContext): AudioNode {
+    if (!this.outputBus || !this.outputAnalyser) {
+      this.outputBus = ctx.createGain();
+      this.outputBus.gain.value = 1;
+      this.outputAnalyser = ctx.createAnalyser();
+      this.outputAnalyser.fftSize = 2048;
+      this.outputAnalyser.smoothingTimeConstant = 0;
+      this.outputBus.connect(this.outputAnalyser);
+      this.outputAnalyser.connect(ctx.destination);
+    }
+    return this.outputBus;
+  }
+
+  async measureOutputSignal(durationMs = 1000): Promise<AudioSignalMeasurement> {
+    const ctx = this.requireCtx();
+    this.getOutputDestination(ctx);
+    const analyser = this.outputAnalyser;
+    if (!analyser) throw new Error("Audio output analyser is unavailable");
+    const samples = new Float32Array(analyser.fftSize);
+    const frameRms: number[] = [];
+    const waveform: number[] = [];
+    let sumSquares = 0;
+    let sampleCount = 0;
+    let peak = 0;
+    const deadline = performance.now() + Math.max(100, durationMs);
+    while (performance.now() < deadline) {
+      analyser.getFloatTimeDomainData(samples);
+      let frameSquares = 0;
+      for (let index = 0; index < samples.length; index += 1) {
+        const value = samples[index];
+        frameSquares += value * value;
+        peak = Math.max(peak, Math.abs(value));
+      }
+      sumSquares += frameSquares;
+      sampleCount += samples.length;
+      frameRms.push(Math.sqrt(frameSquares / samples.length));
+      if (waveform.length === 0) {
+        const stride = Math.max(1, Math.floor(samples.length / 128));
+        for (let index = 0; index < samples.length; index += stride) waveform.push(samples[index]);
+      }
+      await new Promise<void>((resolve) => setTimeout(resolve, 32));
+    }
+    return {
+      rms: sampleCount > 0 ? Math.sqrt(sumSquares / sampleCount) : 0,
+      peak,
+      frameRms,
+      waveform,
+      contextState: ctx.state,
+    };
   }
 
   playBgmVoice(asset: BgmAssetDef, volume: number, fadeInMs = 0): VoiceHandle {
@@ -94,6 +156,8 @@ export class WebAudioBackend implements AudioBackend {
       void this.ctx.close();
       this.ctx = null;
     }
+    this.outputBus = null;
+    this.outputAnalyser = null;
     this.unlocked = false;
   }
 
@@ -122,7 +186,7 @@ export class WebAudioBackend implements AudioBackend {
     } else {
       gainNode.gain.value = volume;
     }
-    gainNode.connect(ctx.destination);
+    gainNode.connect(this.getOutputDestination(ctx));
     let source: AudioBufferSourceNode | null = null;
     let playing = true;
 
@@ -166,7 +230,7 @@ export class WebAudioBackend implements AudioBackend {
     const panner = ctx.createStereoPanner();
     panner.pan.value = pan;
     gainNode.connect(panner);
-    panner.connect(ctx.destination);
+    panner.connect(this.getOutputDestination(ctx));
     let playing = true;
     void this.loadBuffer(ctx, path).then((buffer) => {
       if (!buffer) {
@@ -199,12 +263,18 @@ export class WebAudioBackend implements AudioBackend {
   private playSynthScore(ctx: AudioContext, asset: BgmAssetDef, volume: number, fadeInMs = 500): VoiceHandle {
     const master = ctx.createGain();
     master.gain.value = 0;
-    master.connect(ctx.destination);
+    master.connect(this.getOutputDestination(ctx));
     master.gain.linearRampToValueAtTime(volume, ctx.currentTime + Math.max(0.05, fadeInMs / 1000));
 
     const filter = ctx.createBiquadFilter();
     filter.type = "lowpass";
-    filter.frequency.value = asset.id === "bgm.battle.high" ? 1700 : asset.id === "bgm.victory" ? 2300 : 1100;
+    filter.frequency.value = asset.id === "bgm.battle.high"
+      ? 3600
+      : asset.id === "bgm.battle.low"
+        ? 2200
+        : asset.id === "bgm.victory"
+          ? 3200
+          : 1800;
     filter.Q.value = 0.55;
     filter.connect(master);
 
@@ -334,6 +404,13 @@ export class WebAudioBackend implements AudioBackend {
     step: number,
   ): void {
     const ratio = (semitones: number) => 2 ** (semitones / 12);
+    const orchestrationGain = profile.tension >= 0.95
+      ? 2.05
+      : profile.tension >= 0.6
+        ? 1.7
+        : profile.tension >= 0.4
+          ? 1.5
+          : 1.35;
     const scheduleTone = (
       frequency: number,
       duration: number,
@@ -350,7 +427,7 @@ export class WebAudioBackend implements AudioBackend {
         oscillator.frequency.exponentialRampToValueAtTime(endFrequency, time + duration);
       }
       gain.gain.setValueAtTime(0.0001, time);
-      gain.gain.exponentialRampToValueAtTime(Math.max(0.001, gainValue), time + attack);
+      gain.gain.exponentialRampToValueAtTime(Math.max(0.001, gainValue * orchestrationGain), time + attack);
       gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
       oscillator.connect(gain);
       gain.connect(destination);
@@ -400,7 +477,7 @@ export class WebAudioBackend implements AudioBackend {
   private playSynthPulseLayer(ctx: AudioContext, volume: number): VoiceHandle {
     const master = ctx.createGain();
     master.gain.value = volume;
-    master.connect(ctx.destination);
+    master.connect(this.getOutputDestination(ctx));
     let playing = true;
 
     const fireStinger = () => {
@@ -449,7 +526,7 @@ export class WebAudioBackend implements AudioBackend {
     panner.pan.value = pan;
     master.gain.value = Math.max(0, volume * (profile.gain ?? 1));
     master.connect(panner);
-    panner.connect(ctx.destination);
+    panner.connect(this.getOutputDestination(ctx));
     const baseFreq = profile.frequency * pitchMultiplier;
     const t0 = ctx.currentTime;
     const sources = new Set<AudioScheduledSourceNode>();

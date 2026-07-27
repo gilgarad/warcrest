@@ -1,4 +1,4 @@
-export type TerrainRenderMode = "legacy" | "prototype" | "prototype-v2";
+export type TerrainRenderMode = "legacy" | "prototype" | "prototype-v2" | "world-surface";
 export type PrototypePresetId = "subtle" | "balanced" | "readability";
 export type UnitVisualSizePreset = "S" | "M" | "L";
 export type UnitLabelPolicy = "selected-or-hovered" | "priority" | "always";
@@ -319,8 +319,8 @@ export const PROTOTYPE_VISUAL_PRESETS: Record<PrototypePresetId, PrototypeVisual
 };
 
 export function parseTerrainRenderMode(value: string | null): TerrainRenderMode {
-  if (value === "legacy" || value === "prototype" || value === "prototype-v2") return value;
-  return "prototype";
+  if (value === "legacy" || value === "prototype" || value === "prototype-v2" || value === "world-surface") return value;
+  return "world-surface";
 }
 
 export function isTerrainDebugInputEnabled(value: string | null): boolean {

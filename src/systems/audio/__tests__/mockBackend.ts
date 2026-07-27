@@ -1,4 +1,4 @@
-import type { AudioBackend, VoiceHandle } from "../backend";
+import type { AudioBackend, AudioSignalMeasurement, VoiceHandle } from "../backend";
 import type { BgmAssetDef, SfxAssetDef } from "../types";
 
 export class MockVoice implements VoiceHandle {
@@ -63,6 +63,10 @@ export class MockAudioBackend implements AudioBackend {
     v.lastVolume = volume;
     this.sfxVoices.push(v);
     return v;
+  }
+
+  async measureOutputSignal(): Promise<AudioSignalMeasurement> {
+    return { rms: 0, peak: 0, frameRms: [], waveform: [], contextState: this.contextState };
   }
 
   destroy(): void {

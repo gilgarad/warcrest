@@ -26,6 +26,17 @@ export interface AgeWaveRoster {
 
 export const LEGACY_SUPPORT_HEAL_POWER = 10;
 export const LEGACY_SUPPORT_BATTLELINE_COUNT = 5;
+export const SUPPORT_HEAL_REDUCTION_RATIO = 2 / 3;
+export const SUPPORT_MANA_PER_BATTLELINE_UNIT = 6;
+export const SUPPORT_HEAL_MANA_COST = 6;
+export const SUPPORT_MANA_REGEN_PER_SEC = 1.25;
+
+export interface SupportResourceProfile {
+  healPower: number;
+  manaMax: number;
+  healManaCost: number;
+  manaRegenPerSec: number;
+}
 
 export const AGE_WAVE_ROSTERS: AgeWaveRoster[] = [
   {
@@ -94,5 +105,15 @@ export function scaleSupportHealPower(
 }
 
 export function getSupportHealPower(ageId: AgeId): number {
-  return scaleSupportHealPower(getBattlelineUnitCount(getWaveRoster(ageId)));
+  return getSupportResourceProfile(ageId).healPower;
+}
+
+export function getSupportResourceProfile(ageId: AgeId): SupportResourceProfile {
+  const battlelineCount = getBattlelineUnitCount(getWaveRoster(ageId));
+  return {
+    healPower: Math.round(scaleSupportHealPower(battlelineCount) * SUPPORT_HEAL_REDUCTION_RATIO * 100) / 100,
+    manaMax: battlelineCount * SUPPORT_MANA_PER_BATTLELINE_UNIT,
+    healManaCost: SUPPORT_HEAL_MANA_COST,
+    manaRegenPerSec: SUPPORT_MANA_REGEN_PER_SEC,
+  };
 }

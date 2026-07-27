@@ -1,0 +1,56 @@
+{
+  "towerMetrics": [
+    {
+      "id": 0,
+      "pointType": "buildable",
+      "x": 3079.782608695652,
+      "y": 2279.1304347826085,
+      "textureKey": "tower-ruin-asset"
+    },
+    {
+      "id": 1,
+      "pointType": "fixed-fortress",
+      "x": 4095,
+      "y": 1740,
+      "textureKey": "fixed-fortress-v1"
+    },
+    {
+      "id": 2,
+      "pointType": "buildable",
+      "x": 4960.217391304348,
+      "y": 1305.2173913043478,
+      "textureKey": "tower-full"
+    }
+  ],
+  "screenDistances": [
+    {
+      "pair": [
+        0,
+        1
+      ],
+      "world": 1149.490311971219,
+      "screenAtDefaultZoom": 528.7655435067608
+    },
+    {
+      "pair": [
+        1,
+        2
+      ],
+      "world": 968.3166068180891,
+      "screenAtDefaultZoom": 445.425639136321
+    }
+  ],
+  "fixedUi": {
+    "selectedCapturePointId": 1,
+    "visibleCaptureActions": [
+      "repair-fortress"
+    ]
+  },
+  "buildableUi": {
+    "selectedCapturePointId": 0,
+    "visibleCaptureActions": [
+      "build-supply-depot",
+      "build-mint"
+    ]
+  }
+}

@@ -37,4 +37,10 @@ describe("battlefield map specs", () => {
       expect(socket.bypassSlots).toHaveLength(2);
     });
   });
+
+  it("owns explicit depth-sorted props instead of baking them into the world surface", () => {
+    expect(LANE_BATTLEFIELD_MAP_SPEC.terrainProps).toHaveLength(6);
+    expect(LANE_BATTLEFIELD_MAP_SPEC.terrainProps.every((prop) => prop.occludesUnits)).toBe(true);
+    expect(LANE_BATTLEFIELD_MAP_SPEC.terrainProps.every((prop) => !prop.footprint.blocksMovement)).toBe(true);
+  });
 });

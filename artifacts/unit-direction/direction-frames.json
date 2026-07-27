@@ -1,0 +1,144 @@
+{
+  "left": [
+    {
+      "id": 9,
+      "team": "player",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.455,
+      "laneRow": 0,
+      "hp": 34,
+      "maxHp": 34,
+      "facingX": -1,
+      "flipX": true,
+      "motion": {
+        "x": -47.826086956521976,
+        "y": 26.086956521739012
+      },
+      "pose": "stone-axeman-walk-b",
+      "attackAnimTime": 0,
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0
+    },
+    {
+      "id": 9,
+      "team": "player",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.455,
+      "laneRow": 0,
+      "hp": 34,
+      "maxHp": 34,
+      "facingX": -1,
+      "flipX": true,
+      "motion": {
+        "x": -36.95652173913004,
+        "y": 19.565217391304486
+      },
+      "pose": "stone-axeman-walk-b",
+      "attackAnimTime": 0,
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0
+    },
+    {
+      "id": 9,
+      "team": "player",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.455,
+      "laneRow": 0,
+      "hp": 34,
+      "maxHp": 34,
+      "facingX": -1,
+      "flipX": true,
+      "motion": {
+        "x": -28.26086956521749,
+        "y": 15.217391304347757
+      },
+      "pose": "stone-axeman-walk-b",
+      "attackAnimTime": 0,
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0
+    }
+  ],
+  "right": [
+    {
+      "id": 9,
+      "team": "player",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.545,
+      "laneRow": 0,
+      "hp": 34,
+      "maxHp": 34,
+      "facingX": 1,
+      "flipX": false,
+      "motion": {
+        "x": 47.826086956521976,
+        "y": -26.086956521739012
+      },
+      "pose": "stone-axeman-walk-b",
+      "attackAnimTime": 0,
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0
+    },
+    {
+      "id": 9,
+      "team": "player",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.545,
+      "laneRow": 0,
+      "hp": 34,
+      "maxHp": 34,
+      "facingX": 1,
+      "flipX": false,
+      "motion": {
+        "x": 36.95652173913004,
+        "y": -19.565217391304486
+      },
+      "pose": "stone-axeman-walk-b",
+      "attackAnimTime": 0,
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0
+    },
+    {
+      "id": 9,
+      "team": "player",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.545,
+      "laneRow": 0,
+      "hp": 34,
+      "maxHp": 34,
+      "facingX": 1,
+      "flipX": false,
+      "motion": {
+        "x": 28.26086956521749,
+        "y": -15.217391304347757
+      },
+      "pose": "stone-axeman-walk-b",
+      "attackAnimTime": 0,
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0
+    }
+  ]
+}

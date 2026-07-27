@@ -318,6 +318,7 @@ export class AudioSystem {
         this.setSfxVolume(sfx);
       },
       setCombatSfxMode: (mode: CombatSfxMode) => this.setCombatSfxMode(mode),
+      measureOutputSignal: (durationMs = 1000) => this.backend.measureOutputSignal(durationMs),
     };
   }
 }

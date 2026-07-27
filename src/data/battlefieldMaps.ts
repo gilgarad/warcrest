@@ -43,6 +43,17 @@ export interface StructureSocketSpec {
   bypassSlots: WorldPointSpec[];
 }
 
+export interface TerrainPropSpec {
+  id: string;
+  textureKey: "rock-cluster" | "tree-cluster";
+  position: WorldPointSpec;
+  displayWidth: number;
+  displayHeight: number;
+  groundOriginY: number;
+  footprint: StructureFootprintSpec;
+  occludesUnits: boolean;
+}
+
 /**
  * Runtime map contract. Storage adapters such as Tiled JSON should translate
  * into this shape instead of leaking their schema into gameplay or rendering.
@@ -53,6 +64,7 @@ export interface BattlefieldMapSpec {
   lanePath: LanePathNodeSpec[];
   terrainPatches: TerrainPatchSpec[];
   structureSockets: StructureSocketSpec[];
+  terrainProps: TerrainPropSpec[];
 }
 
 export const LANE_PATH_NODES: LanePathNodeSpec[] = [
@@ -167,6 +179,15 @@ const CAPTURE_SOCKETS = [
   createCaptureSocket(2, 3),
 ];
 
+const TERRAIN_PROPS: TerrainPropSpec[] = [
+  { id: "rock-west-ridge", textureKey: "rock-cluster", position: { x: 1730, y: 2310 }, displayWidth: 210, displayHeight: 152, groundOriginY: 0.86, footprint: { shape: "ellipse", width: 178, height: 66, blocksMovement: false }, occludesUnits: true },
+  { id: "trees-west-south", textureKey: "tree-cluster", position: { x: 2360, y: 3110 }, displayWidth: 180, displayHeight: 238, groundOriginY: 0.9, footprint: { shape: "ellipse", width: 128, height: 62, blocksMovement: false }, occludesUnits: true },
+  { id: "rock-central-north", textureKey: "rock-cluster", position: { x: 3540, y: 1170 }, displayWidth: 196, displayHeight: 144, groundOriginY: 0.86, footprint: { shape: "ellipse", width: 164, height: 62, blocksMovement: false }, occludesUnits: true },
+  { id: "trees-central-south", textureKey: "tree-cluster", position: { x: 3880, y: 2720 }, displayWidth: 176, displayHeight: 232, groundOriginY: 0.9, footprint: { shape: "ellipse", width: 126, height: 62, blocksMovement: false }, occludesUnits: true },
+  { id: "rock-east-south", textureKey: "rock-cluster", position: { x: 5050, y: 2210 }, displayWidth: 188, displayHeight: 138, groundOriginY: 0.86, footprint: { shape: "ellipse", width: 158, height: 60, blocksMovement: false }, occludesUnits: true },
+  { id: "trees-east-ridge", textureKey: "tree-cluster", position: { x: 5550, y: 1080 }, displayWidth: 174, displayHeight: 228, groundOriginY: 0.9, footprint: { shape: "ellipse", width: 124, height: 60, blocksMovement: false }, occludesUnits: true },
+];
+
 export const CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC: BattlefieldMapSpec = {
   schemaVersion: 1,
   id: "warcrest-central-terrain-prototype-v1",
@@ -184,6 +205,7 @@ export const CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC: BattlefieldMapSpec = {
     },
   ],
   structureSockets: [CAPTURE_SOCKETS[1]],
+  terrainProps: [],
 };
 
 export const LANE_BATTLEFIELD_MAP_SPEC: BattlefieldMapSpec = {
@@ -192,4 +214,5 @@ export const LANE_BATTLEFIELD_MAP_SPEC: BattlefieldMapSpec = {
   lanePath: LANE_PATH_NODES,
   terrainPatches: createLaneTerrainPatches(),
   structureSockets: CAPTURE_SOCKETS,
+  terrainProps: TERRAIN_PROPS,
 };

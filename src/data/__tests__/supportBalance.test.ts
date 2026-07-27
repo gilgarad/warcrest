@@ -3,6 +3,7 @@ import { AGES } from "../ages";
 import {
   getBattlelineUnitCount,
   getSupportHealPower,
+  getSupportResourceProfile,
   getWaveRoster,
   scaleSupportHealPower,
 } from "../unitRosters";
@@ -19,13 +20,55 @@ function uniformSurvivalSec(
   return netDamagePerSec <= 0 ? Number.POSITIVE_INFINITY : hp / netDamagePerSec;
 }
 
+function manaGatedSurvivalSec(): { survivalSec: number; castTimes: number[] } {
+  const hpPerUnit = 34;
+  const damagePerUnitSec = 3;
+  const cooldownSec = 1.2;
+  const profile = getSupportResourceProfile("stone");
+  const hp = [hpPerUnit, hpPerUnit, hpPerUnit];
+  const castTimes: number[] = [];
+  const stepSec = 0.01;
+  let mana = profile.manaMax;
+  let cooldown = cooldownSec;
+  let elapsed = 0;
+  while (elapsed < 60 && hp.some((value) => value > 0)) {
+    elapsed += stepSec;
+    mana = Math.min(profile.manaMax, mana + profile.manaRegenPerSec * stepSec);
+    cooldown -= stepSec;
+    for (let index = 0; index < hp.length; index += 1) {
+      hp[index] = Math.max(0, hp[index] - damagePerUnitSec * stepSec);
+    }
+    const injured = hp
+      .map((value, index) => ({ value, index }))
+      .filter(({ value }) => value > 0 && value < hpPerUnit)
+      .sort((a, b) => a.value - b.value);
+    if (injured.length === 0 || cooldown > 0 || mana < profile.healManaCost) continue;
+    cooldown = cooldownSec;
+    mana -= profile.healManaCost;
+    let remaining = profile.healPower;
+    for (const { index } of injured) {
+      const applied = Math.min(hpPerUnit - hp[index], Math.max(1, remaining));
+      hp[index] += applied;
+      remaining -= applied;
+      if (remaining <= 0) break;
+    }
+    castTimes.push(Number(elapsed.toFixed(2)));
+  }
+  return { survivalSec: Number(elapsed.toFixed(2)), castTimes };
+}
+
 describe("support healing roster scaling", () => {
-  it("preserves the legacy per-unit healing rate for every current age roster", () => {
+  it("reduces each heal and derives the same mana profile for every current three-unit roster", () => {
     for (const age of AGES) {
       const roster = getWaveRoster(age.id);
       expect(getBattlelineUnitCount(roster)).toBe(3);
-      expect(getSupportHealPower(age.id)).toBe(6);
-      expect(getSupportHealPower(age.id) / 3).toBe(10 / 5);
+      expect(getSupportHealPower(age.id)).toBe(4);
+      expect(getSupportResourceProfile(age.id)).toEqual({
+        healPower: 4,
+        manaMax: 18,
+        healManaCost: 6,
+        manaRegenPerSec: 1.25,
+      });
     }
   });
 
@@ -36,18 +79,19 @@ describe("support healing roster scaling", () => {
     expect(scaleSupportHealPower(0)).toBe(0);
   });
 
-  it("keeps the adjusted survival gain equal to the legacy 5-unit baseline", () => {
+  it("keeps the mana-gated survival gain useful but below the legacy unlimited baseline", () => {
     const hp = 34;
     const incomingDamagePerUnitSec = 3;
     const cooldownSec = 1.2;
     const noSupport = uniformSurvivalSec(hp, incomingDamagePerUnitSec, 0, cooldownSec, 3);
     const legacyFive = uniformSurvivalSec(hp, incomingDamagePerUnitSec, 10, cooldownSec, 5);
-    const adjustedThree = uniformSurvivalSec(hp, incomingDamagePerUnitSec, 6, cooldownSec, 3);
-    const unscaledThree = uniformSurvivalSec(hp, incomingDamagePerUnitSec, 10, cooldownSec, 3);
+    const manaGated = manaGatedSurvivalSec();
 
     expect(noSupport).toBeCloseTo(11.33, 2);
     expect(legacyFive).toBeCloseTo(25.5, 2);
-    expect(adjustedThree).toBeCloseTo(legacyFive, 5);
-    expect(unscaledThree).toBeCloseTo(153, 2);
+    expect(manaGated.survivalSec).toBeGreaterThan(noSupport);
+    expect(manaGated.survivalSec).toBeLessThan(legacyFive * 0.65);
+    expect(manaGated.castTimes.slice(0, 3)).toEqual([1.2, 2.4, 3.6]);
+    expect(manaGated.castTimes[3] - manaGated.castTimes[2]).toBeGreaterThan(2);
   });
 });

@@ -26,6 +26,9 @@ repository work.
 - `five-issue-fixes-validation.md`: roster-scaled support healing, 30-second
   waves, layered procedural audio, QA-only terrain input, and full-lane hybrid
   terrain expansion evidence
+- `five-issue-followup-validation.md`: support mana gating, measured audio
+  output, terrain-independent facing, opaque world-surface architecture, and
+  fixed-fortress distinction evidence
 - `audio-system-prototype.md`: independent audio architecture and the historical
   pre-integration baseline from commit `f57303b`
 - `audio-integration-validation.md`: live scene integration, dynamic music,

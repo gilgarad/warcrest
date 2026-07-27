@@ -9,6 +9,7 @@ import {
 // Reuses the real AudioSystem singleton — no duplicated audio logic here,
 // per the "don't fake it twice" requirement in the task spec.
 const audio = getAudioSystem();
+void audio.initialize();
 
 const $ = <T extends HTMLElement>(id: string): T => document.getElementById(id) as T;
 

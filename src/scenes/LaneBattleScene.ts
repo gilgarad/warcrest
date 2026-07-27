@@ -17,6 +17,7 @@ import {
 import { getResource, type ResourceId } from "../data/resources";
 import {
   getSupportHealPower,
+  getSupportResourceProfile,
   getWaveRoster,
   type BattleUnitId,
   type SupportUnitId,
@@ -51,6 +52,7 @@ import {
   PROTOTYPE_TERRAIN_ASSETS,
   type StructureGroundPresentation,
 } from "../gfx/battlefieldPrototypeRenderer";
+import { BattlefieldWorldRenderer } from "../gfx/battlefieldWorldRenderer";
 import { generateBattlefield, type BattlefieldResult } from "../systems/battlefieldGenerator";
 import {
   BattleAudioStateMachine,
@@ -88,6 +90,8 @@ const FACING_DEAD_ZONE_WORLD_PX = 0.35;
 const ATTACK_VISUAL_DURATION_SEC = 0.48;
 const TOWER_IMAGE_GROUND_ORIGIN_Y = 1128 / 1254;
 const TOWER_IMAGE_VISIBLE_HEIGHT_RATIO = 1036 / 1254;
+const FIXED_FORTRESS_GROUND_ORIGIN_Y = 1038 / 1122;
+const FIXED_FORTRESS_VISIBLE_HEIGHT_RATIO = 1010 / 1122;
 const UNIT_IMAGE_GROUND_ORIGIN_Y = 0.86;
 
 interface SpriteOpaqueMetrics {
@@ -148,6 +152,10 @@ interface LaneUnit {
   attackAnimTime: number;
   attackFacingLockSec: number;
   healPower: number;
+  manaCurrent: number;
+  manaMax: number;
+  manaRegenPerSec: number;
+  healManaCost: number;
   attrition: number;
   displaySize: number;
   bobPhase: number;
@@ -162,6 +170,8 @@ interface LaneUnit {
   selectionRing: Phaser.GameObjects.Ellipse;
   hpBg: Phaser.GameObjects.Rectangle;
   hpFill: Phaser.GameObjects.Rectangle;
+  manaBg: Phaser.GameObjects.Rectangle;
+  manaFill: Phaser.GameObjects.Rectangle;
   label: Phaser.GameObjects.Text;
   hovered: boolean;
   selected: boolean;
@@ -239,10 +249,12 @@ interface CapturePointState {
   ring: Phaser.GameObjects.Arc;
   core: Phaser.GameObjects.Arc;
   towerSprite: Phaser.GameObjects.Image;
+  selectionHitZone: Phaser.GameObjects.Zone;
   towerHpBg: Phaser.GameObjects.Rectangle;
   towerHpFill: Phaser.GameObjects.Rectangle;
   groundPresentation?: StructureGroundPresentation;
   groundPresentationV2?: StructureGroundPresentation;
+  groundPresentationWorld?: StructureGroundPresentation;
   label: Phaser.GameObjects.Text;
   ownerText: Phaser.GameObjects.Text;
   buildingText: Phaser.GameObjects.Text;
@@ -326,8 +338,10 @@ export class LaneBattleScene extends Phaser.Scene {
   private workerAccumulator = new Map<string, number>();
   private terrainPrototype!: BattlefieldPrototypeRenderer;
   private terrainPrototypeV2!: BattlefieldPrototypeRenderer;
+  private terrainWorld!: BattlefieldWorldRenderer;
   private originalBackground!: Phaser.GameObjects.Image;
   private prototypeV2Background!: Phaser.GameObjects.Image;
+  private readonly legacyObstacleObjects: Phaser.GameObjects.Image[] = [];
   private terrainMode: TerrainRenderMode = parseTerrainRenderMode(QUERY_PARAMS.get("terrain"));
   private terrainPrototypeEnabled = this.terrainMode !== "legacy";
   private readonly prototypePresetId: PrototypePresetId = parsePrototypePreset(QUERY_PARAMS.get("preset"));
@@ -392,6 +406,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.load.image("tower-critical", "/assets/battlefield-objects/tower-critical.png");
     this.load.image("tower-ruin-asset", "/assets/battlefield-objects/tower-ruin.png");
     this.load.image("tower-build", "/assets/battlefield-objects/tower-build.png");
+    this.load.image("fixed-fortress-v1", "/assets/battlefield-objects/fixed-fortress-v1.png");
     this.load.image("rock-cluster", "/assets/battlefield-objects/rock-cluster.png");
     this.load.image("tree-cluster", "/assets/battlefield-objects/tree-cluster.png");
     this.load.image("stone-slinger-unit", "/assets/lane-units/stone-slinger-unit.png");
@@ -682,7 +697,7 @@ export class LaneBattleScene extends Phaser.Scene {
     const keyboard = this.input.keyboard;
     if (keyboard && this.terrainDebugInputEnabled) {
       const cycleTerrainMode = () => {
-        const modes: TerrainRenderMode[] = ["legacy", "prototype", "prototype-v2"];
+        const modes: TerrainRenderMode[] = ["legacy", "prototype", "prototype-v2", "world-surface"];
         const currentIndex = modes.indexOf(this.terrainMode);
         this.setTerrainMode(modes[(currentIndex + 1) % modes.length], true);
       };
@@ -723,6 +738,20 @@ export class LaneBattleScene extends Phaser.Scene {
         this.selectCapturePoint(fortress.id);
         this.refreshUi();
       },
+      prepareCapturePointInteraction: (id: number, hpRatio = 1) => {
+        const point = this.capturePoints.find((entry) => entry.id === id);
+        if (!point) return;
+        point.owner = "player";
+        point.control = 1;
+        point.towerBuilt = true;
+        point.towerBuildRemainingSec = 0;
+        point.towerHp = point.towerMaxHp * Phaser.Math.Clamp(hpRatio, 0.05, 1);
+        const focus = this.progressToScreen(point.progress, 0);
+        this.cameras.main.centerOn(focus.x, focus.y);
+        this.refreshCapturePointVisuals();
+        this.refreshUi();
+        this.publishDebug();
+      },
       setAttackVisualPhase: (
         unitId: BattleUnitId | SupportUnitId,
         team: TeamId,
@@ -735,6 +764,32 @@ export class LaneBattleScene extends Phaser.Scene {
         this.syncUnitPresentation(unit);
       },
       resetDirectionShowcase: () => this.resetValidationDirectionShowcase(),
+      prepareDirectionProbe: (direction: -1 | 1) => {
+        const unit = this.units.find((entry) => entry.unitId === "stone_axeman" && entry.team === "player");
+        if (!unit) return;
+        this.units.forEach((entry) => this.setUnitPresentationVisible(entry, entry === unit));
+        unit.attackAnimTime = 0;
+        unit.attackFacingLockSec = 0;
+        unit.attackTimerSec = 10;
+        unit.progress = 0.5 + direction * 0.045;
+        unit.visualProgress = 0.5;
+        unit.laneRow = 0;
+        unit.visualLaneRow = 0;
+        unit.facingX = direction === 1 ? -1 : 1;
+        const start = this.progressToScreen(unit.visualProgress, unit.visualLaneRow);
+        unit.lastPresentationX = start.x;
+        unit.lastPresentationY = start.y;
+        const focus = this.progressToScreen(0.5, 0);
+        this.cameras.main.centerOn(focus.x, focus.y);
+        this.syncUnitPresentation(unit);
+        this.publishDebug();
+      },
+      stepDirectionProbe: () => {
+        const unit = this.units.find((entry) => entry.unitId === "stone_axeman" && entry.team === "player" && entry.sprite.visible);
+        if (!unit) return;
+        this.syncUnitVisual(unit);
+        this.publishDebug();
+      },
       setUnitsVisible: (visible: boolean) => {
         this.units.forEach((unit) => this.setUnitPresentationVisible(unit, visible));
       },
@@ -758,6 +813,39 @@ export class LaneBattleScene extends Phaser.Scene {
         this.setUnitPresentationVisible(attacker, true);
         if (target) this.setUnitPresentationVisible(target, true);
       },
+      prepareSupportProbe: () => {
+        const support = this.units.find((unit) => unit.unitId === "supply_wagon" && unit.team === "player");
+        if (!support) return;
+        const allies = this.units.filter((unit) => unit.team === "player" && unit.role === "battle").slice(0, 3);
+        support.progress = 0.5;
+        support.laneRow = 0;
+        support.visualProgress = 0.5;
+        support.visualLaneRow = 0;
+        support.manaCurrent = support.manaMax;
+        support.attackTimerSec = 0;
+        allies.forEach((ally, index) => {
+          ally.progress = 0.5 + (index - 1) * 0.008;
+          ally.laneRow = (index - 1) * 1.6;
+          ally.visualProgress = ally.progress;
+          ally.visualLaneRow = ally.laneRow;
+          ally.hp = Math.max(1, ally.maxHp - 12);
+        });
+        this.units.forEach((unit) => this.setUnitPresentationVisible(unit, unit === support || allies.includes(unit)));
+        [...allies, support].forEach((unit) => this.syncUnitPresentation(unit));
+        const focus = this.progressToScreen(0.5, 0);
+        this.cameras.main.centerOn(focus.x, focus.y);
+        this.publishDebug();
+      },
+      stepSupportProbe: (deltaSec: number) => {
+        const support = this.units.find((unit) => unit.unitId === "supply_wagon" && unit.team === "player");
+        if (!support) return;
+        const step = Math.max(0, deltaSec);
+        support.attackTimerSec -= step;
+        support.manaCurrent = Math.min(support.manaMax, support.manaCurrent + support.manaRegenPerSec * step);
+        this.tickSupport(support, step);
+        this.units.filter((unit) => unit.team === "player").forEach((unit) => this.syncUnitPresentation(unit));
+        this.publishDebug();
+      },
     };
     (window as unknown as { __terrainPrototypeControl: typeof control }).__terrainPrototypeControl = control;
     this.setTerrainMode(this.terrainMode, false);
@@ -768,13 +856,15 @@ export class LaneBattleScene extends Phaser.Scene {
     this.terrainPrototypeEnabled = mode !== "legacy";
     this.terrainPrototype.setEnabled(mode === "prototype");
     this.terrainPrototypeV2.setEnabled(mode === "prototype-v2");
-    this.originalBackground.setVisible(mode !== "prototype-v2");
+    this.terrainWorld.setEnabled(mode === "world-surface");
+    this.originalBackground.setVisible(mode === "legacy" || mode === "prototype");
     this.prototypeV2Background.setVisible(mode === "prototype-v2");
+    this.legacyObstacleObjects.forEach((object) => object.setVisible(mode !== "world-surface"));
 
     this.capturePoints.forEach((point) => {
       const isPrototypePoint = point.id === 1;
       const isV1 = mode === "prototype" && isPrototypePoint;
-      const isV2 = mode === "prototype-v2";
+      const isV2 = mode === "prototype-v2" || mode === "world-surface";
       point.ring
         .setScale(isV1 ? 1.42 : 1, isV1 ? 0.68 : 1)
         .setVisible(!isV2 || this.selectedCapturePointId === point.id);
@@ -839,6 +929,15 @@ export class LaneBattleScene extends Phaser.Scene {
     );
     this.terrainPrototypeV2.create();
     this.terrainPrototypeV2.setEnabled(this.terrainMode === "prototype-v2");
+    this.terrainWorld = new BattlefieldWorldRenderer(
+      this,
+      LANE_BATTLEFIELD_MAP_SPEC,
+      WORLD_W,
+      WORLD_H,
+      (groundY, offset) => this.getGroundDepth(groundY, offset),
+    );
+    this.terrainWorld.create();
+    this.terrainWorld.setEnabled(this.terrainMode === "world-surface");
 
     const laneGlow = this.add.graphics().setDepth(DEPTH_FIELD);
     laneGlow.lineStyle(82, 0xffffff, 0.05);
@@ -854,11 +953,13 @@ export class LaneBattleScene extends Phaser.Scene {
 
     this.laneObstacles.forEach((obstacle) => {
       const pos = this.progressToScreen(obstacle.progress, obstacle.laneRow);
-      this.add.image(pos.x, pos.y, obstacle.textureKey)
+      const object = this.add.image(pos.x, pos.y, obstacle.textureKey)
         .setDisplaySize(obstacle.width, obstacle.height)
         .setOrigin(0.5, 0.86)
         .setAlpha(obstacle.alpha ?? 1)
         .setDepth(this.getGroundDepth(pos.y));
+      object.setVisible(this.terrainMode !== "world-surface");
+      this.legacyObstacleObjects.push(object);
     });
 
     this.capturePoints = CAPTURE_POINT_DEFINITIONS.map((definition) => {
@@ -868,6 +969,9 @@ export class LaneBattleScene extends Phaser.Scene {
         ? this.terrainPrototype.getSocketPresentation(getCapturePointSocketId(index))
         : undefined;
       const groundPresentationV2 = this.terrainPrototypeV2.getSocketPresentation(
+        getCapturePointSocketId(index),
+      );
+      const groundPresentationWorld = this.terrainWorld.getSocketPresentation(
         getCapturePointSocketId(index),
       );
       const ring = this.add.circle(pos.x, pos.y, 34, 0xf3cc6a, 0.2)
@@ -900,6 +1004,10 @@ export class LaneBattleScene extends Phaser.Scene {
         .setDisplaySize(TOWER_W, TOWER_H)
         .setOrigin(0.5, TOWER_IMAGE_GROUND_ORIGIN_Y)
         .setDepth(this.getGroundDepth(pos.y));
+      const selectionHitZone = this.add.zone(pos.x, pos.y, TOWER_W, TOWER_H)
+        .setOrigin(0.5, TOWER_IMAGE_GROUND_ORIGIN_Y)
+        .setDepth(DEPTH_UI - 1)
+        .setInteractive({ useHandCursor: true });
       const towerHpBg = this.add.rectangle(pos.x, pos.y - 158, 60, 7, 0x132033, 0.92)
         .setDepth(towerSprite.depth + 1)
         .setVisible(false);
@@ -912,6 +1020,7 @@ export class LaneBattleScene extends Phaser.Scene {
       core.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
       label.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
       towerSprite.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
+      selectionHitZone.on("pointerdown", () => this.selectCapturePoint(index));
 
       return {
         id: index,
@@ -931,10 +1040,12 @@ export class LaneBattleScene extends Phaser.Scene {
         ring,
         core,
         towerSprite,
+        selectionHitZone,
         towerHpBg,
         towerHpFill,
         groundPresentation,
         groundPresentationV2,
+        groundPresentationWorld,
         label,
         ownerText,
         buildingText,
@@ -1340,6 +1451,7 @@ export class LaneBattleScene extends Phaser.Scene {
       unit.attackFacingLockSec = Math.max(0, unit.attackFacingLockSec - deltaSec);
       unit.attackTimerSec -= deltaSec;
       if (unit.role === "support") {
+        unit.manaCurrent = Math.min(unit.manaMax, unit.manaCurrent + unit.manaRegenPerSec * deltaSec);
         this.tickSupport(unit, deltaSec);
         return;
       }
@@ -1427,8 +1539,9 @@ export class LaneBattleScene extends Phaser.Scene {
     const injured = allies
       .filter((ally) => ally.hp < ally.maxHp && this.unitDistance(unit, ally) <= unit.range * RANGE_TO_PROGRESS)
       .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
-    if (injured.length > 0 && unit.attackTimerSec <= 0) {
+    if (injured.length > 0 && unit.attackTimerSec <= 0 && unit.manaCurrent >= unit.healManaCost) {
       unit.attackTimerSec = unit.attackCooldownSec;
+      unit.manaCurrent -= unit.healManaCost;
       this.beginAttackPresentation(unit, injured[0].sprite.x);
       let remainingHeal = unit.healPower;
       let totalHealed = 0;
@@ -1929,7 +2042,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private isPrototypeV2(): boolean {
-    return this.terrainMode === "prototype-v2";
+    return this.terrainMode === "prototype-v2" || this.terrainMode === "world-surface";
   }
 
   private getCanvasCssScale(): number {
@@ -1997,7 +2110,14 @@ export class LaneBattleScene extends Phaser.Scene {
         .setVisible(!centralV2 && point.towerBuilt);
       point.towerSprite
         .setPosition(pos.x, pos.y)
-        .setOrigin(0.5, this.isPrototypeV2() ? TOWER_IMAGE_GROUND_ORIGIN_Y : 0.88);
+        .setOrigin(
+          0.5,
+          point.definition.pointType === "fixed-fortress"
+            ? FIXED_FORTRESS_GROUND_ORIGIN_Y
+            : this.isPrototypeV2()
+              ? TOWER_IMAGE_GROUND_ORIGIN_Y
+              : 0.88,
+        );
       point.towerSprite.setDepth(this.getGroundDepth(pos.y));
       point.groundPresentation?.shadow
         .setPosition(pos.x + 20, pos.y + 12)
@@ -2014,14 +2134,21 @@ export class LaneBattleScene extends Phaser.Scene {
         )
         .setDepth(this.getGroundDepth(pos.y, -2))
         .setVisible(centralV2 && point.towerBuilt);
+      point.groundPresentationWorld?.shadow
+        .setPosition(pos.x + 22, pos.y + 13)
+        .setDepth(this.getGroundDepth(pos.y, -2))
+        .setVisible(this.terrainMode === "world-surface" && point.towerBuilt);
       point.ownerText.setText(point.owner === "player" ? "아군 점령" : point.owner === "enemy" ? "적 점령" : "중립");
       point.ownerText.setColor(point.owner === "player" ? "#cfeeff" : point.owner === "enemy" ? "#ffd8d8" : "#eadfb3");
       const selectedScale = this.isPrototypeV2() ? 1 : selected ? 1.04 : 1;
       const towerTargetCssHeight = point.definition.pointType === "fixed-fortress"
         ? this.scaleVisualConfig.fixedFortressCssHeight
         : this.scaleVisualConfig.captureTowerCssHeight;
+      const visibleHeightRatio = point.definition.pointType === "fixed-fortress"
+        ? FIXED_FORTRESS_VISIBLE_HEIGHT_RATIO
+        : TOWER_IMAGE_VISIBLE_HEIGHT_RATIO;
       const towerHeight = this.isPrototypeV2()
-        ? this.cssPxToWorld(towerTargetCssHeight / TOWER_IMAGE_VISIBLE_HEIGHT_RATIO) * selectedScale
+        ? this.cssPxToWorld(towerTargetCssHeight / visibleHeightRatio) * selectedScale
         : TOWER_H * selectedScale;
       const towerWidth = this.isPrototypeV2()
         ? towerHeight * (point.towerSprite.frame.realWidth / point.towerSprite.frame.realHeight)
@@ -2074,6 +2201,8 @@ export class LaneBattleScene extends Phaser.Scene {
         ? "tower-build"
         : !point.towerBuilt
           ? "tower-ruin-asset"
+          : point.definition.pointType === "fixed-fortress"
+            ? "fixed-fortress-v1"
           : hpRatio > 0.66
             ? "tower-full"
             : hpRatio > 0.33
@@ -2082,9 +2211,17 @@ export class LaneBattleScene extends Phaser.Scene {
       point.towerSprite.setTexture(towerTexture);
       point.towerSprite.setAlpha(point.towerBuildRemainingSec > 0 ? 0.45 : 1);
       point.towerSprite.setDisplaySize(towerWidth, towerHeight);
+      point.selectionHitZone
+        .setPosition(pos.x, pos.y)
+        .setOrigin(0.5, point.towerSprite.originY)
+        .setSize(Math.max(towerWidth, this.cssPxToWorld(96)), Math.max(towerHeight, this.cssPxToWorld(120)))
+        .setDepth(DEPTH_UI - 1);
       point.towerSprite.clearTint();
       if (point.owner === "enemy" && point.towerBuilt) point.towerSprite.setTint(0xffd0d0);
       if (point.owner === "neutral" && point.towerBuilt) point.towerSprite.setTint(0xe7ddb5);
+      if (point.definition.pointType === "fixed-fortress" && point.towerBuilt && hpRatio <= 0.66) {
+        point.towerSprite.setTint(hpRatio > 0.33 ? 0xe4c6a0 : 0xc98a82);
+      }
       point.buildingText.setText(
         point.definition.pointType === "fixed-fortress"
           ? "고정 요새"
@@ -2434,6 +2571,8 @@ export class LaneBattleScene extends Phaser.Scene {
     unit.selectionRing.destroy();
     unit.hpBg.destroy();
     unit.hpFill.destroy();
+    unit.manaBg.destroy();
+    unit.manaFill.destroy();
     unit.label.destroy();
   }
 
@@ -2443,6 +2582,8 @@ export class LaneBattleScene extends Phaser.Scene {
     unit.selectionRing.setVisible(visible && (unit.selected || unit.hovered));
     unit.hpBg.setVisible(visible);
     unit.hpFill.setVisible(visible);
+    unit.manaBg.setVisible(visible && unit.role === "support");
+    unit.manaFill.setVisible(visible && unit.role === "support");
     unit.label.setVisible(visible && this.shouldShowV2UnitLabel(unit));
   }
 
@@ -2480,6 +2621,8 @@ export class LaneBattleScene extends Phaser.Scene {
     sprite.setTint(team === "player" ? 0xe9f6ff : 0xffd0d0);
     const hpBg = this.add.rectangle(pos.x, pos.y - 44, 34, 5, 0x132033, 0.92).setDepth(sprite.depth + 1);
     const hpFill = this.add.rectangle(pos.x - 17, pos.y - 44, 34, 5, team === "player" ? 0x62d4a3 : 0xf06f6f, 1).setOrigin(0, 0.5).setDepth(sprite.depth + 2);
+    const manaBg = this.add.rectangle(pos.x, pos.y - 38, 34, 4, 0x101a2b, 0.92).setDepth(sprite.depth + 1).setVisible(role === "support");
+    const manaFill = this.add.rectangle(pos.x - 17, pos.y - 38, 34, 4, 0x57a8ff, 1).setOrigin(0, 0.5).setDepth(sprite.depth + 2).setVisible(role === "support");
     const label = this.add.text(pos.x, pos.y - 58, stats.label, {
       fontFamily: "sans-serif",
       fontSize: "10px",
@@ -2487,7 +2630,9 @@ export class LaneBattleScene extends Phaser.Scene {
       stroke: "#132033",
       strokeThickness: 3,
     }).setOrigin(0.5).setDepth(sprite.depth + 3);
-    this.uiCamera?.ignore([shadow, selectionRing, sprite, hpBg, hpFill, label]);
+    this.uiCamera?.ignore([shadow, selectionRing, sprite, hpBg, hpFill, manaBg, manaFill, label]);
+
+    const supportProfile = getSupportResourceProfile(teamAgeId);
 
     const unit: LaneUnit = {
       id: nextUnitId++,
@@ -2509,6 +2654,10 @@ export class LaneBattleScene extends Phaser.Scene {
       attackAnimTime: 0,
       attackFacingLockSec: 0,
       healPower: role === "support" ? getSupportHealPower(teamAgeId) : stats.healPower ?? 0,
+      manaCurrent: role === "support" ? supportProfile.manaMax : 0,
+      manaMax: role === "support" ? supportProfile.manaMax : 0,
+      manaRegenPerSec: role === "support" ? supportProfile.manaRegenPerSec : 0,
+      healManaCost: role === "support" ? supportProfile.healManaCost : 0,
       attrition: 0,
       displaySize,
       bobPhase: Phaser.Math.FloatBetween(0, Math.PI * 2),
@@ -2523,6 +2672,8 @@ export class LaneBattleScene extends Phaser.Scene {
       selectionRing,
       hpBg,
       hpFill,
+      manaBg,
+      manaFill,
       label,
       hovered: false,
       selected: false,
@@ -2711,7 +2862,7 @@ export class LaneBattleScene extends Phaser.Scene {
       .setPosition(pos.x + attackOffsetX, pos.y - bob - attackLift)
       .setOrigin(0.5, originY)
       .setRotation(0)
-      .setFlipX(this.isPrototypeV2() && unit.facingX < 0)
+      .setFlipX(unit.facingX < 0)
       .setDisplaySize(spriteWidth, spriteHeight)
       .setDepth(this.getGroundDepth(pos.y));
     unit.hpBg
@@ -2722,6 +2873,17 @@ export class LaneBattleScene extends Phaser.Scene {
       .setPosition(pos.x - v2HpWidth / 2, hpY)
       .setSize(v2HpWidth * Math.max(0, unit.hp / unit.maxHp), v2HpHeight)
       .setDepth(this.getGroundDepth(pos.y, 6));
+    const manaY = hpY + v2HpHeight + this.cssPxToWorld(3);
+    unit.manaBg
+      .setPosition(pos.x, manaY)
+      .setSize(v2HpWidth, Math.max(2, v2HpHeight * 0.72))
+      .setDepth(this.getGroundDepth(pos.y, 5))
+      .setVisible(unit.role === "support");
+    unit.manaFill
+      .setPosition(pos.x - v2HpWidth / 2, manaY)
+      .setSize(v2HpWidth * (unit.manaMax > 0 ? unit.manaCurrent / unit.manaMax : 0), Math.max(2, v2HpHeight * 0.72))
+      .setDepth(this.getGroundDepth(pos.y, 6))
+      .setVisible(unit.role === "support");
     unit.label
       .setText(this.isPrototypeV2() ? `${UNIT_STATS[unit.unitId].label} Lv.1` : UNIT_STATS[unit.unitId].label)
       .setPosition(pos.x, labelY)
@@ -2978,6 +3140,11 @@ export class LaneBattleScene extends Phaser.Scene {
         motion: { x: unit.motionX, y: unit.motionY },
         pose: unit.currentTextureKey,
         attackAnimTime: unit.attackAnimTime,
+        manaCurrent: unit.manaCurrent,
+        manaMax: unit.manaMax,
+        manaRegenPerSec: unit.manaRegenPerSec,
+        healManaCost: unit.healManaCost,
+        healPower: unit.healPower,
       })),
       battlefield: {
         capturePoints: this.battlefield.capturePoints,
@@ -3078,6 +3245,10 @@ export class LaneBattleScene extends Phaser.Scene {
             hpWorldHeight: unit.hpBg.height,
             hpCssWidth: unit.hpBg.width * this.cameras.main.zoom * this.getCanvasCssScale(),
             hpCssHeight: unit.hpBg.height * this.cameras.main.zoom * this.getCanvasCssScale(),
+            manaCurrent: unit.manaCurrent,
+            manaMax: unit.manaMax,
+            manaRegenPerSec: unit.manaRegenPerSec,
+            healManaCost: unit.healManaCost,
             labelCssFontSize: Number.parseFloat(String(unit.label.style.fontSize))
               * this.cameras.main.zoom
               * this.getCanvasCssScale(),
@@ -3092,6 +3263,8 @@ export class LaneBattleScene extends Phaser.Scene {
             id: point.id,
             pointType: point.definition.pointType,
             textureKey: point.towerSprite.texture.key,
+            worldX: point.towerSprite.x,
+            worldY: point.towerSprite.y,
             cssFrameHeight: point.towerSprite.displayHeight
               * this.cameras.main.zoom
               * this.getCanvasCssScale(),
