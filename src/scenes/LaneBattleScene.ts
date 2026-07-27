@@ -4,6 +4,7 @@ import {
   BASE_FOOD_REGEN_PER_SEC,
   BASE_RESOURCE_TICK_SEC,
   BASE_WORKER_COST,
+  AI_INSTANT_WAVE_MIN_REMAINING_SEC,
   getAgeBalance,
   getOpponentScale,
   INSTANT_WAVE_TOKEN_COOLDOWN_AFTER_WAVE_SEC,
@@ -14,11 +15,21 @@ import {
   type ResourceCost,
 } from "../data/balance";
 import { getResource, type ResourceId } from "../data/resources";
-import { getWaveRoster, type BattleUnitId, type SupportUnitId } from "../data/unitRosters";
-import { LANE_BATTLEFIELD_MAP_SPEC } from "../data/battlefieldMaps";
+import {
+  getSupportHealPower,
+  getWaveRoster,
+  type BattleUnitId,
+  type SupportUnitId,
+} from "../data/unitRosters";
+import {
+  CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC,
+  getCapturePointSocketId,
+  LANE_BATTLEFIELD_MAP_SPEC,
+} from "../data/battlefieldMaps";
 import {
   getPrototypeScaleConfig,
   getPrototypeVisualConfig,
+  isTerrainDebugInputEnabled,
   parseScalePreset,
   parsePrototypePreset,
   parseTerrainRenderMode,
@@ -283,7 +294,7 @@ const UNIT_STATS: Record<BattleUnitId | SupportUnitId, UnitStatDef> = {
   iron_spearman: { hp: 50, attack: 15, defense: 7, range: 2.4, speed: 1.06, attackCooldownSec: 1.0, label: "철창", textureKey: "token-spear", tint: 0xa7c8dd },
   musketeer: { hp: 36, attack: 21, defense: 4, range: 6.4, speed: 1.0, attackCooldownSec: 2.1, label: "머스킷", textureKey: "token-ranged", tint: 0xc09aff },
   knight: { hp: 72, attack: 22, defense: 10, range: 1.8, speed: 1.35, attackCooldownSec: 1.45, label: "기사", textureKey: "token-elite", tint: 0xffe1a1 },
-  supply_wagon: { hp: 54, attack: 0, defense: 3, range: 4.4, speed: 0.98, attackCooldownSec: 1.2, healPower: 10, label: "보급", textureKey: "stone-supply-unit", tint: 0x89da93 },
+  supply_wagon: { hp: 54, attack: 0, defense: 3, range: 4.4, speed: 0.98, attackCooldownSec: 1.2, healPower: getSupportHealPower("stone"), label: "보급", textureKey: "stone-supply-unit", tint: 0x89da93 },
 };
 
 function makeResourceMap(gold: number, wood: number, food: number, metal: number): Record<ResourceId, number> {
@@ -325,15 +336,13 @@ export class LaneBattleScene extends Phaser.Scene {
   private readonly scaleVisualConfig: PrototypeScaleConfig = getPrototypeScaleConfig(this.scalePresetId);
   private readonly verificationSeed = QUERY_PARAMS.get("seed") ?? DEFAULT_VERIFICATION_SEED;
   private readonly visualValidationScenario = QUERY_PARAMS.get("scenario") === "visual-validation";
-  private readonly laneStart = new Phaser.Math.Vector2(1240, 3130);
-  private readonly laneEnd = new Phaser.Math.Vector2(5995, 580);
-  private readonly lanePath: LanePathNode[] = [
-    { progress: 0, position: new Phaser.Math.Vector2(1240, 3130) },
-    { progress: 0.375, position: new Phaser.Math.Vector2(3080, 2280) },
-    { progress: 0.588, position: new Phaser.Math.Vector2(4095, 1740) },
-    { progress: 0.767, position: new Phaser.Math.Vector2(4960, 1305) },
-    { progress: 1, position: new Phaser.Math.Vector2(5995, 580) },
-  ];
+  private readonly terrainDebugInputEnabled = isTerrainDebugInputEnabled(QUERY_PARAMS.get("terrainDebug"));
+  private readonly lanePath: LanePathNode[] = LANE_BATTLEFIELD_MAP_SPEC.lanePath.map((node) => ({
+    progress: node.progress,
+    position: new Phaser.Math.Vector2(node.position.x, node.position.y),
+  }));
+  private readonly laneStart = this.lanePath[0].position.clone();
+  private readonly laneEnd = this.lanePath[this.lanePath.length - 1].position.clone();
   private isDraggingField = false;
   private uiCamera!: Phaser.Cameras.Scene2D.Camera;
   private readonly worldObjects: Phaser.GameObjects.GameObject[] = [];
@@ -670,17 +679,26 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private setupTerrainPrototypeControls(): void {
-    this.input.keyboard?.on("keydown-T", () => {
-      const modes: TerrainRenderMode[] = ["legacy", "prototype", "prototype-v2"];
-      const currentIndex = modes.indexOf(this.terrainMode);
-      this.setTerrainMode(modes[(currentIndex + 1) % modes.length], true);
-    });
+    const keyboard = this.input.keyboard;
+    if (keyboard && this.terrainDebugInputEnabled) {
+      const cycleTerrainMode = () => {
+        const modes: TerrainRenderMode[] = ["legacy", "prototype", "prototype-v2"];
+        const currentIndex = modes.indexOf(this.terrainMode);
+        this.setTerrainMode(modes[(currentIndex + 1) % modes.length], true);
+      };
+      keyboard.on("keydown-T", cycleTerrainMode);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => keyboard.off("keydown-T", cycleTerrainMode));
+    }
 
     const control = {
       setEnabled: (enabled: boolean) => this.setTerrainMode(enabled ? "prototype" : "legacy", false),
       toggle: () => this.setTerrainMode(this.terrainMode === "legacy" ? "prototype" : "legacy", false),
       setMode: (mode: TerrainRenderMode) => this.setTerrainMode(mode, false),
       focusCentral: () => this.focusCentralCapture(),
+      focusProgress: (progress: number) => {
+        const focus = this.progressToScreen(Phaser.Math.Clamp(progress, 0, 1), 0);
+        this.cameras.main.centerOn(focus.x, focus.y);
+      },
       setPaused: (paused: boolean) => {
         if (paused) {
           this.scene.pause();
@@ -756,7 +774,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.capturePoints.forEach((point) => {
       const isPrototypePoint = point.id === 1;
       const isV1 = mode === "prototype" && isPrototypePoint;
-      const isV2 = mode === "prototype-v2" && isPrototypePoint;
+      const isV2 = mode === "prototype-v2";
       point.ring
         .setScale(isV1 ? 1.42 : 1, isV1 ? 0.68 : 1)
         .setVisible(!isV2 || this.selectedCapturePointId === point.id);
@@ -774,7 +792,7 @@ export class LaneBattleScene extends Phaser.Scene {
         ? "기존 전장 렌더링"
         : mode === "prototype"
           ? "중앙 지형 프로토타입 V1"
-          : `중앙 지형 프로토타입 V2 · ${this.prototypePresetId}/${this.scalePresetId}`;
+          : `전체 레인 지형 V2 · ${this.prototypePresetId}/${this.scalePresetId}`;
       this.infoText.setText(`${label} 표시`);
     }
   }
@@ -800,7 +818,7 @@ export class LaneBattleScene extends Phaser.Scene {
 
     this.terrainPrototype = new BattlefieldPrototypeRenderer(
       this,
-      LANE_BATTLEFIELD_MAP_SPEC,
+      CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC,
       (groundY, offset) => this.getGroundDepth(groundY, offset),
     );
     this.terrainPrototype.create();
@@ -847,11 +865,11 @@ export class LaneBattleScene extends Phaser.Scene {
       const { id: index, progress } = definition;
       const pos = this.progressToScreen(progress, 0);
       const groundPresentation = index === 1
-        ? this.terrainPrototype.getSocketPresentation("central-capture-tower")
+        ? this.terrainPrototype.getSocketPresentation(getCapturePointSocketId(index))
         : undefined;
-      const groundPresentationV2 = index === 1
-        ? this.terrainPrototypeV2.getSocketPresentation("central-capture-tower")
-        : undefined;
+      const groundPresentationV2 = this.terrainPrototypeV2.getSocketPresentation(
+        getCapturePointSocketId(index),
+      );
       const ring = this.add.circle(pos.x, pos.y, 34, 0xf3cc6a, 0.2)
         .setDepth(this.getGroundDepth(pos.y, -6))
         .setStrokeStyle(4, 0xf8e2a5, 0.55);
@@ -1279,7 +1297,11 @@ export class LaneBattleScene extends Phaser.Scene {
     this.enemy.nextWaveInSec -= deltaSec;
     this.enemy.lastWaveElapsedSec += deltaSec;
     if (this.shouldAiAgeUp()) this.advanceAge(this.enemy);
-    if (this.enemy.instantWaveTokens > 0 && this.enemy.lastWaveElapsedSec >= INSTANT_WAVE_TOKEN_COOLDOWN_AFTER_WAVE_SEC && this.enemy.nextWaveInSec > 22) {
+    if (
+      this.enemy.instantWaveTokens > 0
+      && this.enemy.lastWaveElapsedSec >= INSTANT_WAVE_TOKEN_COOLDOWN_AFTER_WAVE_SEC
+      && this.enemy.nextWaveInSec > AI_INSTANT_WAVE_MIN_REMAINING_SEC
+    ) {
       this.tryUseInstantWaveToken(this.enemy);
     }
   }
@@ -1420,6 +1442,12 @@ export class LaneBattleScene extends Phaser.Scene {
         totalHealed += applied;
       }
       if (totalHealed > 0) {
+        this.playWorldSfx(
+          "sfx.support.heal",
+          unit.sprite.x,
+          unit.sprite.y,
+          `support-heal:${unit.id}:${Math.round(this.elapsedSec * 1000)}`,
+        );
         this.spawnToast(`치유 ${totalHealed}`, unit.sprite.x, unit.sprite.y - 44, "#92f1a5");
       }
       return;
@@ -2437,6 +2465,7 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private spawnLaneUnit(team: TeamId, role: "battle" | "support", unitId: BattleUnitId | SupportUnitId, progress: number, laneRow: number): void {
     const stats = UNIT_STATS[unitId];
+    const teamAgeId = team === "player" ? this.player.ageId : this.enemy.ageId;
     const pos = this.progressToScreen(progress, laneRow);
     const displaySize = role === "support" ? 86 : 76;
     const initialTextureKey = this.getAnimatedTexture(unitId, "idle") ?? stats.textureKey;
@@ -2479,7 +2508,7 @@ export class LaneBattleScene extends Phaser.Scene {
       attackTimerSec: stats.attackCooldownSec * Phaser.Math.FloatBetween(0.4, 0.95),
       attackAnimTime: 0,
       attackFacingLockSec: 0,
-      healPower: stats.healPower ?? 0,
+      healPower: role === "support" ? getSupportHealPower(teamAgeId) : stats.healPower ?? 0,
       attrition: 0,
       displaySize,
       bobPhase: Phaser.Math.FloatBetween(0, Math.PI * 2),
@@ -3002,6 +3031,15 @@ export class LaneBattleScene extends Phaser.Scene {
           playerBaseHp: PLAYER_BASE_HP,
           enemyBaseHp: ENEMY_BASE_HP,
           laneRowSpacing: LANE_ROW_SPACING,
+        },
+        terrain: {
+          mapSpecId: LANE_BATTLEFIELD_MAP_SPEC.id,
+          patchCount: LANE_BATTLEFIELD_MAP_SPEC.terrainPatches.length,
+          cellCount: LANE_BATTLEFIELD_MAP_SPEC.terrainPatches.reduce(
+            (total, patch) => total + patch.cells.length,
+            0,
+          ),
+          structureSocketCount: LANE_BATTLEFIELD_MAP_SPEC.structureSockets.length,
         },
         presentation: {
           scalePreset: this.scalePresetId,

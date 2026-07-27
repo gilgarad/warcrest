@@ -151,58 +151,109 @@ export class BattlefieldPrototypeRenderer {
     const config = this.visualConfig;
     if (!config) throw new Error("Prototype V2 requires a visual config");
 
-    const alongScale = config.terrain.patchLength / 760;
-    const acrossScale = config.terrain.patchWidth / 300;
-    const transitionScale = config.terrain.transitionWidth / 110;
+    const patchLength = patch.columns * patch.cellWidth;
+    const patchWidth = patch.rows * patch.cellHeight;
     const cos = Math.cos(patch.rotationRad);
     const sin = Math.sin(patch.rotationRad);
-    const fixedDecals = [
-      { along: -330, across: -126, width: 164, height: 66, material: "grass" as const, rotation: -0.08 },
-      { along: -260, across: 116, width: 128, height: 52, material: "dirt" as const, rotation: 0.12 },
-      { along: -188, across: -94, width: 108, height: 42, material: "dirt" as const, rotation: -0.14 },
-      { along: -116, across: 82, width: 92, height: 36, material: "stone" as const, rotation: 0.08 },
-      { along: -48, across: -72, width: 82, height: 32, material: "stone" as const, rotation: -0.18 },
-      { along: 38, across: 68, width: 104, height: 36, material: "stone" as const, rotation: 0.15 },
-      { along: 126, across: -88, width: 96, height: 38, material: "dirt" as const, rotation: -0.1 },
-      { along: 196, across: 106, width: 132, height: 50, material: "dirt" as const, rotation: 0.17 },
-      { along: 286, across: -118, width: 148, height: 58, material: "grass" as const, rotation: -0.05 },
-      { along: 344, across: 92, width: 112, height: 44, material: "grass" as const, rotation: 0.13 },
-      { along: -18, across: 126, width: 74, height: 30, material: "dirt" as const, rotation: -0.21 },
-      { along: 76, across: -132, width: 68, height: 28, material: "grass" as const, rotation: 0.19 },
-      { along: -348, across: 32, width: 70, height: 26, material: "stone" as const, rotation: 0.09 },
-      { along: 356, across: -20, width: 76, height: 28, material: "stone" as const, rotation: -0.12 },
-      { along: -228, across: 34, width: 56, height: 24, material: "stone" as const, rotation: 0.2 },
-      { along: 242, across: -28, width: 62, height: 24, material: "stone" as const, rotation: -0.2 },
-      { along: -92, across: 144, width: 84, height: 31, material: "grass" as const, rotation: 0.06 },
-      { along: 154, across: -146, width: 88, height: 32, material: "grass" as const, rotation: -0.07 },
-    ];
+    const halfRows = (patch.rows - 1) / 2;
+    const materialRows = Array.from({ length: patch.rows }, (_, row) => {
+      const material = patch.cells.find((cell) => cell.row === row)?.material;
+      if (!material) throw new Error(`Terrain patch ${patch.id} has no material for row ${row}`);
+      return material;
+    });
+    const bands: Array<{ startRow: number; endRow: number; material: TerrainMaterial }> = [];
 
-    fixedDecals.slice(0, config.terrain.breakupCount).forEach((decal, index) => {
-      const along = decal.along * alongScale;
-      const across = decal.across * acrossScale;
-      const width = decal.width * transitionScale;
-      const height = decal.height * transitionScale;
+    materialRows.forEach((material, row) => {
+      const current = bands[bands.length - 1];
+      if (current?.material === material) {
+        current.endRow = row;
+      } else {
+        bands.push({ startRow: row, endRow: row, material });
+      }
+    });
+
+    bands.forEach((band, bandIndex) => {
+      const rowCenter = (band.startRow + band.endRow) / 2;
+      const across = (rowCenter - halfRows) * patch.cellHeight;
+      const x = patch.center.x - across * sin;
+      const y = patch.center.y + across * cos;
+      const bandHeight = (band.endRow - band.startRow + 1) * patch.cellHeight + 18;
+      const isOuterBand = band.startRow === 0 || band.endRow === patch.rows - 1;
+      const alpha = band.material === "stone"
+        ? config.terrain.breakupAlpha * 0.74
+        : config.terrain.transitionAlpha * (band.material === "dirt" ? 0.58 : 0.32);
+      const tile = this.scene.add.tileSprite(
+        x,
+        y,
+        patchLength,
+        bandHeight,
+        TERRAIN_TEXTURES[band.material],
+      )
+        .setRotation(patch.rotationRad)
+        .setTilePosition((bandIndex + 1) * 197, (bandIndex + 1) * 131)
+        .setTileScale(0.46 + bandIndex * 0.025)
+        .setTint(TERRAIN_TINT[band.material])
+        .setAlpha(alpha * (isOuterBand ? 0.76 : 1))
+        .setDepth(TERRAIN_DEPTH);
+      const maskShape = this.scene.make.graphics({ x, y }, false)
+        .setRotation(patch.rotationRad);
+      maskShape.fillStyle(0xffffff, 1);
+      maskShape.fillRoundedRect(
+        -patchLength / 2,
+        -bandHeight / 2,
+        patchLength,
+        bandHeight,
+        Math.min(bandHeight / 2, 120),
+      );
+      tile.setMask(maskShape.createGeometryMask());
+      this.objects.push(tile);
+    });
+
+    const patchSeed = [...patch.id].reduce((total, char) => total + char.charCodeAt(0), 0);
+    const decalCount = Math.max(
+      config.terrain.breakupCount,
+      Math.round(config.terrain.breakupCount * (patchLength / config.terrain.patchLength) * 0.55),
+    );
+    const transitionScale = config.terrain.transitionWidth / 110;
+
+    for (let index = 0; index < decalCount; index += 1) {
+      const sample = (multiplier: number, offset: number): number => (
+        ((patchSeed + index * multiplier + offset) % 101) / 100
+      );
+      const along = -patchLength / 2
+        + patchLength * ((index + 0.5) / decalCount)
+        + (sample(37, 11) - 0.5) * Math.min(92, patch.cellWidth * 0.72);
+      const across = (sample(53, 29) * 2 - 1) * patchWidth * 0.46;
+      const acrossRatio = Math.abs(across) / (patchWidth / 2);
+      const material: TerrainMaterial = acrossRatio < 0.3
+        ? "stone"
+        : acrossRatio < 0.68
+          ? "dirt"
+          : "grass";
+      const width = (54 + sample(71, 7) * 106) * transitionScale;
+      const height = (22 + sample(43, 17) * 42) * transitionScale;
       const x = patch.center.x + along * cos - across * sin;
       const y = patch.center.y + along * sin + across * cos;
-      const alpha = decal.material === "stone"
-        ? config.terrain.breakupAlpha
-        : config.terrain.transitionAlpha;
-      const tile = this.scene.add.tileSprite(x, y, width, height, TERRAIN_TEXTURES[decal.material])
-        .setRotation(patch.rotationRad + decal.rotation)
-        .setTilePosition(index * 83, index * 57)
+      const rotation = (sample(29, 41) - 0.5) * 0.42;
+      const alpha = material === "stone"
+        ? config.terrain.breakupAlpha * 0.78
+        : config.terrain.transitionAlpha * (material === "dirt" ? 0.68 : 0.5);
+      const tile = this.scene.add.tileSprite(x, y, width, height, TERRAIN_TEXTURES[material])
+        .setRotation(patch.rotationRad + rotation)
+        .setTilePosition((patchSeed + index * 83) % 907, (patchSeed + index * 57) % 811)
         .setTileScale(0.42 + (index % 3) * 0.04)
-        .setTint(TERRAIN_TINT[decal.material])
+        .setTint(TERRAIN_TINT[material])
         .setAlpha(alpha * (0.78 + (index % 4) * 0.07))
         .setFlipX(index % 2 === 1)
         .setFlipY(index % 3 === 1)
         .setDepth(TERRAIN_DEPTH);
       const maskShape = this.scene.make.graphics({ x, y }, false)
-        .setRotation(patch.rotationRad + decal.rotation);
+        .setRotation(patch.rotationRad + rotation);
       maskShape.fillStyle(0xffffff, 1);
       maskShape.fillEllipse(0, 0, width, height);
       tile.setMask(maskShape.createGeometryMask());
       this.objects.push(tile);
-    });
+    }
   }
 
   private createStructureGround(socket: StructureSocketSpec): void {

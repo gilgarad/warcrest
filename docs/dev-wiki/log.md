@@ -2140,3 +2140,24 @@ Use consistent headings so entries are easy to grep.
   맵 적용은 아직 보류 상태, `project_development.md`는 최신화가 안 돼
   stale함을 확인 — 자세한 내용은 `docs/dev-wiki/codex-prompt-log.md`
   (1)번 항목에 기록.
+
+## [2026-07-27] feature | 밸런스·오디오·입력·전체 레인 지형 5건 수정
+
+- 브랜치 `terrain-prototype-central`에서 작업했다. 별도 GitHub Issue는
+  만들지 않았으며 이 항목을 의무 fallback 작업 기록으로 사용한다.
+- 작업 시작 시 다른 세션 소유의 `project_development.md` 수정만 있었고,
+  해당 파일은 수정하거나 스테이징하지 않았다.
+- 보급대 회복량을 과거 5기 기준 10에서 실제 시대별 전투 로스터 수에
+  비례하도록 바꿨다. 현재 모든 시대 3기 기준 회복량은 6이다.
+- 웨이브를 30초로 줄이고 토큰 10초 쿨다운은 유지했다. AI 사용 임계값은
+  기존 `22/90` 비율로 계산해 약 7.33초가 됐다.
+- 실제 오디오 생성 도구가 없어 Web Audio를 확장했다. BGM은 32/48스텝
+  현악·금관·베이스·리드·타악 프레이즈로, SFX는 blade/impact/grunt/
+  healChime으로 분리하고 `sfx.support.heal`을 실제 치유 이벤트에 연결했다.
+- `keydown-T`는 일반 플레이에서 제거하고 `terrainDebug=1` QA URL에만
+  등록하며 장면 종료 때 해제한다.
+- V1 중앙 맵은 보존한 채 V2에 4개 연속 레인 패치, 368개 논리 지형 셀,
+  3개 구조물 socket을 적용했다. 원경 매트와 전투 로직은 유지했다.
+- 검증: build 통과, Vitest 57/57, 오디오 Playwright 4/4, 지형/입력
+  Playwright 2/2, `git diff --check` 통과. 상세 내용은
+  `docs/dev-wiki/five-issue-fixes-validation.md`에 기록했다.

@@ -23,6 +23,11 @@ export interface TerrainPatchSpec {
   cells: TerrainCellSpec[];
 }
 
+export interface LanePathNodeSpec {
+  progress: number;
+  position: WorldPointSpec;
+}
+
 export interface StructureFootprintSpec {
   shape: "ellipse";
   width: number;
@@ -45,14 +50,23 @@ export interface StructureSocketSpec {
 export interface BattlefieldMapSpec {
   schemaVersion: 1;
   id: string;
+  lanePath: LanePathNodeSpec[];
   terrainPatches: TerrainPatchSpec[];
   structureSockets: StructureSocketSpec[];
 }
 
-const CENTRAL_CAPTURE = { x: 4095, y: 1740 };
+export const LANE_PATH_NODES: LanePathNodeSpec[] = [
+  { progress: 0, position: { x: 1240, y: 3130 } },
+  { progress: 0.375, position: { x: 3080, y: 2280 } },
+  { progress: 0.588, position: { x: 4095, y: 1740 } },
+  { progress: 0.767, position: { x: 4960, y: 1305 } },
+  { progress: 1, position: { x: 5995, y: 580 } },
+];
+
+const CENTRAL_CAPTURE = LANE_PATH_NODES[2].position;
 const CENTRAL_LANE_ROTATION = Math.atan2(1305 - 2280, 4960 - 3080);
 
-function createCentralPrototypeCells(columns: number, rows: number): TerrainCellSpec[] {
+function createTerrainCells(columns: number, rows: number, variantSeed = 0): TerrainCellSpec[] {
   const centerRow = (rows - 1) / 2;
   const cells: TerrainCellSpec[] = [];
 
@@ -69,7 +83,7 @@ function createCentralPrototypeCells(columns: number, rows: number): TerrainCell
         column,
         row,
         material,
-        variant: (column * 17 + row * 31) % 8,
+        variant: (column * 17 + row * 31 + variantSeed * 13) % 8,
       });
     }
   }
@@ -80,9 +94,83 @@ function createCentralPrototypeCells(columns: number, rows: number): TerrainCell
 const CENTRAL_PATCH_COLUMNS = 8;
 const CENTRAL_PATCH_ROWS = 8;
 
-export const LANE_BATTLEFIELD_MAP_SPEC: BattlefieldMapSpec = {
+const LANE_PATCH_ROWS = 8;
+const LANE_PATCH_CELL_HEIGHT = 96;
+const LANE_PATCH_TARGET_CELL_WIDTH = 148;
+const LANE_PATCH_OVERLAP = 240;
+
+function createLaneTerrainPatches(): TerrainPatchSpec[] {
+  return LANE_PATH_NODES.slice(0, -1).map((start, index) => {
+    const end = LANE_PATH_NODES[index + 1];
+    const dx = end.position.x - start.position.x;
+    const dy = end.position.y - start.position.y;
+    const segmentLength = Math.hypot(dx, dy) + LANE_PATCH_OVERLAP;
+    const columns = Math.ceil(segmentLength / LANE_PATCH_TARGET_CELL_WIDTH);
+
+    return {
+      id: `playable-lane-segment-${index + 1}`,
+      center: {
+        x: (start.position.x + end.position.x) / 2,
+        y: (start.position.y + end.position.y) / 2,
+      },
+      rotationRad: Math.atan2(dy, dx),
+      columns,
+      rows: LANE_PATCH_ROWS,
+      cellWidth: segmentLength / columns,
+      cellHeight: LANE_PATCH_CELL_HEIGHT,
+      cells: createTerrainCells(columns, LANE_PATCH_ROWS, index + 1),
+    };
+  });
+}
+
+export function getCapturePointSocketId(capturePointId: number): string {
+  return `capture-point-${capturePointId}-tower`;
+}
+
+function createCaptureSocket(capturePointId: number, pathNodeIndex: number): StructureSocketSpec {
+  const previous = LANE_PATH_NODES[pathNodeIndex - 1].position;
+  const current = LANE_PATH_NODES[pathNodeIndex].position;
+  const next = LANE_PATH_NODES[pathNodeIndex + 1].position;
+  const tangentX = next.x - previous.x;
+  const tangentY = next.y - previous.y;
+  const tangentLength = Math.hypot(tangentX, tangentY);
+  const bypassDistance = 122;
+  const perpendicularX = -tangentY / tangentLength;
+  const perpendicularY = tangentX / tangentLength;
+
+  return {
+    id: getCapturePointSocketId(capturePointId),
+    kind: "capture-tower",
+    position: { ...current },
+    footprint: {
+      shape: "ellipse",
+      width: 166,
+      height: 76,
+      blocksMovement: false,
+    },
+    bypassSlots: [
+      {
+        x: current.x + perpendicularX * bypassDistance,
+        y: current.y + perpendicularY * bypassDistance,
+      },
+      {
+        x: current.x - perpendicularX * bypassDistance,
+        y: current.y - perpendicularY * bypassDistance,
+      },
+    ],
+  };
+}
+
+const CAPTURE_SOCKETS = [
+  createCaptureSocket(0, 1),
+  createCaptureSocket(1, 2),
+  createCaptureSocket(2, 3),
+];
+
+export const CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC: BattlefieldMapSpec = {
   schemaVersion: 1,
-  id: "warcrest-lane-prototype-v1",
+  id: "warcrest-central-terrain-prototype-v1",
+  lanePath: LANE_PATH_NODES,
   terrainPatches: [
     {
       id: "central-capture-prototype",
@@ -92,24 +180,16 @@ export const LANE_BATTLEFIELD_MAP_SPEC: BattlefieldMapSpec = {
       rows: CENTRAL_PATCH_ROWS,
       cellWidth: 148,
       cellHeight: 108,
-      cells: createCentralPrototypeCells(CENTRAL_PATCH_COLUMNS, CENTRAL_PATCH_ROWS),
+      cells: createTerrainCells(CENTRAL_PATCH_COLUMNS, CENTRAL_PATCH_ROWS),
     },
   ],
-  structureSockets: [
-    {
-      id: "central-capture-tower",
-      kind: "capture-tower",
-      position: CENTRAL_CAPTURE,
-      footprint: {
-        shape: "ellipse",
-        width: 166,
-        height: 76,
-        blocksMovement: false,
-      },
-      bypassSlots: [
-        { x: 4035, y: 1632 },
-        { x: 4155, y: 1848 },
-      ],
-    },
-  ],
+  structureSockets: [CAPTURE_SOCKETS[1]],
+};
+
+export const LANE_BATTLEFIELD_MAP_SPEC: BattlefieldMapSpec = {
+  schemaVersion: 1,
+  id: "warcrest-full-lane-hybrid-v1",
+  lanePath: LANE_PATH_NODES,
+  terrainPatches: createLaneTerrainPatches(),
+  structureSockets: CAPTURE_SOCKETS,
 };

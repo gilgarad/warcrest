@@ -54,7 +54,61 @@ async function startGame(page: Page): Promise<void> {
 
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 
+test("Audio Lab plays the layered score and distinct combat synthesis families", async ({ page }) => {
+  const runtimeErrors: string[] = [];
+  const failedResponses: Array<{ status: number; url: string }> = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      const location = message.location();
+      runtimeErrors.push(`${message.text()} @ ${location.url || "unknown"}:${location.lineNumber ?? 0}`);
+    }
+  });
+  page.on("pageerror", (error) => runtimeErrors.push(error.message));
+  page.on("response", (response) => {
+    if (response.status() >= 400) failedResponses.push({ status: response.status(), url: response.url() });
+  });
+
+  await page.goto("/tools/audio-lab/index.html");
+  await page.locator("#unlockBtn").click();
+  await expect(page.locator("#unlockStatus")).toContainText("활성화됨");
+  await page.locator("#combatSfxMode").selectOption("full");
+
+  await page.locator('[data-asset-id="bgm.battle.low"]').click();
+  await expect(page.locator("#state")).toContainText('"currentBgmId": "bgm.battle.low"');
+  await page.waitForTimeout(900);
+  await page.locator('[data-asset-id="bgm.battle.high"]').click();
+  await expect(page.locator("#state")).toContainText('"currentBgmId": "bgm.battle.high"');
+
+  for (const id of [
+    "sfx.combat.meleeHit",
+    "sfx.combat.projectileHit",
+    "sfx.combat.unitHit",
+    "sfx.combat.unitDeath",
+    "sfx.support.heal",
+  ]) {
+    await page.locator(`[data-asset-id="${id}"]`).click();
+    await page.waitForTimeout(120);
+  }
+
+  await page.waitForTimeout(700);
+  const state = JSON.parse(await page.locator("#state").innerText()) as {
+    currentBgmId: string;
+    activeBgmVoices: number;
+    lastError: string | null;
+    missingAssetCounts: { bgm: number; sfx: number };
+  };
+  expect(state.currentBgmId).toBe("bgm.battle.high");
+  expect(state.activeBgmVoices).toBeGreaterThan(0);
+  expect(state.lastError).toBeNull();
+  expect(state.missingAssetCounts).toEqual({ bgm: 6, sfx: 33 });
+  expect(failedResponses).toEqual([]);
+  expect(runtimeErrors).toEqual([]);
+
+  await page.screenshot({ path: `${ARTIFACT_DIR}/audio-lab-layered-synthesis.png`, fullPage: true });
+});
+
 test("complete audio lifecycle, settings, focus, terminal states, and restart", async ({ page }) => {
+  test.setTimeout(90_000);
   const consoleErrors: string[] = [];
   const failedResponses: Array<{ status: number; url: string }> = [];
   page.on("console", (message) => {

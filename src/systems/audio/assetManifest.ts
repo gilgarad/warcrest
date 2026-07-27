@@ -1,6 +1,6 @@
 import type { BgmAssetDef, SfxAssetDef } from "./types";
 
-const NO_ASSET_YET = "확인 필요 — 실제 오디오 파일이 아직 없음(프로토타입 합성음으로 대체 중)";
+const NO_ASSET_YET = "실제 오디오 파일 없음 — 외부 자산 없이 Web Audio 런타임 합성으로 대체 중";
 
 /**
  * BGM manifest. Every entry's `filePath` is where a real file *would* live —
@@ -85,16 +85,17 @@ export const SFX_ASSETS: SfxAssetDef[] = [
   // -- wave / combat --
   sfx("sfx.wave.prepare", "웨이브 준비", "wave", { kind: "sweepUp", frequency: 220, durationMs: 400 }, { cooldownMs: 800 }),
   sfx("sfx.wave.start", "웨이브 시작", "wave", { kind: "chime", frequency: 349.2, durationMs: 300 }, { cooldownMs: 800 }),
-  sfx("sfx.combat.meleeAttack", "근접 공격", "combat", { kind: "pluck", frequency: 300, durationMs: 80 }, { cooldownMs: 60, maxSimultaneous: 6 }),
-  sfx("sfx.combat.meleeHit", "근접 타격", "combat", { kind: "noiseHit", frequency: 260, durationMs: 90 }, { cooldownMs: 60, maxSimultaneous: 6 }),
+  sfx("sfx.combat.meleeAttack", "근접 공격", "combat", { kind: "blade", frequency: 420, durationMs: 130 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.55 }),
+  sfx("sfx.combat.meleeHit", "근접 타격", "combat", { kind: "blade", frequency: 310, durationMs: 170 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.62 }),
   sfx("sfx.combat.rangedFire", "원거리 발사", "combat", { kind: "pluck", frequency: 520, durationMs: 90 }, { cooldownMs: 60, maxSimultaneous: 6 }),
-  sfx("sfx.combat.projectileHit", "투사체 충돌", "combat", { kind: "noiseHit", frequency: 200, durationMs: 100 }, { cooldownMs: 60, maxSimultaneous: 6 }),
+  sfx("sfx.combat.projectileHit", "투사체 충돌", "combat", { kind: "impact", frequency: 150, durationMs: 180 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.64 }),
   sfx("sfx.combat.catapultFire", "투석기 발사", "combat", { kind: "sweepDown", frequency: 180, durationMs: 250 }, { cooldownMs: 300, maxSimultaneous: 2 }),
-  sfx("sfx.combat.catapultImpact", "투석기 충돌", "combat", { kind: "noiseHit", frequency: 100, durationMs: 260 }, { cooldownMs: 300, maxSimultaneous: 2 }),
-  sfx("sfx.combat.unitHit", "유닛 피격", "combat", { kind: "noiseHit", frequency: 340, durationMs: 70 }, { cooldownMs: 40, maxSimultaneous: 8 }),
-  sfx("sfx.combat.unitDeath", "유닛 사망", "combat", { kind: "sweepDown", frequency: 260, durationMs: 220 }, { cooldownMs: 80, maxSimultaneous: 4 }),
-  sfx("sfx.combat.towerAttack", "타워 공격", "combat", { kind: "pluck", frequency: 246.9, durationMs: 120 }, { cooldownMs: 150, maxSimultaneous: 3 }),
-  sfx("sfx.combat.towerHit", "타워 피격", "combat", { kind: "noiseHit", frequency: 150, durationMs: 140 }, { cooldownMs: 150, maxSimultaneous: 3 }),
+  sfx("sfx.combat.catapultImpact", "투석기 충돌", "combat", { kind: "impact", frequency: 82, durationMs: 360 }, { cooldownMs: 300, maxSimultaneous: 2, baseVolume: 0.72 }),
+  sfx("sfx.combat.unitHit", "유닛 피격", "combat", { kind: "grunt", frequency: 165, durationMs: 190 }, { cooldownMs: 40, maxSimultaneous: 8, baseVolume: 0.48 }),
+  sfx("sfx.combat.unitDeath", "유닛 사망", "combat", { kind: "grunt", frequency: 125, durationMs: 420 }, { cooldownMs: 80, maxSimultaneous: 4, baseVolume: 0.58 }),
+  sfx("sfx.combat.towerAttack", "타워 공격", "combat", { kind: "impact", frequency: 115, durationMs: 220 }, { cooldownMs: 150, maxSimultaneous: 3, baseVolume: 0.64 }),
+  sfx("sfx.combat.towerHit", "타워 피격", "combat", { kind: "impact", frequency: 95, durationMs: 260 }, { cooldownMs: 150, maxSimultaneous: 3, baseVolume: 0.68 }),
+  sfx("sfx.support.heal", "보급대 치유", "combat", { kind: "healChime", frequency: 659.3, durationMs: 520 }, { cooldownMs: 450, maxSimultaneous: 3, baseVolume: 0.52, pitchVariation: 0.025 }),
 
   // -- base / construction --
   sfx("sfx.capture.progress", "점령 진행", "capture", { kind: "pluck", frequency: 440, durationMs: 60 }, { cooldownMs: 400 }),

@@ -23,6 +23,9 @@ repository work.
   visual presets, world-UI sizing, exact-state comparison, and V2 recommendation
 - `terrain-prototype-v3-validation.md`: CSS-scale unit/tower presets, facing and
   attack verification, fixed-fortress policy, grounding, and controlled captures
+- `five-issue-fixes-validation.md`: roster-scaled support healing, 30-second
+  waves, layered procedural audio, QA-only terrain input, and full-lane hybrid
+  terrain expansion evidence
 - `audio-system-prototype.md`: independent audio architecture and the historical
   pre-integration baseline from commit `f57303b`
 - `audio-integration-validation.md`: live scene integration, dynamic music,

@@ -155,6 +155,7 @@ categories.forEach((category) => {
         btn.title = `결과: ${result}`;
       }
     });
+    btn.dataset.assetId = asset.id;
     grid.appendChild(btn);
   });
   sfxContainerEl.appendChild(grid);

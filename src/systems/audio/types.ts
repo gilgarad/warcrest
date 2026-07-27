@@ -11,7 +11,18 @@ export type BgmStateId =
 
 /** Minimal synthesis recipe used as a fallback voice when no real audio file exists yet. */
 export interface SynthProfile {
-  kind: "pad" | "pluck" | "pulse" | "noiseHit" | "sweepUp" | "sweepDown" | "chime";
+  kind:
+    | "pad"
+    | "pluck"
+    | "pulse"
+    | "noiseHit"
+    | "sweepUp"
+    | "sweepDown"
+    | "chime"
+    | "blade"
+    | "impact"
+    | "grunt"
+    | "healChime";
   /** Root frequency in Hz. For BGM pads this is the tonic; for SFX it's the pitch center. */
   frequency: number;
   durationMs: number;

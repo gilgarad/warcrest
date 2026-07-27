@@ -323,6 +323,10 @@ export function parseTerrainRenderMode(value: string | null): TerrainRenderMode 
   return "prototype";
 }
 
+export function isTerrainDebugInputEnabled(value: string | null): boolean {
+  return value === "1";
+}
+
 export function parsePrototypePreset(value: string | null): PrototypePresetId {
   if (value === "subtle" || value === "balanced" || value === "readability") return value;
   return DEFAULT_PROTOTYPE_PRESET;

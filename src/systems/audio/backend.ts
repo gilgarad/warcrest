@@ -268,20 +268,60 @@ export class WebAudioBackend implements AudioBackend {
     lead: number[];
     chord: number[][];
     pulseEvery: number;
+    stringsEvery: number;
+    brassEvery: number;
+    percussionEvery: number;
+    tension: number;
   } {
     switch (assetId) {
       case "bgm.menu":
-        return { root, beatSec: 0.52, phraseSteps: 16, bass: [0, 0, 5, 3], lead: [12, 14, 15, 10, 12, 7, 10, 14], chord: [[0, 3, 7], [0, 5, 8], [0, 3, 7], [0, 2, 7]], pulseEvery: 0 };
+        return {
+          root, beatSec: 0.62, phraseSteps: 32,
+          bass: [0, 0, -2, -2, -5, -5, -7, -7, 0, 0, 3, -2, -5, -7, -2, 0],
+          lead: [12, 10, 7, 5, 3, 5, 7, 10, 12, 15, 14, 10, 7, 5, 3, 2],
+          chord: [[0, 3, 7], [-2, 3, 7], [-5, 0, 3], [-7, -2, 2], [0, 3, 8], [3, 7, 10], [-2, 2, 7], [-5, 0, 5]],
+          pulseEvery: 0, stringsEvery: 4, brassEvery: 16, percussionEvery: 0, tension: 0.25,
+        };
       case "bgm.preparation":
-        return { root, beatSec: 0.4, phraseSteps: 16, bass: [0, 3, 5, 7], lead: [7, 10, 12, 10, 14, 12, 10, 7], chord: [[0, 3, 7], [0, 5, 8], [0, 4, 7], [0, 5, 10]], pulseEvery: 4 };
+        return {
+          root, beatSec: 0.46, phraseSteps: 32,
+          bass: [0, 0, 3, 3, 5, 5, 7, 7, 0, 3, 5, 7, 8, 7, 5, 3],
+          lead: [7, 10, 12, 10, 14, 12, 15, 14, 17, 15, 14, 12, 10, 12, 14, 15],
+          chord: [[0, 3, 7], [3, 7, 10], [5, 8, 12], [7, 10, 14], [0, 3, 8], [3, 7, 12], [5, 10, 14], [7, 12, 15]],
+          pulseEvery: 4, stringsEvery: 4, brassEvery: 8, percussionEvery: 8, tension: 0.46,
+        };
       case "bgm.battle.low":
-        return { root, beatSec: 0.32, phraseSteps: 16, bass: [0, 0, 3, 5, 0, 7, 5, 3], lead: [12, 10, 12, 15, 17, 15, 12, 10], chord: [[0, 3, 7], [0, 3, 8], [0, 5, 10], [0, 3, 7]], pulseEvery: 4 };
+        return {
+          root, beatSec: 0.36, phraseSteps: 48,
+          bass: [0, 0, 3, 0, 5, 3, 7, 5, 0, 3, 5, 7, 8, 7, 5, 3],
+          lead: [12, 10, 12, 15, 17, 15, 12, 10, 14, 15, 17, 19, 17, 15, 14, 12],
+          chord: [[0, 3, 7], [0, 3, 8], [3, 7, 10], [5, 8, 12], [0, 5, 10], [3, 8, 12], [5, 10, 15], [7, 12, 15]],
+          pulseEvery: 4, stringsEvery: 4, brassEvery: 8, percussionEvery: 4, tension: 0.68,
+        };
       case "bgm.battle.high":
-        return { root, beatSec: 0.24, phraseSteps: 24, bass: [0, 0, 3, 5, 7, 5, 3, 0], lead: [12, 15, 17, 19, 17, 15, 22, 19], chord: [[0, 3, 7], [0, 5, 8], [0, 3, 10], [0, 5, 10]], pulseEvery: 2 };
+        return {
+          root, beatSec: 0.27, phraseSteps: 48,
+          bass: [0, 0, 3, 5, 7, 5, 8, 7, 0, 3, 5, 7, 10, 8, 7, 5],
+          lead: [12, 15, 17, 19, 17, 22, 19, 24, 15, 17, 19, 22, 24, 22, 19, 17],
+          chord: [[0, 3, 7], [3, 7, 10], [5, 8, 12], [7, 10, 14], [8, 12, 15], [10, 14, 17], [7, 12, 15], [5, 10, 14]],
+          pulseEvery: 2, stringsEvery: 2, brassEvery: 4, percussionEvery: 2, tension: 1,
+        };
       case "bgm.victory":
-        return { root, beatSec: 0.34, phraseSteps: 12, bass: [0, 5, 7, 12], lead: [0, 4, 7, 12, 16, 19, 24, 19], chord: [[0, 4, 7], [0, 5, 9], [0, 4, 7], [0, 7, 12]], pulseEvery: 0 };
+        return {
+          root, beatSec: 0.38, phraseSteps: 16,
+          bass: [0, 5, 7, 12, 5, 7, 12, 12],
+          lead: [0, 4, 7, 12, 16, 19, 24, 19, 16, 19, 24, 28, 24, 19, 16, 12],
+          chord: [[0, 4, 7], [5, 9, 12], [7, 11, 14], [12, 16, 19]],
+          pulseEvery: 0, stringsEvery: 2, brassEvery: 4, percussionEvery: 4, tension: 0.72,
+        };
       default:
-        return { root, beatSec: 0.46, phraseSteps: 10, bass: [7, 5, 3, 0], lead: [12, 10, 7, 5, 3, 0, -2, -5], chord: [[0, 3, 7], [0, 3, 8], [0, 2, 7], [0, 3, 6]], pulseEvery: 0 };
+        return {
+          root, beatSec: 0.5, phraseSteps: 16,
+          bass: [7, 5, 3, 0, -2, -5, -7, -12],
+          lead: [12, 10, 7, 5, 3, 0, -2, -5, -7, -5, -9, -12],
+          chord: [[0, 3, 7], [-2, 3, 7], [-5, 0, 3], [-7, -2, 2]],
+          pulseEvery: 0, stringsEvery: 4, brassEvery: 8, percussionEvery: 0, tension: 0.34,
+        };
     }
   }
 
@@ -300,11 +340,15 @@ export class WebAudioBackend implements AudioBackend {
       gainValue: number,
       type: OscillatorType,
       attack = 0.025,
+      endFrequency?: number,
     ) => {
       const oscillator = ctx.createOscillator();
       const gain = ctx.createGain();
       oscillator.type = type;
       oscillator.frequency.setValueAtTime(frequency, time);
+      if (endFrequency) {
+        oscillator.frequency.exponentialRampToValueAtTime(endFrequency, time + duration);
+      }
       gain.gain.setValueAtTime(0.0001, time);
       gain.gain.exponentialRampToValueAtTime(Math.max(0.001, gainValue), time + attack);
       gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
@@ -316,20 +360,40 @@ export class WebAudioBackend implements AudioBackend {
       sources.add(oscillator);
     };
 
-    const bassInterval = profile.bass[step % profile.bass.length];
-    scheduleTone(profile.root / 2 * ratio(bassInterval), profile.beatSec * 0.92, 0.055, "triangle", 0.04);
+    const phraseStep = step % profile.phraseSteps;
+    const section = Math.floor(phraseStep / Math.max(1, profile.phraseSteps / 4));
+    const rise = 1 + section * profile.tension * 0.08;
+    const bassInterval = profile.bass[phraseStep % profile.bass.length];
+    scheduleTone(profile.root / 4 * ratio(bassInterval), profile.beatSec * 0.96, 0.07 * rise, "triangle", 0.035);
 
-    if (step % 2 === 0) {
-      const chord = profile.chord[Math.floor(step / 4) % profile.chord.length];
+    if (phraseStep % profile.stringsEvery === 0) {
+      const chord = profile.chord[Math.floor(phraseStep / profile.stringsEvery) % profile.chord.length];
       chord.forEach((interval, index) => {
-        scheduleTone(profile.root * ratio(interval), profile.beatSec * 2.8, 0.018 / (index + 1), "sine", 0.09);
+        const chordFrequency = profile.root / 2 * ratio(interval);
+        scheduleTone(chordFrequency, profile.beatSec * profile.stringsEvery * 1.35, 0.026 / (index + 1), "sine", 0.18);
+        scheduleTone(chordFrequency * 1.002, profile.beatSec * profile.stringsEvery * 1.2, 0.009 / (index + 1), "triangle", 0.22);
       });
-      const leadInterval = profile.lead[step % profile.lead.length];
-      scheduleTone(profile.root * ratio(leadInterval), profile.beatSec * 0.72, 0.028, "triangle", 0.012);
     }
 
-    if (profile.pulseEvery > 0 && step % profile.pulseEvery === profile.pulseEvery - 1) {
-      scheduleTone(profile.root * 2, profile.beatSec * 0.24, 0.012, "square", 0.004);
+    if (phraseStep % 2 === 0 && (section > 0 || profile.tension >= 0.6)) {
+      const leadInterval = profile.lead[Math.floor(phraseStep / 2) % profile.lead.length];
+      scheduleTone(profile.root * ratio(leadInterval), profile.beatSec * 1.45, 0.022 * rise, "triangle", 0.045);
+    }
+
+    if (profile.brassEvery > 0 && phraseStep % profile.brassEvery === 0) {
+      const brassInterval = profile.bass[Math.floor(phraseStep / profile.brassEvery) % profile.bass.length];
+      const brassRoot = profile.root / 2 * ratio(brassInterval);
+      scheduleTone(brassRoot, profile.beatSec * profile.brassEvery * 0.82, 0.024 * rise, "sawtooth", 0.14);
+      scheduleTone(brassRoot * 1.5, profile.beatSec * profile.brassEvery * 0.68, 0.011 * rise, "triangle", 0.12);
+    }
+
+    if (profile.percussionEvery > 0 && phraseStep % profile.percussionEvery === 0) {
+      const thump = profile.root * (profile.tension >= 0.8 ? 0.72 : 0.58);
+      scheduleTone(thump, profile.beatSec * 0.42, 0.038 * profile.tension, "sine", 0.004, thump * 0.44);
+    }
+
+    if (profile.pulseEvery > 0 && phraseStep % profile.pulseEvery === profile.pulseEvery - 1) {
+      scheduleTone(profile.root * 2, profile.beatSec * 0.22, 0.01 * rise, "square", 0.004);
     }
   }
 
@@ -380,66 +444,170 @@ export class WebAudioBackend implements AudioBackend {
     pan: number,
   ): VoiceHandle {
     const durationS = Math.max(0.05, profile.durationMs / 1000);
-    const g = ctx.createGain();
+    const master = ctx.createGain();
     const panner = ctx.createStereoPanner();
     panner.pan.value = pan;
-    g.connect(panner);
+    master.gain.value = Math.max(0, volume * (profile.gain ?? 1));
+    master.connect(panner);
     panner.connect(ctx.destination);
     const baseFreq = profile.frequency * pitchMultiplier;
     const t0 = ctx.currentTime;
-    let node: AudioScheduledSourceNode;
+    const sources = new Set<AudioScheduledSourceNode>();
+    let endAt = t0 + durationS;
 
-    if (profile.kind === "noiseHit") {
-      const bufferSize = Math.floor(ctx.sampleRate * durationS);
+    const connectLayer = (
+      source: AudioScheduledSourceNode,
+      gainValue: number,
+      startAt: number,
+      stopAt: number,
+      attackS: number,
+      filter?: { type: BiquadFilterType; frequency: number; q?: number },
+    ): void => {
+      const layerGain = ctx.createGain();
+      layerGain.gain.setValueAtTime(0.0001, startAt);
+      layerGain.gain.exponentialRampToValueAtTime(Math.max(0.001, gainValue), startAt + attackS);
+      layerGain.gain.exponentialRampToValueAtTime(0.0001, stopAt);
+      if (filter) {
+        const node = ctx.createBiquadFilter();
+        node.type = filter.type;
+        node.frequency.value = filter.frequency;
+        node.Q.value = filter.q ?? 0.7;
+        source.connect(node);
+        node.connect(layerGain);
+      } else {
+        source.connect(layerGain);
+      }
+      layerGain.connect(master);
+      source.onended = () => sources.delete(source);
+      source.start(startAt);
+      source.stop(stopAt + 0.02);
+      sources.add(source);
+      endAt = Math.max(endAt, stopAt + 0.02);
+    };
+
+    const scheduleOsc = (
+      type: OscillatorType,
+      frequency: number,
+      endFrequency: number,
+      gainValue: number,
+      startOffsetS = 0,
+      layerDurationS = durationS,
+      attackS = 0.008,
+      filter?: { type: BiquadFilterType; frequency: number; q?: number },
+    ): void => {
+      const osc = ctx.createOscillator();
+      const startAt = t0 + startOffsetS;
+      const stopAt = startAt + layerDurationS;
+      osc.type = type;
+      osc.frequency.setValueAtTime(Math.max(20, frequency), startAt);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFrequency), stopAt);
+      connectLayer(osc, gainValue, startAt, stopAt, Math.min(attackS, layerDurationS * 0.4), filter);
+    };
+
+    const scheduleNoise = (
+      gainValue: number,
+      startOffsetS = 0,
+      layerDurationS = durationS,
+      filter: { type: BiquadFilterType; frequency: number; q?: number } = {
+        type: "bandpass",
+        frequency: baseFreq,
+      },
+    ): void => {
+      const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * layerDurationS));
       const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+      for (let i = 0; i < bufferSize; i += 1) {
+        const progress = i / bufferSize;
+        data[i] = (Math.random() * 2 - 1) * (1 - progress * 0.72);
       }
       const noise = ctx.createBufferSource();
       noise.buffer = buffer;
-      const filter = ctx.createBiquadFilter();
-      filter.type = "bandpass";
-      filter.frequency.value = baseFreq;
-      noise.connect(filter);
-      filter.connect(g);
-      node = noise;
-    } else {
-      const osc = ctx.createOscillator();
-      osc.type = profile.kind === "chime" ? "sine" : profile.kind === "pluck" ? "triangle" : "square";
-      osc.frequency.setValueAtTime(baseFreq, t0);
-      if (profile.kind === "sweepUp") osc.frequency.exponentialRampToValueAtTime(baseFreq * 2.2, t0 + durationS);
-      if (profile.kind === "sweepDown") osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, t0 + durationS);
-      osc.connect(g);
-      node = osc;
+      const startAt = t0 + startOffsetS;
+      connectLayer(noise, gainValue, startAt, startAt + layerDurationS, 0.003, filter);
+    };
+
+    switch (profile.kind) {
+      case "blade":
+        scheduleNoise(0.62, 0, durationS * 0.72, { type: "highpass", frequency: baseFreq * 2.4, q: 0.5 });
+        scheduleNoise(0.34, 0.018, durationS * 0.9, { type: "bandpass", frequency: baseFreq * 4.6, q: 2.4 });
+        scheduleOsc("triangle", baseFreq * 2.1, baseFreq * 0.62, 0.26, 0, durationS * 0.64, 0.003);
+        break;
+      case "impact":
+        scheduleNoise(0.46, 0, durationS * 0.7, { type: "lowpass", frequency: baseFreq * 5.4, q: 0.8 });
+        scheduleOsc("sine", baseFreq * 1.5, baseFreq * 0.42, 0.78, 0, durationS, 0.002);
+        scheduleOsc("triangle", baseFreq * 2.6, baseFreq * 0.7, 0.2, 0.008, durationS * 0.52, 0.002);
+        break;
+      case "grunt":
+        scheduleOsc("sawtooth", baseFreq * 1.16, baseFreq * 0.64, 0.42, 0, durationS, 0.018, {
+          type: "bandpass", frequency: 520 * pitchMultiplier, q: 3.2,
+        });
+        scheduleOsc("triangle", baseFreq * 0.92, baseFreq * 0.52, 0.46, 0.012, durationS * 0.92, 0.012, {
+          type: "bandpass", frequency: 920 * pitchMultiplier, q: 4.1,
+        });
+        scheduleNoise(0.1, 0.03, durationS * 0.6, { type: "bandpass", frequency: 680, q: 1.8 });
+        break;
+      case "healChime": {
+        const notes = [1, 1.25, 1.5, 2];
+        notes.forEach((ratio, index) => {
+          const delay = index * 0.045;
+          const noteDuration = durationS * (1.35 - index * 0.08);
+          scheduleOsc("sine", baseFreq * ratio, baseFreq * ratio * 0.998, 0.34 / (1 + index * 0.18), delay, noteDuration, 0.008);
+          scheduleOsc("triangle", baseFreq * ratio * 2.01, baseFreq * ratio * 2, 0.08, delay, noteDuration * 0.72, 0.006);
+        });
+        scheduleNoise(0.075, 0.025, durationS * 0.5, { type: "highpass", frequency: 4200, q: 0.5 });
+        break;
+      }
+      case "noiseHit":
+        scheduleNoise(0.9, 0, durationS, { type: "bandpass", frequency: baseFreq, q: 0.9 });
+        break;
+      case "chime":
+        [1, 1.5, 2].forEach((ratio, index) => {
+          scheduleOsc("sine", baseFreq * ratio, baseFreq * ratio, 0.52 / (index + 1), index * 0.026, durationS * 1.2, 0.006);
+        });
+        break;
+      case "pluck":
+        scheduleOsc("triangle", baseFreq, baseFreq * 0.96, 0.82, 0, durationS, 0.004);
+        scheduleOsc("sine", baseFreq * 2, baseFreq * 1.92, 0.18, 0, durationS * 0.62, 0.003);
+        break;
+      case "sweepUp":
+        scheduleOsc("sawtooth", baseFreq, baseFreq * 2.2, 0.62, 0, durationS, 0.012, { type: "lowpass", frequency: baseFreq * 5 });
+        break;
+      case "sweepDown":
+        scheduleOsc("sawtooth", baseFreq, baseFreq * 0.5, 0.62, 0, durationS, 0.012, { type: "lowpass", frequency: baseFreq * 5 });
+        break;
+      case "pulse":
+        scheduleOsc("square", baseFreq, baseFreq * 0.82, 0.5, 0, durationS, 0.004, { type: "lowpass", frequency: baseFreq * 4 });
+        scheduleOsc("sine", baseFreq / 2, baseFreq / 3, 0.42, 0, durationS, 0.003);
+        break;
+      case "pad":
+      default:
+        scheduleOsc("sine", baseFreq, baseFreq, 0.48, 0, durationS, 0.04);
+        scheduleOsc("triangle", baseFreq * 1.5, baseFreq * 1.5, 0.22, 0, durationS, 0.05);
+        break;
     }
 
-    g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(Math.max(0.001, volume), t0 + Math.min(0.02, durationS * 0.2));
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + durationS);
-
-    node.start();
-    node.stop(t0 + durationS + 0.02);
-
     let playing = true;
-    setTimeout(() => {
+    const completionId = setTimeout(() => {
       playing = false;
-    }, (durationS + 0.02) * 1000);
+    }, Math.max(0, endAt - t0) * 1000);
 
     return {
       get isPlaying() {
         return playing;
       },
       setVolume(v: number) {
-        g.gain.value = v;
+        master.gain.setTargetAtTime(v * (profile.gain ?? 1), ctx.currentTime, 0.015);
       },
       stop() {
         playing = false;
-        try {
-          node.stop();
-        } catch {
-          // already stopped
-        }
+        clearTimeout(completionId);
+        sources.forEach((source) => {
+          try {
+            source.stop();
+          } catch {
+            // already stopped
+          }
+        });
       },
     };
   }

@@ -24,6 +24,9 @@ export interface AgeWaveRoster {
   support: Array<RosterEntry<SupportUnitId>>;
 }
 
+export const LEGACY_SUPPORT_HEAL_POWER = 10;
+export const LEGACY_SUPPORT_BATTLELINE_COUNT = 5;
+
 export const AGE_WAVE_ROSTERS: AgeWaveRoster[] = [
   {
     ageId: "stone",
@@ -75,4 +78,21 @@ export function getWaveRoster(ageId: AgeId): AgeWaveRoster {
   const found = AGE_WAVE_ROSTERS.find((roster) => roster.ageId === ageId);
   if (!found) throw new Error(`Unknown wave roster age: ${ageId}`);
   return found;
+}
+
+export function getBattlelineUnitCount(roster: AgeWaveRoster): number {
+  return roster.battleline.reduce((total, entry) => total + entry.count, 0);
+}
+
+export function scaleSupportHealPower(
+  battlelineUnitCount: number,
+  baselineHealPower = LEGACY_SUPPORT_HEAL_POWER,
+  baselineBattlelineCount = LEGACY_SUPPORT_BATTLELINE_COUNT,
+): number {
+  if (battlelineUnitCount <= 0 || baselineBattlelineCount <= 0) return 0;
+  return Math.round((baselineHealPower * battlelineUnitCount / baselineBattlelineCount) * 100) / 100;
+}
+
+export function getSupportHealPower(ageId: AgeId): number {
+  return scaleSupportHealPower(getBattlelineUnitCount(getWaveRoster(ageId)));
 }
