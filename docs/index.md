@@ -31,6 +31,7 @@ first — a maintained snapshot of current status/architecture/next-steps.
 - [Central Terrain Prototype V3 Validation](dev-wiki/terrain-prototype-v3-validation.md)
 - [Audio System Prototype](dev-wiki/audio-system-prototype.md)
 - [Audio Integration Validation](dev-wiki/audio-integration-validation.md)
+- [Codex Prompt Log](dev-wiki/codex-prompt-log.md) — separate from AI Usage Log below; this is where the current session's turns go while it's in prompt-engineering-only mode
 
 ## Patterns
 

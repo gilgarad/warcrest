@@ -2123,3 +2123,20 @@ Use consistent headings so entries are easy to grep.
   정확 일치를 확인했다.
 - 캡처와 JSON은 `artifacts/audio-integration/`, 상세 42항목 결과는
   `docs/dev-wiki/audio-integration-validation.md`에 기록했다.
+
+## [2026-07-27] process | 이 세션(Claude Code)을 프롬프트 엔지니어링 전용으로 전환
+
+- 사용자 지시: 이 세션은 별도 지시 전까지 이 저장소의 소스 코드를 직접
+  작성/수정하지 않고, 다른(Codex) 세션이 잘 작업할 수 있도록 프롬프트를
+  작성하는 역할로 전환. 하네스 규약(백로그 등)은 그대로 유지하되, 매 턴
+  대화 요약 저장은 `docs/ai-usage/session-log.md`가 아니라 새 별도 문서
+  `docs/dev-wiki/codex-prompt-log.md`로 옮김 — 형식/취지는 그 문서 상단에
+  기록.
+- `docs/index.md`에 새 문서 링크 추가. 코드 변경은 없음(파일 자체 없음
+  기록이 이 항목).
+- 겸사겸사 저장소 현재 상태를 재조사: 오디오 시스템이 실제 게임에 완전
+  통합됨(`docs/dev-wiki/audio-integration-validation.md`), 유닛 가독성/
+  고정요새 규칙 커밋(`91fb6c0`) 반영됨, 지형은 V3까지 진행했지만 전체
+  맵 적용은 아직 보류 상태, `project_development.md`는 최신화가 안 돼
+  stale함을 확인 — 자세한 내용은 `docs/dev-wiki/codex-prompt-log.md`
+  (1)번 항목에 기록.
