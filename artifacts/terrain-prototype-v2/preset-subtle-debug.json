@@ -1,0 +1,442 @@
+{
+  "phase": "lane-siege",
+  "elapsedSec": 30.203729999999993,
+  "player": {
+    "ageId": "stone",
+    "resources": {
+      "gold": 65,
+      "wood": 43,
+      "food": 54.203729999999936,
+      "metal": 21,
+      "gunpowder": 0,
+      "fuel": 0
+    },
+    "workers": {
+      "gold": 1,
+      "wood": 1,
+      "food": 1,
+      "metal": 1,
+      "research": 0,
+      "idle": 0
+    },
+    "baseHp": 400,
+    "nextWaveInSec": 59.79627000000016
+  },
+  "enemy": {
+    "ageId": "stone",
+    "resources": {
+      "gold": 39,
+      "wood": 21,
+      "food": 39.20372999999992,
+      "metal": 13,
+      "gunpowder": 0,
+      "fuel": 0
+    },
+    "workers": {
+      "gold": 1,
+      "wood": 1,
+      "food": 1,
+      "metal": 1,
+      "research": 0,
+      "idle": 0
+    },
+    "baseHp": 400,
+    "nextWaveInSec": 69.80082000000003
+  },
+  "units": [
+    {
+      "id": 1,
+      "team": "player",
+      "unitId": "stone_slinger",
+      "role": "battle",
+      "progress": 0.473589809999999,
+      "laneRow": 0,
+      "hp": 26,
+      "maxHp": 26
+    },
+    {
+      "id": 4,
+      "team": "player",
+      "unitId": "supply_wagon",
+      "role": "support",
+      "progress": 0.4308995480000003,
+      "laneRow": 0,
+      "hp": 54,
+      "maxHp": 54
+    },
+    {
+      "id": 5,
+      "team": "enemy",
+      "unitId": "stone_slinger",
+      "role": "battle",
+      "progress": 0.5309602600000032,
+      "laneRow": 0,
+      "hp": 26,
+      "maxHp": 26
+    },
+    {
+      "id": 8,
+      "team": "enemy",
+      "unitId": "supply_wagon",
+      "role": "support",
+      "progress": 0.5560670400000004,
+      "laneRow": 0,
+      "hp": 54,
+      "maxHp": 54
+    },
+    {
+      "id": 9,
+      "team": "enemy",
+      "unitId": "stone_slinger",
+      "role": "battle",
+      "progress": 0.5298166599999997,
+      "laneRow": -0.55,
+      "hp": 26,
+      "maxHp": 26
+    },
+    {
+      "id": 10,
+      "team": "enemy",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.49319826000000133,
+      "laneRow": -0.9999999999999999,
+      "hp": 34,
+      "maxHp": 34
+    },
+    {
+      "id": 11,
+      "team": "enemy",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.49319826000000133,
+      "laneRow": 2.0000000000000004,
+      "hp": 34,
+      "maxHp": 34
+    },
+    {
+      "id": 12,
+      "team": "enemy",
+      "unitId": "supply_wagon",
+      "role": "support",
+      "progress": 0.561940267999999,
+      "laneRow": -1,
+      "hp": 54,
+      "maxHp": 54
+    }
+  ],
+  "battlefield": {
+    "capturePoints": [
+      {
+        "x": 12,
+        "y": 10
+      },
+      {
+        "x": 20,
+        "y": 10
+      },
+      {
+        "x": 28,
+        "y": 10
+      }
+    ],
+    "controlPoints": [
+      {
+        "id": 0,
+        "owner": "player",
+        "control": 1,
+        "buildingId": null
+      },
+      {
+        "id": 1,
+        "owner": "enemy",
+        "control": -1,
+        "buildingId": "mint"
+      },
+      {
+        "id": 2,
+        "owner": "enemy",
+        "control": -1,
+        "buildingId": "supply_depot"
+      }
+    ],
+    "laneStart": {
+      "x": 1240,
+      "y": 3130
+    },
+    "laneEnd": {
+      "x": 5995,
+      "y": 580
+    }
+  },
+  "verification": {
+    "seed": "warcrest-central-v1",
+    "terrainMode": "prototype-v2",
+    "prototypePreset": "subtle",
+    "camera": {
+      "scrollX": 3295,
+      "scrollY": 1290,
+      "zoom": 0.46,
+      "centerX": 4095,
+      "centerY": 1740
+    },
+    "rules": {
+      "worldWidth": 7000,
+      "worldHeight": 3900,
+      "cameraZoom": 0.46,
+      "waveIntervalSec": 90,
+      "unitProgressSpeed": 0.02,
+      "rangeToProgress": 0.013,
+      "friendlyGap": 0.013,
+      "engageGap": 0.022,
+      "captureRadiusProgress": 0.06,
+      "captureRatePerSec": 0.36,
+      "playerBaseHp": 400,
+      "enemyBaseHp": 400,
+      "laneRowSpacing": 42
+    },
+    "presentation": {
+      "unitSizePreset": "S",
+      "configuredUnitHeight": 126,
+      "configuredSupportHeight": 138,
+      "towerScale": 1.05,
+      "unitGroundOriginY": 0.88,
+      "unitFontTargetScreenPx": 10,
+      "towerFontTargetScreenPx": 11,
+      "unitHpTargetScreenPx": {
+        "width": 31,
+        "height": 4
+      },
+      "towerHpTargetScreenPx": {
+        "width": 68,
+        "height": 7
+      },
+      "sampledUnits": [
+        {
+          "id": 1,
+          "unitId": "stone_slinger",
+          "worldWidth": 60.861758471662505,
+          "worldHeight": 120.02033863390322,
+          "screenWidth": 27.996408896964752,
+          "screenHeight": 55.20935577159548,
+          "originY": 0.88,
+          "hpWorldWidth": 67.39130434782608,
+          "hpWorldHeight": 8.695652173913043,
+          "hpScreenWidth": 30.999999999999996,
+          "hpScreenHeight": 4,
+          "labelScale": 2.1739130434782608,
+          "labelVisible": false
+        },
+        {
+          "id": 4,
+          "unitId": "supply_wagon",
+          "worldWidth": 93.22047919293821,
+          "worldHeight": 149.04000000000002,
+          "screenWidth": 42.88142042875158,
+          "screenHeight": 68.5584,
+          "originY": 0.88,
+          "hpWorldWidth": 67.39130434782608,
+          "hpWorldHeight": 8.695652173913043,
+          "hpScreenWidth": 30.999999999999996,
+          "hpScreenHeight": 4,
+          "labelScale": 2.1739130434782608,
+          "labelVisible": false
+        },
+        {
+          "id": 5,
+          "unitId": "stone_slinger",
+          "worldWidth": 60.54818489289741,
+          "worldHeight": 120.96000000000001,
+          "screenWidth": 27.85216505073281,
+          "screenHeight": 55.641600000000004,
+          "originY": 0.88,
+          "hpWorldWidth": 67.39130434782608,
+          "hpWorldHeight": 8.695652173913043,
+          "hpScreenWidth": 30.999999999999996,
+          "hpScreenHeight": 4,
+          "labelScale": 2.1739130434782608,
+          "labelVisible": false
+        },
+        {
+          "id": 8,
+          "unitId": "supply_wagon",
+          "worldWidth": 93.03253467843632,
+          "worldHeight": 149.04000000000002,
+          "screenWidth": 42.79496595208071,
+          "screenHeight": 68.5584,
+          "originY": 0.88,
+          "hpWorldWidth": 67.39130434782608,
+          "hpWorldHeight": 8.695652173913043,
+          "hpScreenWidth": 30.999999999999996,
+          "hpScreenHeight": 4,
+          "labelScale": 2.1739130434782608,
+          "labelVisible": false
+        },
+        {
+          "id": 9,
+          "unitId": "stone_slinger",
+          "worldWidth": 60.4118151071026,
+          "worldHeight": 120.96000000000001,
+          "screenWidth": 27.789434949267196,
+          "screenHeight": 55.641600000000004,
+          "originY": 0.88,
+          "hpWorldWidth": 67.39130434782608,
+          "hpWorldHeight": 8.695652173913043,
+          "hpScreenWidth": 30.999999999999996,
+          "hpScreenHeight": 4,
+          "labelScale": 2.1739130434782608,
+          "labelVisible": false
+        },
+        {
+          "id": 10,
+          "unitId": "stone_axeman",
+          "worldWidth": 65.44613303269448,
+          "worldHeight": 131.04,
+          "screenWidth": 30.10522119503946,
+          "screenHeight": 60.2784,
+          "originY": 0.88,
+          "hpWorldWidth": 67.39130434782608,
+          "hpWorldHeight": 8.695652173913043,
+          "hpScreenWidth": 30.999999999999996,
+          "hpScreenHeight": 4,
+          "labelScale": 2.1739130434782608,
+          "labelVisible": false
+        },
+        {
+          "id": 11,
+          "unitId": "stone_axeman",
+          "worldWidth": 65.44613303269448,
+          "worldHeight": 131.04,
+          "screenWidth": 30.10522119503946,
+          "screenHeight": 60.2784,
+          "originY": 0.88,
+          "hpWorldWidth": 67.39130434782608,
+          "hpWorldHeight": 8.695652173913043,
+          "hpScreenWidth": 30.999999999999996,
+          "hpScreenHeight": 4,
+          "labelScale": 2.1739130434782608,
+          "labelVisible": false
+        },
+        {
+          "id": 12,
+          "unitId": "supply_wagon",
+          "worldWidth": 93.03253467843632,
+          "worldHeight": 149.04000000000002,
+          "screenWidth": 42.79496595208071,
+          "screenHeight": 68.5584,
+          "originY": 0.88,
+          "hpWorldWidth": 67.39130434782608,
+          "hpWorldHeight": 8.695652173913043,
+          "hpScreenWidth": 30.999999999999996,
+          "hpScreenHeight": 4,
+          "labelScale": 2.1739130434782608,
+          "labelVisible": false
+        }
+      ],
+      "centralTower": {
+        "worldWidth": 161.616,
+        "worldHeight": 192.192,
+        "screenWidth": 74.34336,
+        "screenHeight": 88.40832,
+        "originY": 0.88,
+        "hpWorldWidth": 147.82608695652172,
+        "hpWorldHeight": 15.217391304347826,
+        "hpScreenWidth": 68,
+        "hpScreenHeight": 7,
+        "labelScale": 1.7080745341614907
+      }
+    },
+    "unitStats": {
+      "stone_slinger": {
+        "hp": 26,
+        "attack": 7,
+        "defense": 2,
+        "range": 4.5,
+        "speed": 1.05,
+        "attackCooldownSec": 1.3,
+        "healPower": 0
+      },
+      "stone_axeman": {
+        "hp": 34,
+        "attack": 9,
+        "defense": 3,
+        "range": 1.5,
+        "speed": 1.1,
+        "attackCooldownSec": 1,
+        "healPower": 0
+      },
+      "bronze_swordsman": {
+        "hp": 42,
+        "attack": 12,
+        "defense": 5,
+        "range": 1.5,
+        "speed": 1.1,
+        "attackCooldownSec": 0.95,
+        "healPower": 0
+      },
+      "bronze_spearman": {
+        "hp": 38,
+        "attack": 11,
+        "defense": 5,
+        "range": 2.2,
+        "speed": 1,
+        "attackCooldownSec": 1.05,
+        "healPower": 0
+      },
+      "archer": {
+        "hp": 30,
+        "attack": 13,
+        "defense": 3,
+        "range": 5.2,
+        "speed": 1.15,
+        "attackCooldownSec": 2,
+        "healPower": 0
+      },
+      "iron_swordsman": {
+        "hp": 54,
+        "attack": 16,
+        "defense": 8,
+        "range": 1.6,
+        "speed": 1.12,
+        "attackCooldownSec": 0.9,
+        "healPower": 0
+      },
+      "iron_spearman": {
+        "hp": 50,
+        "attack": 15,
+        "defense": 7,
+        "range": 2.4,
+        "speed": 1.06,
+        "attackCooldownSec": 1,
+        "healPower": 0
+      },
+      "musketeer": {
+        "hp": 36,
+        "attack": 21,
+        "defense": 4,
+        "range": 6.4,
+        "speed": 1,
+        "attackCooldownSec": 2.1,
+        "healPower": 0
+      },
+      "knight": {
+        "hp": 72,
+        "attack": 22,
+        "defense": 10,
+        "range": 1.8,
+        "speed": 1.35,
+        "attackCooldownSec": 1.45,
+        "healPower": 0
+      },
+      "supply_wagon": {
+        "hp": 54,
+        "attack": 0,
+        "defense": 3,
+        "range": 4.4,
+        "speed": 0.98,
+        "attackCooldownSec": 1.2,
+        "healPower": 10
+      }
+    }
+  }
+}

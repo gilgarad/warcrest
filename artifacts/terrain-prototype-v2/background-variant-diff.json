@@ -1,0 +1,16 @@
+{
+  "width": 1692,
+  "height": 929,
+  "changedPixels": 23348,
+  "changedPercent": 1.4853664557074768,
+  "changedBounds": {
+    "minX": 899,
+    "minY": 327,
+    "maxX": 1106,
+    "maxY": 493,
+    "width": 208,
+    "height": 167
+  },
+  "minimumVariantAlpha": 255,
+  "replacementIsFullyOpaque": true
+}

@@ -1,0 +1,25 @@
+{
+  "capturedAtElapsedSec": 30.17545666666663,
+  "seed": "warcrest-central-v1",
+  "legacyEqualsV1": true,
+  "v1EqualsV2": true,
+  "legacyEqualsV2": true,
+  "presetRuns": {
+    "subtle": {
+      "elapsedSec": 30.203729999999993,
+      "unitCount": 8,
+      "errors": []
+    },
+    "balanced": {
+      "elapsedSec": 30.153869999999994,
+      "unitCount": 8,
+      "errors": []
+    },
+    "readability": {
+      "elapsedSec": 30.210493333333293,
+      "unitCount": 8,
+      "errors": []
+    }
+  },
+  "pageErrors": []
+}

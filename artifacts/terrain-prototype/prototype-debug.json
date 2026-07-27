@@ -1,0 +1,290 @@
+{
+  "phase": "lane-siege",
+  "elapsedSec": 9.27134333333333,
+  "player": {
+    "ageId": "stone",
+    "resources": {
+      "gold": 60,
+      "wood": 40,
+      "food": 28.271343333333277,
+      "metal": 18,
+      "gunpowder": 0,
+      "fuel": 0
+    },
+    "workers": {
+      "gold": 1,
+      "wood": 1,
+      "food": 1,
+      "metal": 1,
+      "research": 0,
+      "idle": 0
+    },
+    "baseHp": 400,
+    "nextWaveInSec": 80.72865666666672
+  },
+  "enemy": {
+    "ageId": "stone",
+    "resources": {
+      "gold": 42,
+      "wood": 28,
+      "food": 18.27134333333325,
+      "metal": 18,
+      "gunpowder": 0,
+      "fuel": 0
+    },
+    "workers": {
+      "gold": 1,
+      "wood": 1,
+      "food": 1,
+      "metal": 1,
+      "research": 0,
+      "idle": 0
+    },
+    "baseHp": 400,
+    "nextWaveInSec": 80.72865666666672
+  },
+  "units": [
+    {
+      "id": 1,
+      "team": "player",
+      "unitId": "stone_slinger",
+      "role": "battle",
+      "progress": 0.314698209999999,
+      "laneRow": -1,
+      "hp": 26,
+      "maxHp": 26
+    },
+    {
+      "id": 2,
+      "team": "player",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.32396955333333244,
+      "laneRow": 0,
+      "hp": 34,
+      "maxHp": 34
+    },
+    {
+      "id": 3,
+      "team": "player",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.32396955333333244,
+      "laneRow": 3,
+      "hp": 34,
+      "maxHp": 34
+    },
+    {
+      "id": 4,
+      "team": "player",
+      "unitId": "supply_wagon",
+      "role": "support",
+      "progress": 0.2465693880000001,
+      "laneRow": 0,
+      "hp": 54,
+      "maxHp": 54
+    },
+    {
+      "id": 5,
+      "team": "enemy",
+      "unitId": "stone_slinger",
+      "role": "battle",
+      "progress": 0.6853017900000037,
+      "laneRow": -1,
+      "hp": 26,
+      "maxHp": 26
+    },
+    {
+      "id": 6,
+      "team": "enemy",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.6760304466666706,
+      "laneRow": 0,
+      "hp": 34,
+      "maxHp": 34
+    },
+    {
+      "id": 7,
+      "team": "enemy",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.6760304466666706,
+      "laneRow": 3,
+      "hp": 34,
+      "maxHp": 34
+    },
+    {
+      "id": 8,
+      "team": "enemy",
+      "unitId": "supply_wagon",
+      "role": "support",
+      "progress": 0.7534306120000007,
+      "laneRow": 0,
+      "hp": 54,
+      "maxHp": 54
+    }
+  ],
+  "battlefield": {
+    "capturePoints": [
+      {
+        "x": 12,
+        "y": 10
+      },
+      {
+        "x": 20,
+        "y": 10
+      },
+      {
+        "x": 28,
+        "y": 10
+      }
+    ],
+    "controlPoints": [
+      {
+        "id": 0,
+        "owner": "neutral",
+        "control": 0.30837600000000004,
+        "buildingId": null
+      },
+      {
+        "id": 1,
+        "owner": "neutral",
+        "control": 0,
+        "buildingId": null
+      },
+      {
+        "id": 2,
+        "owner": "enemy",
+        "control": -1,
+        "buildingId": "supply_depot"
+      }
+    ],
+    "laneStart": {
+      "x": 1240,
+      "y": 3130
+    },
+    "laneEnd": {
+      "x": 5995,
+      "y": 580
+    }
+  },
+  "verification": {
+    "seed": "warcrest-central-v1",
+    "terrainMode": "prototype",
+    "camera": {
+      "scrollX": 3295,
+      "scrollY": 1290,
+      "zoom": 0.46,
+      "centerX": 4095,
+      "centerY": 1740
+    },
+    "rules": {
+      "worldWidth": 7000,
+      "worldHeight": 3900,
+      "cameraZoom": 0.46,
+      "waveIntervalSec": 90,
+      "unitProgressSpeed": 0.02,
+      "rangeToProgress": 0.013,
+      "friendlyGap": 0.013,
+      "engageGap": 0.022,
+      "captureRadiusProgress": 0.06,
+      "captureRatePerSec": 0.36,
+      "playerBaseHp": 400,
+      "enemyBaseHp": 400,
+      "laneRowSpacing": 42
+    },
+    "unitStats": {
+      "stone_slinger": {
+        "hp": 26,
+        "attack": 7,
+        "defense": 2,
+        "range": 4.5,
+        "speed": 1.05,
+        "attackCooldownSec": 1.3,
+        "healPower": 0
+      },
+      "stone_axeman": {
+        "hp": 34,
+        "attack": 9,
+        "defense": 3,
+        "range": 1.5,
+        "speed": 1.1,
+        "attackCooldownSec": 1,
+        "healPower": 0
+      },
+      "bronze_swordsman": {
+        "hp": 42,
+        "attack": 12,
+        "defense": 5,
+        "range": 1.5,
+        "speed": 1.1,
+        "attackCooldownSec": 0.95,
+        "healPower": 0
+      },
+      "bronze_spearman": {
+        "hp": 38,
+        "attack": 11,
+        "defense": 5,
+        "range": 2.2,
+        "speed": 1,
+        "attackCooldownSec": 1.05,
+        "healPower": 0
+      },
+      "archer": {
+        "hp": 30,
+        "attack": 13,
+        "defense": 3,
+        "range": 5.2,
+        "speed": 1.15,
+        "attackCooldownSec": 2,
+        "healPower": 0
+      },
+      "iron_swordsman": {
+        "hp": 54,
+        "attack": 16,
+        "defense": 8,
+        "range": 1.6,
+        "speed": 1.12,
+        "attackCooldownSec": 0.9,
+        "healPower": 0
+      },
+      "iron_spearman": {
+        "hp": 50,
+        "attack": 15,
+        "defense": 7,
+        "range": 2.4,
+        "speed": 1.06,
+        "attackCooldownSec": 1,
+        "healPower": 0
+      },
+      "musketeer": {
+        "hp": 36,
+        "attack": 21,
+        "defense": 4,
+        "range": 6.4,
+        "speed": 1,
+        "attackCooldownSec": 2.1,
+        "healPower": 0
+      },
+      "knight": {
+        "hp": 72,
+        "attack": 22,
+        "defense": 10,
+        "range": 1.8,
+        "speed": 1.35,
+        "attackCooldownSec": 1.45,
+        "healPower": 0
+      },
+      "supply_wagon": {
+        "hp": 54,
+        "attack": 0,
+        "defense": 3,
+        "range": 4.4,
+        "speed": 0.98,
+        "attackCooldownSec": 1.2,
+        "healPower": 10
+      }
+    }
+  }
+}

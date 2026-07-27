@@ -2063,3 +2063,33 @@ Use consistent headings so entries are easy to grep.
 - 이 브랜치(`terrain-prototype-central`)는 아직 GitHub에 push되지 않은
   로컬 브랜치이며 다른 세션이 활발히 작업 중이므로, 이 세션에서는
   push/PR 등 원격 작업을 시도하지 않음.
+
+## [2026-07-27] feature | 중앙 거점 V3 크기·방향·요새 정책 프로토타입
+
+- 브랜치 `terrain-prototype-central`에서 작업했다. 별도 GitHub Issue를
+  만들지 않았으며 이 항목을 의무 fallback 작업 기록으로 사용한다.
+- `scale=compact|recommended|large`를 기존 지형 블렌드 프리셋과 분리하고,
+  투명 여백을 제외한 실제 실루엣을 CSS 픽셀 목표로 맞췄다. Recommended
+  실측은 투석 96px, 도끼 104px, 보급 116px, 일반 타워 144px, 고정 요새
+  162px이다.
+- canvas CSS scale, camera zoom, DPR을 반영한 고해상도 Phaser Text와
+  정수 canvas-pixel 정렬을 적용했다. 기존 작은 Text texture 역스케일과
+  blur 외곽선의 중복 축소를 제거했다.
+- 석기 3병종의 실제 idle/walk 2장/attack 에셋을 조사했다. 방향별 원화는
+  없으므로 이동 벡터·공격 대상·마지막 방향으로 좌우 flip만 정직하게
+  연결했다. 도끼 attack은 짧은 표시 시간, 보급 attack은 치유 트리거
+  누락이 원인이어서 시각 상태를 교정했다.
+- `capturePointDefinitions.ts`에 `fixed-fortress`와 `buildable` 정책을
+  명시했다. 고정 요새는 손상 시 수리, 파괴 시 재건만 보이고 최대 HP에는
+  버튼이 없으며, 일반 거점은 요새/병참/조달을 선택할 수 있다.
+- 타워 alpha bounds의 실제 기단 `originY=1128/1254`를 적용하고 foundation,
+  contact shadow, HP바와 발사점을 같은 ground anchor로 정렬했다.
+- Playwright 통제 장면은 12유닛, 네 대각 이동 벡터, 근접/원거리 공격,
+  실제 투석 투사체, 손상/최대/파괴 고정 요새와 빈 일반 거점을 포함한다.
+  고정 요새 액션 테스트 `pass: true`, page error 0건이다.
+- 검증: `npm run build` 및 `git diff --check` 통과. 같은 정지 상태의
+  legacy/V2 canonical snapshot, 이전 `rules`와 `unitStats`가 모두 정확히
+  일치했다. 문서 링크 검사 스크립트는 저장소에 없어 실행하지 못했다.
+- 상세 결과와 24개 요구 항목은
+  `docs/dev-wiki/terrain-prototype-v3-validation.md`, 캡처/JSON은
+  `artifacts/terrain-prototype-scale-v3/`에 저장했다.

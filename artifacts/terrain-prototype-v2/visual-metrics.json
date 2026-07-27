@@ -1,0 +1,232 @@
+{
+  "legacy": {
+    "terrainMode": "legacy",
+    "preset": "balanced",
+    "unitSizePreset": "M",
+    "units": {
+      "stone_slinger": {
+        "screenWidth": 35,
+        "screenHeight": 34.91,
+        "hpScreenWidth": 15.64,
+        "hpScreenHeight": 2.3,
+        "labelEffectiveScreenPx": 4.6,
+        "labelVisibleSamples": 3,
+        "sampleCount": 3,
+        "originY": 0.5
+      },
+      "supply_wagon": {
+        "screenWidth": 42.72,
+        "screenHeight": 42.72,
+        "hpScreenWidth": 15.64,
+        "hpScreenHeight": 2.3,
+        "labelEffectiveScreenPx": 4.6,
+        "labelVisibleSamples": 3,
+        "sampleCount": 3,
+        "originY": 0.5
+      },
+      "stone_axeman": {
+        "screenWidth": 34.96,
+        "screenHeight": 34.96,
+        "hpScreenWidth": 15.64,
+        "hpScreenHeight": 2.3,
+        "labelEffectiveScreenPx": 4.6,
+        "labelVisibleSamples": 2,
+        "sampleCount": 2,
+        "originY": 0.5
+      }
+    },
+    "centralTower": {
+      "screenWidth": 70.8,
+      "screenHeight": 84.2,
+      "hpScreenWidth": 27.6,
+      "hpScreenHeight": 3.22,
+      "labelEffectiveScreenPx": 6.44,
+      "originY": 0.88,
+      "towerToAverageBattleHeightRatio": 2.41
+    }
+  },
+  "v1": {
+    "terrainMode": "prototype",
+    "preset": "balanced",
+    "unitSizePreset": "M",
+    "units": {
+      "stone_slinger": {
+        "screenWidth": 25.8,
+        "screenHeight": 51.44,
+        "hpScreenWidth": 15.64,
+        "hpScreenHeight": 2.3,
+        "labelEffectiveScreenPx": 4.6,
+        "labelVisibleSamples": 3,
+        "sampleCount": 3,
+        "originY": 0.88
+      },
+      "supply_wagon": {
+        "screenWidth": 33.93,
+        "screenHeight": 54.28,
+        "hpScreenWidth": 15.64,
+        "hpScreenHeight": 2.3,
+        "labelEffectiveScreenPx": 4.6,
+        "labelVisibleSamples": 3,
+        "sampleCount": 3,
+        "originY": 0.88
+      },
+      "stone_axeman": {
+        "screenWidth": 25.73,
+        "screenHeight": 51.52,
+        "hpScreenWidth": 15.64,
+        "hpScreenHeight": 2.3,
+        "labelEffectiveScreenPx": 4.6,
+        "labelVisibleSamples": 2,
+        "sampleCount": 2,
+        "originY": 0.88
+      }
+    },
+    "centralTower": {
+      "screenWidth": 70.8,
+      "screenHeight": 84.2,
+      "hpScreenWidth": 27.6,
+      "hpScreenHeight": 3.22,
+      "labelEffectiveScreenPx": 6.44,
+      "originY": 0.88,
+      "towerToAverageBattleHeightRatio": 1.64
+    }
+  },
+  "subtle": {
+    "terrainMode": "prototype-v2",
+    "preset": "subtle",
+    "unitSizePreset": "S",
+    "units": {
+      "stone_slinger": {
+        "screenWidth": 27.88,
+        "screenHeight": 55.5,
+        "hpScreenWidth": 31,
+        "hpScreenHeight": 4,
+        "labelEffectiveScreenPx": 10,
+        "labelVisibleSamples": 0,
+        "sampleCount": 3,
+        "originY": 0.88
+      },
+      "supply_wagon": {
+        "screenWidth": 42.82,
+        "screenHeight": 68.56,
+        "hpScreenWidth": 31,
+        "hpScreenHeight": 4,
+        "labelEffectiveScreenPx": 10,
+        "labelVisibleSamples": 0,
+        "sampleCount": 3,
+        "originY": 0.88
+      },
+      "stone_axeman": {
+        "screenWidth": 30.11,
+        "screenHeight": 60.28,
+        "hpScreenWidth": 31,
+        "hpScreenHeight": 4,
+        "labelEffectiveScreenPx": 10,
+        "labelVisibleSamples": 0,
+        "sampleCount": 2,
+        "originY": 0.88
+      }
+    },
+    "centralTower": {
+      "screenWidth": 74.34,
+      "screenHeight": 88.41,
+      "hpScreenWidth": 68,
+      "hpScreenHeight": 7,
+      "labelEffectiveScreenPx": 11,
+      "originY": 0.88,
+      "towerToAverageBattleHeightRatio": 1.54
+    }
+  },
+  "balanced": {
+    "terrainMode": "prototype-v2",
+    "preset": "balanced",
+    "unitSizePreset": "M",
+    "units": {
+      "stone_slinger": {
+        "screenWidth": 32.82,
+        "screenHeight": 65.45,
+        "hpScreenWidth": 39,
+        "hpScreenHeight": 5,
+        "labelEffectiveScreenPx": 12,
+        "labelVisibleSamples": 0,
+        "sampleCount": 3,
+        "originY": 0.88
+      },
+      "supply_wagon": {
+        "screenWidth": 51.25,
+        "screenHeight": 82,
+        "hpScreenWidth": 39,
+        "hpScreenHeight": 5,
+        "labelEffectiveScreenPx": 12,
+        "labelVisibleSamples": 2,
+        "sampleCount": 3,
+        "originY": 0.88
+      },
+      "stone_axeman": {
+        "screenWidth": 36.53,
+        "screenHeight": 73.14,
+        "hpScreenWidth": 39,
+        "hpScreenHeight": 5,
+        "labelEffectiveScreenPx": 12,
+        "labelVisibleSamples": 0,
+        "sampleCount": 2,
+        "originY": 0.88
+      }
+    },
+    "centralTower": {
+      "screenWidth": 80.72,
+      "screenHeight": 95.99,
+      "hpScreenWidth": 82,
+      "hpScreenHeight": 9,
+      "labelEffectiveScreenPx": 13,
+      "originY": 0.88,
+      "towerToAverageBattleHeightRatio": 1.4
+    }
+  },
+  "readability": {
+    "terrainMode": "prototype-v2",
+    "preset": "readability",
+    "unitSizePreset": "L",
+    "units": {
+      "stone_slinger": {
+        "screenWidth": 38.79,
+        "screenHeight": 76.08,
+        "hpScreenWidth": 48,
+        "hpScreenHeight": 6,
+        "labelEffectiveScreenPx": 14,
+        "labelVisibleSamples": 3,
+        "sampleCount": 3,
+        "originY": 0.88
+      },
+      "supply_wagon": {
+        "screenWidth": 60.01,
+        "screenHeight": 96,
+        "hpScreenWidth": 48,
+        "hpScreenHeight": 6,
+        "labelEffectiveScreenPx": 14,
+        "labelVisibleSamples": 3,
+        "sampleCount": 3,
+        "originY": 0.88
+      },
+      "stone_axeman": {
+        "screenWidth": 44.17,
+        "screenHeight": 88.43,
+        "hpScreenWidth": 48,
+        "hpScreenHeight": 6,
+        "labelEffectiveScreenPx": 14,
+        "labelVisibleSamples": 2,
+        "sampleCount": 2,
+        "originY": 0.88
+      }
+    },
+    "centralTower": {
+      "screenWidth": 86.38,
+      "screenHeight": 102.72,
+      "hpScreenWidth": 98,
+      "hpScreenHeight": 11,
+      "labelEffectiveScreenPx": 15,
+      "originY": 0.88,
+      "towerToAverageBattleHeightRatio": 1.27
+    }
+  }
+}

@@ -1,0 +1,171 @@
+{
+  "phase": "lane-siege",
+  "player": {
+    "ageId": "stone",
+    "resources": {
+      "gold": 60,
+      "wood": 40,
+      "food": 24.613163333333247,
+      "metal": 18,
+      "gunpowder": 0,
+      "fuel": 0
+    },
+    "workers": {
+      "gold": 1,
+      "wood": 1,
+      "food": 1,
+      "metal": 1,
+      "research": 0,
+      "idle": 0
+    },
+    "baseHp": 400,
+    "nextWaveInSec": 84.38683666666675
+  },
+  "enemy": {
+    "ageId": "stone",
+    "resources": {
+      "gold": 42,
+      "wood": 28,
+      "food": 14.61316333333325,
+      "metal": 18,
+      "gunpowder": 0,
+      "fuel": 0
+    },
+    "workers": {
+      "gold": 1,
+      "wood": 1,
+      "food": 1,
+      "metal": 1,
+      "research": 0,
+      "idle": 0
+    },
+    "baseHp": 400,
+    "nextWaveInSec": 84.38683666666675
+  },
+  "units": [
+    {
+      "id": 1,
+      "team": "player",
+      "unitId": "stone_slinger",
+      "role": "battle",
+      "progress": 0.23787642999999886,
+      "laneRow": -1,
+      "hp": 26,
+      "maxHp": 26
+    },
+    {
+      "id": 2,
+      "team": "player",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.2434895933333323,
+      "laneRow": 0,
+      "hp": 34,
+      "maxHp": 34
+    },
+    {
+      "id": 3,
+      "team": "player",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.2434895933333323,
+      "laneRow": 3,
+      "hp": 34,
+      "maxHp": 34
+    },
+    {
+      "id": 4,
+      "team": "player",
+      "unitId": "supply_wagon",
+      "role": "support",
+      "progress": 0.174771452,
+      "laneRow": 0,
+      "hp": 54,
+      "maxHp": 54
+    },
+    {
+      "id": 5,
+      "team": "enemy",
+      "unitId": "stone_slinger",
+      "role": "battle",
+      "progress": 0.762123570000004,
+      "laneRow": -1,
+      "hp": 26,
+      "maxHp": 26
+    },
+    {
+      "id": 6,
+      "team": "enemy",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.7565104066666707,
+      "laneRow": 0,
+      "hp": 34,
+      "maxHp": 34
+    },
+    {
+      "id": 7,
+      "team": "enemy",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.7565104066666707,
+      "laneRow": 3,
+      "hp": 34,
+      "maxHp": 34
+    },
+    {
+      "id": 8,
+      "team": "enemy",
+      "unitId": "supply_wagon",
+      "role": "support",
+      "progress": 0.8252285479999999,
+      "laneRow": 0,
+      "hp": 54,
+      "maxHp": 54
+    }
+  ],
+  "battlefield": {
+    "capturePoints": [
+      {
+        "x": 12,
+        "y": 10
+      },
+      {
+        "x": 20,
+        "y": 10
+      },
+      {
+        "x": 28,
+        "y": 10
+      }
+    ],
+    "controlPoints": [
+      {
+        "id": 0,
+        "owner": "neutral",
+        "control": 0,
+        "buildingId": null
+      },
+      {
+        "id": 1,
+        "owner": "neutral",
+        "control": 0,
+        "buildingId": null
+      },
+      {
+        "id": 2,
+        "owner": "enemy",
+        "control": -1,
+        "buildingId": "supply_depot"
+      }
+    ],
+    "laneStart": {
+      "x": 1240,
+      "y": 3130
+    },
+    "laneEnd": {
+      "x": 5995,
+      "y": 580
+    }
+  }
+}

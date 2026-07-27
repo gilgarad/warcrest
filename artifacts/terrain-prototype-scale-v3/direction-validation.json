@@ -1,0 +1,45 @@
+{
+  "errors": [],
+  "directions": [
+    {
+      "id": 9,
+      "unitId": "stone_axeman",
+      "facingX": 1,
+      "flipX": false,
+      "motion": {
+        "x": 19.44567137208378,
+        "y": 6.642410822043985
+      }
+    },
+    {
+      "id": 10,
+      "unitId": "stone_axeman",
+      "facingX": 1,
+      "flipX": false,
+      "motion": {
+        "x": 4.410854258391282,
+        "y": -21.402400097890677
+      }
+    },
+    {
+      "id": 11,
+      "unitId": "stone_axeman",
+      "facingX": -1,
+      "flipX": true,
+      "motion": {
+        "x": -4.570556887043949,
+        "y": 21.63303257588268
+      }
+    },
+    {
+      "id": 12,
+      "unitId": "stone_slinger",
+      "facingX": -1,
+      "flipX": true,
+      "motion": {
+        "x": -21.11662816357193,
+        "y": -7.50147112182276
+      }
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "compact": {
+    "units": {
+      "stone_axeman": {
+        "visibleCssPx": 97.76,
+        "frameCssPx": 146.23,
+        "labelCssPx": 12.95,
+        "pose": "stone-axeman-walk-a"
+      },
+      "stone_slinger": {
+        "visibleCssPx": 90.24,
+        "frameCssPx": 136.36,
+        "labelCssPx": 12.95,
+        "pose": "stone-slinger-walk-a"
+      },
+      "supply_wagon": {
+        "visibleCssPx": 106,
+        "frameCssPx": 139.86,
+        "labelCssPx": 12.95,
+        "pose": "stone-supply-idle"
+      }
+    },
+    "fixedFortress": {
+      "visibleCssPx": 148,
+      "frameCssPx": 179.14,
+      "labelCssPx": 16.09
+    },
+    "cssScale": 0.85333,
+    "dpr": 1
+  },
+  "recommended": {
+    "units": {
+      "stone_axeman": {
+        "visibleCssPx": 104,
+        "frameCssPx": 155.56,
+        "labelCssPx": 14.13,
+        "pose": "stone-axeman-walk-a"
+      },
+      "stone_slinger": {
+        "visibleCssPx": 96,
+        "frameCssPx": 149.92,
+        "labelCssPx": 14.13,
+        "pose": "stone-slinger-walk-b"
+      },
+      "supply_wagon": {
+        "visibleCssPx": 116,
+        "frameCssPx": 153.06,
+        "labelCssPx": 14.13,
+        "pose": "stone-supply-idle"
+      }
+    },
+    "fixedFortress": {
+      "visibleCssPx": 162,
+      "frameCssPx": 196.09,
+      "labelCssPx": 16.88
+    },
+    "cssScale": 0.85333,
+    "dpr": 1
+  },
+  "large": {
+    "units": {
+      "stone_axeman": {
+        "visibleCssPx": 110.24,
+        "frameCssPx": 164.9,
+        "labelCssPx": 14.13,
+        "pose": "stone-axeman-walk-a"
+      },
+      "stone_slinger": {
+        "visibleCssPx": 101.76,
+        "frameCssPx": 158.91,
+        "labelCssPx": 14.13,
+        "pose": "stone-slinger-walk-b"
+      },
+      "supply_wagon": {
+        "visibleCssPx": 124,
+        "frameCssPx": 163.61,
+        "labelCssPx": 14.13,
+        "pose": "stone-supply-idle"
+      }
+    },
+    "fixedFortress": {
+      "visibleCssPx": 174,
+      "frameCssPx": 210.61,
+      "labelCssPx": 18.06
+    },
+    "cssScale": 0.85333,
+    "dpr": 1
+  }
+}
