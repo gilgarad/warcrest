@@ -466,3 +466,84 @@ dirt: 0.2, stone: 0.32`)를 또 조정하는 수준의 대응은 **이번엔 받
 확인이 필요한 부분을 정리해라. `docs/dev-wiki/log.md`에 하네스 규칙대로
 기록하고, 순서대로 하나씩 끝내고 다음으로 넘어가라.
 ```
+
+## 2026-07-27 (4) — 일반 거점 vs 요새 거점 혼동 문제 → 프롬프트에 5번 항목 추가
+
+### 사용자 지시 원문
+
+> 조금 더 추가하여 프롬프트 만들어줘. 일반 거점과 요새 거점이 다르다고
+> 앞서서도 계속 말했는데, 요새 거점 클릭하면 다른 건물을 지을 수 있도록
+> 되어있음. 만일 일반 거점과 요새 거점의 위치가 비슷한 바람에 일어난
+> 착각이라면 조금 위치를 서로 변경해야함.
+
+### 확인한 현재 코드 상태
+
+- `src/data/capturePointDefinitions.ts:32-65`: 거점 3개는 `id 0`
+  (`progress 0.375`, `pointType: "buildable"`), `id 1` (`progress 0.588`,
+  `pointType: "fixed-fortress"`), `id 2` (`progress 0.767`,
+  `pointType: "buildable"`)로 데이터 모델은 세 지점을 진행도(progress)
+  기준으로 분명히 떨어뜨려 정의하고 있다.
+- `getCapturePointActions()`(같은 파일 68-96행): `fixed-fortress`는
+  `rebuild-fortress`/`repair-fortress`만 반환하고, `build-supply-depot`/
+  `build-mint` 같은 액션은 `pointType !== "fixed-fortress"` 분기에서만
+  나온다. `LaneBattleScene.ts:1740-1805` `tryBuildAtSelectedPoint()`도
+  `allowedBuildingTypes.includes(buildingId)`를 먼저 검사하고, 요새는
+  `allowedBuildingTypes: ["watchtower"]` 뿐이라 다른 건물 ID는 이 시점에서
+  거부된다. **즉 백엔드 로직만 보면 요새를 선택한 상태에서 다른 건물을
+  짓는 것은 데이터상 불가능하다.**
+- 그런데 `refreshCapturePointVisuals()`(`LaneBattleScene.ts:1976-2090`)를
+  보면 요새와 일반 거점(타워 건설됨 상태)이 **같은 타워 스프라이트
+  텍스처**(`tower-full`/`tower-damaged`/`tower-critical`)를 그대로
+  공유하고, 높이 차이도 `fixedFortressCssHeight`(162px) vs
+  `captureTowerCssHeight`(144px)로 약 12%뿐이며, 색조(tint)도 소유
+  진영 기준으로만 다르다. 시각적으로 둘을 구분해주는 건 사실상 머리 위
+  텍스트 라벨(`중앙 고정 요새 · Lv.1` vs `건설 거점 N · 타워 Lv.1`)
+  하나뿐이다.
+- 결론: **사용자가 말한 "착각" 가설이 맞을 가능성이 높다.** 요새 자체가
+  다른 건물을 짓게 해주는 게 아니라, 실루엣이 거의 동일한 옆 건설
+  거점(타워가 이미 서 있는 상태)을 요새로 착각해서 클릭했을 가능성이
+  크다. 진행도(progress) 값 자체는 0.375 / 0.588 / 0.767로 꽤 떨어져
+  있어 "위치가 겹친다"기보다는 "생김새가 구분이 안 된다" 쪽에 더 가까워
+  보이지만, 실제 카메라 줌/거리에서 정말 그런지는 코드만으로 단정할 수
+  없다 — 그래서 프롬프트에는 위치/시각 구분 둘 다 실측하라고 넣었다.
+
+### 프롬프트 추가분 (5번 항목)
+
+기존 프롬프트의 "# 결과물" 절 앞에 아래 5번 항목을 추가하고, 공통 원칙의
+"4개는 서로 독립 이슈다"를 "5개는 서로 독립 이슈다"로 수정한다.
+
+```
+## 5. 일반 거점과 요새 거점이 헷갈림 — 클릭하면 요새에서도 다른 건물이
+   지어지는 것처럼 보임
+
+`src/data/capturePointDefinitions.ts`와 `getCapturePointActions()`,
+`LaneBattleScene.ts`의 `tryBuildAtSelectedPoint()`를 확인한 결과, 데이터/
+로직상으로는 고정 요새(`pointType: "fixed-fortress"`, id 1)가
+`rebuild-fortress`/`repair-fortress` 외의 건설 액션을 가질 수 없게
+이미 막혀 있다. 그런데 `refreshCapturePointVisuals()`를 보면 요새와
+일반 건설 거점(타워 건설 상태)이 **같은 타워 스프라이트 텍스처를 공유**
+하고, 높이 차이도 162px vs 144px로 약 12%뿐이며, 실질적으로 구분되는
+요소는 머리 위 텍스트 라벨 하나뿐이다. 세 거점의 진행도(progress)는
+0.375 / 0.588(요새) / 0.767로 데이터상으로는 떨어져 있다.
+
+- 먼저 실제 플레이 카메라 기준으로 요새와 인접 건설 거점이 화면상 얼마나
+  가까워 보이는지 실측해라(이미 있는
+  `artifacts/terrain-full-lane/after-*.png` 스크린샷 재활용 가능). "위치가
+  겹쳐서" 헷갈리는 것인지 "생김새가 똑같아서" 헷갈리는 것인지 구분해서
+  결론을 내려라 — 둘 다일 수도 있다.
+- 결론과 무관하게, 고정 요새는 실루엣/색/아이콘 중 최소 하나를 일반
+  건설 거점과 명백히 다르게 만들어서 라벨을 읽지 않아도 한눈에 구분되게
+  해라(예: 전용 텍스처, 뚜렷하게 다른 윤곽, 왕관/깃발 같은 전용 장식
+  등 — 방식은 네가 정해도 된다).
+- 만약 실측 결과 실제로 화면상 위치가 가까워서 혼동을 유발하는 게
+  맞다면, 사용자가 제안한 대로 요새와 인접 건설 거점의 위치(progress
+  값 또는 레인 배치)를 서로 좀 더 떨어뜨려라. 단, 위치를 바꾸면
+  `battlefieldMaps.ts`의 `createCaptureSocket`/`CAPTURE_SOCKETS`와
+  지형 하이브리드 레인(4번 항목) 배치가 같이 어긋나지 않는지 확인해라.
+- 수정 후 실제 클릭 테스트로 "요새를 선택한 상태에서 건설 패널에
+  타워 재건/수리 외의 버튼이 하나도 안 뜬다"와 "요새와 옆 거점을 헷갈리지
+  않고 클릭할 수 있다"를 스크린샷으로 남겨라.
+```
+
+이 항목을 5번으로 추가한 최종 프롬프트 전문은 사용자에게 채팅으로 그대로
+전달한다.
