@@ -1,0 +1,158 @@
+import type { BgmAssetDef, SfxAssetDef } from "./types";
+
+const NO_ASSET_YET = "확인 필요 — 실제 오디오 파일이 아직 없음(프로토타입 합성음으로 대체 중)";
+
+/**
+ * BGM manifest. Every entry's `filePath` is where a real file *would* live —
+ * none exist yet (`missingAsset: true` on all of them), so BgmManager falls
+ * back to the paired `synth` profile. Once a real file is dropped at
+ * `filePath`, flip `missingAsset` to `false` and playback switches to the
+ * file automatically (see `backend.ts`).
+ */
+export const BGM_ASSETS: BgmAssetDef[] = [
+  {
+    id: "bgm.menu",
+    label: "메뉴/타이틀",
+    filePath: "/assets/audio/bgm/menu.mp3",
+    loop: true,
+    baseVolume: 0.5,
+    missingAsset: true,
+    synth: { kind: "pad", frequency: 196, durationMs: 0 },
+    licenseNote: NO_ASSET_YET,
+  },
+  {
+    id: "bgm.preparation",
+    label: "준비/배치 단계",
+    filePath: "/assets/audio/bgm/preparation.mp3",
+    loop: true,
+    baseVolume: 0.45,
+    missingAsset: true,
+    synth: { kind: "pad", frequency: 174.6, durationMs: 0 },
+    licenseNote: NO_ASSET_YET,
+  },
+  {
+    id: "bgm.battle.low",
+    label: "전투 — 저강도",
+    filePath: "/assets/audio/bgm/battle-low.mp3",
+    loop: true,
+    baseVolume: 0.55,
+    missingAsset: true,
+    synth: { kind: "pad", frequency: 146.8, durationMs: 0 },
+    licenseNote: NO_ASSET_YET,
+  },
+  {
+    id: "bgm.battle.high",
+    label: "전투 — 고강도",
+    filePath: "/assets/audio/bgm/battle-high.mp3",
+    loop: true,
+    baseVolume: 0.65,
+    missingAsset: true,
+    synth: { kind: "pulse", frequency: 146.8, durationMs: 0 },
+    licenseNote: NO_ASSET_YET,
+  },
+  {
+    id: "bgm.victory",
+    label: "승리",
+    filePath: "/assets/audio/bgm/victory.mp3",
+    loop: false,
+    baseVolume: 0.6,
+    missingAsset: true,
+    synth: { kind: "chime", frequency: 261.6, durationMs: 0 },
+    licenseNote: NO_ASSET_YET,
+  },
+  {
+    id: "bgm.defeat",
+    label: "패배",
+    filePath: "/assets/audio/bgm/defeat.mp3",
+    loop: false,
+    baseVolume: 0.5,
+    missingAsset: true,
+    synth: { kind: "pad", frequency: 98, durationMs: 0 },
+    licenseNote: NO_ASSET_YET,
+  },
+];
+
+export const SFX_ASSETS: SfxAssetDef[] = [
+  // -- UI --
+  sfx("sfx.ui.hover", "버튼 hover", "ui", { kind: "pluck", frequency: 880, durationMs: 60 }),
+  sfx("sfx.ui.confirm", "버튼 confirm", "ui", { kind: "pluck", frequency: 660, durationMs: 120 }),
+  sfx("sfx.ui.cancel", "버튼 cancel", "ui", { kind: "pluck", frequency: 330, durationMs: 120 }),
+  sfx("sfx.ui.hireSuccess", "구매/고용 성공", "ui", { kind: "chime", frequency: 523.3, durationMs: 220 }),
+  sfx("sfx.ui.hireFail", "구매/고용 실패", "ui", { kind: "noiseHit", frequency: 220, durationMs: 140 }),
+  sfx("sfx.ui.buildSelect", "건설 선택", "ui", { kind: "pluck", frequency: 494, durationMs: 100 }),
+  sfx("sfx.ui.settingsChange", "설정 변경", "ui", { kind: "pluck", frequency: 740, durationMs: 60 }),
+
+  // -- wave / combat --
+  sfx("sfx.wave.prepare", "웨이브 준비", "wave", { kind: "sweepUp", frequency: 220, durationMs: 400 }, { cooldownMs: 800 }),
+  sfx("sfx.wave.start", "웨이브 시작", "wave", { kind: "chime", frequency: 349.2, durationMs: 300 }, { cooldownMs: 800 }),
+  sfx("sfx.combat.meleeAttack", "근접 공격", "combat", { kind: "pluck", frequency: 300, durationMs: 80 }, { cooldownMs: 60, maxSimultaneous: 6 }),
+  sfx("sfx.combat.meleeHit", "근접 타격", "combat", { kind: "noiseHit", frequency: 260, durationMs: 90 }, { cooldownMs: 60, maxSimultaneous: 6 }),
+  sfx("sfx.combat.rangedFire", "원거리 발사", "combat", { kind: "pluck", frequency: 520, durationMs: 90 }, { cooldownMs: 60, maxSimultaneous: 6 }),
+  sfx("sfx.combat.projectileHit", "투사체 충돌", "combat", { kind: "noiseHit", frequency: 200, durationMs: 100 }, { cooldownMs: 60, maxSimultaneous: 6 }),
+  sfx("sfx.combat.catapultFire", "투석기 발사", "combat", { kind: "sweepDown", frequency: 180, durationMs: 250 }, { cooldownMs: 300, maxSimultaneous: 2 }),
+  sfx("sfx.combat.catapultImpact", "투석기 충돌", "combat", { kind: "noiseHit", frequency: 100, durationMs: 260 }, { cooldownMs: 300, maxSimultaneous: 2 }),
+  sfx("sfx.combat.unitHit", "유닛 피격", "combat", { kind: "noiseHit", frequency: 340, durationMs: 70 }, { cooldownMs: 40, maxSimultaneous: 8 }),
+  sfx("sfx.combat.unitDeath", "유닛 사망", "combat", { kind: "sweepDown", frequency: 260, durationMs: 220 }, { cooldownMs: 80, maxSimultaneous: 4 }),
+  sfx("sfx.combat.towerAttack", "타워 공격", "combat", { kind: "pluck", frequency: 246.9, durationMs: 120 }, { cooldownMs: 150, maxSimultaneous: 3 }),
+  sfx("sfx.combat.towerHit", "타워 피격", "combat", { kind: "noiseHit", frequency: 150, durationMs: 140 }, { cooldownMs: 150, maxSimultaneous: 3 }),
+
+  // -- base / construction --
+  sfx("sfx.capture.progress", "점령 진행", "capture", { kind: "pluck", frequency: 440, durationMs: 60 }, { cooldownMs: 400 }),
+  sfx("sfx.capture.complete", "점령 완료", "capture", { kind: "chime", frequency: 587.3, durationMs: 260 }, { cooldownMs: 500 }),
+  sfx("sfx.capture.lost", "점령 상실", "capture", { kind: "sweepDown", frequency: 300, durationMs: 260 }, { cooldownMs: 500 }),
+  sfx("sfx.construction.start", "건설 시작", "construction", { kind: "pluck", frequency: 392, durationMs: 100 }, { cooldownMs: 300 }),
+  sfx("sfx.construction.complete", "건설 완료", "construction", { kind: "chime", frequency: 440, durationMs: 240 }, { cooldownMs: 300 }),
+  sfx("sfx.construction.repair", "수리", "construction", { kind: "pluck", frequency: 349.2, durationMs: 90 }, { cooldownMs: 200, maxSimultaneous: 3 }),
+  sfx("sfx.fortress.warning", "요새 경고", "state", { kind: "pulse", frequency: 220, durationMs: 320 }, { cooldownMs: 1200, priority: 9 }),
+  sfx("sfx.fortress.destroyed", "요새 파괴/비활성화", "state", { kind: "sweepDown", frequency: 160, durationMs: 500 }, { cooldownMs: 2000, priority: 10 }),
+  sfx("sfx.fortress.rebuilt", "요새 재건", "state", { kind: "chime", frequency: 392, durationMs: 320 }, { cooldownMs: 2000, priority: 8 }),
+
+  // -- game state --
+  sfx("sfx.state.resourceGain", "자원 획득", "state", { kind: "pluck", frequency: 698.5, durationMs: 70 }, { cooldownMs: 150, maxSimultaneous: 3 }),
+  sfx("sfx.state.resourceShortage", "자원 부족", "state", { kind: "noiseHit", frequency: 180, durationMs: 120 }, { cooldownMs: 600 }),
+  sfx("sfx.state.victory", "승리", "state", { kind: "chime", frequency: 659.3, durationMs: 500 }, { cooldownMs: 5000, priority: 10 }),
+  sfx("sfx.state.defeat", "패배", "state", { kind: "sweepDown", frequency: 220, durationMs: 500 }, { cooldownMs: 5000, priority: 10 }),
+];
+
+function sfx(
+  id: string,
+  label: string,
+  category: SfxAssetDef["category"],
+  synth: SfxAssetDef["synth"],
+  overrides: Partial<Pick<SfxAssetDef, "cooldownMs" | "maxSimultaneous" | "priority" | "pitchVariation" | "volumeVariation" | "spatial" | "baseVolume">> = {}
+): SfxAssetDef {
+  return {
+    id,
+    label,
+    category,
+    filePath: `/assets/audio/sfx/${id.replace(/^sfx\./, "").replace(/\./g, "-")}.mp3`,
+    baseVolume: overrides.baseVolume ?? 0.7,
+    cooldownMs: overrides.cooldownMs ?? 120,
+    maxSimultaneous: overrides.maxSimultaneous ?? 4,
+    priority: overrides.priority ?? 5,
+    pitchVariation: overrides.pitchVariation ?? 0.06,
+    volumeVariation: overrides.volumeVariation ?? 0.08,
+    spatial: overrides.spatial ?? false,
+    missingAsset: true,
+    synth,
+    licenseNote: NO_ASSET_YET,
+  };
+}
+
+const bgmById = new Map(BGM_ASSETS.map((a) => [a.id, a]));
+const sfxById = new Map(SFX_ASSETS.map((a) => [a.id, a]));
+
+export function getBgmAsset(id: string): BgmAssetDef | undefined {
+  return bgmById.get(id);
+}
+
+export function getSfxAsset(id: string): SfxAssetDef | undefined {
+  return sfxById.get(id);
+}
+
+export function listMissingAssets(): { bgm: string[]; sfx: string[] } {
+  return {
+    bgm: BGM_ASSETS.filter((a) => a.missingAsset).map((a) => a.id),
+    sfx: SFX_ASSETS.filter((a) => a.missingAsset).map((a) => a.id),
+  };
+}

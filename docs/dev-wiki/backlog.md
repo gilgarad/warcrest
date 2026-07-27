@@ -36,6 +36,16 @@ GitHub Issues own task status. This file owns planning context.
   user playtest feedback (`npm run dev`) on feel/readability/rough edges,
   then iterate rather than widening scope blindly. This is likely to be
   superseded by the lane-siege pivot rather than expanded much further.
+- **Independent audio system prototype (parallel track)** — built entirely
+  in `src/systems/audio/` + `tools/audio-lab/`, deliberately not wired into
+  any scene yet (no BGM/SFX files exist in the repo; the manifest marks
+  everything `missingAsset: true` with synthesized fallback tones). Full
+  writeup + integration guide/patch examples:
+  `docs/dev-wiki/audio-system-prototype.md`. Next step for whoever picks
+  this up: apply the patch examples in that doc's §25 to
+  `BootScene.ts`/`LaneBattleScene.ts`/`GameOverScene.ts` once the
+  lane-siege pivot's scene structure has settled (no point wiring it into
+  a scene shape that's still actively changing).
 
 ## Recently Closed
 

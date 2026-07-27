@@ -1733,3 +1733,333 @@ Use consistent headings so entries are easy to grep.
     1) 유닛 렌더링 구조
     2) 근접전 점유 슬롯/국소 조향 로직
     을 아예 바꾸는 작업으로 봐야 함.
+
+## [2026-07-26] art | 애니메이션/전장 방향 보드 생성 및 아트 디렉션 문서 고정
+
+- 사용자 요청:
+  - "상세하게 좀 멋지게 구상하고 아트 작업도 좀 한 뒤에 진행하도록 해."
+- 수행:
+  - built-in `image_gen`으로 다음 콘셉트 보드를 생성:
+    - `public/assets/concepts/stone-age-unit-motion-sheet.png`
+    - `public/assets/concepts/warcrest-battlefield-direction-board.png`
+  - `docs/dev-wiki/art-direction-animation.md` 추가:
+    - 실제 보행/공격 애니메이션 기준
+    - 후열이 측면 슬롯을 찾아 끼어드는 근접전 연출 기준
+    - 다음 구현에서 무엇을 구조적으로 바꿔야 하는지 정리
+  - `docs/dev-wiki/index.md`, `docs/index.md`에 새 문서 라우팅 추가.
+- 결과:
+  - 다음 단계의 구현은 이제 "정지 스프라이트 변형"이 아니라
+    "실제 walk/attack pose animation + clustered melee staging"을 목표로
+    고정됨.
+
+## [2026-07-27] code | 석기 병종 프레임 포즈 애니메이션 연결, 근접 전투 슬롯 로직 1차 적용
+
+- 수행:
+  - built-in `image_gen`으로 석기 `투석병`, `도끼병`, `보급대`의
+    `IDLE / WALK A / WALK B / ATTACK` 포즈 시트를 생성.
+  - 크로마키 제거 후 `public/assets/lane-poses/`에 저장하고, 추가로
+    `public/assets/lane-poses/frames/`에 포즈별 PNG로 분할.
+  - `src/scenes/LaneBattleScene.ts`
+    - 석기 병종은 이동/공격 상태에 따라 포즈 텍스처를 교체하도록 변경.
+    - 전체 스프라이트 bob 위주였던 모션에서, 최소한의 실제 프레임 전환 기반
+      보행/공격 읽기가 보이도록 구조를 바꿈.
+    - 근접 유닛은 적 주변 `combat slot` 후보(progress + lane row)를 탐색해
+      후열이 측면 슬롯으로 들어가도록 1차 로직을 추가.
+    - 슬롯을 못 잡아도 완전히 멈추지 않고 계속 전열을 압축해 접근하도록 유지.
+- 검증:
+  - `npm run build` 통과.
+  - 헤드리스 브라우저 캡처로 전장 진입 후 포즈 전환 화면 재확인
+    (`/tmp/warcrest-run-anim-1.png`, `/tmp/warcrest-run-anim-2.png`).
+- 남은 한계:
+  - 현재는 석기 병종만 실제 포즈 애니메이션이 적용됨.
+  - 대규모 누적 웨이브 상황에서 "후열이 충분히 퍼져 싸우는가"는 추가
+    스트레스 테스트가 더 필요함.
+
+## [2026-07-27] note | 거점/타워/원거리 탄도 요구사항 해석 고정
+
+- 사용자 요구:
+  - "거점도 길 가운데 있어야 함. 타워 그림처럼."
+  - "타워 그림이 그림이 아니라 실제 오브젝트여야 할 거 같음."
+  - "병력 중 투석이나 활(궁병)은 돌이나 화살이 적에게 가는 장면까지도 함께 애니메이션이 되어야 함."
+- 해석:
+  - 현재 원형 `거점` 마커는 도로 한가운데, 즉 타워가 서 있는 자리 자체에 있어야 함.
+    지금처럼 도로 옆/아래쪽에 별도 오버레이로 분리돼 있으면 안 됨.
+  - 현재 배경에 그려진 타워를 단순 배경 장식으로 두지 않고, 실제 게임 오브젝트
+    개념으로 다뤄야 함.
+    이 오브젝트는 거점과 유사한 전장 구조물이지만, 점령되면 유지/전환이 아니라
+    "기존 타워는 무조건 파괴"되고, 점령한 진영이 자기 비용으로 다시 세우는
+    흐름이어야 함.
+  - 원거리 유닛의 공격은 숫자만 뜨는 처리로 끝나면 안 되고, 투석병은 돌,
+    궁병은 화살이 실제로 발사되어 적에게 도달하는 탄도 애니메이션이 있어야 함.
+
+## [2026-07-27] code | 레인 중앙 실체 타워, 타워 재건축, 원거리 투사체 1차 연결
+
+- 수행:
+  - `src/scenes/LaneBattleScene.ts`
+    - 각 거점에 레인 중앙 실체 오브젝트 타워(`towerSprite`)와 타워 HP 바를
+      추가했다.
+    - 점령 거점의 타워는 실제 상태(`건재 / 파괴 / 재건축 중`)를 가지며,
+      적 점령으로 소유가 뒤집히면 기존 타워는 즉시 파괴되도록 정리했다.
+    - 석기 기준 `금10 / 목재10`, `10초` 재건축 규칙을 `시대별 확장 가능한
+      helper` 구조로 분리했다.
+    - 타워 공격은 일반 병과와 비슷한 속도로 `2발 동시 발사`되도록 하고,
+      시대별로 `돌 / 화살 / 탄환` 텍스처를 바꿔 쓰는 구조를 넣었다.
+    - `투석병 / 궁병 / 머스킷` 계열은 즉시 피해 대신 실제 투사체를 날린 뒤
+      명중 시 피해가 적용되도록 바꿨다.
+    - 유닛이 적 타워를 사거리 안에서 직접 공격할 수 있도록 타워 대상 판정을
+      추가했다.
+    - 선택 거점 패널에 타워 HP / 재건 남은 시간 / 파괴 상태를 함께 노출하도록
+      정리했다.
+- 검증:
+  - `npm run build` 통과.
+  - 로컬 Vite 서버(`http://127.0.0.1:5174`)에서 헤드리스 브라우저 캡처로
+    레인 중앙 타워 배치와 교전 장면 확인
+    (`/tmp/warcrest-towers-2.png`, `/tmp/warcrest-towers-4.png`).
+- 남은 한계:
+  - 이번 턴은 타워/투사체 구조를 먼저 연결한 상태라, 사용자가 계속 지적한
+    "후열이 더 적극적으로 옆자리 찾아 난전 합류"와 "더 실제적인 보행/공격
+    프레임 애니메이션"은 다음 턴에서 계속 다듬어야 함.
+
+## [2026-07-27] note | 전장 오브젝트 기반 재구성 프롬프트 확정 대기
+
+- 사용자 피드백:
+  - 현재 타워가 배경 타워와 겹쳐 보여 "실체 오브젝트" 요구를 충족하지 못함.
+  - 거점 위치가 여전히 길 중앙이 아니고, 동선도 체감상 더 길어져야 함.
+  - 전장 배경의 돌더미/나무/고저차 역시 단순 배경이 아니라 오브젝트처럼
+    취급되어, 유닛 이동이 이를 관통하지 않도록 구조를 바꿔야 함.
+- 대응:
+  - 이번 턴은 바로 덧칠식 수정으로 가지 않고, 배경/타워/거점/장애물/이동 경로를
+    한 번에 다시 설계하는 구현 프롬프트를 먼저 사용자 확인용으로 제시하기로 함.
+
+## [2026-07-27] note | 배경 평탄화 + 근거리 구조물 오브젝트화 요구 추가
+
+- 사용자 보정:
+  - 기존 배경 속 큰 돌/구조물을 그대로 두고 그 위에 판정만 얹는 방식이 아니라,
+    전장 근처 배경은 더 평탄하게 다시 그리고, 큰 돌/나무/본진 구조물은 별도
+    오브젝트로 다시 올려야 함.
+  - 단, 동선에서 충분히 멀리 떨어진 원경 요소는 배경 그림으로 남겨도 무방함.
+  - 양쪽 본진도 동일하게 배경 장식이 아니라 오브젝트 기반 구조로 재구성해야 함.
+
+## [2026-07-27] code | 평탄 베이스 배경 + 본진/타워/장애물 오브젝트 자산 1차 반영
+
+- 수행:
+  - built-in `image_gen`으로 새 평탄 전장 베이스와 오브젝트 자산을 생성했다.
+    - `public/assets/battle/lane-battlefield-base-v3.png`
+    - `public/assets/battlefield-objects/base-player.png`
+    - `public/assets/battlefield-objects/base-enemy.png`
+    - `public/assets/battlefield-objects/tower-full.png`
+    - `public/assets/battlefield-objects/tower-damaged.png`
+    - `public/assets/battlefield-objects/tower-critical.png`
+    - `public/assets/battlefield-objects/tower-ruin.png`
+    - `public/assets/battlefield-objects/tower-build.png`
+    - `public/assets/battlefield-objects/rock-cluster.png`
+    - `public/assets/battlefield-objects/tree-cluster.png`
+  - 크로마키 제거 스크립트로 본진/타워/장애물 자산의 투명 배경을 정리했다.
+  - `src/scenes/LaneBattleScene.ts`
+    - 월드 길이를 크게 늘려 레인을 더 길게 재설정했다.
+    - 기존 배경 타워 그림 대신 실제 타워 상태 스프라이트를 사용하도록 변경했다.
+    - 양쪽 본진도 별도 오브젝트 이미지로 배치했다.
+    - 레인 주변 돌/나무 장애물을 별도 오브젝트로 배치했다.
+    - 유닛이 장애물 쪽으로 파고들면 lane row를 밀어내는 간단한 통행 제한을 추가했다.
+    - 거점 진행 위치를 고정 progress로 재배치해 레인 중앙 기준으로 다시 정렬했다.
+- 검증:
+  - `npm run build` 통과.
+  - 로컬 실행 캡처 확인:
+    - `/tmp/warcrest-objlane-1.png`
+    - `/tmp/warcrest-objlane-2.png`
+    - `/tmp/warcrest-objlane-3.png`
+- 현재 한계:
+  - 오브젝트 기반 전환은 들어갔지만, 배치 스케일과 가림 관계는 추가 폴리싱이 더 필요하다.
+  - 장애물 회피는 현재 "간단한 레인 밀어내기" 수준이라, 이후 실제 경로 탐색에 가까운
+    구조로 확장할 여지가 있다.
+
+## [2026-07-27] code | 고시점 전장 복원 + 오브젝트 축척/깊이 정렬 교정
+
+- 사용자 교정:
+  - 오브젝트 분리는 유지하되, 직전 버전의 높은 RTS 시점과 Civilization Wars식
+    장거리 레인 구도를 복원해야 함.
+  - 타워가 화면을 지배하지 않도록 유닛과 클래시 계열 수준의 상징적 축척을
+    사용하고, 유닛이 타워 뒤를 지날 때는 타워에 가려져야 함.
+- 수행:
+  - built-in `image_gen`으로 기존 고시점 배경을 기준 삼은 구도 스케치
+    `public/assets/concepts/warcrest-object-battlefield-layout-sketch.png`와,
+    타워/본진만 비운 오브젝트용 배경
+    `public/assets/battle/lane-battlefield-object-base-v4.png`를 생성했다.
+  - `LaneBattleScene`의 카메라를 `0.46`으로 넓히고 월드를 `7000 x 3900`으로
+    재구성했다.
+  - 배경 원본 좌표 격자로 본진 2곳과 원형 타워 패드 3곳의 중심을 확인하고,
+    5개 기준점으로 이루어진 레인 경로를 추가했다. 유닛 이동과 거점은 이
+    경로를 따라 실제 도로 중앙에 놓인다.
+  - 타워 선택 갱신에서 `setScale(1)`이 원본 `1254 x 1254` 크기를 복구하던
+    직접 원인을 제거하고, 타워를 `148 x 176` 표시 크기로 고정했다.
+  - 유닛, 타워, 본진, 장애물의 depth를 공통 접지점 `y` 공식으로 통일했다.
+  - 카메라 드래그 거리와 경계 계산에 현재 줌 배율을 반영했다.
+- 검증:
+  - `npm run build` 통과.
+  - `http://127.0.0.1:5174`에서 시작 화면, 중앙 전장, 유닛의 첫 타워 통과와
+    점령 장면을 헤드리스 브라우저로 확인했다.
+  - 캡처:
+    - `/tmp/warcrest-layout-v6-start.png`
+    - `/tmp/warcrest-layout-v6-mid.png`
+    - `/tmp/warcrest-layout-v6-pass-tower.png`
+
+## [2026-07-27] analysis | 전장 지형 타일화 필요성 및 점진 전환 계획
+
+- 사용자 요청에 따라 게임 코드는 수정하지 않고 현재 Phaser 렌더링, 배경,
+  오브젝트, 카메라, 경로, 거점, 장애물 구조와 첨부 스크린샷을 분석했다.
+- 확인:
+  - `1692 x 929` 단일 배경이 `7000 x 3900` 월드로 확대된다.
+  - `battlefieldGenerator`의 논리 타일은 실제 화면/이동 원본으로 쓰이지 않는다.
+  - 유닛 원본 프레임은 세로형이지만 화면에서 정사각형으로 강제 변형된다.
+  - 동적 오브젝트 depth는 접지점 기준이나, 배경 내부 벽/바위에는 가림 정보가
+    없다.
+- 판단:
+  - 논리 지형 그리드는 필요하지만 전체 순수 타일맵 즉시 전환은 아트 반복과
+    대규모 회귀 위험이 크다.
+  - 원경 매트 배경을 유지하고 플레이 가능 레인만 타일/전이/데칼로 바꾸며,
+    footprint와 lane graph를 공통 맵 데이터로 묶는 하이브리드 구조를 권장한다.
+- 산출물:
+  - `docs/dev-wiki/terrain-rendering-plan.md`
+  - 중앙 거점 `8 x 8` 셀 최소 프로토타입부터 시작하는 0~7단계 계획,
+    단계별 완료 기준, 영향 파일, 위험, 사용자 결정 사항을 기록했다.
+
+## [2026-07-27] code | 중앙 거점 하이브리드 지형 최소 프로토타입
+
+- 추적:
+  - 브랜치: `terrain-prototype-central`
+  - GitHub Issue는 지정되지 않아 이 항목을 `AGENTS.md`의 fallback 기록으로
+    사용한다.
+  - 승인 문서: `docs/dev-wiki/terrain-rendering-plan.md`
+- 에셋 조사:
+  - 기존 저장소에는 반복 가능한 잔디/흙/석재 타일과 foundation, 방향성
+    접지 그림자가 없었다.
+  - 기존 빈 지면 배경은 현재 전장과 시점/광원이 달라 재사용하지 않았다.
+  - built-in `image_gen`으로 production이 아닌 placeholder 텍스처 세 종류를
+    생성해 `public/assets/prototype-terrain/`에 명시적으로 저장했다.
+- 구현:
+  - 저장 형식과 분리된 `BattlefieldMapSpec` 및 중앙 `8 x 8` 셀, 구조물
+    footprint, 우회 슬롯 데이터를 추가했다. footprint의 이동 차단은
+    `false`로 유지했다.
+  - 중앙 영역에만 잔디/흙/석재 렌더 패치를 추가했다. 개별 셀의 반투명
+    경계가 격자로 보인 첫 시도를 폐기하고, 동일 재질 셀을 렌더 밴드로
+    합성해 경계를 줄였다.
+  - 중앙 타워 foundation과 방향성 접지 그림자를 추가했다.
+  - 유닛 원본 종횡비와 발 기준 origin을 적용하고, 유닛/타워/그림자/HP바/
+    선택 표시/투사체의 기준점을 ground anchor에 맞췄다.
+  - URL의 `terrain=legacy|prototype`, `camera=central`, `seed`와 `T` 키,
+    `window.__terrainPrototypeControl`을 추가해 같은 상태에서 즉시 비교할
+    수 있게 했다.
+  - Phaser 난수 seed를 고정하고 구조물 점령의 `Math.random()`도 Phaser
+    seeded RNG로 통일했다.
+- 산출물:
+  - 기준/프로토타입/debug/나란히 비교 이미지를
+    `artifacts/terrain-prototype/`에 저장했다.
+  - 실행법, 기준 수치, 에셋 출처, 남은 시각 문제를
+    `docs/dev-wiki/terrain-prototype-validation.md`에 기록했다.
+- 검증:
+  - `npm run build` 통과.
+  - Playwright에서 한 실행을 정지한 뒤 legacy/prototype 표시만 전환했다.
+  - `terrainMode`를 제외한 snapshot JSON이 정확히 같아 전투 상태가
+    변하지 않았음을 확인했다.
+- 남은 한계:
+  - placeholder와 배경의 붓 터치/석재 크기는 아직 완전히 일치하지 않는다.
+  - 정면에 가까운 기존 유닛 원화의 카메라 각도 문제는 종횡비 교정만으로
+    해결되지 않는다.
+  - 사용자 판단 전에는 전체 레인으로 확장하지 않는다.
+
+## [2026-07-27] code | 중앙 거점 지형·유닛·월드 UI 프로토타입 V2
+
+- 추적:
+  - 브랜치: `terrain-prototype-central`
+  - GitHub Issue는 지정되지 않아 이 항목을 `AGENTS.md` fallback 기록으로
+    사용한다.
+  - V1 기준 문서:
+    `docs/dev-wiki/terrain-prototype-validation.md`
+- 사용자 요구:
+  - 배경에 구워진 원형 거점 패드와 새 foundation의 중첩을 투명도로
+    숨기지 않고 실제 제거
+  - V1의 사각형 지형 밴드 제거
+  - 카메라 줌 `0.46`과 전장 시야를 유지한 채 유닛, 타워, 이름표, HP바
+    가독성 개선
+  - 지형/유닛/UI를 묶은 subtle/balanced/readability 3개 프리셋 비교
+  - 전투/이동/점령/충돌 수치와 footprint 차단은 변경하지 않음
+- 구현:
+  - 원본 배경의 중앙 패드 `208 x 167` 영역만 인접 일반 도로 픽셀로
+    불규칙 완전 불투명 교체한 V2 background variant를 추가했다.
+  - V1 렌더 경로는 보존하고 V2에서만 불규칙 잔디/흙/석재 전환 데칼,
+    눌린 흙, 접촉 음영, 단일 석재 foundation, 균열/파편, 방향성 그림자를
+    사용한다.
+  - `src/config/prototypeVisualConfig.ts`에 패치, 전환, 데칼, foundation,
+    그림자, S/M/L 유닛, 병종 보정, 타워 배율, UI 크기/간격/outline,
+    밀집 표시 정책, 줌 보정을 집중시켰다.
+  - V2 유닛은 종횡비와 발 origin `0.88`을 유지하면서 화면 최소/최대
+    높이를 적용한다. 확대된 표시를 따라 선택 원과 클릭 대상도 맞췄다.
+  - 이름표와 HP바는 월드 위치를 따르되 inverse zoom으로 화면 크기를
+    보정한다. balanced는 선택/hover와 팀별 대표 보급병 이름만 표시한다.
+  - URL에 `terrain=prototype-v2&preset=subtle|balanced|readability`를
+    추가하고 `T` 키와 debug control에서 3개 렌더 모드를 순환 가능하게 했다.
+- 검증:
+  - 고정 seed, 중앙 카메라, 경과 `30.17546초`에서 정지한 뒤
+    legacy/V1/V2만 전환했다.
+  - 표시 메타데이터를 제외한 전투 snapshot은 세 모드가 정확히 같았다.
+  - `npm run build`, `git diff --check` 통과, Playwright page error `0`.
+  - 내부 `1600 x 900`과 실제 `1365 x 768` 브라우저 표시를 확인했다.
+  - 전체/중앙 확대/모드 비교/프리셋 비교/debug/실측 산출물을
+    `artifacts/terrain-prototype-v2/`에 저장했다.
+- 판단:
+  - subtle은 병종 정보가 부족하고 readability는 이름표가 과밀하다.
+  - 기본 추천 후보는 `balanced / M`이다.
+  - 사용자 판단 전에는 V2를 전체 레인으로 확장하지 않는다.
+- 상세 문서:
+  - `docs/dev-wiki/terrain-prototype-v2-validation.md`
+
+## [2026-07-27] feature | 독립 오디오 시스템 프로토타입 (별도 세션, LaneBattleScene 미수정)
+
+- 사용자가 이 세션(Claude Code)에는 다른(Codex) 세션의 게임플레이 작업과
+  충돌하지 않는 독립 오디오 시스템만 맡김. 금지 파일:
+  `LaneBattleScene.ts`, `prototypeVisualConfig.ts`, `battlefieldMaps.ts`,
+  `battlefieldPrototypeRenderer.ts`, 가능하면 `main.ts` — 실제로는
+  Boot/GameOverScene을 포함해 씬 파일을 단 하나도 수정하지 않음(최대
+  보수적으로 해석).
+- Plan Mode로 조사(Explore 서브에이전트 2개 병렬) → 계획 파일 작성 →
+  `ExitPlanMode` 승인 후 구현. 핵심 조사 결과: 오디오 파일이 저장소에
+  0개, 유일한 소리는 `musicController.ts`의 절차적 합성 배경음(모드
+  3개: boot/battle/gameover)뿐 — 이 파일은 3개 씬이 지금도 직접
+  호출 중이라 import도, 수정도 하지 않음.
+- `src/systems/audio/`에 완전히 독립적인 아키텍처 구현: `types`,
+  `backend`(Web Audio 실제 구현 + mock 가능한 `AudioBackend` 인터페이스),
+  `assetManifest`(BGM 6종 + SFX 32종, 전부 `missingAsset: true`로 정직하게
+  표시하고 합성 fallback 톤으로 대체), `audioSettings`(localStorage,
+  버전 필드, 손상 데이터 자동 복구), `bgmManager`, `sfxManager`,
+  `audioDirector`(7개 상태 머신, victory/defeat 잠금, fortress-under-attack
+  경고 레이어), `audioSystem`(단일 진입점 파사드).
+- 실제 버그 하나 발견·수정: BGM 크로스페이드를 처음엔 JS
+  `setInterval`로 수동 구현했는데, 유닛 테스트를 짜던 중 "크로스페이드
+  도중 재전환하면 이전 fade-out 인터벌이 완전히 취소되지 않고 남을 수
+  있다"는 결함을 발견 → 백엔드의 네이티브 게인 램프(`voice.stop(fadeMs)`,
+  `playBgmVoice(..., fadeInMs)`)에 위임하도록 재설계해 타이머 상태 자체를
+  없앰.
+- `vitest`를 devDependency로 신규 도입(이 저장소에 테스트 러너가 없었음),
+  유닛 테스트 26개(4파일) 작성 및 전부 통과.
+- `tools/audio-lab/`(독립 Vite 페이지, `vite.config.ts` 없이도 동작 —
+  Vite dev 서버가 임의 위치 `.html`을 그대로 서빙)를 구현, 실제
+  `src/systems/audio` 모듈을 그대로 사용(로직 중복 없음). Playwright로
+  잠금 해제/BGM 재생/크로스페이드/`fortress-under-attack` 레이어링/
+  victory 잠금/SFX 쿨타임·동시재생 상한/설정 새로고침 복원까지 실제
+  클릭으로 검증, 콘솔 에러 0건.
+- **공유 작업 디렉터리 위험 방어**: 브랜치를 만들거나 전환하지 않음
+  (다른 세션과 워크트리를 공유하므로 브랜치 전환이 그쪽에도 영향을 줄
+  수 있음), 다른 세션이 쓰던 5173/5174/5175 포트를 피해 5176으로 dev
+  서버를 띄움, 커밋 스테이징 시 `git add -A`를 쓰지 않고 오디오 관련
+  파일만 정확히 지정(`LaneBattleScene.ts` 등 다른 세션의 uncommitted
+  작업은 전혀 건드리지 않음).
+- `docs/dev-wiki/audio-system-prototype.md`에 사용자가 요청한 25개
+  항목(기존 구조 조사부터 최소 통합 절차/패치 예시까지) 전부 기록.
+  통합 프롬프트는 채팅 응답에 별도로 작성해 전달(게임 개발 대화창에
+  붙여넣을 수 있도록).
+- 배경음 "품질 개선"(무음 제거/정규화 등)은 대상 파일이 없어 절차적
+  배경음 자체의 특성 분석으로 대체 — 사용자가 사전에 "경로/위치가
+  안 맞으면 알아서 조정"이라고 허용한 범위로 판단.
+- 이 브랜치(`terrain-prototype-central`)는 아직 GitHub에 push되지 않은
+  로컬 브랜치이며 다른 세션이 활발히 작업 중이므로, 이 세션에서는
+  push/PR 등 원격 작업을 시도하지 않음.
