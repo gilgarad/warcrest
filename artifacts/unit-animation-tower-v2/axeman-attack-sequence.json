@@ -1,0 +1,14 @@
+[
+  {
+    "phase": 0.12,
+    "pose": "stone-axeman-attack-windup"
+  },
+  {
+    "phase": 0.5,
+    "pose": "stone-axeman-attack-contact"
+  },
+  {
+    "phase": 0.88,
+    "pose": "stone-axeman-attack-recover"
+  }
+]

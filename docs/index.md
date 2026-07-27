@@ -31,6 +31,7 @@ first — a maintained snapshot of current status/architecture/next-steps.
 - [Central Terrain Prototype V3 Validation](dev-wiki/terrain-prototype-v3-validation.md)
 - [Five Issue Fixes and Full-Lane Validation](dev-wiki/five-issue-fixes-validation.md)
 - [Five Issue Follow-up Validation](dev-wiki/five-issue-followup-validation.md)
+- [Unit Animation and Tower Volley V2 Validation](dev-wiki/unit-animation-tower-v2-validation.md)
 - [Audio System Prototype](dev-wiki/audio-system-prototype.md)
 - [Audio Integration Validation](dev-wiki/audio-integration-validation.md)
 - [Codex Prompt Log](dev-wiki/codex-prompt-log.md) — separate from AI Usage Log below; this is where the current session's turns go while it's in prompt-engineering-only mode

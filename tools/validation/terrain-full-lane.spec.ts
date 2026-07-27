@@ -144,5 +144,5 @@ test("terrain keyboard cycling is absent in normal play and available behind the
   await start(`${GAME_URL}&terrainDebug=1`);
   expect(await terrainMode()).toBe("prototype-v2");
   await page.keyboard.press("KeyT");
-  expect(await terrainMode()).toBe("legacy");
+  expect(await terrainMode()).toBe("world-surface");
 });

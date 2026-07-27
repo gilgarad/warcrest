@@ -16,7 +16,6 @@ import {
 } from "../data/balance";
 import { getResource, type ResourceId } from "../data/resources";
 import {
-  getSupportHealPower,
   getSupportResourceProfile,
   getWaveRoster,
   type BattleUnitId,
@@ -60,6 +59,24 @@ import {
   getAudioSystem,
 } from "../systems/audio";
 import { AudioSettingsPanel } from "../ui/AudioSettingsPanel";
+import {
+  UNIT_ANIMATION_ASSETS,
+  getUnitAnimationDefinition,
+  resolveUnitAnimationTexture,
+} from "../presentation/units/unitAnimationRegistry";
+import {
+  getUnitScaleFactor,
+  resolveUnitFramePresentation,
+} from "../presentation/units/unitPresentation";
+import {
+  UNIT_STATS,
+  getProjectileKeyForUnit,
+} from "../systems/lane-units/unitStats";
+import { createTowerAttackPattern } from "../systems/lane-combat/towerAttack";
+import {
+  launchLaneProjectile,
+  setLaneProjectileProgress,
+} from "../systems/lane-combat/projectileLauncher";
 
 const CANVAS_W = 1600;
 const CANVAS_H = 900;
@@ -92,27 +109,6 @@ const TOWER_IMAGE_GROUND_ORIGIN_Y = 1128 / 1254;
 const TOWER_IMAGE_VISIBLE_HEIGHT_RATIO = 1036 / 1254;
 const FIXED_FORTRESS_GROUND_ORIGIN_Y = 1038 / 1122;
 const FIXED_FORTRESS_VISIBLE_HEIGHT_RATIO = 1010 / 1122;
-const UNIT_IMAGE_GROUND_ORIGIN_Y = 0.86;
-
-interface SpriteOpaqueMetrics {
-  visibleHeightRatio: number;
-  groundOriginY: number;
-}
-
-const UNIT_POSE_OPAQUE_METRICS: Record<string, SpriteOpaqueMetrics> = {
-  "stone-axeman-attack": { visibleHeightRatio: 673 / 887, groundOriginY: 759 / 887 },
-  "stone-axeman-idle": { visibleHeightRatio: 600 / 887, groundOriginY: 755 / 887 },
-  "stone-axeman-walk-a": { visibleHeightRatio: 593 / 887, groundOriginY: 755 / 887 },
-  "stone-axeman-walk-b": { visibleHeightRatio: 588 / 887, groundOriginY: 759 / 887 },
-  "stone-slinger-attack": { visibleHeightRatio: 571 / 887, groundOriginY: 739 / 887 },
-  "stone-slinger-idle": { visibleHeightRatio: 620 / 887, groundOriginY: 743 / 887 },
-  "stone-slinger-walk-a": { visibleHeightRatio: 587 / 887, groundOriginY: 743 / 887 },
-  "stone-slinger-walk-b": { visibleHeightRatio: 568 / 887, groundOriginY: 741 / 887 },
-  "stone-supply-attack": { visibleHeightRatio: 513 / 793, groundOriginY: 683 / 793 },
-  "stone-supply-idle": { visibleHeightRatio: 601 / 793, groundOriginY: 688 / 793 },
-  "stone-supply-walk-a": { visibleHeightRatio: 577 / 793, groundOriginY: 678 / 793 },
-  "stone-supply-walk-b": { visibleHeightRatio: 559 / 793, groundOriginY: 683 / 793 },
-};
 
 type TeamId = "player" | "enemy";
 type WorkerRole = "gold" | "wood" | "food" | "metal" | "research" | "idle";
@@ -160,6 +156,7 @@ interface LaneUnit {
   displaySize: number;
   bobPhase: number;
   currentTextureKey: string;
+  presentationOverrideTexture?: string;
   facingX: -1 | 1;
   lastPresentationX: number;
   lastPresentationY: number;
@@ -190,30 +187,11 @@ interface ActionButton {
   text: Phaser.GameObjects.Text;
 }
 
-interface UnitStatDef {
-  hp: number;
-  attack: number;
-  defense: number;
-  range: number;
-  speed: number;
-  attackCooldownSec: number;
-  healPower?: number;
-  label: string;
-  textureKey: UnitTextureKey;
-  tint: number;
-}
-
 interface CombatSlot {
   progress: number;
   laneRow: number;
 }
 
-interface TowerAttackSpec {
-  projectileKey: string;
-  damage: number;
-  rangeProgress: number;
-  cooldownSec: number;
-}
 
 interface LaneObstacle {
   textureKey: string;
@@ -295,19 +273,6 @@ const BUILDINGS: BuildingDef[] = [
     description: "주기적으로 금 수급",
   },
 ];
-
-const UNIT_STATS: Record<BattleUnitId | SupportUnitId, UnitStatDef> = {
-  stone_slinger: { hp: 26, attack: 7, defense: 2, range: 4.5, speed: 1.05, attackCooldownSec: 1.3, label: "투석", textureKey: "stone-slinger-unit", tint: 0xd4b27c },
-  stone_axeman: { hp: 34, attack: 9, defense: 3, range: 1.5, speed: 1.1, attackCooldownSec: 1.0, label: "도끼", textureKey: "stone-axeman-unit", tint: 0xa7b1be },
-  bronze_swordsman: { hp: 42, attack: 12, defense: 5, range: 1.5, speed: 1.1, attackCooldownSec: 0.95, label: "청동검", textureKey: "token-axe", tint: 0xe1af64 },
-  bronze_spearman: { hp: 38, attack: 11, defense: 5, range: 2.2, speed: 1.0, attackCooldownSec: 1.05, label: "청동창", textureKey: "token-spear", tint: 0xd1c28f },
-  archer: { hp: 30, attack: 13, defense: 3, range: 5.2, speed: 1.15, attackCooldownSec: 2.0, label: "활", textureKey: "token-ranged", tint: 0x90c6ff },
-  iron_swordsman: { hp: 54, attack: 16, defense: 8, range: 1.6, speed: 1.12, attackCooldownSec: 0.9, label: "철검", textureKey: "token-axe", tint: 0xdfe7f4 },
-  iron_spearman: { hp: 50, attack: 15, defense: 7, range: 2.4, speed: 1.06, attackCooldownSec: 1.0, label: "철창", textureKey: "token-spear", tint: 0xa7c8dd },
-  musketeer: { hp: 36, attack: 21, defense: 4, range: 6.4, speed: 1.0, attackCooldownSec: 2.1, label: "머스킷", textureKey: "token-ranged", tint: 0xc09aff },
-  knight: { hp: 72, attack: 22, defense: 10, range: 1.8, speed: 1.35, attackCooldownSec: 1.45, label: "기사", textureKey: "token-elite", tint: 0xffe1a1 },
-  supply_wagon: { hp: 54, attack: 0, defense: 3, range: 4.4, speed: 0.98, attackCooldownSec: 1.2, healPower: getSupportHealPower("stone"), label: "보급", textureKey: "stone-supply-unit", tint: 0x89da93 },
-};
 
 function makeResourceMap(gold: number, wood: number, food: number, metal: number): Record<ResourceId, number> {
   return { gold, wood, food, metal, gunpowder: 0, fuel: 0 };
@@ -412,18 +377,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.load.image("stone-slinger-unit", "/assets/lane-units/stone-slinger-unit.png");
     this.load.image("stone-axeman-unit", "/assets/lane-units/stone-axeman-unit.png");
     this.load.image("stone-supply-unit", "/assets/lane-units/stone-supply-unit.png");
-    this.load.image("stone-slinger-idle", "/assets/lane-poses/frames/stone-slinger-idle.png");
-    this.load.image("stone-slinger-walk-a", "/assets/lane-poses/frames/stone-slinger-walk-a.png");
-    this.load.image("stone-slinger-walk-b", "/assets/lane-poses/frames/stone-slinger-walk-b.png");
-    this.load.image("stone-slinger-attack", "/assets/lane-poses/frames/stone-slinger-attack.png");
-    this.load.image("stone-axeman-idle", "/assets/lane-poses/frames/stone-axeman-idle.png");
-    this.load.image("stone-axeman-walk-a", "/assets/lane-poses/frames/stone-axeman-walk-a.png");
-    this.load.image("stone-axeman-walk-b", "/assets/lane-poses/frames/stone-axeman-walk-b.png");
-    this.load.image("stone-axeman-attack", "/assets/lane-poses/frames/stone-axeman-attack.png");
-    this.load.image("stone-supply-idle", "/assets/lane-poses/frames/stone-supply-idle.png");
-    this.load.image("stone-supply-walk-a", "/assets/lane-poses/frames/stone-supply-walk-a.png");
-    this.load.image("stone-supply-walk-b", "/assets/lane-poses/frames/stone-supply-walk-b.png");
-    this.load.image("stone-supply-attack", "/assets/lane-poses/frames/stone-supply-attack.png");
+    UNIT_ANIMATION_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
     PROTOTYPE_TERRAIN_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
   }
 
@@ -644,7 +598,11 @@ export class LaneBattleScene extends Phaser.Scene {
       {
         key: "projectile-stone",
         color: 0x9e8c76,
-        draw: (g) => g.fillStyle(0x9e8c76, 1).fillCircle(10, 10, 7),
+        draw: (g) => {
+          g.fillStyle(0x312a24, 0.8).fillCircle(11, 12, 9);
+          g.fillStyle(0xb6a186, 1).fillCircle(10, 10, 7);
+          g.fillStyle(0xe0cfb2, 0.9).fillCircle(7, 7, 2);
+        },
       },
       {
         key: "projectile-arrow",
@@ -720,6 +678,7 @@ export class LaneBattleScene extends Phaser.Scene {
         } else {
           this.scene.resume();
         }
+        this.publishDebug();
       },
       openAudioSettings: () => this.audioSettingsPanel.open(),
       forceGameOver: (win: boolean) => this.scene.start("gameover", {
@@ -762,6 +721,68 @@ export class LaneBattleScene extends Phaser.Scene {
         unit.attackAnimTime = ATTACK_VISUAL_DURATION_SEC * (1 - Phaser.Math.Clamp(phase, 0, 1));
         unit.attackFacingLockSec = unit.attackAnimTime;
         this.syncUnitPresentation(unit);
+        this.publishDebug();
+      },
+      prepareUnitPoseGallery: (unitId: BattleUnitId | SupportUnitId) => {
+        const definition = getUnitAnimationDefinition(unitId);
+        if (!definition) return;
+        this.units.forEach((unit) => this.destroyUnitPresentation(unit));
+        this.units = [];
+        const textures = [
+          definition.idle,
+          definition.walkA,
+          definition.walkB,
+          definition.attack[definition.attack.length - 1] ?? definition.idle,
+        ];
+        textures.forEach((texture, index) => {
+          this.spawnLaneUnit(
+            "player",
+            unitId === "supply_wagon" ? "support" : "battle",
+            unitId,
+            0.46 + index * 0.027,
+            (index - 1.5) * 1.8,
+          );
+          const unit = this.units[this.units.length - 1];
+          if (!unit) return;
+          unit.presentationOverrideTexture = texture;
+          unit.attackTimerSec = 10;
+          this.syncUnitPresentation(unit);
+        });
+        const focus = this.progressToScreen(0.505, 0);
+        this.cameras.main.centerOn(focus.x, focus.y);
+        this.publishDebug();
+      },
+      prepareBronzeWaveProbe: () => {
+        this.units.forEach((unit) => this.destroyUnitPresentation(unit));
+        this.units = [];
+        this.player.ageId = "bronze";
+        this.spawnWaveUnits(this.player, getWaveRoster("bronze"), 0.5);
+        this.units.forEach((unit) => {
+          unit.attackTimerSec = 10;
+          this.syncUnitPresentation(unit);
+        });
+        const focus = this.progressToScreen(0.5, 0);
+        this.cameras.main.centerOn(focus.x, focus.y);
+        this.publishDebug();
+      },
+      prepareTowerVolleyProbe: () => {
+        this.units.forEach((unit) => this.destroyUnitPresentation(unit));
+        this.units = [];
+        this.activeProjectiles.forEach((projectile) => projectile.destroy());
+        this.activeProjectiles.clear();
+        const tower = this.capturePoints[1];
+        tower.owner = "player";
+        tower.control = 1;
+        tower.towerBuilt = true;
+        tower.towerHp = tower.towerMaxHp;
+        tower.towerTimerSec = 0;
+        this.spawnLaneUnit("enemy", "battle", "stone_axeman", tower.progress + 0.065, 0);
+        this.tickWatchtower(tower, 0);
+        this.activeProjectiles.forEach((projectile) => setLaneProjectileProgress(projectile, 0.45));
+        const focus = this.progressToScreen(tower.progress, 0);
+        this.cameras.main.centerOn(focus.x, focus.y);
+        this.publishDebug();
+        this.scene.pause();
       },
       resetDirectionShowcase: () => this.resetValidationDirectionShowcase(),
       prepareDirectionProbe: (direction: -1 | 1) => {
@@ -1482,7 +1503,7 @@ export class LaneBattleScene extends Phaser.Scene {
           if (this.isRangedUnit(unit)) {
             const start = this.getUnitProjectileAnchor(unit);
             const end = this.getTowerProjectileAnchor(enemyTower, false);
-            this.launchProjectile(start, end, this.getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToTower(enemyTower, damage, unit.team), 1.02);
+            this.launchProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToTower(enemyTower, damage, unit.team), 1.02);
           } else {
             this.applyDamageToTower(enemyTower, damage, unit.team);
           }
@@ -1513,7 +1534,7 @@ export class LaneBattleScene extends Phaser.Scene {
         if (this.isRangedUnit(unit)) {
           const start = this.getUnitProjectileAnchor(unit);
           const end = this.getUnitProjectileAnchor(nearest);
-          this.launchProjectile(start, end, this.getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToUnit(nearest, damage, unit.team === "player" ? "#ffd67a" : "#ff8f8f"), 1.04);
+          this.launchProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToUnit(nearest, damage, unit.team === "player" ? "#ffd67a" : "#ff8f8f"), 1.04);
         } else {
           nearest.hp -= damage;
           this.playWorldSfx(
@@ -1800,7 +1821,7 @@ export class LaneBattleScene extends Phaser.Scene {
     if (!point.towerBuilt) return;
     point.towerTimerSec -= deltaSec;
     if (point.owner === "neutral" || point.towerTimerSec > 0) return;
-    const spec = this.getTowerAttackSpec(point.owner === "player" ? this.player.ageId : this.enemy.ageId);
+    const spec = createTowerAttackPattern(point.owner === "player" ? this.player.ageId : this.enemy.ageId);
     const target = this.units
       .filter((unit) => unit.team !== point.owner && progressBetween(unit.progress, point.progress) <= spec.rangeProgress)
       .sort((a, b) => a.hp - b.hp)[0];
@@ -1813,10 +1834,26 @@ export class LaneBattleScene extends Phaser.Scene {
       start.y,
       `tower-attack:${point.id}:${target.id}:${Math.round(this.elapsedSec * 1000)}`,
     );
-    const offsets = [-12, 12];
-    offsets.forEach((offset, idx) => {
-      const aim = this.getUnitProjectileAnchor(target).add(new Phaser.Math.Vector2(offset, idx * 3));
-      this.launchProjectile(start, aim, spec.projectileKey, () => this.applyDamageToUnit(target, spec.damage, point.owner === "player" ? "#8fd2ff" : "#ffb4b4", "요새"), 1);
+    Array.from({ length: spec.projectileCount }, (_, index) => {
+      const centeredIndex = index - (spec.projectileCount - 1) / 2;
+      const offset = centeredIndex * spec.spreadWorldPx * 2;
+      const launch = start.clone().add(new Phaser.Math.Vector2(
+        centeredIndex * spec.spreadWorldPx,
+        -centeredIndex * 4,
+      ));
+      const aim = this.getUnitProjectileAnchor(target).add(new Phaser.Math.Vector2(offset, index * 3));
+      this.launchProjectile(
+        launch,
+        aim,
+        spec.projectileKey,
+        () => this.applyDamageToUnit(
+          target,
+          spec.perProjectileDamage,
+          point.owner === "player" ? "#8fd2ff" : "#ffb4b4",
+          "요새",
+        ),
+        1,
+      );
     });
   }
 
@@ -2285,29 +2322,10 @@ export class LaneBattleScene extends Phaser.Scene {
     return UNIT_STATS[sampleUnit].hp * 5;
   }
 
-  private getTowerAttackSpec(ageId: AgeId): TowerAttackSpec {
-    const ageIndex = AGES.findIndex((age) => age.id === ageId);
-    if (ageIndex >= 4) return { projectileKey: "projectile-shot", damage: 10, rangeProgress: 0.082, cooldownSec: 2.05 };
-    if (ageIndex >= 2) return { projectileKey: "projectile-arrow", damage: 8, rangeProgress: 0.076, cooldownSec: 1.95 };
-    return { projectileKey: "projectile-stone", damage: 6, rangeProgress: 0.072, cooldownSec: 2.0 };
-  }
-
-  private getProjectileKeyForUnit(unitId: BattleUnitId | SupportUnitId): string {
-    switch (unitId) {
-      case "stone_slinger":
-        return "projectile-stone";
-      case "archer":
-        return "projectile-arrow";
-      case "musketeer":
-        return "projectile-shot";
-      default:
-        return "projectile-stone";
-    }
-  }
-
   private getUnitProjectileAnchor(unit: LaneUnit): Phaser.Math.Vector2 {
     const visibleHeight = unit.sprite.displayHeight
-      * this.getUnitOpaqueMetrics(unit.currentTextureKey).visibleHeightRatio;
+      * (resolveUnitFramePresentation(unit.unitId, 1, 1).referenceVisibleHeight
+        / resolveUnitFramePresentation(unit.unitId, 1, 1).spriteHeight);
     return new Phaser.Math.Vector2(
       unit.sprite.x,
       unit.sprite.y - (this.terrainPrototypeEnabled ? visibleHeight * 0.58 : 10),
@@ -2332,42 +2350,27 @@ export class LaneBattleScene extends Phaser.Scene {
     onHit: () => void,
     durationScale = 1,
   ): void {
-    const projectile = this.add.image(start.x, start.y, textureKey)
-      .setDepth(DEPTH_UNIT + Math.max(start.y, end.y) * 0.1 + 6)
-      .setScale(textureKey === "projectile-shot" ? 0.9 : 1.05);
-    if (this.isPrototypeV2()) {
-      const cssSize = textureKey === "projectile-arrow"
-        ? { width: 26, height: 9 }
-        : textureKey === "projectile-shot"
-          ? { width: 14, height: 14 }
-          : { width: 18, height: 18 };
-      projectile.setDisplaySize(
-        this.cssPxToWorld(cssSize.width),
-        this.cssPxToWorld(cssSize.height),
-      );
-    }
-    projectile.setName(textureKey);
-    this.activeProjectiles.add(projectile);
-    this.uiCamera?.ignore(projectile);
-    projectile.setRotation(Phaser.Math.Angle.Between(start.x, start.y, end.x, end.y));
-    const travel = Phaser.Math.Distance.Between(start.x, start.y, end.x, end.y);
-    const duration = Phaser.Math.Clamp(travel * 1.2 * durationScale, 150, 360);
-    this.tweens.addCounter({
-      from: 0,
-      to: 1,
-      duration,
-      ease: "Quad.Out",
-      onUpdate: (tween) => {
-        const value = tween.getValue() ?? 0;
-        const x = Phaser.Math.Linear(start.x, end.x, value);
-        const y = Phaser.Math.Linear(start.y, end.y, value) - Math.sin(value * Math.PI) * Math.min(42, travel * 0.06);
-        projectile.setPosition(x, y);
+    const cssSize = textureKey === "projectile-arrow"
+      ? { width: 26, height: 9 }
+      : textureKey === "projectile-shot"
+        ? { width: 14, height: 14 }
+        : { width: 18, height: 18 };
+    launchLaneProjectile({
+      scene: this,
+      start,
+      end,
+      textureKey,
+      depth: DEPTH_UNIT + Math.max(start.y, end.y) * 0.1 + 6,
+      durationScale,
+      displaySize: this.isPrototypeV2()
+        ? { width: this.cssPxToWorld(cssSize.width), height: this.cssPxToWorld(cssSize.height) }
+        : undefined,
+      onCreated: (created) => {
+        this.activeProjectiles.add(created);
+        this.uiCamera?.ignore(created);
       },
-      onComplete: () => {
-        this.activeProjectiles.delete(projectile);
-        projectile.destroy();
-        onHit();
-      },
+      onDestroyed: (destroyed) => this.activeProjectiles.delete(destroyed),
+      onHit,
     });
   }
 
@@ -2380,7 +2383,7 @@ export class LaneBattleScene extends Phaser.Scene {
       target.sprite.y,
       `impact:projectile:${target.id}:${Math.round(this.elapsedSec * 1000)}`,
     );
-    target.sprite.setTintFill(0xffffff);
+    target.sprite.setTint(0xffc49b);
     this.time.delayedCall(80, () => {
       if (!target.sprite.active) return;
       target.sprite.clearTint();
@@ -2609,7 +2612,7 @@ export class LaneBattleScene extends Phaser.Scene {
     const teamAgeId = team === "player" ? this.player.ageId : this.enemy.ageId;
     const pos = this.progressToScreen(progress, laneRow);
     const displaySize = role === "support" ? 86 : 76;
-    const initialTextureKey = this.getAnimatedTexture(unitId, "idle") ?? stats.textureKey;
+    const initialTextureKey = resolveUnitAnimationTexture(unitId, false, 0, 0) ?? stats.textureKey;
     const shadow = this.add.ellipse(pos.x, pos.y + 22, role === "support" ? 56 : 46, role === "support" ? 20 : 16, 0x000000, 0.2)
       .setDepth(this.getGroundDepth(pos.y, -1));
     const selectionRing = this.add.ellipse(pos.x, pos.y, 62, 24, 0x72c8ff, 0.12)
@@ -2653,7 +2656,7 @@ export class LaneBattleScene extends Phaser.Scene {
       attackTimerSec: stats.attackCooldownSec * Phaser.Math.FloatBetween(0.4, 0.95),
       attackAnimTime: 0,
       attackFacingLockSec: 0,
-      healPower: role === "support" ? getSupportHealPower(teamAgeId) : stats.healPower ?? 0,
+      healPower: role === "support" ? supportProfile.healPower : stats.healPower ?? 0,
       manaCurrent: role === "support" ? supportProfile.manaMax : 0,
       manaMax: role === "support" ? supportProfile.manaMax : 0,
       manaRegenPerSec: role === "support" ? supportProfile.manaRegenPerSec : 0,
@@ -2699,7 +2702,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private playImpactFeedback(attacker: LaneUnit, target: LaneUnit, damage: number): void {
-    target.sprite.setTintFill(0xffffff);
+    target.sprite.setTint(0xffc49b);
     this.time.delayedCall(80, () => {
       if (!target.sprite.active) return;
       target.sprite.clearTint();
@@ -2730,28 +2733,6 @@ export class LaneBattleScene extends Phaser.Scene {
     this.syncUnitPresentation(unit);
   }
 
-  private getV2UnitWorldHeight(unit: LaneUnit): number {
-    const roleFactor = unit.unitId === "stone_slinger"
-      ? 0.96
-      : unit.unitId === "stone_axeman"
-        ? 1.04
-        : 1;
-    const targetVisibleCssHeight = unit.role === "support"
-      ? this.scaleVisualConfig.supportUnitCssHeight
-      : unit.unitId === "knight"
-        ? this.scaleVisualConfig.largeUnitCssHeight
-        : this.scaleVisualConfig.normalUnitCssHeight * roleFactor;
-    const metrics = this.getUnitOpaqueMetrics(unit.currentTextureKey);
-    return this.cssPxToWorld(targetVisibleCssHeight / metrics.visibleHeightRatio);
-  }
-
-  private getUnitOpaqueMetrics(textureKey: string): SpriteOpaqueMetrics {
-    return UNIT_POSE_OPAQUE_METRICS[textureKey] ?? {
-      visibleHeightRatio: 1,
-      groundOriginY: UNIT_IMAGE_GROUND_ORIGIN_Y,
-    };
-  }
-
   private shouldShowV2UnitLabel(unit: LaneUnit): boolean {
     const policy = this.scaleVisualConfig.unitLabelPolicy;
     if (policy === "always") return true;
@@ -2774,7 +2755,16 @@ export class LaneBattleScene extends Phaser.Scene {
       ? this.snapWorldPointToCanvasPixel(rawPos.x, rawPos.y)
       : rawPos;
     const moving = progressBetween(unit.progress, unit.visualProgress) > 0.0008;
-    const desiredTexture = this.getUnitPoseTexture(unit, moving);
+    const attackProgress = unit.attackAnimTime > 0
+      ? 1 - unit.attackAnimTime / ATTACK_VISUAL_DURATION_SEC
+      : 0;
+    const gait = this.elapsedSec * 10 + unit.bobPhase;
+    const desiredTexture = unit.presentationOverrideTexture ?? resolveUnitAnimationTexture(
+      unit.unitId,
+      moving,
+      Math.sin(this.elapsedSec * 9 + unit.bobPhase),
+      attackProgress,
+    ) ?? UNIT_STATS[unit.unitId].textureKey;
     if (desiredTexture !== unit.currentTextureKey) {
       unit.currentTextureKey = desiredTexture;
       unit.sprite.setTexture(desiredTexture);
@@ -2790,11 +2780,7 @@ export class LaneBattleScene extends Phaser.Scene {
     unit.lastPresentationX = pos.x;
     unit.lastPresentationY = pos.y;
 
-    const gait = this.elapsedSec * 10 + unit.bobPhase;
     const bob = moving ? Math.sin(gait) * 1.1 : Math.sin(this.elapsedSec * 4 + unit.bobPhase) * 0.35;
-    const attackProgress = unit.attackAnimTime > 0
-      ? 1 - unit.attackAnimTime / ATTACK_VISUAL_DURATION_SEC
-      : 0;
     const attackEase = attackProgress > 0 ? Math.sin(attackProgress * Math.PI) : 0;
     const meleeLunge = this.isMeleeUnit(unit) ? attackEase * 11 * unit.facingX : 0;
     const rangedRecoil = this.isRangedUnit(unit) ? -attackEase * 5 * unit.facingX : 0;
@@ -2802,21 +2788,31 @@ export class LaneBattleScene extends Phaser.Scene {
     const attackOffsetX = meleeLunge + rangedRecoil + supportReach;
     const attackLift = attackEase * (this.isMeleeUnit(unit) ? 1.4 : 0.6);
     const legacyScale = unit.role === "support" ? 1.08 : 1;
-    const prototypeHeight = this.isPrototypeV2()
-      ? this.getV2UnitWorldHeight(unit)
-      : unit.role === "support" ? 118 : 112;
     const frameAspect = unit.sprite.frame.realHeight > 0
       ? unit.sprite.frame.realWidth / unit.sprite.frame.realHeight
       : 1;
+    const targetVisibleCssHeight = unit.role === "support"
+      ? this.scaleVisualConfig.supportUnitCssHeight
+      : unit.unitId === "knight"
+        ? this.scaleVisualConfig.largeUnitCssHeight
+        : this.scaleVisualConfig.normalUnitCssHeight * getUnitScaleFactor(unit.unitId);
+    const targetVisibleWorldHeight = this.isPrototypeV2()
+      ? this.cssPxToWorld(targetVisibleCssHeight)
+      : unit.role === "support" ? 118 : 112;
+    const framePresentation = resolveUnitFramePresentation(
+      unit.unitId,
+      targetVisibleWorldHeight,
+      frameAspect,
+    );
     const spriteWidth = this.terrainPrototypeEnabled
-      ? prototypeHeight * frameAspect
+      ? framePresentation.spriteWidth
       : unit.displaySize * legacyScale;
     const spriteHeight = this.terrainPrototypeEnabled
-      ? prototypeHeight
+      ? framePresentation.spriteHeight
       : unit.displaySize * legacyScale;
-    const opaqueMetrics = this.getUnitOpaqueMetrics(unit.currentTextureKey);
+    const originX = this.isPrototypeV2() ? framePresentation.originX : 0.5;
     const originY = this.isPrototypeV2()
-      ? opaqueMetrics.groundOriginY
+      ? framePresentation.originY
       : this.terrainPrototypeEnabled ? 0.88 : 0.5;
     const v2HpWidth = this.isPrototypeV2()
       ? this.cssPxToWorld(this.scaleVisualConfig.unitHpWidthCssPx)
@@ -2828,7 +2824,7 @@ export class LaneBattleScene extends Phaser.Scene {
       ? this.cssPxToWorld(7)
       : 10;
     const visibleSpriteHeight = this.isPrototypeV2()
-      ? spriteHeight * opaqueMetrics.visibleHeightRatio
+      ? framePresentation.referenceVisibleHeight
       : spriteHeight * originY;
     const hpY = this.terrainPrototypeEnabled
       ? pos.y - visibleSpriteHeight - v2VerticalGap - bob - attackLift
@@ -2860,7 +2856,7 @@ export class LaneBattleScene extends Phaser.Scene {
       .setVisible(this.isPrototypeV2() && (unit.selected || unit.hovered));
     unit.sprite
       .setPosition(pos.x + attackOffsetX, pos.y - bob - attackLift)
-      .setOrigin(0.5, originY)
+      .setOrigin(originX, originY)
       .setRotation(0)
       .setFlipX(unit.facingX < 0)
       .setDisplaySize(spriteWidth, spriteHeight)
@@ -2906,30 +2902,6 @@ export class LaneBattleScene extends Phaser.Scene {
         .setShadow(0, 0, "#000000", 0, false, false)
         .setBackgroundColor("rgba(0, 0, 0, 0)")
         .setPadding(0);
-    }
-  }
-
-  private getUnitPoseTexture(unit: LaneUnit, moving: boolean): string {
-    if (unit.attackAnimTime > 0.02) {
-      return this.getAnimatedTexture(unit.unitId, "attack") ?? UNIT_STATS[unit.unitId].textureKey;
-    }
-    if (moving) {
-      const phase = Math.sin(this.elapsedSec * 9 + unit.bobPhase) >= 0 ? "walk-a" : "walk-b";
-      return this.getAnimatedTexture(unit.unitId, phase) ?? UNIT_STATS[unit.unitId].textureKey;
-    }
-    return this.getAnimatedTexture(unit.unitId, "idle") ?? UNIT_STATS[unit.unitId].textureKey;
-  }
-
-  private getAnimatedTexture(unitId: BattleUnitId | SupportUnitId, pose: "idle" | "walk-a" | "walk-b" | "attack"): string | undefined {
-    switch (unitId) {
-      case "stone_slinger":
-        return `stone-slinger-${pose}`;
-      case "stone_axeman":
-        return `stone-axeman-${pose}`;
-      case "supply_wagon":
-        return `stone-supply-${pose}`;
-      default:
-        return undefined;
     }
   }
 
@@ -3171,6 +3143,10 @@ export class LaneBattleScene extends Phaser.Scene {
         x: projectile.x,
         y: projectile.y,
       })),
+      towerAttackPatterns: {
+        stone: createTowerAttackPattern("stone"),
+        bronze: createTowerAttackPattern("bronze"),
+      },
       verification: {
         seed: this.verificationSeed,
         terrainMode: this.terrainMode,
@@ -3237,9 +3213,11 @@ export class LaneBattleScene extends Phaser.Scene {
             cssFrameWidth: unit.sprite.displayWidth * this.cameras.main.zoom * this.getCanvasCssScale(),
             cssFrameHeight: unit.sprite.displayHeight * this.cameras.main.zoom * this.getCanvasCssScale(),
             cssVisibleHeight: unit.sprite.displayHeight
-              * this.getUnitOpaqueMetrics(unit.currentTextureKey).visibleHeightRatio
+              * (resolveUnitFramePresentation(unit.unitId, 1, 1).referenceVisibleHeight
+                / resolveUnitFramePresentation(unit.unitId, 1, 1).spriteHeight)
               * this.cameras.main.zoom
               * this.getCanvasCssScale(),
+            originX: unit.sprite.originX,
             originY: unit.sprite.originY,
             hpWorldWidth: unit.hpBg.width,
             hpWorldHeight: unit.hpBg.height,

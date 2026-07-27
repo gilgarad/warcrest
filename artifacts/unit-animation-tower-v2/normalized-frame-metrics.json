@@ -1,0 +1,146 @@
+[
+  {
+    "key": "stone-axeman-idle",
+    "width": 1152,
+    "height": 1024,
+    "minX": 291,
+    "minY": 300,
+    "maxX": 610,
+    "maxY": 899
+  },
+  {
+    "key": "stone-axeman-walk-a",
+    "width": 1152,
+    "height": 1024,
+    "minX": 261,
+    "minY": 307,
+    "maxX": 612,
+    "maxY": 899
+  },
+  {
+    "key": "stone-axeman-walk-b",
+    "width": 1152,
+    "height": 1024,
+    "minX": 227,
+    "minY": 322,
+    "maxX": 583,
+    "maxY": 899
+  },
+  {
+    "key": "stone-axeman-attack-contact",
+    "width": 1152,
+    "height": 1024,
+    "minX": 150,
+    "minY": 375,
+    "maxX": 598,
+    "maxY": 899
+  },
+  {
+    "key": "stone-slinger-idle",
+    "width": 1152,
+    "height": 1024,
+    "minX": 296,
+    "minY": 280,
+    "maxX": 583,
+    "maxY": 899
+  },
+  {
+    "key": "stone-slinger-walk-a",
+    "width": 1152,
+    "height": 1024,
+    "minX": 207,
+    "minY": 313,
+    "maxX": 597,
+    "maxY": 899
+  },
+  {
+    "key": "stone-slinger-walk-b",
+    "width": 1152,
+    "height": 1024,
+    "minX": 189,
+    "minY": 332,
+    "maxX": 561,
+    "maxY": 899
+  },
+  {
+    "key": "stone-slinger-attack",
+    "width": 1152,
+    "height": 1024,
+    "minX": 179,
+    "minY": 329,
+    "maxX": 658,
+    "maxY": 899
+  },
+  {
+    "key": "stone-supply-idle",
+    "width": 1152,
+    "height": 1024,
+    "minX": 271,
+    "minY": 299,
+    "maxX": 600,
+    "maxY": 899
+  },
+  {
+    "key": "stone-supply-walk-a",
+    "width": 1152,
+    "height": 1024,
+    "minX": 249,
+    "minY": 323,
+    "maxX": 572,
+    "maxY": 899
+  },
+  {
+    "key": "stone-supply-walk-b",
+    "width": 1152,
+    "height": 1024,
+    "minX": 191,
+    "minY": 346,
+    "maxX": 560,
+    "maxY": 899
+  },
+  {
+    "key": "stone-supply-attack",
+    "width": 1152,
+    "height": 1024,
+    "minX": 129,
+    "minY": 387,
+    "maxX": 664,
+    "maxY": 899
+  },
+  {
+    "key": "bronze-spearman-idle",
+    "width": 1152,
+    "height": 1024,
+    "minX": 344,
+    "minY": 376,
+    "maxX": 546,
+    "maxY": 899
+  },
+  {
+    "key": "bronze-spearman-walk-a",
+    "width": 1152,
+    "height": 1024,
+    "minX": 248,
+    "minY": 391,
+    "maxX": 512,
+    "maxY": 899
+  },
+  {
+    "key": "bronze-spearman-walk-b",
+    "width": 1152,
+    "height": 1024,
+    "minX": 180,
+    "minY": 455,
+    "maxX": 577,
+    "maxY": 899
+  },
+  {
+    "key": "bronze-spearman-attack-contact",
+    "width": 1152,
+    "height": 1024,
+    "minX": 46,
+    "minY": 275,
+    "maxX": 1064,
+    "maxY": 899
+  }
+]

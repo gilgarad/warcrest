@@ -1,0 +1,94 @@
+[
+  {
+    "id": 21,
+    "team": "player",
+    "unitId": "stone_slinger",
+    "role": "battle",
+    "progress": 0.5,
+    "laneRow": -3,
+    "hp": 26,
+    "maxHp": 26,
+    "facingX": 1,
+    "flipX": false,
+    "motion": {
+      "x": 0,
+      "y": 0
+    },
+    "pose": "stone-slinger-idle",
+    "attackAnimTime": 0,
+    "manaCurrent": 0,
+    "manaMax": 0,
+    "manaRegenPerSec": 0,
+    "healManaCost": 0,
+    "healPower": 0
+  },
+  {
+    "id": 22,
+    "team": "player",
+    "unitId": "bronze_swordsman",
+    "role": "battle",
+    "progress": 0.5,
+    "laneRow": 0,
+    "hp": 42,
+    "maxHp": 42,
+    "facingX": 1,
+    "flipX": false,
+    "motion": {
+      "x": 0,
+      "y": 0
+    },
+    "pose": "token-axe",
+    "attackAnimTime": 0,
+    "manaCurrent": 0,
+    "manaMax": 0,
+    "manaRegenPerSec": 0,
+    "healManaCost": 0,
+    "healPower": 0
+  },
+  {
+    "id": 23,
+    "team": "player",
+    "unitId": "bronze_spearman",
+    "role": "battle",
+    "progress": 0.5,
+    "laneRow": 3,
+    "hp": 38,
+    "maxHp": 38,
+    "facingX": -1,
+    "flipX": true,
+    "motion": {
+      "x": 0,
+      "y": 0
+    },
+    "pose": "bronze-spearman-idle",
+    "attackAnimTime": 0,
+    "manaCurrent": 0,
+    "manaMax": 0,
+    "manaRegenPerSec": 0,
+    "healManaCost": 0,
+    "healPower": 0
+  },
+  {
+    "id": 24,
+    "team": "player",
+    "unitId": "supply_wagon",
+    "role": "support",
+    "progress": 0.48,
+    "laneRow": 0,
+    "hp": 54,
+    "maxHp": 54,
+    "facingX": -1,
+    "flipX": true,
+    "motion": {
+      "x": 0,
+      "y": 0
+    },
+    "pose": "stone-supply-idle",
+    "attackAnimTime": 0,
+    "manaCurrent": 18,
+    "manaMax": 18,
+    "manaRegenPerSec": 1.25,
+    "healManaCost": 6,
+    "healPower": 4
+  }
+]

@@ -29,6 +29,9 @@ repository work.
 - `five-issue-followup-validation.md`: support mana gating, measured audio
   output, terrain-independent facing, opaque world-surface architecture, and
   fixed-fortress distinction evidence
+- `unit-animation-tower-v2-validation.md`: normalized pose assets and anchors,
+  shared animation registry, bronze spearman art, three-stage axe swing, and
+  explicit two-projectile tower pattern evidence
 - `audio-system-prototype.md`: independent audio architecture and the historical
   pre-integration baseline from commit `f57303b`
 - `audio-integration-validation.md`: live scene integration, dynamic music,
