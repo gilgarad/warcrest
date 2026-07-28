@@ -1,0 +1,128 @@
+[
+  {
+    "key": "defense-tower-full",
+    "output": "public/assets/production/structures/defense-tower-full.png",
+    "canvas": [
+      512,
+      512
+    ],
+    "alphaBbox": [
+      151,
+      88,
+      361,
+      448
+    ],
+    "groundAnchor": [
+      256,
+      448
+    ]
+  },
+  {
+    "key": "defense-tower-damaged",
+    "output": "public/assets/production/structures/defense-tower-damaged.png",
+    "canvas": [
+      512,
+      512
+    ],
+    "alphaBbox": [
+      152,
+      88,
+      361,
+      448
+    ],
+    "groundAnchor": [
+      256,
+      448
+    ]
+  },
+  {
+    "key": "defense-tower-critical",
+    "output": "public/assets/production/structures/defense-tower-critical.png",
+    "canvas": [
+      512,
+      512
+    ],
+    "alphaBbox": [
+      138,
+      98,
+      374,
+      448
+    ],
+    "groundAnchor": [
+      256,
+      448
+    ]
+  },
+  {
+    "key": "defense-tower-ruins",
+    "output": "public/assets/production/structures/defense-tower-ruins.png",
+    "canvas": [
+      512,
+      512
+    ],
+    "alphaBbox": [
+      94,
+      168,
+      417,
+      448
+    ],
+    "groundAnchor": [
+      256,
+      448
+    ]
+  },
+  {
+    "key": "defense-tower-construction",
+    "output": "public/assets/production/structures/defense-tower-construction.png",
+    "canvas": [
+      512,
+      512
+    ],
+    "alphaBbox": [
+      123,
+      108,
+      389,
+      448
+    ],
+    "groundAnchor": [
+      256,
+      448
+    ]
+  },
+  {
+    "key": "main-base",
+    "output": "public/assets/production/structures/main-base.png",
+    "canvas": [
+      512,
+      512
+    ],
+    "alphaBbox": [
+      38,
+      88,
+      473,
+      448
+    ],
+    "groundAnchor": [
+      256,
+      448
+    ]
+  },
+  {
+    "key": "capture-marker",
+    "output": "public/assets/production/structures/capture-marker.png",
+    "canvas": [
+      512,
+      512
+    ],
+    "alphaBbox": [
+      110,
+      68,
+      402,
+      448
+    ],
+    "groundAnchor": [
+      256,
+      448
+    ]
+  }
+]

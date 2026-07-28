@@ -2017,3 +2017,19 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
     폐기·재생성했고, chroma fringe와 고립 alpha 픽셀도 cleanup 단계에서
     제거했다.
   - 지형 QA 68/68, 소품 QA 5/5, build와 24 files/87 tests가 통과했다.
+
+## 2026-07-28 (131) — Day 3-4 스트림 C 구조물 생산 완료
+
+- **사용 도구**: Codex, built-in image generation, chroma-key removal,
+  Python/Pillow normalization, cleanup and asset QA
+- **사용자 지시 요약**: 본진, 타워 5상태, 캡처 마커를 승인된
+  `structure-medium`/광원/팀컬러 계약으로 생산하고 배치 좌표나 production
+  registry는 Day 5 전까지 건드리지 않는다.
+- **AI 산출물 요약**:
+  - 타워 5상태, 본진, 캡처 마커 7개를 제작했다. 타워는 한 건물의 점진적
+    손상 계열이며 캡처 마커는 타워와 다른 개방형 단상 실루엣이다.
+  - 생성 시트가 명목 셀 경계를 넘은 문제를 contact sheet에서 발견해,
+    manifest crop box로 완전한 오브젝트를 추출하도록 정규화 파이프라인을
+    보강했다.
+  - 구조물 QA 7/7, 전체 자산 QA, build, 24 files/87 tests가 통과했다.
+    Day 3-4 범위대로 게임 통합은 진행하지 않았다.

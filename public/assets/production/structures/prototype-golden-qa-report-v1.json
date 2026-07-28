@@ -1,0 +1,160 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "key": "defense-tower-full",
+      "canvas": [
+        512,
+        512
+      ],
+      "alphaBbox": [
+        151,
+        88,
+        361,
+        448
+      ],
+      "opaqueHeight": 360,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "defense-tower-damaged",
+      "canvas": [
+        512,
+        512
+      ],
+      "alphaBbox": [
+        152,
+        88,
+        361,
+        448
+      ],
+      "opaqueHeight": 360,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "defense-tower-critical",
+      "canvas": [
+        512,
+        512
+      ],
+      "alphaBbox": [
+        138,
+        98,
+        374,
+        448
+      ],
+      "opaqueHeight": 350,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "defense-tower-ruins",
+      "canvas": [
+        512,
+        512
+      ],
+      "alphaBbox": [
+        94,
+        168,
+        417,
+        448
+      ],
+      "opaqueHeight": 280,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "defense-tower-construction",
+      "canvas": [
+        512,
+        512
+      ],
+      "alphaBbox": [
+        123,
+        108,
+        389,
+        448
+      ],
+      "opaqueHeight": 340,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "main-base",
+      "canvas": [
+        512,
+        512
+      ],
+      "alphaBbox": [
+        38,
+        88,
+        473,
+        448
+      ],
+      "opaqueHeight": 360,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "capture-marker",
+      "canvas": [
+        512,
+        512
+      ],
+      "alphaBbox": [
+        110,
+        68,
+        402,
+        448
+      ],
+      "opaqueHeight": 380,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    }
+  ],
+  "failures": []
+}

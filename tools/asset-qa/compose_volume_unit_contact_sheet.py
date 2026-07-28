@@ -20,7 +20,9 @@ def main() -> None:
 
     spec = json.loads(Path(args.spec).read_text(encoding="utf-8"))
     assets = Path(args.assets)
-    cell_width, cell_height = 540, 430
+    max_canvas_width = max(asset["canvas"][0] for asset in spec["assets"])
+    max_canvas_height = max(asset["canvas"][1] for asset in spec["assets"])
+    cell_width, cell_height = max_canvas_width + 28, max_canvas_height + 46
     columns = args.columns
     rows = (len(spec["assets"]) + columns - 1) // columns
     sheet = Image.new("RGB", (cell_width * columns, cell_height * rows), "#17202a")

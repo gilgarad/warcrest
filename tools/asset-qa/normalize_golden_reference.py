@@ -35,13 +35,16 @@ def main() -> None:
         if source_path not in sources:
             sources[source_path] = Image.open(source_path).convert("RGBA")
         source = sources[source_path]
-        columns = asset.get("columns", spec["columns"])
-        rows = asset.get("rows", spec["rows"])
-        cell_width = source.width // columns
-        cell_height = source.height // rows
-        left = asset["column"] * cell_width
-        top = asset["row"] * cell_height
-        cell = source.crop((left, top, left + cell_width, top + cell_height))
+        if "crop" in asset:
+            cell = source.crop(tuple(asset["crop"]))
+        else:
+            columns = asset.get("columns", spec["columns"])
+            rows = asset.get("rows", spec["rows"])
+            cell_width = source.width // columns
+            cell_height = source.height // rows
+            left = asset["column"] * cell_width
+            top = asset["row"] * cell_height
+            cell = source.crop((left, top, left + cell_width, top + cell_height))
         content = cell.crop(alpha_bbox(cell))
         target_width, target_height = asset["canvas"]
         anchor_x, anchor_y = asset["anchor"]

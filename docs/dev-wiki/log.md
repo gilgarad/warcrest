@@ -2217,3 +2217,14 @@ Use consistent headings so entries are easy to grep.
   탈락시켜 조밀한 교체본과 반복 가능한 alpha cleanup으로 바로잡았다.
 - 지형 QA 68/68, 소품 QA 5/5, build, 24 files/87 tests가 통과했다.
   Day 5 전이므로 실제 맵과 registry에는 연결하지 않았다.
+
+## [2026-07-28] art | Day 3-4 스트림 C 구조물 볼륨 생산
+
+- 동일 원형 석조 타워의 건재·손상·치명손상·폐허·건설중 5단계와
+  본진·캡처 마커를 `structure-medium`으로 제작했다.
+- 생성 contact sheet가 등분 셀 경계를 넘긴 문제를 육안 검수에서 발견해
+  최초 출력을 탈락시켰다. manifest-defined crop box를 정규화기에 추가해
+  실제 오브젝트 간 여백 기준으로 완전한 형상을 분리했다.
+- 구조물 QA 7/7 및 전체 자산 QA(golden 6, units 12, terrain 68, props 5),
+  build, 24 files/87 tests가 통과했다. 배치 데이터와 registry는 변경하지
+  않았다.

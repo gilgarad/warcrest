@@ -1,0 +1,14 @@
+{
+  "source": "art-source/volume-production/structures/defense-tower-states-v1-alpha.png",
+  "columns": 3,
+  "rows": 2,
+  "assets": [
+    { "key": "defense-tower-full", "filename": "defense-tower-full.png", "crop": [0, 0, 512, 575], "canvas": [512, 512], "anchor": [256, 448], "opaqueHeight": 360, "minOpaqueHeight": 280, "maxOpaqueHeight": 420 },
+    { "key": "defense-tower-damaged", "filename": "defense-tower-damaged.png", "crop": [512, 0, 1024, 575], "canvas": [512, 512], "anchor": [256, 448], "opaqueHeight": 360, "minOpaqueHeight": 280, "maxOpaqueHeight": 420 },
+    { "key": "defense-tower-critical", "filename": "defense-tower-critical.png", "crop": [1024, 0, 1536, 575], "canvas": [512, 512], "anchor": [256, 448], "opaqueHeight": 350, "minOpaqueHeight": 280, "maxOpaqueHeight": 420 },
+    { "key": "defense-tower-ruins", "filename": "defense-tower-ruins.png", "crop": [0, 575, 512, 1024], "canvas": [512, 512], "anchor": [256, 448], "opaqueHeight": 280, "minOpaqueHeight": 250, "maxOpaqueHeight": 420 },
+    { "key": "defense-tower-construction", "filename": "defense-tower-construction.png", "crop": [512, 575, 1024, 1024], "canvas": [512, 512], "anchor": [256, 448], "opaqueHeight": 340, "minOpaqueHeight": 280, "maxOpaqueHeight": 420 },
+    { "key": "main-base", "filename": "main-base.png", "source": "art-source/volume-production/structures/main-base-v1-alpha.png", "columns": 1, "rows": 1, "column": 0, "row": 0, "canvas": [512, 512], "anchor": [256, 448], "opaqueHeight": 360, "minOpaqueHeight": 280, "maxOpaqueHeight": 420 },
+    { "key": "capture-marker", "filename": "capture-marker.png", "source": "art-source/volume-production/structures/capture-marker-v1-alpha.png", "columns": 1, "rows": 1, "column": 0, "row": 0, "canvas": [512, 512], "anchor": [256, 448], "opaqueHeight": 380, "minOpaqueHeight": 280, "maxOpaqueHeight": 420 }
+  ]
+}

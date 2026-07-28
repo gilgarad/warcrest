@@ -79,3 +79,45 @@ Validation:
 
 The terrain generator is deterministic and project-local; it includes no copied
 third-party game art. Assets remain unregistered until Day 5.
+
+## Stream C: Structure family
+
+Produced seven normalized `structure-medium` candidates:
+
+- `defense-tower-full.png`
+- `defense-tower-damaged.png`
+- `defense-tower-critical.png`
+- `defense-tower-ruins.png`
+- `defense-tower-construction.png`
+- `main-base.png`
+- `capture-marker.png`
+
+The tower states share one circular stone-and-bronze identity and footprint.
+Damage progresses through chipped battlements, partial collapse, and recognizable
+ruins; construction uses the same circular masonry with timber scaffolding. The
+capture marker intentionally uses an open stepped dais and flagpole, not an
+enclosed firing structure, so it remains distinct from the tower without labels.
+
+The generated 3x2 tower source did not obey exact equal-height cell boundaries:
+top-row tower bases crossed the nominal 512 px row. Initial grid splitting therefore
+left foreign strips in ruins/construction outputs. The candidates were rejected,
+and the normalizer gained manifest-defined crop boxes so each complete object is
+extracted from the real source spacing before normalization.
+
+Evidence: `artifacts/volume-production/structures-contact-sheet.png`.
+
+Validation:
+
+- `npm run asset:qa:structures`: 7/7 passed canvas, opaque-height,
+  ground-anchor, edge-margin, and transparent-corner checks.
+- Final aggregate QA: golden 6/6, units 12/12, terrain 68/68, props 5/5,
+  structures 7/7.
+- `npm run build`: passed; existing Vite chunk-size warning only.
+- `npm test`: 24 files, 87 tests passed.
+
+## Day 5 handoff
+
+No production candidate in this document is loaded by a game scene or registry.
+Day 5 must integrate them together, add runtime shadows/depth ordering under the
+approved contract, and capture the Phase-1 camera positions before gameplay-scale
+acceptance. No additional art-direction decision blocks that integration.
