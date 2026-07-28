@@ -1,0 +1,116 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "key": "field-oak",
+      "canvas": [
+        256,
+        256
+      ],
+      "alphaBbox": [
+        40,
+        34,
+        216,
+        224
+      ],
+      "opaqueHeight": 190,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "field-pine",
+      "canvas": [
+        256,
+        256
+      ],
+      "alphaBbox": [
+        68,
+        34,
+        188,
+        224
+      ],
+      "opaqueHeight": 190,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "rock-cluster",
+      "canvas": [
+        256,
+        256
+      ],
+      "alphaBbox": [
+        61,
+        74,
+        195,
+        224
+      ],
+      "opaqueHeight": 150,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "fallen-log",
+      "canvas": [
+        256,
+        256
+      ],
+      "alphaBbox": [
+        34,
+        104,
+        221,
+        224
+      ],
+      "opaqueHeight": 120,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "field-boulder",
+      "canvas": [
+        256,
+        256
+      ],
+      "alphaBbox": [
+        77,
+        74,
+        231,
+        224
+      ],
+      "opaqueHeight": 150,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    }
+  ],
+  "failures": []
+}

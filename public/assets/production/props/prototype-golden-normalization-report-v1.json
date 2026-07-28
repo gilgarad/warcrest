@@ -1,0 +1,92 @@
+[
+  {
+    "key": "field-oak",
+    "output": "public/assets/production/props/field-oak.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alphaBbox": [
+      40,
+      34,
+      216,
+      224
+    ],
+    "groundAnchor": [
+      128,
+      224
+    ]
+  },
+  {
+    "key": "field-pine",
+    "output": "public/assets/production/props/field-pine.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alphaBbox": [
+      68,
+      34,
+      188,
+      224
+    ],
+    "groundAnchor": [
+      128,
+      224
+    ]
+  },
+  {
+    "key": "rock-cluster",
+    "output": "public/assets/production/props/rock-cluster.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alphaBbox": [
+      61,
+      74,
+      195,
+      224
+    ],
+    "groundAnchor": [
+      128,
+      224
+    ]
+  },
+  {
+    "key": "fallen-log",
+    "output": "public/assets/production/props/fallen-log.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alphaBbox": [
+      34,
+      104,
+      221,
+      224
+    ],
+    "groundAnchor": [
+      128,
+      224
+    ]
+  },
+  {
+    "key": "field-boulder",
+    "output": "public/assets/production/props/field-boulder.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alphaBbox": [
+      24,
+      74,
+      231,
+      224
+    ],
+    "groundAnchor": [
+      128,
+      224
+    ]
+  }
+]

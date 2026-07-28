@@ -2206,3 +2206,14 @@ Use consistent headings so entries are easy to grep.
 - `tools/asset-qa/volume-unit-assets.json`과 전용 contact-sheet 생성기를
   추가했다. `npm run asset:qa:units` 12/12, build, 24 files/87 tests 통과.
 - 상세 자산 목록과 검증 근거는 `volume-production-validation.md`에 기록했다.
+
+## [2026-07-28] art | Day 3-4 스트림 B 지형·소품 볼륨 생산
+
+- 잔디·흙·도로·석재 4개 불투명 base와 재질별 16-state 투명 overlay를
+  생성해 총 68개 지형 production 후보를 만들었다. 다른 게임 자산 없이
+  프로젝트 로컬 deterministic Pillow 생성기를 사용했다.
+- 나무·침엽수·암석 군락·고목·승인된 바위 5개를 `prop-standard`로
+  정규화했다. 최초 납작한 암석 군락과 잔여 chroma 픽셀은 육안 검수에서
+  탈락시켜 조밀한 교체본과 반복 가능한 alpha cleanup으로 바로잡았다.
+- 지형 QA 68/68, 소품 QA 5/5, build, 24 files/87 tests가 통과했다.
+  Day 5 전이므로 실제 맵과 registry에는 연결하지 않았다.

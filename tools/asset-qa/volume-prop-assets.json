@@ -1,0 +1,12 @@
+{
+  "source": "art-source/volume-production/props/field-props-contact-sheet-v3-clean-alpha.png",
+  "columns": 2,
+  "rows": 2,
+  "assets": [
+    { "key": "field-oak", "filename": "field-oak.png", "column": 0, "row": 0, "canvas": [256, 256], "anchor": [128, 224], "opaqueHeight": 190, "minOpaqueHeight": 110, "maxOpaqueHeight": 200 },
+    { "key": "field-pine", "filename": "field-pine.png", "column": 1, "row": 0, "canvas": [256, 256], "anchor": [128, 224], "opaqueHeight": 190, "minOpaqueHeight": 110, "maxOpaqueHeight": 200 },
+    { "key": "rock-cluster", "filename": "rock-cluster.png", "source": "art-source/volume-production/props/rock-cluster-v2-alpha.png", "columns": 1, "rows": 1, "column": 0, "row": 0, "canvas": [256, 256], "anchor": [128, 224], "opaqueHeight": 150, "minOpaqueHeight": 110, "maxOpaqueHeight": 200 },
+    { "key": "fallen-log", "filename": "fallen-log.png", "column": 1, "row": 1, "canvas": [256, 256], "anchor": [128, 224], "opaqueHeight": 120, "minOpaqueHeight": 110, "maxOpaqueHeight": 200 },
+    { "key": "field-boulder", "filename": "field-boulder.png", "source": "public/assets/golden-reference/prototype-golden-field-boulder-v1.png", "columns": 1, "rows": 1, "column": 0, "row": 0, "canvas": [256, 256], "anchor": [128, 224], "opaqueHeight": 150, "minOpaqueHeight": 110, "maxOpaqueHeight": 200 }
+  ]
+}

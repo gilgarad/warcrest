@@ -2002,3 +2002,18 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
     반대 실루엣으로 교체했다.
   - 생산 후보 12개가 자산 QA 12/12를 통과했으며 build와 전체 테스트
     (24 files/87 tests)도 통과했다. 게임 레지스트리에는 연결하지 않았다.
+
+## 2026-07-28 (130) — Day 3-4 스트림 B 지형·소품 생산
+
+- **사용 도구**: Codex, built-in image generation, Python/Pillow terrain
+  generation, alpha cleanup and asset QA
+- **사용자 지시 요약**: 승인된 16-state 규칙과 접지 계약을 그대로 써서
+  잔디·흙·도로·석재 전체 타일 조합과 나머지 나무·바위 소품을 생산하되,
+  Day 5 전에는 실제 맵에 통합하지 않는다.
+- **AI 산출물 요약**:
+  - 4개 base와 재질별 16개 투명 transition, 총 68개 지형 자산을
+    deterministic 프로젝트 로컬 생성기로 제작했다.
+  - 소품 5개를 정규화했다. 첫 암석 군락은 캔버스 높이 규약을 위반해
+    폐기·재생성했고, chroma fringe와 고립 alpha 픽셀도 cleanup 단계에서
+    제거했다.
+  - 지형 QA 68/68, 소품 QA 5/5, build와 24 files/87 tests가 통과했다.

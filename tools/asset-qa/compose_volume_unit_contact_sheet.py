@@ -15,16 +15,19 @@ def main() -> None:
     parser.add_argument("--spec", default="tools/asset-qa/volume-unit-assets.json")
     parser.add_argument("--assets", default="public/assets/production/units")
     parser.add_argument("--output", default="artifacts/volume-production/units-contact-sheet.png")
+    parser.add_argument("--columns", type=int, default=4)
     args = parser.parse_args()
 
     spec = json.loads(Path(args.spec).read_text(encoding="utf-8"))
     assets = Path(args.assets)
     cell_width, cell_height = 540, 430
-    sheet = Image.new("RGB", (cell_width * 4, cell_height * 3), "#17202a")
+    columns = args.columns
+    rows = (len(spec["assets"]) + columns - 1) // columns
+    sheet = Image.new("RGB", (cell_width * columns, cell_height * rows), "#17202a")
     draw = ImageDraw.Draw(sheet)
 
     for index, asset in enumerate(spec["assets"]):
-        row, column = divmod(index, 4)
+        row, column = divmod(index, columns)
         frame = Image.open(assets / asset["filename"]).convert("RGBA")
         x = column * cell_width + (cell_width - frame.width) // 2
         y = row * cell_height + 28

@@ -40,3 +40,42 @@ Evidence: `artifacts/volume-production/units-contact-sheet.png`.
 
 Source images and chroma-key alpha intermediates are retained under
 `art-source/volume-production/units/`. Assets are not registered in the game.
+
+## Stream B: Terrain material families and field props
+
+Produced four seamless, fully opaque 64x64 base materials (`grass`, `dirt`,
+`road`, `stone`) and one complete 16-state transparent marching-squares overlay
+family for each material. The 4 bases plus 64 overlays provide 68 reusable assets;
+an overlay can be composited over any selected base without baking a second base
+into the transition.
+
+Produced five normalized `prop-standard` candidates:
+
+- `field-oak.png`
+- `field-pine.png`
+- `rock-cluster.png`
+- `fallen-log.png`
+- `field-boulder.png` (the approved golden-reference boulder, production-renamed)
+
+The initial horizontal rock cluster could not meet the 110 px minimum opaque
+height without exceeding the canvas width. It was rejected rather than weakening
+the contract, then replaced with a compact triangular rock mound. Magenta chroma
+remnants and isolated alpha pixels found in the first prop contact sheet were
+removed by a repeatable cleanup stage before final review.
+
+Evidence:
+
+- `artifacts/volume-production/terrain-material-families.png`
+- `artifacts/volume-production/props-contact-sheet.png`
+
+Validation:
+
+- `npm run asset:qa:terrain`: 68/68 passed dimensions, base opacity, non-empty
+  mask rules, and four-corner marching grammar.
+- `npm run asset:qa:props`: 5/5 passed canvas, opaque-height, ground-anchor,
+  edge-margin, and transparent-corner checks.
+- `npm run build`: passed; existing Vite chunk-size warning only.
+- `npm test`: 24 files, 87 tests passed.
+
+The terrain generator is deterministic and project-local; it includes no copied
+third-party game art. Assets remain unregistered until Day 5.
