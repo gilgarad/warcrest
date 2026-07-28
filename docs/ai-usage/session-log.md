@@ -1952,3 +1952,9 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
     확장하고 같은 정지 상태의 legacy/V2 gameplay snapshot 동일성을
     검증했다.
   - 빌드, Vitest 57개, Playwright 6개, 문서화와 비교 캡처를 완료했다.
+
+## 2026-07-28 (124) — Day 0 구조물 이격 규칙 적용
+
+- **사용 도구**: Codex
+- **사용자 결정 요약**: 약한 3/4 top-down 전면 재제작과 구조물 progress 최소 0.15 이격을 확정했고, Day 2 승인 전 대량 생산은 보류한다.
+- **AI 작업 요약**: 타워 progress를 0.600/0.200으로 바꾸고 실측 최소 0.167을 단위 테스트와 Playwright로 검증했다. build, 85 tests, 관련 Playwright 2개가 통과했다.

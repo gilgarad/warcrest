@@ -2161,3 +2161,10 @@ Use consistent headings so entries are easy to grep.
 - 검증: build 통과, Vitest 57/57, 오디오 Playwright 4/4, 지형/입력
   Playwright 2/2, `git diff --check` 통과. 상세 내용은
   `docs/dev-wiki/five-issue-fixes-validation.md`에 기록했다.
+
+## [2026-07-28] fix | Day 0 structure socket spacing
+
+- Branch: terrain-prototype-central; GitHub Issue 없음. 이 로그와 pre-visual-bug-fixes-validation.md를 최소 작업 기록으로 사용했다.
+- 정확한 1:2 규칙을 폐기하고, 타워가 연결 거점보다 본진에서 멀면서 모든 구조물 progress 차이가 0.15 이상인 규칙으로 교체했다.
+- 캡처 0.375/0.767, 타워 0.600/0.200이며 실측 최소 간격은 0.167이다.
+- npm run build, Vitest 23 files/85 tests, 관련 Playwright 2개를 통과했다.

@@ -1,16 +1,25 @@
 {
-  "formula": "tower distance from own base = 2 x linked capture distance",
+  "rule": "tower is beyond its linked capture from own base; every structure pair has progress gap >= 0.15",
+  "minimumMeasuredGap": 0.16700000000000004,
+  "pairwiseGaps": [
+    0.22499999999999998,
+    0.392,
+    0.175,
+    0.16700000000000004,
+    0.39999999999999997,
+    0.567
+  ],
   "snapshots": [
     {
       "side": "player",
       "captureProgress": 0.375,
-      "towerProgress": 0.75,
+      "towerProgress": 0.6,
       "selectedAfterClick": 0
     },
     {
       "side": "enemy",
       "captureProgress": 0.767,
-      "towerProgress": 0.534,
+      "towerProgress": 0.2,
       "selectedAfterClick": 1
     }
   ]

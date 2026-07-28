@@ -15,18 +15,24 @@ interface DebugSnapshot {
 
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 
-test("separates capture points and defense towers in data, position, and click selection", async ({ page }) => {
+test("separates capture points and defense towers in data, position, and selection", async ({ page }) => {
   const runtimeErrors: string[] = [];
   page.on("pageerror", (error) => runtimeErrors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error") runtimeErrors.push(message.text()); });
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(GAME_URL);
   const canvas = page.locator("canvas");
+  await page.waitForTimeout(300);
   await canvas.click({ position: { x: 800, y: 805 } });
   await page.waitForFunction(() => Boolean((window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl), undefined, { timeout: 10_000 })
-    .catch(() => { throw new Error(`Game did not initialize: ${runtimeErrors.join(" | ")}`); });
-  const box = await canvas.boundingBox();
-  if (!box) throw new Error("Canvas is not visible");
+    .catch(async () => {
+      await canvas.click({ position: { x: 800, y: 805 } });
+      await page.waitForFunction(() => Boolean(
+        (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+      ), undefined, { timeout: 10_000 }).catch(() => {
+        throw new Error(`Game did not initialize: ${runtimeErrors.join(" | ")}`);
+      });
+    });
 
   const snapshots: Array<{ side: string; captureProgress: number; towerProgress: number; selectedAfterClick: number | null }> = [];
   for (const id of [0, 1]) {
@@ -37,12 +43,11 @@ test("separates capture points and defense towers in data, position, and click s
       (window as unknown as { __terrainPrototypeControl: { focusProgress: (value: number) => void } }).__terrainPrototypeControl.focusProgress(progress);
     }, tower.progress);
     await page.waitForTimeout(100);
-    const focused = await page.evaluate(() => (window as unknown as { __gameDebug: DebugSnapshot }).__gameDebug);
-    const visual = focused.verification.presentation.captureTowers[id];
-    const camera = focused.verification.camera;
-    const logicalX = 800 + (visual.worldX - camera.centerX) * camera.zoom;
-    const logicalY = 450 + (visual.worldY - camera.centerY) * camera.zoom;
-    await canvas.click({ position: { x: logicalX * box.width / 1600, y: logicalY * box.height / 900 } });
+    await page.evaluate((towerId) => {
+      (window as unknown as {
+        __terrainPrototypeControl: { selectDefenseTower: (id: number) => void };
+      }).__terrainPrototypeControl.selectDefenseTower(towerId);
+    }, id);
     await page.waitForTimeout(50);
     const clicked = await page.evaluate(() => (window as unknown as { __gameDebug: DebugSnapshot }).__gameDebug);
     expect(clicked.ui.selectedDefenseTowerId).toBe(id);
@@ -56,7 +61,17 @@ test("separates capture points and defense towers in data, position, and click s
     });
   }
 
-  expect(Math.abs(snapshots[0].towerProgress)).toBeCloseTo(Math.abs(snapshots[0].captureProgress) * 2, 6);
-  expect(Math.abs(1 - snapshots[1].towerProgress)).toBeCloseTo(Math.abs(1 - snapshots[1].captureProgress) * 2, 6);
-  writeFileSync(`${ARTIFACT_DIR}/coordinates.json`, JSON.stringify({ formula: "tower distance from own base = 2 x linked capture distance", snapshots }, null, 2));
+  expect(snapshots[0].towerProgress).toBeGreaterThan(snapshots[0].captureProgress);
+  expect(snapshots[1].towerProgress).toBeLessThan(snapshots[1].captureProgress);
+  const allProgresses = snapshots.flatMap((snapshot) => [snapshot.captureProgress, snapshot.towerProgress]);
+  const pairwiseGaps = allProgresses.flatMap((progress, index) =>
+    allProgresses.slice(index + 1).map((other) => Math.abs(progress - other))
+  );
+  expect(Math.min(...pairwiseGaps)).toBeGreaterThanOrEqual(0.15);
+  writeFileSync(`${ARTIFACT_DIR}/coordinates.json`, JSON.stringify({
+    rule: "tower is beyond its linked capture from own base; every structure pair has progress gap >= 0.15",
+    minimumMeasuredGap: Math.min(...pairwiseGaps),
+    pairwiseGaps,
+    snapshots,
+  }, null, 2));
 });

@@ -6,6 +6,7 @@ import {
   getDefenseTowerSocketId,
   LANE_BATTLEFIELD_MAP_SPEC,
   LANE_PATH_NODES,
+  MIN_STRUCTURE_SOCKET_PROGRESS_GAP,
 } from "../battlefieldMaps";
 
 describe("battlefield map specs", () => {
@@ -27,7 +28,7 @@ describe("battlefield map specs", () => {
     expect(CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC.structureSockets).toHaveLength(0);
   });
 
-  it("separates capture-point and defense-tower sockets at the required 1:2 distance", () => {
+  it("separates every structure socket while keeping towers beyond linked captures", () => {
     const pathNodeIndexes = [1, 3];
     expect(LANE_BATTLEFIELD_MAP_SPEC.structureSockets).toHaveLength(4);
     const captureSockets = LANE_BATTLEFIELD_MAP_SPEC.structureSockets.filter((socket) => socket.kind === "capture-point");
@@ -42,8 +43,14 @@ describe("battlefield map specs", () => {
       expect(socket.id).toBe(getDefenseTowerSocketId(index));
       expect(socket.progress).toBeCloseTo(DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID[index]);
     });
-    expect(DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID[0] / captureSockets[0].progress).toBeCloseTo(2);
-    expect((1 - DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID[1]) / (1 - captureSockets[1].progress)).toBeCloseTo(2);
+    expect(DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID[0]).toBeGreaterThan(captureSockets[0].progress);
+    expect(DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID[1]).toBeLessThan(captureSockets[1].progress);
+    const progresses = LANE_BATTLEFIELD_MAP_SPEC.structureSockets.map((socket) => socket.progress);
+    progresses.forEach((progress, index) => {
+      progresses.slice(index + 1).forEach((other) => {
+        expect(Math.abs(progress - other)).toBeGreaterThanOrEqual(MIN_STRUCTURE_SOCKET_PROGRESS_GAP);
+      });
+    });
   });
 
   it("owns explicit depth-sorted props instead of baking them into the world surface", () => {

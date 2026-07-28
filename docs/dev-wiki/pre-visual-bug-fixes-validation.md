@@ -94,15 +94,13 @@ definitions and rules.
 - Unit tests assert four map sockets, their distinct kinds, and the requested
   progress-space ratio: own base to tower = 2 x own base to linked capture.
 
-### Remaining map-layout conflict
+### Day 0 spacing correction
 
-The exact requested formula exposes a pre-existing asymmetry: player tower
-progress `0.750` lies only `0.017` from the unchanged enemy-side capture at
-`0.767`. Their state and input paths are independent, but their art remains
-close. Changing either progress would violate the explicit instructions to
-retain capture progress and use the exact 1:2 rule. This needs an explicit map
-layout choice before B2: move the old capture, relax the ratio, or add a
-lateral structure lane in the new top-down terrain grammar.
+The exact 1:2 rule was superseded by a minimum-spacing rule after human review.
+Capture progress remains `0.375` and `0.767`; player/enemy tower progress is now
+`0.600` and `0.200`. Both towers remain farther from their own base than their
+linked capture, and every pair among all four structure sockets is separated by
+at least `0.15` progress. The measured minimum is `0.167`.
 
 ### Verification
 
