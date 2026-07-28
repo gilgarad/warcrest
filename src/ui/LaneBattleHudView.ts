@@ -24,6 +24,10 @@ interface ActionButton {
   text: Phaser.GameObjects.Text;
 }
 
+const HUD_SOURCE_WIDTH = 1672;
+const HUD_TOP_SOURCE_HEIGHT = 160;
+const HUD_BOTTOM_SOURCE_HEIGHT = 220;
+
 export interface LaneBattleHudCallbacks {
   hireWorker: () => void;
   hireResearchWorker: () => void;
@@ -92,8 +96,8 @@ export class LaneBattleHudView {
       row.plus.setFillStyle(worker.canIncrease ? 0x324a73 : 0x1d2634, 0.96);
       row.minus.setFillStyle(worker.canDecrease ? 0x324a73 : 0x1d2634, 0.96);
     });
-    this.playerBaseBar.width = 220 * snapshot.playerBaseRatio;
-    this.enemyBaseBar.width = 220 * snapshot.enemyBaseRatio;
+    this.playerBaseBar.width = 180 * snapshot.playerBaseRatio;
+    this.enemyBaseBar.width = 180 * snapshot.enemyBaseRatio;
     this.playerBaseBar.setOrigin(0, 0.5);
     this.enemyBaseBar.setOrigin(0, 0.5);
     this.rosterText.setText(snapshot.rosterLines);
@@ -108,52 +112,66 @@ export class LaneBattleHudView {
       .map(([action]) => action);
   }
 
+  getCompositionMetrics(): { topHeight: number; bottomHeight: number; openWorldHeight: number; openWorldRatio: number } {
+    const scale = this.canvasWidth / HUD_SOURCE_WIDTH;
+    const topHeight = HUD_TOP_SOURCE_HEIGHT * scale;
+    const bottomHeight = HUD_BOTTOM_SOURCE_HEIGHT * scale;
+    const openWorldHeight = this.canvasHeight - topHeight - bottomHeight;
+    return {
+      topHeight,
+      bottomHeight,
+      openWorldHeight,
+      openWorldRatio: openWorldHeight / this.canvasHeight,
+    };
+  }
+
   private create(audioDebugEnabled: boolean): void {
-    const hudScale = this.canvasWidth / 1672;
-    this.scene.add.image(0, 0, "war-table-hud").setOrigin(0, 0).setScale(hudScale).setCrop(0, 0, 1672, 188).setDepth(this.depth).setScrollFactor(0);
-    this.scene.add.image(0, this.canvasHeight - 278 * hudScale, "war-table-hud").setOrigin(0, 0).setScale(hudScale).setCrop(0, 663, 1672, 278).setDepth(this.depth).setScrollFactor(0);
-    this.scene.add.rectangle(150, 126, 230, 112, 0x07111a, 0.76).setStrokeStyle(2, 0x7ea0c9, 0.26).setDepth(this.depth + 1).setScrollFactor(0);
-    this.scene.add.text(42, 78, "전선 지휘", { fontFamily: "Georgia, serif", fontSize: "24px", color: "#eaf3ff", stroke: "#182535", strokeThickness: 4 }).setDepth(this.depth + 2).setScrollFactor(0);
-    this.ageText = this.scene.add.text(42, 108, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#d6e3f1" }).setDepth(this.depth + 2).setScrollFactor(0);
-    this.waveText = this.scene.add.text(42, 128, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#d6e3f1" }).setDepth(this.depth + 2).setScrollFactor(0);
-    this.baseText = this.scene.add.text(42, 148, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#d6e3f1" }).setDepth(this.depth + 2).setScrollFactor(0);
-    this.tokensText = this.scene.add.text(42, 168, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#f3d27a" }).setDepth(this.depth + 2).setScrollFactor(0);
+    const hudScale = this.canvasWidth / HUD_SOURCE_WIDTH;
+    const bottomHeight = HUD_BOTTOM_SOURCE_HEIGHT * hudScale;
+    this.scene.add.image(0, 0, "war-table-hud").setOrigin(0, 0).setScale(hudScale).setCrop(0, 0, HUD_SOURCE_WIDTH, HUD_TOP_SOURCE_HEIGHT).setDepth(this.depth).setScrollFactor(0);
+    this.scene.add.image(0, this.canvasHeight - bottomHeight, "war-table-hud").setOrigin(0, 0).setScale(hudScale).setCrop(0, 721, HUD_SOURCE_WIDTH, HUD_BOTTOM_SOURCE_HEIGHT).setDepth(this.depth).setScrollFactor(0);
+    this.scene.add.rectangle(150, 72, 230, 116, 0x07111a, 0.72).setStrokeStyle(2, 0x7ea0c9, 0.26).setDepth(this.depth + 1).setScrollFactor(0);
+    this.scene.add.text(42, 14, "전선 지휘", { fontFamily: "Georgia, serif", fontSize: "22px", color: "#eaf3ff", stroke: "#182535", strokeThickness: 4 }).setDepth(this.depth + 2).setScrollFactor(0);
+    this.ageText = this.scene.add.text(42, 46, "", { fontFamily: "sans-serif", fontSize: "12px", color: "#d6e3f1" }).setDepth(this.depth + 2).setScrollFactor(0);
+    this.waveText = this.scene.add.text(42, 66, "", { fontFamily: "sans-serif", fontSize: "12px", color: "#d6e3f1" }).setDepth(this.depth + 2).setScrollFactor(0);
+    this.baseText = this.scene.add.text(42, 86, "", { fontFamily: "sans-serif", fontSize: "12px", color: "#d6e3f1" }).setDepth(this.depth + 2).setScrollFactor(0);
+    this.tokensText = this.scene.add.text(42, 106, "", { fontFamily: "sans-serif", fontSize: "12px", color: "#f3d27a" }).setDepth(this.depth + 2).setScrollFactor(0);
 
     const resourceXs = [360, 680, 1080, 1400];
     MVP_ACTIVE_RESOURCE_IDS.forEach((resourceId, index) => {
-      this.scene.add.image(resourceXs[index], 34, getResourceIconKey(resourceId)).setDisplaySize(26, 26).setDepth(this.depth + 2).setScrollFactor(0);
-      this.scene.add.text(resourceXs[index], 10, getResource(resourceId).label, { fontFamily: "sans-serif", fontSize: "11px", color: "#97abd0" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0);
-      this.resourceTexts.set(resourceId, this.scene.add.text(resourceXs[index], 48, "", { fontFamily: "Georgia, serif", fontSize: "22px", color: "#f5fbff" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0));
+      this.scene.add.image(resourceXs[index], 46, getResourceIconKey(resourceId)).setDisplaySize(24, 24).setDepth(this.depth + 2).setScrollFactor(0);
+      this.scene.add.text(resourceXs[index], 14, getResource(resourceId).label, { fontFamily: "sans-serif", fontSize: "11px", color: "#97abd0" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0);
+      this.resourceTexts.set(resourceId, this.scene.add.text(resourceXs[index] + 24, 34, "", { fontFamily: "Georgia, serif", fontSize: "21px", color: "#f5fbff" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0, 0));
     });
 
-    this.scene.add.text(84, 640, "일꾼 배치", { fontFamily: "Georgia, serif", fontSize: "22px", color: "#f4e6c5" }).setDepth(this.depth + 2).setScrollFactor(0);
-    let workerY = 676;
+    this.scene.add.text(64, 704, "일꾼 배치", { fontFamily: "Georgia, serif", fontSize: "20px", color: "#f4e6c5" }).setDepth(this.depth + 2).setScrollFactor(0);
+    let workerY = 738;
     (["gold", "wood", "food", "metal", "research", "idle"] as WorkerRole[]).forEach((role) => {
       this.workerRows.set(role, this.createWorkerRow(role, workerY));
-      workerY += 28;
+      workerY += 25;
     });
 
-    this.createActionButton(430, 668, 190, 42, "일꾼 고용", this.callbacks.hireWorker);
-    this.createActionButton(430, 722, 190, 42, "연구 일꾼", this.callbacks.hireResearchWorker);
-    this.createActionButton(1100, 668, 220, 42, "즉시 웨이브", this.callbacks.useInstantWave);
-    this.createActionButton(1100, 722, 220, 42, "시대 업", this.callbacks.ageUp);
+    this.createActionButton(320, 730, 180, 38, "일꾼 고용", this.callbacks.hireWorker);
+    this.createActionButton(320, 778, 180, 38, "연구 일꾼", this.callbacks.hireResearchWorker);
+    this.createActionButton(1190, 730, 210, 38, "즉시 웨이브", this.callbacks.useInstantWave);
+    this.createActionButton(1190, 778, 210, 38, "시대 업", this.callbacks.ageUp);
 
-    this.rosterText = this.scene.add.text(790, 650, "", { fontFamily: "sans-serif", fontSize: "14px", color: "#d8e7f6", lineSpacing: 4 }).setDepth(this.depth + 2).setScrollFactor(0);
-    this.capturePanelTitle = this.scene.add.text(790, 744, "", { fontFamily: "Georgia, serif", fontSize: "18px", color: "#f4e6c5" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0.5);
-    this.capturePanelBody = this.scene.add.text(790, 784, "", { fontFamily: "sans-serif", fontSize: "12px", color: "#d8e7f6", align: "center", lineSpacing: 3 }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0.5);
-    this.infoText = this.scene.add.text(790, 842, "", { fontFamily: "sans-serif", fontSize: "12px", color: "#a8bdd7" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0.5);
+    this.rosterText = this.scene.add.text(530, 714, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#d8e7f6", lineSpacing: 3 }).setDepth(this.depth + 2).setScrollFactor(0);
+    this.capturePanelTitle = this.scene.add.text(780, 718, "", { fontFamily: "Georgia, serif", fontSize: "17px", color: "#f4e6c5" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0.5);
+    this.capturePanelBody = this.scene.add.text(780, 758, "", { fontFamily: "sans-serif", fontSize: "11px", color: "#d8e7f6", align: "center", lineSpacing: 2 }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0.5);
+    this.infoText = this.scene.add.text(780, 870, "", { fontFamily: "sans-serif", fontSize: "11px", color: "#a8bdd7" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0.5);
 
-    this.captureActionButtons.set("rebuild-defense-tower", this.createActionButton(882, 670, 150, 34, "타워 재건", this.callbacks.rebuildDefenseTower));
-    this.captureActionButtons.set("build-supply-depot", this.createActionButton(882, 712, 150, 34, "병참", this.callbacks.buildSupplyDepot));
-    this.captureActionButtons.set("build-mint", this.createActionButton(882, 754, 150, 34, "조달소", this.callbacks.buildMint));
-    this.captureActionButtons.set("dismantle", this.createActionButton(882, 796, 150, 30, "폐기", this.callbacks.dismantle));
+    this.captureActionButtons.set("rebuild-defense-tower", this.createActionButton(920, 708, 150, 32, "타워 재건", this.callbacks.rebuildDefenseTower));
+    this.captureActionButtons.set("build-supply-depot", this.createActionButton(920, 748, 150, 32, "병참", this.callbacks.buildSupplyDepot));
+    this.captureActionButtons.set("build-mint", this.createActionButton(920, 788, 150, 32, "조달소", this.callbacks.buildMint));
+    this.captureActionButtons.set("dismantle", this.createActionButton(920, 828, 150, 28, "폐기", this.callbacks.dismantle));
 
-    this.playerBaseBar = this.scene.add.rectangle(160, 228, 220, 12, 0x4fc1ff, 1).setOrigin(0, 0.5).setDepth(this.depth + 2);
-    this.enemyBaseBar = this.scene.add.rectangle(1218, 228, 220, 12, 0xff7373, 1).setOrigin(0, 0.5).setDepth(this.depth + 2);
-    this.scene.add.rectangle(160, 228, 220, 12, 0, 0).setOrigin(0, 0.5).setStrokeStyle(2, 0xd6e3f1, 0.4).setDepth(this.depth + 1);
-    this.scene.add.rectangle(1218, 228, 220, 12, 0, 0).setOrigin(0, 0.5).setStrokeStyle(2, 0xd6e3f1, 0.4).setDepth(this.depth + 1);
-    this.scene.add.text(160, 204, "아군 본진", { fontFamily: "sans-serif", fontSize: "12px", color: "#c7e5ff" }).setDepth(this.depth + 2);
-    this.scene.add.text(1218, 204, "적 본진", { fontFamily: "sans-serif", fontSize: "12px", color: "#ffd0d0" }).setDepth(this.depth + 2);
+    this.playerBaseBar = this.scene.add.rectangle(300, 140, 180, 9, 0x4fc1ff, 1).setOrigin(0, 0.5).setDepth(this.depth + 2);
+    this.enemyBaseBar = this.scene.add.rectangle(1120, 140, 180, 9, 0xff7373, 1).setOrigin(0, 0.5).setDepth(this.depth + 2);
+    this.scene.add.rectangle(300, 140, 180, 9, 0, 0).setOrigin(0, 0.5).setStrokeStyle(2, 0xd6e3f1, 0.4).setDepth(this.depth + 1);
+    this.scene.add.rectangle(1120, 140, 180, 9, 0, 0).setOrigin(0, 0.5).setStrokeStyle(2, 0xd6e3f1, 0.4).setDepth(this.depth + 1);
+    this.scene.add.text(300, 120, "아군 본진", { fontFamily: "sans-serif", fontSize: "11px", color: "#c7e5ff" }).setDepth(this.depth + 2);
+    this.scene.add.text(1120, 120, "적 본진", { fontFamily: "sans-serif", fontSize: "11px", color: "#ffd0d0" }).setDepth(this.depth + 2);
 
     this.audioSettingsPanel = new AudioSettingsPanel(this.scene, { depth: this.depth + 60, onVisibilityChange: this.callbacks.onAudioSettingsVisibilityChange });
     if (audioDebugEnabled) {

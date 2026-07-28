@@ -1,0 +1,19 @@
+{
+  "unitCount": 24,
+  "beforeModes": {
+    "detail": 24,
+    "summary": 0,
+    "compact": 0,
+    "hidden": 0
+  },
+  "afterModes": {
+    "detail": 0,
+    "summary": 2,
+    "compact": 0,
+    "hidden": 22
+  },
+  "summaryLabels": [
+    "아군 ×12 · HP 100%",
+    "적군 ×12 · HP 100%"
+  ]
+}

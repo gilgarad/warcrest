@@ -79,6 +79,10 @@ import {
   resolveUnitFramePresentation,
 } from "../presentation/units/unitPresentation";
 import {
+  resolveUnitOverlayDensity,
+  type UnitOverlayMode,
+} from "../presentation/units/unitOverlayDensity";
+import {
   UNIT_STATS,
   getProjectileKeyForUnit,
 } from "../systems/lane-units/unitStats";
@@ -325,6 +329,8 @@ export class LaneBattleScene extends Phaser.Scene {
   private readonly uiObjects: Phaser.GameObjects.GameObject[] = [];
   private readonly activeProjectiles = new Set<Phaser.GameObjects.Image>();
   private readonly engagedUnitIds = new Set<number>();
+  private unitOverlayDensityEnabled = true;
+  private unitOverlayModes = new Map<number, UnitOverlayMode>();
   private readonly audio = getAudioSystem();
   private readonly audioWiring = new LaneBattleAudioWiring(this.audio);
   private hud!: LaneBattleHudView;
@@ -421,6 +427,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.tickAi(deltaSec);
     this.tickWaves(deltaSec);
     this.tickCombat(deltaSec);
+    this.refreshUnitOverlayDensity();
     this.tickCapturePoints(deltaSec);
     this.updateAudioState();
     this.refreshUi();
@@ -894,6 +901,8 @@ export class LaneBattleScene extends Phaser.Scene {
         const focus = this.progressToScreen(0.5, 0);
         this.cameras.main.centerOn(focus.x, focus.y);
         this.refreshCapturePointVisuals();
+        this.units.forEach((unit) => this.syncUnitPresentation(unit));
+        this.refreshUnitOverlayDensity();
         this.publishDebug();
       },
       stepOccupancyProbe: (deltaSec: number, steps: number) => {
@@ -903,6 +912,16 @@ export class LaneBattleScene extends Phaser.Scene {
           this.tickCombat(step);
         }
         this.units.forEach((unit) => this.syncUnitPresentation(unit));
+        this.refreshUnitOverlayDensity();
+        this.publishDebug();
+      },
+      setUnitOverlayDensityEnabled: (enabled: boolean) => {
+        this.unitOverlayDensityEnabled = enabled;
+        this.refreshUnitOverlayDensity();
+        this.publishDebug();
+      },
+      setHudVisible: (visible: boolean) => {
+        this.uiCamera.setVisible(visible);
         this.publishDebug();
       },
       setVisualAuditLayer: (layer: "ground" | "props" | "units" | "combat") => {
@@ -2641,16 +2660,19 @@ export class LaneBattleScene extends Phaser.Scene {
       .on("pointerover", () => {
         unit.hovered = true;
         this.syncUnitPresentation(unit);
+        this.refreshUnitOverlayDensity();
       })
       .on("pointerout", () => {
         unit.hovered = false;
         this.syncUnitPresentation(unit);
+        this.refreshUnitOverlayDensity();
       })
       .on("pointerdown", () => {
         this.units.forEach((entry) => {
           entry.selected = entry.id === unit.id ? !entry.selected : false;
           this.syncUnitPresentation(entry);
         });
+        this.refreshUnitOverlayDensity();
       });
     this.units.push(unit);
     this.syncUnitPresentation(unit);
@@ -2700,6 +2722,62 @@ export class LaneBattleScene extends Phaser.Scene {
       const screenDistance = Phaser.Math.Distance.Between(unitPos.x, unitPos.y, otherPos.x, otherPos.y)
         * this.cameras.main.zoom;
       return screenDistance < 86;
+    });
+  }
+
+  private refreshUnitOverlayDensity(): void {
+    const visibleUnits = this.units.filter((unit) => unit.sprite.visible);
+    const canvasScale = this.getCanvasCssScale();
+    const decisions = this.unitOverlayDensityEnabled
+      ? resolveUnitOverlayDensity(visibleUnits.map((unit) => ({
+        id: unit.id,
+        team: unit.team,
+        screenX: unit.sprite.x * this.cameras.main.zoom * canvasScale,
+        screenY: unit.sprite.y * this.cameras.main.zoom * canvasScale,
+        hp: unit.hp,
+        maxHp: unit.maxHp,
+        priority: unit.selected || unit.hovered,
+      })))
+      : new Map();
+    this.unitOverlayModes.clear();
+
+    visibleUnits.forEach((unit) => {
+      const decision = decisions.get(unit.id);
+      const mode: UnitOverlayMode = decision?.mode ?? "detail";
+      this.unitOverlayModes.set(unit.id, mode);
+      const aggregateRatio = decision?.hpRatio ?? (unit.maxHp > 0 ? unit.hp / unit.maxHp : 0);
+      const summary = mode === "summary";
+      const hidden = mode === "hidden";
+      const baseWidth = this.isPrototypeV2()
+        ? this.cssPxToWorld(this.scaleVisualConfig.unitHpWidthCssPx)
+        : 34;
+      const width = summary ? baseWidth * 1.35 : baseWidth;
+      const hpVisible = !hidden;
+
+      unit.hpBg
+        .setVisible(hpVisible)
+        .setAlpha(mode === "compact" ? 0.7 : 0.94)
+        .setSize(width, unit.hpBg.height);
+      unit.hpFill
+        .setVisible(hpVisible)
+        .setAlpha(mode === "compact" ? 0.82 : 1)
+        .setPosition(unit.hpBg.x - width / 2, unit.hpFill.y)
+        .setSize(width * Math.max(0, aggregateRatio), unit.hpFill.height);
+
+      const showResource = unit.role === "support" && !hidden && !summary;
+      unit.manaBg.setVisible(showResource);
+      unit.manaFill.setVisible(showResource);
+
+      if (summary) {
+        const teamLabel = unit.team === "player" ? "아군" : "적군";
+        unit.label
+          .setText(`${teamLabel} ×${decision?.groupSize ?? 1} · HP ${Math.round(aggregateRatio * 100)}%`)
+          .setVisible(true);
+      } else {
+        unit.label
+          .setText(this.isPrototypeV2() ? `${UNIT_STATS[unit.unitId].label} Lv.1` : UNIT_STATS[unit.unitId].label)
+          .setVisible(!hidden && (mode === "detail" || this.shouldShowV2UnitLabel(unit)));
+      }
     });
   }
 
@@ -3034,6 +3112,13 @@ export class LaneBattleScene extends Phaser.Scene {
           y: unit.sprite.y,
           rotationRad: unit.sprite.rotation,
         },
+        overlay: {
+          mode: this.unitOverlayModes.get(unit.id) ?? "detail",
+          hpVisible: unit.hpBg.visible,
+          manaVisible: unit.manaBg.visible,
+          labelVisible: unit.label.visible,
+          labelText: unit.label.text,
+        },
         attackTiming: this.getUnitAttackTiming(unit, unit.attackTargetKind),
       })),
       battlefield: {
@@ -3070,6 +3155,13 @@ export class LaneBattleScene extends Phaser.Scene {
         selectedCapturePointId: this.selectedCapturePointId,
         selectedDefenseTowerId: this.selectedDefenseTowerId,
         visibleCaptureActions: this.hud.getVisibleCaptureActions(),
+        hudVisible: this.uiCamera.visible,
+        composition: this.hud.getCompositionMetrics(),
+        unitOverlayDensityEnabled: this.unitOverlayDensityEnabled,
+        unitOverlayModes: Object.fromEntries(this.units.map((unit) => [
+          unit.id,
+          this.unitOverlayModes.get(unit.id) ?? "detail",
+        ])),
       },
       activeProjectiles: [...this.activeProjectiles].map((projectile) => ({
         textureKey: projectile.name,
