@@ -106,3 +106,21 @@ fixed-fortress HUD branch.
 - `LaneBattleScene.ts`: 3,413 -> 3,355 lines.
 - `npm run build`: passed.
 - `npm test`: 20 files, 80 tests passed.
+
+## 2026-07-28 - Stage 1.2e: HUD Phaser view
+
+Extracted `src/ui/LaneBattleHudView.ts`. It owns the Phaser HUD objects,
+resource and worker rows, action-button interactions, capture-action
+visibility, base bars, information messages, audio settings panel, and optional
+audio debug overlay. The scene now creates one view with semantic callbacks and
+applies the pure snapshot from `laneBattleHudModel`.
+
+This second HUD extraction removes layout and widget ownership from the scene,
+rather than stopping at string formatting. Runtime validation covered the
+audio settings panel at three viewport sizes and capture-point selection/action
+visibility.
+
+- `LaneBattleScene.ts`: 3,355 -> 3,145 lines.
+- `npm run build`: passed.
+- `npm test`: 20 files, 80 tests passed.
+- Playwright: audio integration plus capture-point distinction, 5 tests passed.
