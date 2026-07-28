@@ -591,6 +591,7 @@ export class LaneBattleScene extends Phaser.Scene {
       });
       const focus = this.progressToScreen(0.5, 0);
       this.cameras.main.centerOn(focus.x, focus.y);
+      this.refreshUi();
       this.publishDebug();
     };
 
@@ -618,6 +619,37 @@ export class LaneBattleScene extends Phaser.Scene {
         summary: win ? "오디오 통합 승리 검증" : "오디오 통합 패배 검증",
       }),
       snapshot: () => this.createVerificationSnapshot(),
+      fundDay8Regression: () => {
+        Object.keys(this.player.resources).forEach((resourceId) => {
+          this.player.resources[resourceId as keyof typeof this.player.resources] = 9999;
+        });
+        this.player.lastWaveElapsedSec = 10;
+        this.refreshUi();
+        this.publishDebug();
+      },
+      advanceStructureProbe: (seconds: number) => {
+        this.tickCapturePoints(Math.max(0, seconds));
+        this.refreshUi();
+        this.publishDebug();
+      },
+      prepareCaptureOwnershipProbe: () => {
+        this.units.forEach((unit) => this.destroyUnitPresentation(unit));
+        this.units = [];
+        this.defenseTowers.forEach((tower) => {
+          tower.built = false;
+          tower.hp = 0;
+          tower.buildRemainingSec = 0;
+        });
+        const point = this.capturePoints[0];
+        point.owner = "enemy";
+        point.control = -1;
+        point.buildingId = "mint";
+        point.buildingLevel = 4;
+        this.spawnLaneUnit("player", "battle", "stone_axeman", point.progress, 0);
+        this.selectCapturePoint(point.id);
+        this.refreshCapturePointVisuals();
+        this.publishDebug();
+      },
       selectCapturePoint: (id: number) => this.selectCapturePoint(id),
       selectDefenseTower: (id: number) => this.selectDefenseTower(id),
       setCentralFortressHpRatio: (ratio: number) => {
@@ -686,8 +718,7 @@ export class LaneBattleScene extends Phaser.Scene {
         point.buildingLevel = 0;
         const focus = this.progressToScreen(point.progress, 0);
         this.cameras.main.centerOn(focus.x, focus.y);
-        this.refreshCapturePointVisuals();
-        this.refreshUi();
+        this.selectCapturePoint(point.id);
         this.publishDebug();
       },
       setAttackVisualPhase: (
@@ -3085,6 +3116,7 @@ export class LaneBattleScene extends Phaser.Scene {
           labelWorldY: point.label.y,
           markerTexture: point.marker.texture.key,
           buildingId: point.buildingId ?? null,
+          buildingLevel: point.buildingLevel,
           availableActions: getCapturePointActions(point.definition, point),
         })),
         defenseTowers: this.defenseTowers.map((tower) => ({
@@ -3101,6 +3133,7 @@ export class LaneBattleScene extends Phaser.Scene {
         laneEnd: { x: this.laneEnd.x, y: this.laneEnd.y },
       },
       ui: {
+        ageLabel: this.hud.getAgeLabelText(),
         selectedCapturePointId: this.selectedCapturePointId,
         selectedDefenseTowerId: this.selectedDefenseTowerId,
         visibleCaptureActions: this.hud.getVisibleCaptureActions(),

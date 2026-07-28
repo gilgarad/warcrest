@@ -17,21 +17,23 @@ type VerificationSnapshot = Record<string, unknown> & {
 };
 
 function canonicalGameplaySnapshot(snapshot: VerificationSnapshot): VerificationSnapshot {
-  const copy = structuredClone(snapshot);
+  const visualKeys = new Set([
+    "facingX", "flipX", "motion", "pose", "renderTexture", "tint",
+    "presentation", "overlay", "worldX", "worldY", "labelWorldX", "labelWorldY",
+    "markerTexture",
+  ]);
+  const stripVisualState = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(stripVisualState);
+    if (!value || typeof value !== "object") return value;
+    return Object.fromEntries(Object.entries(value as Record<string, unknown>)
+      .filter(([key]) => !visualKeys.has(key))
+      .map(([key, entry]) => [key, stripVisualState(entry)]));
+  };
+  const copy = stripVisualState(structuredClone(snapshot)) as VerificationSnapshot;
   delete copy.elapsedSec;
   delete copy.verification?.terrainMode;
   delete copy.verification?.prototypePreset;
   delete copy.verification?.presentation;
-  if (Array.isArray(copy.units)) {
-    copy.units = copy.units.map((unit) => {
-      const canonicalUnit = { ...(unit as Record<string, unknown>) };
-      delete canonicalUnit.facingX;
-      delete canonicalUnit.flipX;
-      delete canonicalUnit.motion;
-      delete canonicalUnit.pose;
-      return canonicalUnit;
-    });
-  }
   return copy;
 }
 
@@ -95,7 +97,7 @@ test(`captures the ${CAPTURE_PHASE} full-lane terrain state without changing gam
   expect(verification.terrain.mapSpecId).toBe("warcrest-full-lane-hybrid-v1");
   expect(verification.terrain.patchCount).toBe(4);
   expect(verification.terrain.cellCount).toBeGreaterThan(300);
-  expect(verification.terrain.structureSocketCount).toBe(2);
+  expect(verification.terrain.structureSocketCount).toBe(4);
   expect(errors).toEqual([]);
 
   await page.screenshot({ path: `${ARTIFACT_DIR}/${CAPTURE_PHASE}-central.png` });

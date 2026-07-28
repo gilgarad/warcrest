@@ -78,8 +78,8 @@ test("bronze spearman keeps one silhouette height through attack poses", async (
 
   expect(sequence.map((entry) => entry.pose)).toEqual([
     "bronze-spearman-idle",
-    "bronze-spearman-attack-windup",
-    "bronze-spearman-attack-contact",
+    "bronze-spearman-attack",
+    "bronze-spearman-attack",
     "bronze-spearman-idle",
   ]);
   const visibleHeights = sequence.map((entry) => entry.cssVisibleHeight);

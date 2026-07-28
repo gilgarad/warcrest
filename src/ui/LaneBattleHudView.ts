@@ -112,6 +112,10 @@ export class LaneBattleHudView {
       .map(([action]) => action);
   }
 
+  getAgeLabelText(): string {
+    return this.ageText.text;
+  }
+
   getCompositionMetrics(): { topHeight: number; bottomHeight: number; openWorldHeight: number; openWorldRatio: number } {
     const scale = this.canvasWidth / HUD_SOURCE_WIDTH;
     const topHeight = HUD_TOP_SOURCE_HEIGHT * scale;

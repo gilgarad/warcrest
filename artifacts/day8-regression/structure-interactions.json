@@ -1,0 +1,846 @@
+{
+  "current": {
+    "phase": "lane-siege",
+    "elapsedSec": 1.1998999999999973,
+    "player": {
+      "ageId": "stone",
+      "resources": {
+        "gold": 9993,
+        "wood": 9989,
+        "food": 9999.366666666661,
+        "metal": 9999,
+        "gunpowder": 9999,
+        "fuel": 9999
+      },
+      "workers": {
+        "gold": 1,
+        "wood": 1,
+        "food": 1,
+        "metal": 1,
+        "research": 0,
+        "idle": 0
+      },
+      "baseHp": 400,
+      "nextWaveInSec": 28.80010000000005
+    },
+    "enemy": {
+      "ageId": "stone",
+      "resources": {
+        "gold": 60,
+        "wood": 30,
+        "food": 19.19989999999995,
+        "metal": 18,
+        "gunpowder": 0,
+        "fuel": 0
+      },
+      "workers": {
+        "gold": 1,
+        "wood": 1,
+        "food": 1,
+        "metal": 1,
+        "research": 0,
+        "idle": 0
+      },
+      "baseHp": 400,
+      "nextWaveInSec": 28.80010000000005
+    },
+    "units": [
+      {
+        "id": 9,
+        "team": "player",
+        "unitId": "stone_axeman",
+        "role": "battle",
+        "progress": 0.375,
+        "laneRow": 0,
+        "hp": 34,
+        "maxHp": 34,
+        "facingX": -1,
+        "flipX": false,
+        "tint": 16777215,
+        "motion": {
+          "x": -0.9242166626181643,
+          "y": 0.40320621811997626
+        },
+        "pose": "stone-axeman-idle",
+        "renderTexture": "stone-axeman-idle",
+        "attackAnimTime": 0,
+        "attackTargetKind": "unit",
+        "manaCurrent": 0,
+        "manaMax": 0,
+        "manaRegenPerSec": 0,
+        "healManaCost": 0,
+        "healPower": 0,
+        "presentation": {
+          "x": 3079.075783337382,
+          "y": 2280.5346910068097,
+          "rotationRad": 0
+        },
+        "overlay": {
+          "mode": "detail",
+          "hpVisible": true,
+          "manaVisible": false,
+          "labelVisible": false,
+          "labelText": "도끼 Lv.1"
+        },
+        "attackTiming": {
+          "durationSec": 0.46,
+          "eventProgress": 0.48,
+          "targetKind": "unit",
+          "eventDelayMs": 220.79999999999998
+        }
+      }
+    ],
+    "battlefield": {
+      "capturePoints": [
+        {
+          "x": 12,
+          "y": 10
+        },
+        {
+          "x": 20,
+          "y": 10
+        },
+        {
+          "x": 28,
+          "y": 10
+        }
+      ],
+      "controlPoints": [
+        {
+          "id": 0,
+          "pointType": "buildable",
+          "allowedBuildingTypes": [
+            "supply_depot",
+            "mint"
+          ],
+          "owner": "player",
+          "control": 1,
+          "progress": 0.375,
+          "worldX": 3079.075783337382,
+          "worldY": 2280.40320621812,
+          "labelWorldX": 3079.075783337382,
+          "labelWorldY": 2032.5771192615982,
+          "markerTexture": "capture-marker",
+          "buildingId": "mint",
+          "buildingLevel": 3,
+          "availableActions": [
+            "dismantle"
+          ]
+        },
+        {
+          "id": 1,
+          "pointType": "buildable",
+          "allowedBuildingTypes": [
+            "supply_depot",
+            "mint"
+          ],
+          "owner": "neutral",
+          "control": 0,
+          "progress": 0.767,
+          "worldX": 4959.510565946078,
+          "worldY": 1304.316249696381,
+          "labelWorldX": 4959.510565946078,
+          "labelWorldY": 1056.4901627398592,
+          "markerTexture": "capture-marker-neutral",
+          "buildingId": null,
+          "buildingLevel": 0,
+          "availableActions": []
+        }
+      ],
+      "defenseTowers": [
+        {
+          "id": 0,
+          "owner": "player",
+          "linkedCapturePointId": 0,
+          "progress": 0.6,
+          "built": false,
+          "hp": 0,
+          "maxHp": 130,
+          "buildRemainingSec": 0
+        },
+        {
+          "id": 1,
+          "owner": "enemy",
+          "linkedCapturePointId": 1,
+          "progress": 0.2,
+          "built": true,
+          "hp": 130,
+          "maxHp": 130,
+          "buildRemainingSec": 0
+        }
+      ],
+      "laneStart": {
+        "x": 1240,
+        "y": 3130
+      },
+      "laneEnd": {
+        "x": 5995,
+        "y": 580
+      }
+    },
+    "ui": {
+      "ageLabel": "시대 석기 시대",
+      "selectedCapturePointId": 0,
+      "selectedDefenseTowerId": null,
+      "visibleCaptureActions": [
+        "dismantle"
+      ],
+      "hudVisible": true,
+      "composition": {
+        "topHeight": 153.11004784688996,
+        "bottomHeight": 210.52631578947367,
+        "openWorldHeight": 536.3636363636364,
+        "openWorldRatio": 0.595959595959596
+      },
+      "unitOverlayDensityEnabled": true,
+      "unitOverlayModes": {
+        "9": "detail"
+      }
+    },
+    "activeProjectiles": [
+      {
+        "textureKey": "projectile-stone",
+        "x": 1942.789560511295,
+        "y": 2659.462270221982
+      },
+      {
+        "textureKey": "projectile-stone",
+        "x": 1977.878310511295,
+        "y": 2662.1978460624136
+      }
+    ],
+    "engagement": {
+      "uniqueAttackers": 2,
+      "battleUnits": 1,
+      "currentlyAnimating": 0
+    },
+    "towerAttackPatterns": {
+      "stone": {
+        "projectileKey": "projectile-stone",
+        "projectileCount": 2,
+        "perProjectileDamage": 7,
+        "spreadWorldPx": 18,
+        "rangeProgress": 0.072,
+        "cooldownSec": 1.3
+      },
+      "bronze": {
+        "projectileKey": "projectile-stone",
+        "projectileCount": 2,
+        "perProjectileDamage": 7,
+        "spreadWorldPx": 18,
+        "rangeProgress": 0.072,
+        "cooldownSec": 1.3
+      }
+    },
+    "verification": {
+      "seed": "warcrest-day8",
+      "terrainMode": "world-surface",
+      "prototypePreset": "balanced",
+      "scalePreset": "recommended",
+      "visualValidationScenario": false,
+      "camera": {
+        "scrollX": 3352.988826815643,
+        "scrollY": 1260.8379888268157,
+        "zoom": 0.46,
+        "centerX": 4152.988826815643,
+        "centerY": 1710.8379888268157
+      },
+      "rules": {
+        "worldWidth": 7000,
+        "worldHeight": 3900,
+        "cameraZoom": 0.46,
+        "waveIntervalSec": 30,
+        "unitProgressSpeed": 0.02,
+        "rangeToProgress": 0.013,
+        "friendlyGap": 0.011,
+        "engageGap": 0.022,
+        "captureRadiusProgress": 0.06,
+        "captureRatePerSec": 0.36,
+        "playerBaseHp": 400,
+        "enemyBaseHp": 400,
+        "laneRowSpacing": 62
+      },
+      "terrain": {
+        "mapSpecId": "warcrest-full-lane-hybrid-v1",
+        "patchCount": 4,
+        "cellCount": 368,
+        "structureSocketCount": 4,
+        "propGrounding": [
+          {
+            "id": "rock-west-ridge",
+            "textureKey": "field-boulder",
+            "groundOriginY": 0.875,
+            "shadow": {
+              "offsetX": 4,
+              "offsetY": 2,
+              "widthScale": 0.92,
+              "heightScale": 0.5,
+              "rotationRad": -0.08,
+              "alpha": 0.3
+            }
+          },
+          {
+            "id": "trees-west-south",
+            "textureKey": "field-oak",
+            "groundOriginY": 0.875,
+            "shadow": {
+              "offsetX": 7,
+              "offsetY": 3,
+              "widthScale": 0.84,
+              "heightScale": 0.52,
+              "rotationRad": -0.1,
+              "alpha": 0.34
+            }
+          },
+          {
+            "id": "rock-central-north",
+            "textureKey": "rock-cluster",
+            "groundOriginY": 0.875,
+            "shadow": {
+              "offsetX": 4,
+              "offsetY": 2,
+              "widthScale": 0.92,
+              "heightScale": 0.5,
+              "rotationRad": -0.08,
+              "alpha": 0.3
+            }
+          },
+          {
+            "id": "trees-central-south",
+            "textureKey": "fallen-log",
+            "groundOriginY": 0.875,
+            "shadow": {
+              "offsetX": 7,
+              "offsetY": 3,
+              "widthScale": 0.84,
+              "heightScale": 0.52,
+              "rotationRad": -0.1,
+              "alpha": 0.34
+            }
+          },
+          {
+            "id": "rock-east-south",
+            "textureKey": "field-boulder",
+            "groundOriginY": 0.875,
+            "shadow": {
+              "offsetX": 4,
+              "offsetY": 2,
+              "widthScale": 0.92,
+              "heightScale": 0.5,
+              "rotationRad": -0.08,
+              "alpha": 0.3
+            }
+          },
+          {
+            "id": "trees-east-ridge",
+            "textureKey": "field-pine",
+            "groundOriginY": 0.875,
+            "shadow": {
+              "offsetX": 7,
+              "offsetY": 3,
+              "widthScale": 0.84,
+              "heightScale": 0.52,
+              "rotationRad": -0.1,
+              "alpha": 0.34
+            }
+          }
+        ]
+      },
+      "presentation": {
+        "scalePreset": "recommended",
+        "canvasCssScale": 1,
+        "devicePixelRatio": 1,
+        "configuredVisibleCssHeights": {
+          "normalUnit": 100,
+          "supportUnit": 116,
+          "largeUnit": 122,
+          "captureTower": 144,
+          "fixedFortress": 162
+        },
+        "configuredFontCssPx": {
+          "unit": 14,
+          "selectedUnit": 15,
+          "auxiliary": 13,
+          "tower": 16,
+          "fixedFortress": 17
+        },
+        "sampledUnits": [
+          {
+            "id": 9,
+            "unitId": "stone_axeman",
+            "pose": "stone-axeman-idle",
+            "worldWidth": 321.54589371980677,
+            "worldHeight": 321.54589371980677,
+            "canvasScreenWidth": 147.91111111111113,
+            "canvasScreenHeight": 147.91111111111113,
+            "cssFrameWidth": 147.91111111111113,
+            "cssFrameHeight": 147.91111111111113,
+            "cssVisibleHeight": 104,
+            "originX": 0.5,
+            "originY": 0.875,
+            "hpWorldWidth": 113.04347826086956,
+            "hpWorldHeight": 13.043478260869565,
+            "hpCssWidth": 52,
+            "hpCssHeight": 6,
+            "manaCurrent": 0,
+            "manaMax": 0,
+            "manaRegenPerSec": 0,
+            "healManaCost": 0,
+            "labelCssFontSize": 13.8,
+            "labelResolution": 2,
+            "labelScale": 1,
+            "labelVisible": false,
+            "facingX": -1,
+            "flipX": false,
+            "motion": {
+              "x": -0.9242166626181643,
+              "y": 0.40320621811997626
+            }
+          }
+        ],
+        "captureTowers": [
+          {
+            "id": 0,
+            "pointType": "defense-tower",
+            "textureKey": "defense-tower-ruins",
+            "worldX": 4152.988826815643,
+            "worldY": 1710.8379888268157,
+            "cssFrameHeight": 263.3142857142857,
+            "cssVisibleHeight": 143.99999999999997,
+            "originY": 0.875
+          },
+          {
+            "id": 1,
+            "pointType": "defense-tower",
+            "textureKey": "defense-tower-full-enemy",
+            "worldX": 2220.380131163469,
+            "worldY": 2676.0553801311635,
+            "cssFrameHeight": 204.8,
+            "cssVisibleHeight": 144,
+            "originY": 0.875
+          }
+        ],
+        "centralTower": {
+          "pointType": "defense-tower",
+          "worldWidth": 445.2173913043478,
+          "worldHeight": 445.2173913043478,
+          "cssFrameWidth": 204.8,
+          "cssFrameHeight": 204.8,
+          "cssVisibleHeight": 144,
+          "originY": 0.875,
+          "hpWorldWidth": 234.78260869565216,
+          "hpWorldHeight": 19.565217391304348,
+          "hpCssWidth": 108,
+          "hpCssHeight": 9,
+          "labelCssFontSize": 16.1,
+          "labelResolution": 2,
+          "labelScale": 1,
+          "availableActions": []
+        }
+      },
+      "unitStats": {
+        "stone_slinger": {
+          "hp": 26,
+          "attack": 7,
+          "defense": 2,
+          "range": 4.5,
+          "speed": 1.05,
+          "attackCooldownSec": 1.3,
+          "healPower": 0
+        },
+        "stone_axeman": {
+          "hp": 34,
+          "attack": 9,
+          "defense": 3,
+          "range": 1.5,
+          "speed": 1.1,
+          "attackCooldownSec": 1,
+          "healPower": 0
+        },
+        "bronze_swordsman": {
+          "hp": 42,
+          "attack": 12,
+          "defense": 5,
+          "range": 1.5,
+          "speed": 1.1,
+          "attackCooldownSec": 0.95,
+          "healPower": 0
+        },
+        "bronze_spearman": {
+          "hp": 38,
+          "attack": 11,
+          "defense": 5,
+          "range": 2.2,
+          "speed": 1,
+          "attackCooldownSec": 1.05,
+          "healPower": 0
+        },
+        "archer": {
+          "hp": 30,
+          "attack": 13,
+          "defense": 3,
+          "range": 5.2,
+          "speed": 1.15,
+          "attackCooldownSec": 2,
+          "healPower": 0
+        },
+        "iron_swordsman": {
+          "hp": 54,
+          "attack": 16,
+          "defense": 8,
+          "range": 1.6,
+          "speed": 1.12,
+          "attackCooldownSec": 0.9,
+          "healPower": 0
+        },
+        "iron_spearman": {
+          "hp": 50,
+          "attack": 15,
+          "defense": 7,
+          "range": 2.4,
+          "speed": 1.06,
+          "attackCooldownSec": 1,
+          "healPower": 0
+        },
+        "musketeer": {
+          "hp": 36,
+          "attack": 21,
+          "defense": 4,
+          "range": 6.4,
+          "speed": 1,
+          "attackCooldownSec": 2.1,
+          "healPower": 0
+        },
+        "knight": {
+          "hp": 72,
+          "attack": 22,
+          "defense": 10,
+          "range": 1.8,
+          "speed": 1.35,
+          "attackCooldownSec": 1.45,
+          "healPower": 0
+        },
+        "supply_wagon": {
+          "hp": 54,
+          "attack": 0,
+          "defense": 3,
+          "range": 4.4,
+          "speed": 0.98,
+          "attackCooldownSec": 1.2,
+          "healPower": 4
+        }
+      }
+    }
+  },
+  "audio": {
+    "build": {
+      "initialized": true,
+      "unlocked": true,
+      "contextState": "running",
+      "currentBgmId": "bgm.battle.low",
+      "bgmState": "battle-low",
+      "activeBgmVoices": 1,
+      "activeSfxVoices": 1,
+      "settings": {
+        "version": 2,
+        "masterVolume": 0.8,
+        "bgmVolume": 0.8,
+        "sfxVolume": 0.9,
+        "mute": false,
+        "muteWhenUnfocused": true,
+        "combatSfxMode": "reduced",
+        "crossfadeDurationMs": 1200
+      },
+      "recentEvents": [
+        {
+          "id": "sfx.ui.confirm",
+          "result": "played",
+          "atMs": 23
+        },
+        {
+          "id": "sfx.ui.buildSelect",
+          "result": "played",
+          "atMs": 6002
+        },
+        {
+          "id": "sfx.wave.start",
+          "result": "played",
+          "atMs": 6037
+        },
+        {
+          "id": "sfx.ui.buildSelect",
+          "result": "played",
+          "atMs": 6327
+        },
+        {
+          "id": "sfx.ui.hover",
+          "result": "played",
+          "atMs": 8545
+        },
+        {
+          "id": "sfx.construction.start",
+          "result": "played",
+          "atMs": 8545
+        },
+        {
+          "id": "sfx.combat.towerAttack",
+          "result": "played",
+          "atMs": 9114
+        }
+      ],
+      "skippedEventCount": 0,
+      "unlockAttemptCount": 1,
+      "missingAssetFallback": true,
+      "focusMuted": false,
+      "lastError": null
+    },
+    "completedBuild": {
+      "initialized": true,
+      "unlocked": true,
+      "contextState": "running",
+      "currentBgmId": "bgm.battle.low",
+      "bgmState": "battle-low",
+      "activeBgmVoices": 1,
+      "activeSfxVoices": 0,
+      "settings": {
+        "version": 2,
+        "masterVolume": 0.8,
+        "bgmVolume": 0.8,
+        "sfxVolume": 0.9,
+        "mute": false,
+        "muteWhenUnfocused": true,
+        "combatSfxMode": "reduced",
+        "crossfadeDurationMs": 1200
+      },
+      "recentEvents": [
+        {
+          "id": "sfx.ui.confirm",
+          "result": "played",
+          "atMs": 23
+        },
+        {
+          "id": "sfx.ui.buildSelect",
+          "result": "played",
+          "atMs": 6002
+        },
+        {
+          "id": "sfx.wave.start",
+          "result": "played",
+          "atMs": 6037
+        },
+        {
+          "id": "sfx.ui.buildSelect",
+          "result": "played",
+          "atMs": 6327
+        },
+        {
+          "id": "sfx.ui.hover",
+          "result": "played",
+          "atMs": 8545
+        },
+        {
+          "id": "sfx.construction.start",
+          "result": "played",
+          "atMs": 8545
+        },
+        {
+          "id": "sfx.combat.towerAttack",
+          "result": "played",
+          "atMs": 9114
+        },
+        {
+          "id": "sfx.combat.projectileHit",
+          "result": "played",
+          "atMs": 9648
+        },
+        {
+          "id": "sfx.combat.projectileHit",
+          "result": "duplicate",
+          "atMs": 9648
+        },
+        {
+          "id": "sfx.construction.complete",
+          "result": "played",
+          "atMs": 9927
+        }
+      ],
+      "skippedEventCount": 1,
+      "unlockAttemptCount": 1,
+      "missingAssetFallback": true,
+      "focusMuted": false,
+      "lastError": null
+    },
+    "rebuild": {
+      "initialized": true,
+      "unlocked": true,
+      "contextState": "running",
+      "currentBgmId": "bgm.battle.low",
+      "bgmState": "battle-low",
+      "activeBgmVoices": 1,
+      "activeSfxVoices": 2,
+      "settings": {
+        "version": 2,
+        "masterVolume": 0.8,
+        "bgmVolume": 0.8,
+        "sfxVolume": 0.9,
+        "mute": false,
+        "muteWhenUnfocused": true,
+        "combatSfxMode": "reduced",
+        "crossfadeDurationMs": 1200
+      },
+      "recentEvents": [
+        {
+          "id": "sfx.construction.complete",
+          "result": "played",
+          "atMs": 9927
+        },
+        {
+          "id": "sfx.ui.hover",
+          "result": "played",
+          "atMs": 12504
+        },
+        {
+          "id": "sfx.ui.confirm",
+          "result": "played",
+          "atMs": 12504
+        },
+        {
+          "id": "sfx.ui.buildSelect",
+          "result": "played",
+          "atMs": 13084
+        },
+        {
+          "id": "sfx.support.heal",
+          "result": "played",
+          "atMs": 13804
+        },
+        {
+          "id": "sfx.fortress.warning",
+          "result": "played",
+          "atMs": 13970
+        },
+        {
+          "id": "sfx.ui.hover",
+          "result": "played",
+          "atMs": 15209
+        },
+        {
+          "id": "sfx.construction.start",
+          "result": "played",
+          "atMs": 15209
+        },
+        {
+          "id": "sfx.combat.rangedFire",
+          "result": "played",
+          "atMs": 15348
+        },
+        {
+          "id": "sfx.construction.complete",
+          "result": "played",
+          "atMs": 15766
+        },
+        {
+          "id": "sfx.fortress.rebuilt",
+          "result": "played",
+          "atMs": 15766
+        },
+        {
+          "id": "sfx.combat.towerAttack",
+          "result": "sampled",
+          "atMs": 15766
+        }
+      ],
+      "skippedEventCount": 2,
+      "unlockAttemptCount": 1,
+      "missingAssetFallback": true,
+      "focusMuted": false,
+      "lastError": null
+    },
+    "capture": {
+      "initialized": true,
+      "unlocked": true,
+      "contextState": "running",
+      "currentBgmId": "bgm.battle.low",
+      "bgmState": "battle-low",
+      "activeBgmVoices": 1,
+      "activeSfxVoices": 1,
+      "settings": {
+        "version": 2,
+        "masterVolume": 0.8,
+        "bgmVolume": 0.8,
+        "sfxVolume": 0.9,
+        "mute": false,
+        "muteWhenUnfocused": true,
+        "combatSfxMode": "reduced",
+        "crossfadeDurationMs": 1200
+      },
+      "recentEvents": [
+        {
+          "id": "sfx.ui.confirm",
+          "result": "played",
+          "atMs": 12504
+        },
+        {
+          "id": "sfx.ui.buildSelect",
+          "result": "played",
+          "atMs": 13084
+        },
+        {
+          "id": "sfx.support.heal",
+          "result": "played",
+          "atMs": 13804
+        },
+        {
+          "id": "sfx.fortress.warning",
+          "result": "played",
+          "atMs": 13970
+        },
+        {
+          "id": "sfx.ui.hover",
+          "result": "played",
+          "atMs": 15209
+        },
+        {
+          "id": "sfx.construction.start",
+          "result": "played",
+          "atMs": 15209
+        },
+        {
+          "id": "sfx.combat.rangedFire",
+          "result": "played",
+          "atMs": 15348
+        },
+        {
+          "id": "sfx.construction.complete",
+          "result": "played",
+          "atMs": 15766
+        },
+        {
+          "id": "sfx.fortress.rebuilt",
+          "result": "played",
+          "atMs": 15766
+        },
+        {
+          "id": "sfx.combat.towerAttack",
+          "result": "sampled",
+          "atMs": 15766
+        },
+        {
+          "id": "sfx.ui.buildSelect",
+          "result": "played",
+          "atMs": 16196
+        },
+        {
+          "id": "sfx.capture.complete",
+          "result": "played",
+          "atMs": 16222
+        }
+      ],
+      "skippedEventCount": 2,
+      "unlockAttemptCount": 1,
+      "missingAssetFallback": true,
+      "focusMuted": false,
+      "lastError": null
+    }
+  }
+}

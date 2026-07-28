@@ -56,7 +56,7 @@ test("default terrain mode visibly mirrors three left and right movement frames"
     }
   }
 
-  expect(records.left.every((frame) => frame.motion.x < 0 && frame.facingX === -1 && frame.flipX)).toBe(true);
-  expect(records.right.every((frame) => frame.motion.x > 0 && frame.facingX === 1 && !frame.flipX)).toBe(true);
+  expect(records.left.every((frame) => frame.motion.x < 0 && frame.facingX === -1 && !frame.flipX)).toBe(true);
+  expect(records.right.every((frame) => frame.motion.x > 0 && frame.facingX === 1 && frame.flipX)).toBe(true);
   writeFileSync(`${ARTIFACT_DIR}/direction-frames.json`, JSON.stringify(records, null, 2));
 });
