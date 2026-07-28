@@ -2208,7 +2208,6 @@ export class LaneBattleScene extends Phaser.Scene {
     this.time.delayedCall(80, () => {
       if (!target.sprite.active) return;
       target.sprite.clearTint();
-      target.sprite.setTint(target.team === "player" ? 0xe9f6ff : 0xffd0d0);
     });
     const impact = this.add.circle(target.sprite.x, target.sprite.y - 2, 10 + Math.min(10, damage), 0xffffff, 0.24)
       .setDepth(target.sprite.depth - 1);
@@ -2457,7 +2456,6 @@ export class LaneBattleScene extends Phaser.Scene {
       .setVisible(false);
     const sprite = this.add.image(pos.x, pos.y, initialTextureKey).setDepth(this.getGroundDepth(pos.y));
     sprite.setDisplaySize(displaySize, displaySize);
-    sprite.setTint(team === "player" ? 0xe9f6ff : 0xffd0d0);
     const hpBg = this.add.rectangle(pos.x, pos.y - 44, 34, 5, 0x132033, 0.92).setDepth(sprite.depth + 1);
     const hpFill = this.add.rectangle(pos.x - 17, pos.y - 44, 34, 5, team === "player" ? 0x62d4a3 : 0xf06f6f, 1).setOrigin(0, 0.5).setDepth(sprite.depth + 2);
     const manaBg = this.add.rectangle(pos.x, pos.y - 38, 34, 4, 0x101a2b, 0.92).setDepth(sprite.depth + 1).setVisible(role === "support");
@@ -2544,7 +2542,6 @@ export class LaneBattleScene extends Phaser.Scene {
     this.time.delayedCall(80, () => {
       if (!target.sprite.active) return;
       target.sprite.clearTint();
-      target.sprite.setTint(target.team === "player" ? 0xe9f6ff : 0xffd0d0);
     });
 
     const impact = this.add.circle(target.sprite.x, target.sprite.y - 2, 10 + Math.min(10, damage), attacker.team === "player" ? 0xffd36a : 0xff8b8b, 0.28)
@@ -2898,6 +2895,7 @@ export class LaneBattleScene extends Phaser.Scene {
         maxHp: unit.maxHp,
         facingX: unit.facingX,
         flipX: unit.sprite.flipX,
+        tint: unit.sprite.tintTopLeft,
         motion: { x: unit.motionX, y: unit.motionY },
         pose: unit.currentTextureKey,
         attackAnimTime: unit.attackAnimTime,

@@ -1,0 +1,29 @@
+{
+  "spearmen": [
+    {
+      "id": 23,
+      "team": "player",
+      "unitId": "bronze_spearman",
+      "role": "battle",
+      "progress": 0.5,
+      "laneRow": 3,
+      "hp": 38,
+      "maxHp": 38,
+      "facingX": -1,
+      "flipX": true,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "bronze-spearman-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0
+    }
+  ]
+}
