@@ -878,6 +878,60 @@ export class LaneBattleScene extends Phaser.Scene {
         this.units.forEach((unit) => this.syncUnitPresentation(unit));
         this.publishDebug();
       },
+      setVisualAuditLayer: (layer: "ground" | "props" | "units" | "combat") => {
+        this.uiCamera.setVisible(false);
+        if (layer === "ground") {
+          this.worldObjects.forEach((object) => {
+            const renderable = object as Phaser.GameObjects.GameObject & {
+              depth?: number;
+              setVisible?: (visible: boolean) => unknown;
+            };
+            if ((renderable.depth ?? 0) > 8) renderable.setVisible?.(false);
+          });
+        }
+        const showUnits = layer === "units" || layer === "combat";
+        this.units.forEach((unit) => this.setUnitPresentationVisible(unit, showUnits));
+        this.activeProjectiles.forEach((projectile) => projectile.setVisible(layer === "combat"));
+        this.capturePoints.forEach((point) => {
+          point.ring.setVisible(false);
+          point.core.setVisible(false);
+          point.towerHpBg.setVisible(false);
+          point.towerHpFill.setVisible(false);
+          point.label.setVisible(false);
+          point.ownerText.setVisible(false);
+          point.buildingText.setVisible(false);
+        });
+      },
+      prepareVisualAuditCombat: () => {
+        this.units.forEach((unit) => this.destroyUnitPresentation(unit));
+        this.units = [];
+        this.activeProjectiles.forEach((projectile) => projectile.destroy());
+        this.activeProjectiles.clear();
+        this.engagedUnitIds.clear();
+        this.capturePoints.forEach((point) => {
+          point.owner = "neutral";
+          point.control = 0;
+          point.towerBuilt = false;
+          point.towerHp = 0;
+        });
+        this.spawnLaneUnit("player", "battle", "stone_axeman", 0.492, -0.5);
+        this.spawnLaneUnit("enemy", "battle", "stone_axeman", 0.508, 0.5);
+        this.units.forEach((unit) => {
+          unit.attackTimerSec = 0;
+          unit.visualProgress = unit.progress;
+          unit.visualLaneRow = unit.laneRow;
+          this.syncUnitPresentation(unit);
+        });
+        const focus = this.progressToScreen(0.5, 0);
+        this.cameras.main.centerOn(focus.x, focus.y);
+        this.refreshCapturePointVisuals();
+        this.publishDebug();
+      },
+      stepVisualAuditCombat: (deltaSec: number) => {
+        this.tickCombat(Phaser.Math.Clamp(deltaSec, 0, 0.1));
+        this.units.forEach((unit) => this.syncUnitPresentation(unit));
+        this.publishDebug();
+      },
       resetDirectionShowcase: () => this.resetValidationDirectionShowcase(),
       prepareDirectionProbe: (direction: -1 | 1) => {
         const unit = this.units.find((entry) => entry.unitId === "stone_axeman" && entry.team === "player");
