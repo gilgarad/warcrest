@@ -1,8 +1,6 @@
 import Phaser from "phaser";
 import { AGES, getAge, type AgeId } from "../data/ages";
 import {
-  BASE_FOOD_REGEN_PER_SEC,
-  BASE_RESOURCE_TICK_SEC,
   BASE_WORKER_COST,
   AI_INSTANT_WAVE_MIN_REMAINING_SEC,
   getAgeBalance,
@@ -92,6 +90,20 @@ import {
   LANE_SHIFT_STEP,
   createLaneRowCandidates,
 } from "../systems/lane-combat/laneOccupancy";
+import {
+  advanceTeamAge,
+  canAfford,
+  convertWorkersToResearch,
+  createTeamState,
+  getAgeUpCost,
+  makeResourceMap,
+  payCost,
+  shouldAdvanceAiAge,
+  tickLaneEconomy,
+  type TeamId,
+  type TeamState,
+  type WorkerRole,
+} from "../systems/lane-economy/laneEconomy";
 
 const CANVAS_W = 1600;
 const CANVAS_H = 900;
@@ -125,23 +137,8 @@ const TOWER_IMAGE_VISIBLE_HEIGHT_RATIO = 1036 / 1254;
 const FIXED_FORTRESS_GROUND_ORIGIN_Y = 1038 / 1122;
 const FIXED_FORTRESS_VISIBLE_HEIGHT_RATIO = 1010 / 1122;
 
-type TeamId = "player" | "enemy";
-type WorkerRole = "gold" | "wood" | "food" | "metal" | "research" | "idle";
-type WorkerResourceId = "gold" | "wood" | "food" | "metal";
 type UnitTextureKey = string;
 type BuildingId = CaptureBuildingId;
-
-interface TeamState {
-  id: TeamId;
-  baseHp: number;
-  ageId: AgeId;
-  resources: Record<ResourceId, number>;
-  workers: Record<WorkerRole, number>;
-  instantWaveTokens: number;
-  nextWaveInSec: number;
-  lastWaveElapsedSec: number;
-  pendingBonusWaves: number;
-}
 
 interface LaneUnit {
   id: number;
@@ -291,20 +288,6 @@ const BUILDINGS: BuildingDef[] = [
   },
 ];
 
-function makeResourceMap(gold: number, wood: number, food: number, metal: number): Record<ResourceId, number> {
-  return { gold, wood, food, metal, gunpowder: 0, fuel: 0 };
-}
-
-function canAfford(resources: Record<ResourceId, number>, cost: ResourceCost): boolean {
-  return Object.entries(cost).every(([key, value]) => resources[key as ResourceId] >= value);
-}
-
-function payCost(resources: Record<ResourceId, number>, cost: ResourceCost): void {
-  Object.entries(cost).forEach(([key, value]) => {
-    resources[key as ResourceId] -= value;
-  });
-}
-
 function progressBetween(a: number, b: number): number {
   return Math.abs(a - b);
 }
@@ -417,8 +400,8 @@ export class LaneBattleScene extends Phaser.Scene {
     this.createUnitTokenTextures();
     this.createUiIconTextures();
 
-    this.player = this.createTeamState("player", makeResourceMap(60, 40, 18, 18));
-    this.enemy = this.createTeamState("enemy", makeResourceMap(60, 40, 18, 18));
+    this.player = createTeamState("player", makeResourceMap(60, 40, 18, 18), PLAYER_BASE_HP);
+    this.enemy = createTeamState("enemy", makeResourceMap(60, 40, 18, 18), ENEMY_BASE_HP);
 
     this.drawBattlefield();
     this.worldObjects.push(...this.children.list);
@@ -459,27 +442,6 @@ export class LaneBattleScene extends Phaser.Scene {
     this.refreshUi();
     this.publishDebug();
     this.updateAudioDebugOverlay();
-  }
-
-  private createTeamState(id: TeamId, resources: Record<ResourceId, number>): TeamState {
-    return {
-      id,
-      baseHp: id === "player" ? PLAYER_BASE_HP : ENEMY_BASE_HP,
-      ageId: "stone",
-      resources,
-      workers: {
-        gold: 1,
-        wood: 1,
-        food: 1,
-        metal: 1,
-        research: 0,
-        idle: 0,
-      },
-      instantWaveTokens: 0,
-      nextWaveInSec: WAVE_INTERVAL_SEC,
-      lastWaveElapsedSec: -100,
-      pendingBonusWaves: 0,
-    };
   }
 
   private createUnitTokenTextures(): void {
@@ -1550,27 +1512,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private tickEconomy(deltaSec: number): void {
-    this.player.resources.food += BASE_FOOD_REGEN_PER_SEC * deltaSec;
-    this.enemy.resources.food += BASE_FOOD_REGEN_PER_SEC * deltaSec;
-    this.tickResourceWorker(this.player, "gold", deltaSec, BASE_RESOURCE_TICK_SEC);
-    this.tickResourceWorker(this.player, "wood", deltaSec, BASE_RESOURCE_TICK_SEC);
-    this.tickResourceWorker(this.player, "metal", deltaSec, BASE_RESOURCE_TICK_SEC);
-    this.tickResourceWorker(this.player, "food", deltaSec, getAgeBalance(this.player.ageId).foodWorkerIntervalSec);
-
-    this.tickResourceWorker(this.enemy, "gold", deltaSec, BASE_RESOURCE_TICK_SEC);
-    this.tickResourceWorker(this.enemy, "wood", deltaSec, BASE_RESOURCE_TICK_SEC);
-    this.tickResourceWorker(this.enemy, "metal", deltaSec, BASE_RESOURCE_TICK_SEC);
-    this.tickResourceWorker(this.enemy, "food", deltaSec, getAgeBalance(this.enemy.ageId).foodWorkerIntervalSec);
-  }
-
-  private tickResourceWorker(team: TeamState, resourceId: WorkerResourceId, deltaSec: number, intervalSec: number): void {
-    const key = `${team.id}:${resourceId}`;
-    const workers = team.workers[resourceId];
-    if (workers <= 0) return;
-    const next = (this.workerAccumulator.get(key) ?? 0) + deltaSec;
-    const producedPerWorker = Math.floor(next / intervalSec);
-    if (producedPerWorker > 0) team.resources[resourceId] += producedPerWorker * workers;
-    this.workerAccumulator.set(key, next % intervalSec);
+    tickLaneEconomy([this.player, this.enemy], this.workerAccumulator, deltaSec);
   }
 
   private tickAi(deltaSec: number): void {
@@ -1587,11 +1529,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private shouldAiAgeUp(): boolean {
-    const idx = AGES.findIndex((age) => age.id === this.enemy.ageId);
-    if (idx >= AGES.length - 1) return false;
-    const thresholds = [0, 55, 120, 190, 280];
-    const nextCost = this.getAgeUpCost(idx);
-    return this.elapsedSec >= thresholds[idx + 1] && canAfford(this.enemy.resources, nextCost);
+    return shouldAdvanceAiAge(this.enemy, this.elapsedSec);
   }
 
   private tickWaves(deltaSec: number): void {
@@ -3164,15 +3102,11 @@ export class LaneBattleScene extends Phaser.Scene {
       return;
     }
 
-    if (this.totalConvertibleWorkers() >= RESEARCH_WORKER_CONVERSION.workerCount) {
-      let remaining = RESEARCH_WORKER_CONVERSION.workerCount;
-      (["idle", "gold", "wood", "food", "metal"] as WorkerRole[]).forEach((role) => {
-        if (remaining <= 0) return;
-        const spend = Math.min(remaining, this.player.workers[role]);
-        this.player.workers[role] -= spend;
-        remaining -= spend;
-      });
-      this.player.workers.research += RESEARCH_WORKER_CONVERSION.resultCount;
+    if (convertWorkersToResearch(
+      this.player.workers,
+      RESEARCH_WORKER_CONVERSION.workerCount,
+      RESEARCH_WORKER_CONVERSION.resultCount,
+    )) {
       this.infoText.setText("일반 일꾼 10명을 연구 일꾼으로 전환했습니다");
       this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:research:convert:${this.player.workers.research}` });
       return;
@@ -3180,10 +3114,6 @@ export class LaneBattleScene extends Phaser.Scene {
 
     this.infoText.setText("연구 일꾼 조건 미달");
     this.audio.playSfx("sfx.ui.hireFail", { eventKey: "hire:research:failed" });
-  }
-
-  private totalConvertibleWorkers(): number {
-    return this.player.workers.idle + this.player.workers.gold + this.player.workers.wood + this.player.workers.food + this.player.workers.metal;
   }
 
   private tryUseInstantWaveToken(team: TeamState): void {
@@ -3207,7 +3137,7 @@ export class LaneBattleScene extends Phaser.Scene {
       this.audio.playSfx("sfx.ui.cancel", { eventKey: "age:max" });
       return;
     }
-    const cost = this.getAgeUpCost(idx);
+    const cost = getAgeUpCost(idx);
     if (!canAfford(this.player.resources, cost)) {
       this.infoText.setText("시대 업 실패: 금/목재/금속 부족");
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "age:shortage" });
@@ -3219,18 +3149,8 @@ export class LaneBattleScene extends Phaser.Scene {
     this.audio.playSfx("sfx.ui.confirm", { eventKey: `age:${this.player.ageId}` });
   }
 
-  private getAgeUpCost(ageIndex: number): ResourceCost {
-    return {
-      gold: 35 + ageIndex * 20,
-      wood: 20 + ageIndex * 15,
-      metal: 28 + ageIndex * 20,
-    };
-  }
-
   private advanceAge(team: TeamState): void {
-    const idx = AGES.findIndex((age) => age.id === team.ageId);
-    if (idx >= AGES.length - 1) return;
-    team.ageId = AGES[idx + 1].id;
+    if (!advanceTeamAge(team)) return;
     if (getAge(team.ageId).immediateWaveTokenGranted) this.grantInstantWaveToken(team);
     if (team.id === "player") this.refreshUi();
   }

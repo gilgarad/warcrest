@@ -40,3 +40,18 @@ Decompose `LaneBattleScene` by stable domain boundaries. Each extraction must
 preserve behaviour and pass build/tests before the next domain is moved. The
 four existing terrain renderer modes stay intact until the top-down renderer is
 implemented and validated.
+
+## 2026-07-28 - Stage 1.2a: wave and economy rules
+
+Extracted `src/systems/lane-economy/laneEconomy.ts` as a Phaser-free domain
+module. It now owns team initialization, resource maps, affordability/payment,
+worker production accumulation, age-up cost and AI eligibility, age mutation,
+and research-worker conversion.
+
+`LaneBattleScene` retains orchestration that genuinely belongs to the scene:
+button feedback, audio events, wave spawning, and UI refresh. Four unit tests
+cover production, payment, AI age gates, and atomic worker conversion.
+
+- `LaneBattleScene.ts`: 3,586 -> 3,506 lines.
+- `npm run build`: passed.
+- `npm test`: 17 files, 73 tests passed.
