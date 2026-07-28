@@ -21,21 +21,42 @@ function canonicalGameplaySnapshot(snapshot: Snapshot): Snapshot {
       return next;
     });
   }
+  const battlefield = copy.battlefield as { controlPoints?: unknown[] } | undefined;
+  if (Array.isArray(battlefield?.controlPoints)) {
+    battlefield.controlPoints = battlefield.controlPoints.map((point) => {
+      const next = { ...(point as Record<string, unknown>) };
+      delete next.labelWorldX;
+      delete next.labelWorldY;
+      delete next.markerTexture;
+      return next;
+    });
+  }
   return copy;
 }
 
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 
-test("captures baked-matte versus opaque world-surface at four identical camera positions", async ({ page }) => {
-  await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto(GAME_URL);
+async function enterBattlefield(page: import("@playwright/test").Page): Promise<void> {
   const canvas = page.locator("canvas");
   const box = await canvas.boundingBox();
   if (!box) throw new Error("Canvas is not visible");
-  await canvas.click({ position: { x: 800 * box.width / 1600, y: 805 * box.height / 900 } });
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await canvas.click({ position: { x: box.width * 0.5, y: box.height * 0.894 } });
+    await page.waitForTimeout(500);
+    const ready = await page.evaluate(() => Boolean(
+      (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+    ));
+    if (ready) return;
+  }
   await page.waitForFunction(() => Boolean(
     (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
   ));
+}
+
+test("captures baked-matte versus opaque world-surface at four identical camera positions", async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto(GAME_URL);
+  await enterBattlefield(page);
   await page.evaluate(() => (
     (window as unknown as { __terrainPrototypeControl: { setPaused: (paused: boolean) => void } })
       .__terrainPrototypeControl.setPaused(true)
@@ -92,13 +113,7 @@ test("captures production terrain at 1x and 2x device scale", async ({ browser }
     });
     const page = await context.newPage();
     await page.goto(GAME_URL);
-    const canvas = page.locator("canvas");
-    const box = await canvas.boundingBox();
-    if (!box) throw new Error("Canvas is not visible");
-    await canvas.click({ position: { x: box.width * 0.5, y: box.height * 0.894 } });
-    await page.waitForFunction(() => Boolean(
-      (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-    ));
+    await enterBattlefield(page);
     await page.evaluate(() => {
       const control = (window as unknown as {
         __terrainPrototypeControl: {

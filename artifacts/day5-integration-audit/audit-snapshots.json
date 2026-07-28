@@ -1,0 +1,9 @@
+{
+  "layerUnitCounts": {
+    "ground": 12,
+    "props": 12,
+    "units": 12
+  },
+  "combatFrameCount": 8,
+  "finalCombatUnitCount": 2
+}

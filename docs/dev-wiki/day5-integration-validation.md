@@ -110,3 +110,23 @@ with scaffolding. It does not read as a well or freestanding gallows at gameplay
 scale because the pulley is attached to the tower body. The small upper crossbar
 can still read as a cross-shaped silhouette at a glance; retain this as a manual
 play-review point rather than blocking Day 5 integration.
+
+## Final four-layer audit
+
+The Phase 1 fixed central camera, seed, and layer controls were reused without
+overwriting the baseline. Day 5 captures are in
+`artifacts/day5-integration-audit/`:
+
+- `after-ground.png`: production terrain and unchanged structure foundations
+- `after-props.png`: production props and structures with shared grounding
+- `after-units.png`: production unit families and authored team palettes
+- `after-combat-01.png` through `after-combat-08.png`: deterministic combat
+  sequence
+- `golden-vs-integrated.png`: approved golden reference beside the integrated
+  runtime scene
+
+The runtime now matches the golden reference's top-down projection, upper-left
+lighting, grounded shadows, and authored-region team-color contract. Remaining
+differences are the runtime lane's deliberately straight, uniform geometry and
+the density of HP bars/labels during crowded combat. Those require later map/UI
+composition work rather than further asset-registry changes.
