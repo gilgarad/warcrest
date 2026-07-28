@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
+import { getAttackTimingProfile } from "../../src/systems/lane-combat/attackTiming";
 
 const ARTIFACT_DIR = "artifacts/six-issue-followup";
 const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&seed=warcrest-six-issue-v1";
@@ -74,7 +75,7 @@ test("melee structure damage lands on contact rather than at wind-up", async ({ 
   writeFileSync(`${ARTIFACT_DIR}/melee-structure-timing.json`, JSON.stringify({
     hpBefore,
     hpAtContact: contact.battlefield.defenseTowers[1].hp,
-    contactDelayMs: 240,
+    configuredContactDelayMs: getAttackTimingProfile("melee", "structure").eventDelayMs,
   }, null, 2));
 });
 
@@ -100,6 +101,7 @@ test("ranged structure attack releases before projectile hit and HP loss", async
   writeFileSync(`${ARTIFACT_DIR}/ranged-structure-timing.json`, JSON.stringify({
     hpBefore,
     hpAfter: hit.battlefield.defenseTowers[1].hp,
+    configuredReleaseDelayMs: getAttackTimingProfile("ranged", "structure").eventDelayMs,
     projectileAtRelease: released.activeProjectiles,
   }, null, 2));
 });

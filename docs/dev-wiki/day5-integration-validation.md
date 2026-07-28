@@ -111,6 +111,10 @@ scale because the pulley is attached to the tower body. The small upper crossbar
 can still read as a cross-shaped silhouette at a glance; retain this as a manual
 play-review point rather than blocking Day 5 integration.
 
+Day 6 rechecked this asset in a peacetime, unoccluded runtime capture and found
+that the crossbar reads as a crane attached to the incomplete tower. No asset
+revision was required.
+
 ## Final four-layer audit
 
 The Phase 1 fixed central camera, seed, and layer controls were reused without

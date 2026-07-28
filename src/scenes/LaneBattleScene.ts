@@ -84,6 +84,11 @@ import {
 } from "../systems/lane-units/unitStats";
 import { createTowerAttackPattern } from "../systems/lane-combat/towerAttack";
 import {
+  getAttackTimingProfile,
+  type AttackTimingProfile,
+  type AttackTimingRole,
+} from "../systems/lane-combat/attackTiming";
+import {
   launchLaneProjectile,
   setLaneProjectileProgress,
 } from "../systems/lane-combat/projectileLauncher";
@@ -161,7 +166,6 @@ const CENTRAL_CAPTURE_PROGRESS = 0.588;
 const DEFAULT_VERIFICATION_SEED = "warcrest-central-v1";
 const QUERY_PARAMS = new URLSearchParams(window.location.search);
 const FACING_DEAD_ZONE_WORLD_PX = 0.35;
-const ATTACK_VISUAL_DURATION_SEC = 0.48;
 
 type UnitTextureKey = string;
 
@@ -726,7 +730,8 @@ export class LaneBattleScene extends Phaser.Scene {
       ) => {
         const unit = this.units.find((entry) => entry.unitId === unitId && entry.team === team);
         if (!unit) return;
-        unit.attackAnimTime = ATTACK_VISUAL_DURATION_SEC * (1 - Phaser.Math.Clamp(phase, 0, 1));
+        const timing = this.getUnitAttackTiming(unit, unit.attackTargetKind);
+        unit.attackAnimTime = timing.durationSec * (1 - Phaser.Math.Clamp(phase, 0, 1));
         unit.attackFacingLockSec = unit.attackAnimTime;
         this.syncUnitPresentation(unit);
         this.publishDebug();
@@ -843,6 +848,33 @@ export class LaneBattleScene extends Phaser.Scene {
         this.cameras.main.centerOn(focus.x, focus.y);
         this.refreshCapturePointVisuals();
         this.publishDebug();
+      },
+      prepareUnitAttackProbe: (unitId: "stone_axeman" | "stone_slinger" | "bronze_spearman") => {
+        this.units.forEach((unit) => this.destroyUnitPresentation(unit));
+        this.units = [];
+        this.activeProjectiles.forEach((projectile) => projectile.destroy());
+        this.activeProjectiles.clear();
+        this.engagedUnitIds.clear();
+        this.defenseTowers.forEach((tower) => {
+          tower.built = false;
+          tower.hp = 0;
+          tower.buildRemainingSec = 0;
+        });
+        const gap = unitId === "stone_slinger" ? 0.034 : 0.012;
+        this.spawnLaneUnit("player", "battle", unitId, 0.5 - gap / 2, 0);
+        this.spawnLaneUnit("enemy", "battle", "stone_axeman", 0.5 + gap / 2, 0);
+        const [attacker, target] = this.units;
+        attacker.attackTimerSec = 0;
+        target.attackTimerSec = 10;
+        attacker.visualProgress = attacker.progress;
+        target.visualProgress = target.progress;
+        this.syncUnitPresentation(attacker);
+        this.syncUnitPresentation(target);
+        const focus = this.progressToScreen(0.5, 0);
+        this.cameras.main.centerOn(focus.x, focus.y);
+        this.refreshDefenseTowerVisuals();
+        this.publishDebug();
+        this.scene.pause();
       },
       prepareOccupancyProbe: () => {
         this.units.forEach((unit) => this.destroyUnitPresentation(unit));
@@ -979,27 +1011,33 @@ export class LaneBattleScene extends Phaser.Scene {
         if (target) this.setUnitPresentationVisible(target, true);
       },
       prepareSupportProbe: () => {
-        const support = this.units.find((unit) => unit.unitId === "supply_wagon" && unit.team === "player");
+        this.units.forEach((unit) => this.destroyUnitPresentation(unit));
+        this.units = [];
+        this.activeProjectiles.forEach((projectile) => projectile.destroy());
+        this.activeProjectiles.clear();
+        this.defenseTowers.forEach((tower) => {
+          tower.built = false;
+          tower.hp = 0;
+          tower.buildRemainingSec = 0;
+        });
+        for (let index = 0; index < 3; index += 1) {
+          this.spawnLaneUnit("player", "battle", "stone_axeman", 0.5 + (index - 1) * 0.008, (index - 1) * 1.6);
+        }
+        this.spawnLaneUnit("player", "support", "supply_wagon", 0.482, 0);
+        const support = this.units.find((unit) => unit.unitId === "supply_wagon");
+        const allies = this.units.filter((unit) => unit.role === "battle");
         if (!support) return;
-        const allies = this.units.filter((unit) => unit.team === "player" && unit.role === "battle").slice(0, 3);
-        support.progress = 0.5;
-        support.laneRow = 0;
-        support.visualProgress = 0.5;
-        support.visualLaneRow = 0;
         support.manaCurrent = support.manaMax;
         support.attackTimerSec = 0;
-        allies.forEach((ally, index) => {
-          ally.progress = 0.5 + (index - 1) * 0.008;
-          ally.laneRow = (index - 1) * 1.6;
-          ally.visualProgress = ally.progress;
-          ally.visualLaneRow = ally.laneRow;
+        allies.forEach((ally) => {
+          ally.attackTimerSec = 10;
           ally.hp = Math.max(1, ally.maxHp - 12);
         });
-        this.units.forEach((unit) => this.setUnitPresentationVisible(unit, unit === support || allies.includes(unit)));
         [...allies, support].forEach((unit) => this.syncUnitPresentation(unit));
         const focus = this.progressToScreen(0.5, 0);
         this.cameras.main.centerOn(focus.x, focus.y);
         this.publishDebug();
+        this.scene.pause();
       },
       stepSupportProbe: (deltaSec: number) => {
         const support = this.units.find((unit) => unit.unitId === "supply_wagon" && unit.team === "player");
@@ -1485,27 +1523,7 @@ export class LaneBattleScene extends Phaser.Scene {
     if (injured.length > 0 && unit.attackTimerSec <= 0 && unit.manaCurrent >= unit.healManaCost) {
       unit.attackTimerSec = unit.attackCooldownSec;
       unit.manaCurrent -= unit.healManaCost;
-      this.beginAttackPresentation(unit, injured[0].sprite.x, "unit");
-      let remainingHeal = unit.healPower;
-      let totalHealed = 0;
-      for (const ally of injured) {
-        if (remainingHeal <= 0) break;
-        const missingHp = ally.maxHp - ally.hp;
-        if (missingHp <= 0) continue;
-        const applied = Math.min(missingHp, Math.max(1, remainingHeal));
-        ally.hp += applied;
-        remainingHeal -= applied;
-        totalHealed += applied;
-      }
-      if (totalHealed > 0) {
-        this.playWorldSfx(
-          "sfx.support.heal",
-          unit.sprite.x,
-          unit.sprite.y,
-          `support-heal:${unit.id}:${Math.round(this.elapsedSec * 1000)}`,
-        );
-        this.spawnToast(`치유 ${totalHealed}`, unit.sprite.x, unit.sprite.y - 44, "#92f1a5");
-      }
+      this.startSupportCast(unit, injured[0].sprite.x, () => this.applySupportHeal(unit));
       return;
     }
 
@@ -1520,13 +1538,58 @@ export class LaneBattleScene extends Phaser.Scene {
     }
   }
 
-  private beginAttackPresentation(unit: LaneUnit, targetX: number, targetKind: AttackTargetKind): void {
-    unit.attackAnimTime = ATTACK_VISUAL_DURATION_SEC;
-    unit.attackFacingLockSec = ATTACK_VISUAL_DURATION_SEC;
+  private applySupportHeal(unit: LaneUnit): void {
+    const injured = this.units
+      .filter((ally) => (
+        ally.team === unit.team
+        && ally.role === "battle"
+        && ally.hp < ally.maxHp
+        && this.unitDistance(unit, ally) <= unit.range * RANGE_TO_PROGRESS
+      ))
+      .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
+    let remainingHeal = unit.healPower;
+    let totalHealed = 0;
+    for (const ally of injured) {
+      if (remainingHeal <= 0) break;
+      const missingHp = ally.maxHp - ally.hp;
+      if (missingHp <= 0) continue;
+      const applied = Math.min(missingHp, Math.max(1, remainingHeal));
+      ally.hp += applied;
+      remainingHeal -= applied;
+      totalHealed += applied;
+    }
+    if (totalHealed <= 0) return;
+    this.playWorldSfx(
+      "sfx.support.heal",
+      unit.sprite.x,
+      unit.sprite.y,
+      `support-heal:${unit.id}:${Math.round(this.elapsedSec * 1000)}`,
+    );
+    this.spawnToast(`치유 ${totalHealed}`, unit.sprite.x, unit.sprite.y - 44, "#92f1a5");
+  }
+
+  private getUnitAttackTimingRole(unit: LaneUnit): AttackTimingRole {
+    if (unit.role === "support") return "support";
+    return this.isRangedUnit(unit) ? "ranged" : "melee";
+  }
+
+  private getUnitAttackTiming(unit: LaneUnit, targetKind: AttackTargetKind): AttackTimingProfile {
+    return getAttackTimingProfile(this.getUnitAttackTimingRole(unit), targetKind);
+  }
+
+  private beginAttackPresentation(
+    unit: LaneUnit,
+    targetX: number,
+    targetKind: AttackTargetKind,
+  ): AttackTimingProfile {
+    const timing = this.getUnitAttackTiming(unit, targetKind);
+    unit.attackAnimTime = timing.durationSec;
+    unit.attackFacingLockSec = timing.durationSec;
     unit.attackTargetKind = targetKind;
     this.engagedUnitIds.add(unit.id);
     const deltaX = targetX - unit.sprite.x;
     if (Math.abs(deltaX) > FACING_DEAD_ZONE_WORLD_PX) unit.facingX = deltaX >= 0 ? 1 : -1;
+    return timing;
   }
 
   private startMeleeAttack(
@@ -1535,9 +1598,9 @@ export class LaneBattleScene extends Phaser.Scene {
     targetKind: AttackTargetKind,
     onContact: () => void,
   ): void {
-    this.beginAttackPresentation(unit, targetX, targetKind);
+    const timing = this.beginAttackPresentation(unit, targetX, targetKind);
     const sequence = ++unit.attackSequence;
-    this.time.delayedCall(ATTACK_VISUAL_DURATION_SEC * 500, () => {
+    this.time.delayedCall(timing.eventDelayMs, () => {
       if (!this.units.includes(unit) || unit.attackSequence !== sequence) return;
       onContact();
     });
@@ -1549,11 +1612,20 @@ export class LaneBattleScene extends Phaser.Scene {
     targetKind: AttackTargetKind,
     onRelease: () => void,
   ): void {
-    this.beginAttackPresentation(unit, targetX, targetKind);
+    const timing = this.beginAttackPresentation(unit, targetX, targetKind);
     const sequence = ++unit.attackSequence;
-    this.time.delayedCall(ATTACK_VISUAL_DURATION_SEC * 280, () => {
+    this.time.delayedCall(timing.eventDelayMs, () => {
       if (!this.units.includes(unit) || unit.attackSequence !== sequence) return;
       onRelease();
+    });
+  }
+
+  private startSupportCast(unit: LaneUnit, targetX: number, onCast: () => void): void {
+    const timing = this.beginAttackPresentation(unit, targetX, "unit");
+    const sequence = ++unit.attackSequence;
+    this.time.delayedCall(timing.eventDelayMs, () => {
+      if (!this.units.includes(unit) || unit.attackSequence !== sequence) return;
+      onCast();
     });
   }
 
@@ -2637,8 +2709,9 @@ export class LaneBattleScene extends Phaser.Scene {
       ? this.snapWorldPointToCanvasPixel(rawPos.x, rawPos.y)
       : rawPos;
     const moving = progressBetween(unit.progress, unit.visualProgress) > 0.0008;
+    const attackDurationSec = this.getUnitAttackTiming(unit, unit.attackTargetKind).durationSec;
     const attackProgress = unit.attackAnimTime > 0
-      ? 1 - unit.attackAnimTime / ATTACK_VISUAL_DURATION_SEC
+      ? 1 - unit.attackAnimTime / attackDurationSec
       : 0;
     const gait = this.elapsedSec * 10 + unit.bobPhase;
     const desiredTexture = unit.presentationOverrideTexture ?? resolveUnitAnimationTexture(
@@ -2956,6 +3029,12 @@ export class LaneBattleScene extends Phaser.Scene {
         manaRegenPerSec: unit.manaRegenPerSec,
         healManaCost: unit.healManaCost,
         healPower: unit.healPower,
+        presentation: {
+          x: unit.sprite.x,
+          y: unit.sprite.y,
+          rotationRad: unit.sprite.rotation,
+        },
+        attackTiming: this.getUnitAttackTiming(unit, unit.attackTargetKind),
       })),
       battlefield: {
         capturePoints: this.battlefield.capturePoints,

@@ -25,38 +25,43 @@ export function resolveAttackMotion(input: AttackMotionInput): AttackMotion {
   if (progress <= 0) return { offsetX: 0, lift: 0, rotationRad: 0 };
 
   if (input.role === "support") {
-    const reach = Math.sin(progress * Math.PI);
-    return { offsetX: reach * 3 * input.facing, lift: reach * 1.2, rotationRad: 0 };
+    const castPulse = Math.sin(progress * Math.PI);
+    return {
+      offsetX: castPulse * 1.8 * input.facing,
+      lift: castPulse * 3.2,
+      rotationRad: input.facing * castPulse * 0.012,
+    };
   }
 
   if (input.ranged) {
-    const recoil = progress < 0.34
-      ? smoothStep(progress / 0.34) * -2
-      : -2 - Math.sin(((progress - 0.34) / 0.66) * Math.PI) * 5;
+    const releaseProgress = 0.42;
+    const recoil = progress < releaseProgress
+      ? -smoothStep(progress / releaseProgress) * 5
+      : -5 + smoothStep((progress - releaseProgress) / (1 - releaseProgress)) * 5;
+    const releaseSnap = Math.exp(-Math.pow((progress - releaseProgress) / 0.1, 2));
     return {
-      offsetX: recoil * input.facing,
-      lift: Math.sin(progress * Math.PI) * 0.8,
-      rotationRad: -input.facing * Math.sin(progress * Math.PI) * 0.018,
+      offsetX: (recoil + releaseSnap * 2.4) * input.facing,
+      lift: Math.sin(progress * Math.PI) * 1.2,
+      rotationRad: -input.facing * (0.025 * Math.sin(progress * Math.PI) + releaseSnap * 0.028),
     };
   }
 
   if (input.melee) {
-    const reach = input.targetKind === "structure" ? 15 : 11;
-    const windBack = input.targetKind === "structure" ? 4 : 2.5;
+    const reach = input.targetKind === "structure" ? 22 : 17;
+    const windBack = input.targetKind === "structure" ? 7 : 5;
     let offset: number;
-    if (progress < 0.3) {
-      offset = -smoothStep(progress / 0.3) * windBack;
-    } else if (progress < 0.56) {
-      offset = -windBack + smoothStep((progress - 0.3) / 0.26) * (reach + windBack);
+    if (progress < 0.26) {
+      offset = -smoothStep(progress / 0.26) * windBack;
+    } else if (progress < 0.48) {
+      offset = -windBack + smoothStep((progress - 0.26) / 0.22) * (reach + windBack);
     } else {
-      offset = reach * (1 - smoothStep((progress - 0.56) / 0.44));
+      offset = reach * (1 - smoothStep((progress - 0.48) / 0.52));
     }
     return {
       offsetX: offset * input.facing,
-      lift: Math.sin(progress * Math.PI) * (input.targetKind === "structure" ? 2.2 : 1.4),
-      rotationRad: input.targetKind === "structure"
-        ? input.facing * Math.sin(progress * Math.PI) * 0.025
-        : 0,
+      lift: Math.sin(progress * Math.PI) * (input.targetKind === "structure" ? 3.2 : 2.2),
+      rotationRad: input.facing * Math.sin(progress * Math.PI)
+        * (input.targetKind === "structure" ? 0.065 : 0.045),
     };
   }
 
