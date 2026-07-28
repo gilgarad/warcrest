@@ -2168,3 +2168,9 @@ Use consistent headings so entries are easy to grep.
 - 정확한 1:2 규칙을 폐기하고, 타워가 연결 거점보다 본진에서 멀면서 모든 구조물 progress 차이가 0.15 이상인 규칙으로 교체했다.
 - 캡처 0.375/0.767, 타워 0.600/0.200이며 실측 최소 간격은 0.167이다.
 - npm run build, Vitest 23 files/85 tests, 관련 Playwright 2개를 통과했다.
+
+## [2026-07-28] docs | Day 0 golden-reference style contract
+
+- docs/dev-wiki/style-guide.md에 top-down 지형과 약한 3/4 top-down 오브젝트의 고정 제작 계약을 기록했다.
+- 19개 포즈를 실측해 평균 빈 캔버스 80.4%, 중앙값 불투명 영역 373 x 571을 확인하고 보병 384 x 384, 넓은 포즈 512 x 384, 구조물 512 x 512와 ground anchor를 확정했다.
+- 16-state marching squares, 좌상단 광원, 지정 부위 팀 팔레트, 좌우 2방향과 공격 미세 회전을 승인 전 계약으로 고정했다.
