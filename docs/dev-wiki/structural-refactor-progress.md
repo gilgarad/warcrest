@@ -72,3 +72,19 @@ HP based on five times the first battle-line unit's HP.
 - `LaneBattleScene.ts`: 3,506 -> 3,458 lines.
 - `npm run build`: passed.
 - `npm test`: 18 files, 76 tests passed.
+
+## 2026-07-28 - Stage 1.2c: lane battle audio wiring
+
+Extracted `src/systems/audio/laneBattleAudioWiring.ts`. The wiring class now
+owns the battle-state machine, its 0.45-second evaluation cadence, the rolling
+three-second combat-event window, fortress warning dispatch, camera-relative
+world SFX mixing, and audio debug-line formatting.
+
+The scene continues to decide where semantic events happen and passes only
+combat metrics, world coordinates, and camera data to the wiring class. No
+asset, synthesis profile, volume, state threshold, or event location changed.
+Two unit tests cover state-update throttling and camera-relative SFX options.
+
+- `LaneBattleScene.ts`: 3,458 -> 3,413 lines.
+- `npm run build`: passed.
+- `npm test`: 19 files, 78 tests passed.

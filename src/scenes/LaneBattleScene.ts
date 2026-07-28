@@ -49,11 +49,8 @@ import {
 } from "../gfx/battlefieldPrototypeRenderer";
 import { BattlefieldWorldRenderer } from "../gfx/battlefieldWorldRenderer";
 import { generateBattlefield, type BattlefieldResult } from "../systems/battlefieldGenerator";
-import {
-  BattleAudioStateMachine,
-  calculateSpatialAudio,
-  getAudioSystem,
-} from "../systems/audio";
+import { getAudioSystem } from "../systems/audio";
+import { LaneBattleAudioWiring } from "../systems/audio/laneBattleAudioWiring";
 import { AudioSettingsPanel } from "../ui/AudioSettingsPanel";
 import {
   UNIT_ANIMATION_ASSETS,
@@ -304,12 +301,10 @@ export class LaneBattleScene extends Phaser.Scene {
   private readonly activeProjectiles = new Set<Phaser.GameObjects.Image>();
   private readonly engagedUnitIds = new Set<number>();
   private readonly audio = getAudioSystem();
-  private readonly battleAudioState = new BattleAudioStateMachine();
-  private readonly combatAudioEventTimes: number[] = [];
+  private readonly audioWiring = new LaneBattleAudioWiring(this.audio);
   private audioSettingsPanel!: AudioSettingsPanel;
   private audioSettingsOpen = false;
   private audioDebugText?: Phaser.GameObjects.Text;
-  private nextAudioStateCheckSec = 0;
   private readonly laneObstacles: LaneObstacle[] = [
     { textureKey: "rock-cluster", progress: 0.20, laneRow: -10.2, radiusProgress: 0.03, radiusRows: 1.2, width: 176, height: 132 },
     { textureKey: "tree-cluster", progress: 0.32, laneRow: 10.4, radiusProgress: 0.035, radiusRows: 1.4, width: 144, height: 190 },
@@ -361,7 +356,7 @@ export class LaneBattleScene extends Phaser.Scene {
     Phaser.Math.RND.sow([this.verificationSeed]);
     void this.audio.initialize();
     this.audio.resetDirector("preparation");
-    this.battleAudioState.reset();
+    this.audioWiring.reset();
     this.battlefield = generateBattlefield();
     this.cameras.main.setBackgroundColor(0x081018);
     this.cameras.main.setBounds(0, 0, WORLD_W, WORLD_H);
@@ -1389,12 +1384,6 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private updateAudioState(): void {
-    if (this.elapsedSec < this.nextAudioStateCheckSec) return;
-    this.nextAudioStateCheckSec = this.elapsedSec + 0.45;
-    const nowMs = this.elapsedSec * 1000;
-    while (this.combatAudioEventTimes[0] !== undefined && this.combatAudioEventTimes[0] < nowMs - 3000) {
-      this.combatAudioEventTimes.shift();
-    }
     const engagedUnits = this.units.filter((unit) => {
       const nearest = this.findNearestEnemy(unit);
       if (!nearest) return false;
@@ -1404,24 +1393,14 @@ export class LaneBattleScene extends Phaser.Scene {
     const fixedFortress = this.capturePoints.find((point) =>
       point.definition.pointType === "fixed-fortress" && point.owner === "player",
     );
-    const decision = this.battleAudioState.update({
-      nowMs,
+    this.audioWiring.update(this.elapsedSec, {
       engagedUnits,
       activeProjectiles: this.activeProjectiles.size,
-      recentAttackEvents: this.combatAudioEventTimes.length,
       playerBaseHpRatio: this.player.baseHp / PLAYER_BASE_HP,
       playerFortressHpRatio: fixedFortress
         ? fixedFortress.towerBuilt ? fixedFortress.towerHp / fixedFortress.towerMaxHp : 0
         : 1,
     });
-
-    if (this.audio.getState().bgmState !== "fortress-under-attack") {
-      this.audio.setDirectorState(decision.state);
-    }
-    if (decision.triggerFortressWarning) {
-      this.audio.playSfx("sfx.fortress.warning", { eventKey: "fortress:danger-entry" });
-      this.audio.triggerFortressWarning(decision.state);
-    }
   }
 
   private playWorldSfx(
@@ -1432,7 +1411,8 @@ export class LaneBattleScene extends Phaser.Scene {
     highFrequency = true,
   ): void {
     const camera = this.cameras.main;
-    const mix = calculateSpatialAudio(
+    this.audioWiring.playWorldSfx(
+      assetId,
       { x, y },
       {
         centerX: camera.midPoint.x,
@@ -1441,28 +1421,15 @@ export class LaneBattleScene extends Phaser.Scene {
         height: camera.height,
         zoom: camera.zoom,
       },
-    );
-    this.audio.playSfx(assetId, {
       eventKey,
+      this.elapsedSec,
       highFrequency,
-      volumeMultiplier: mix.audible ? mix.volumeMultiplier : 0,
-      pan: mix.pan,
-    });
-    if (highFrequency) this.combatAudioEventTimes.push(this.elapsedSec * 1000);
+    );
   }
 
   private updateAudioDebugOverlay(): void {
     if (!this.audioDebugText) return;
-    const state = this.audio.getState();
-    this.audioDebugText.setText([
-      `AUDIO ${state.contextState} ${state.unlocked ? "unlocked" : "locked"}`,
-      `state ${state.bgmState ?? "-"} | ${state.currentBgmId ?? "queued"}`,
-      `voices bgm ${state.activeBgmVoices} / sfx ${state.activeSfxVoices}`,
-      `vol ${state.settings.masterVolume.toFixed(2)} · ${state.settings.bgmVolume.toFixed(2)} · ${state.settings.sfxVolume.toFixed(2)}`,
-      `mute ${state.settings.mute} | combat ${state.settings.combatSfxMode}`,
-      `fallback ${state.missingAssetFallback} | skipped ${state.skippedEventCount}`,
-      ...state.recentEvents.slice(-4).map((event) => `${event.id.replace("sfx.", "")} ${event.result}`),
-    ]);
+    this.audioDebugText.setText(this.audioWiring.getDebugLines());
   }
 
   private getResourceIconKey(resourceId: ResourceId): string {
@@ -2587,7 +2554,7 @@ export class LaneBattleScene extends Phaser.Scene {
     if (team.id === "player") {
       this.audio.playSfx("sfx.wave.start", { eventKey: `wave:start:${Math.round(this.elapsedSec * 10)}` });
       this.audio.setDirectorState("battle-low");
-      this.combatAudioEventTimes.push(this.elapsedSec * 1000);
+      this.audioWiring.recordCombatEvent(this.elapsedSec);
     }
     return true;
   }
@@ -2599,7 +2566,7 @@ export class LaneBattleScene extends Phaser.Scene {
     if (team.id === "player") {
       this.audio.playSfx("sfx.wave.start", { eventKey: "wave:opening" });
       this.audio.setDirectorState("battle-low");
-      this.combatAudioEventTimes.push(this.elapsedSec * 1000);
+      this.audioWiring.recordCombatEvent(this.elapsedSec);
     }
   }
 
