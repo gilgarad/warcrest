@@ -23,7 +23,7 @@ def main() -> None:
     failures: list[str] = []
 
     for asset in spec["assets"]:
-        path = asset_dir / f"prototype-golden-{asset['key']}-v1.png"
+        path = asset_dir / asset.get("filename", f"prototype-golden-{asset['key']}-v1.png")
         image = Image.open(path).convert("RGBA")
         bbox = image.getchannel("A").getbbox()
         expected_canvas = tuple(asset["canvas"])

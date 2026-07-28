@@ -4,6 +4,38 @@ Date: 2026-07-28
 Branch: `terrain-prototype-central`
 Status: complete for human review; volume production is blocked.
 
+## Conditional-approval revision
+
+After inspecting the first comparison, the user approved the canvas contract,
+asset QA, 16-state masks, team-color method, and weak 3/4 top-down projection.
+Two visible issues were revised without expanding the asset set.
+
+### Smooth dirt path
+
+The 16-state mask resolver was left unchanged. The input path changed from a
+constant-width linear corner test to a wider cubic Bezier centerline. The
+renderer adds a clipped, low-detail dirt decal on the same Bezier over the
+logical transition tiles. This combination was selected because widening alone
+still leaves a visible one-cell stair step, while replacing the mask renderer
+would discard the already approved terrain grammar.
+
+- Half-width: `1.8` tile rows.
+- Centerline control rows: `8.45, 8.05, 2.70, 1.05`.
+- The smoothing decal is clipped to the test board.
+- `marchingSquares.ts` and its 16 states are unchanged.
+
+### Walk silhouette revision
+
+Walk A and Walk B were regenerated as distinct `v2` prototype frames. Walk A
+plants the screen-left boot forward. Walk B plants the screen-right boot
+forward, moves the opposite foot back, leads with the shield, and trails one
+straight spear. An intermediate Walk B candidate was rejected because it was
+oversized and contained two intersecting weapon shafts; it was not loaded by
+the game.
+
+Both accepted frames retain `384 x 384`, ground anchor `(192, 336)`, opaque
+height `270`, and the approved palette/light contract. Asset QA remains 6/6.
+
 ## Scope
 
 This work implements only the Day 1 mechanical foundation and the Day 2

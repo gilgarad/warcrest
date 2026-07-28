@@ -2181,3 +2181,9 @@ Use consistent headings so entries are easy to grep.
 - 내장 이미지 생성 도구로 청동창병 4포즈, 바위, 방어 타워를 고정 계약 시트로 만들고 prototype-golden 자산으로 정규화했다.
 - /?golden=1 격리 장면과 기존 중앙 카메라 비교 검증을 추가했다. 기존 전투 장면과 생산 레지스트리는 변경하지 않았다.
 - build, 24 files/87 tests, asset QA 6/6, 반복 Playwright 6/6이 통과했다. 대량 생산은 사용자 승인까지 중단한다.
+
+## [2026-07-28] fix | Golden reference conditional-approval revision
+
+- 승인된 16-state 마스크는 유지하고 논리 경로를 폭 1.8의 cubic Bezier 중심선과 보드 경계 제한 데칼로 다듬었다.
+- 청동창병 WALK A/B를 반대 보폭이 명확한 v2로 교체했다. 큰 체격과 이중 창대가 생긴 WALK B 후보는 폐기하고 단일 직선 창 교정본만 썼다.
+- build, 24 files/87 tests, asset QA 6/6, 골든 Playwright 1/1이 통과했다. 다른 에셋으로 확장하지 않았다.

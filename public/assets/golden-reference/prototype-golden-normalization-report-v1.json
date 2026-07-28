@@ -19,15 +19,15 @@
   },
   {
     "key": "bronze-spearman-walk-a",
-    "output": "public/assets/golden-reference/prototype-golden-bronze-spearman-walk-a-v1.png",
+    "output": "public/assets/golden-reference/prototype-golden-bronze-spearman-walk-a-v2.png",
     "canvas": [
       384,
       384
     ],
     "alphaBbox": [
-      120,
+      108,
       66,
-      265,
+      277,
       336
     ],
     "groundAnchor": [
@@ -37,15 +37,15 @@
   },
   {
     "key": "bronze-spearman-walk-b",
-    "output": "public/assets/golden-reference/prototype-golden-bronze-spearman-walk-b-v1.png",
+    "output": "public/assets/golden-reference/prototype-golden-bronze-spearman-walk-b-v2.png",
     "canvas": [
       384,
       384
     ],
     "alphaBbox": [
-      123,
       66,
-      261,
+      66,
+      317,
       336
     ],
     "groundAnchor": [

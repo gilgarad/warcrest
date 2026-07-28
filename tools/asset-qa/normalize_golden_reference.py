@@ -25,14 +25,20 @@ def main() -> None:
 
     spec_path = Path(args.spec)
     spec = json.loads(spec_path.read_text(encoding="utf-8"))
-    source = Image.open(spec["source"]).convert("RGBA")
-    cell_width = source.width // spec["columns"]
-    cell_height = source.height // spec["rows"]
+    sources: dict[str, Image.Image] = {}
     output_dir = Path(args.output)
     output_dir.mkdir(parents=True, exist_ok=True)
 
     report: list[dict[str, object]] = []
     for asset in spec["assets"]:
+        source_path = asset.get("source", spec["source"])
+        if source_path not in sources:
+            sources[source_path] = Image.open(source_path).convert("RGBA")
+        source = sources[source_path]
+        columns = asset.get("columns", spec["columns"])
+        rows = asset.get("rows", spec["rows"])
+        cell_width = source.width // columns
+        cell_height = source.height // rows
         left = asset["column"] * cell_width
         top = asset["row"] * cell_height
         cell = source.crop((left, top, left + cell_width, top + cell_height))
@@ -52,7 +58,7 @@ def main() -> None:
         x = round(anchor_x - resized.width / 2)
         y = round(anchor_y - resized.height)
         canvas.alpha_composite(resized, (x, y))
-        output_path = output_dir / f"prototype-golden-{asset['key']}-v1.png"
+        output_path = output_dir / asset.get("filename", f"prototype-golden-{asset['key']}-v1.png")
         canvas.save(output_path)
         bbox = alpha_bbox(canvas)
         report.append({

@@ -1,5 +1,11 @@
 import Phaser from "phaser";
-import { GOLDEN_TERRAIN_MASKS, GOLDEN_TERRAIN_TILE_SIZE } from "../data/terrain/goldenReferenceTerrain";
+import {
+  GOLDEN_PATH_CONTROL_ROWS,
+  GOLDEN_PATH_HALF_WIDTH_ROWS,
+  GOLDEN_TERRAIN_COLUMNS,
+  GOLDEN_TERRAIN_MASKS,
+  GOLDEN_TERRAIN_TILE_SIZE,
+} from "../data/terrain/goldenReferenceTerrain";
 import { getMarchingPolygons } from "../systems/terrain/marchingSquares";
 
 const ASSET_ROOT = "/assets/golden-reference";
@@ -8,8 +14,8 @@ const BOARD_Y = 130;
 
 const GOLDEN_ASSETS = {
   idle: "prototype-golden-bronze-spearman-idle-v1",
-  walkA: "prototype-golden-bronze-spearman-walk-a-v1",
-  walkB: "prototype-golden-bronze-spearman-walk-b-v1",
+  walkA: "prototype-golden-bronze-spearman-walk-a-v2",
+  walkB: "prototype-golden-bronze-spearman-walk-b-v2",
   attack: "prototype-golden-bronze-spearman-attack-v1",
   boulder: "prototype-golden-field-boulder-v1",
   tower: "prototype-golden-defense-tower-v1",
@@ -94,6 +100,7 @@ export class GoldenReferenceScene extends Phaser.Scene {
         ).setDepth(0);
       });
     });
+    this.drawSmoothedDirtPath();
 
     const plaza = this.add.graphics().setDepth(2);
     plaza.fillStyle(0x5c5e55, 1);
@@ -117,6 +124,35 @@ export class GoldenReferenceScene extends Phaser.Scene {
         color: "#d6c7a2",
       }).setOrigin(0.5).setDepth(51);
     }
+  }
+
+  private drawSmoothedDirtPath(): void {
+    const toPoint = (column: number, row: number): Phaser.Math.Vector2 => new Phaser.Math.Vector2(
+      BOARD_X + column * GOLDEN_TERRAIN_TILE_SIZE,
+      BOARD_Y + row * GOLDEN_TERRAIN_TILE_SIZE,
+    );
+    const curve = new Phaser.Curves.CubicBezier(
+      toPoint(-0.5, GOLDEN_PATH_CONTROL_ROWS[0]),
+      toPoint(GOLDEN_TERRAIN_COLUMNS * 0.34, GOLDEN_PATH_CONTROL_ROWS[1]),
+      toPoint(GOLDEN_TERRAIN_COLUMNS * 0.66, GOLDEN_PATH_CONTROL_ROWS[2]),
+      toPoint(GOLDEN_TERRAIN_COLUMNS + 0.5, GOLDEN_PATH_CONTROL_ROWS[3]),
+    );
+    const fullWidth = GOLDEN_PATH_HALF_WIDTH_ROWS * GOLDEN_TERRAIN_TILE_SIZE * 2;
+    const path = this.add.graphics().setDepth(1);
+    const clipShape = this.make.graphics({ x: 0, y: 0 });
+    clipShape.fillStyle(0xffffff).fillRect(
+      BOARD_X,
+      BOARD_Y,
+      GOLDEN_TERRAIN_COLUMNS * GOLDEN_TERRAIN_TILE_SIZE,
+      GOLDEN_TERRAIN_MASKS.length * GOLDEN_TERRAIN_TILE_SIZE,
+    );
+    path.setMask(clipShape.createGeometryMask());
+    path.lineStyle(fullWidth + 18, 0x493a2a, 0.28);
+    curve.draw(path, 96);
+    path.lineStyle(fullWidth - 14, 0x715337, 0.76);
+    curve.draw(path, 96);
+    path.lineStyle(fullWidth - 38, 0x94704a, 0.16);
+    curve.draw(path, 96);
   }
 
   private addGroundedAsset(
