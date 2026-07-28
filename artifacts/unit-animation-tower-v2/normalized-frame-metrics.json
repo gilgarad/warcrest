@@ -27,12 +27,30 @@
     "maxY": 899
   },
   {
+    "key": "stone-axeman-attack-windup",
+    "width": 1152,
+    "height": 1024,
+    "minX": 150,
+    "minY": 258,
+    "maxX": 552,
+    "maxY": 899
+  },
+  {
     "key": "stone-axeman-attack-contact",
     "width": 1152,
     "height": 1024,
     "minX": 150,
     "minY": 375,
     "maxX": 598,
+    "maxY": 899
+  },
+  {
+    "key": "stone-axeman-attack-recover",
+    "width": 1152,
+    "height": 1024,
+    "minX": 133,
+    "minY": 407,
+    "maxX": 730,
     "maxY": 899
   },
   {
@@ -132,6 +150,15 @@
     "minX": 180,
     "minY": 455,
     "maxX": 577,
+    "maxY": 899
+  },
+  {
+    "key": "bronze-spearman-attack-windup",
+    "width": 1152,
+    "height": 1024,
+    "minX": 151,
+    "minY": 477,
+    "maxX": 567,
     "maxY": 899
   },
   {

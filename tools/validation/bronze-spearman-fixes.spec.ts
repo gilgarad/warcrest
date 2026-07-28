@@ -33,3 +33,56 @@ test("bronze spearman keeps source colors at gameplay scale", async ({ page }) =
   await page.screenshot({ path: `${ARTIFACT_DIR}/a1-after-source-color.png` });
   writeFileSync(`${ARTIFACT_DIR}/a1-render-state.json`, JSON.stringify({ spearmen }, null, 2));
 });
+
+test("bronze spearman keeps one silhouette height through attack poses", async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto(GAME_URL);
+  const canvas = page.locator("canvas");
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error("Canvas is not visible");
+  await canvas.click({ position: { x: 800 * box.width / 1600, y: 805 * box.height / 900 } });
+  await page.waitForFunction(() => Boolean(
+    (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+  ));
+  await page.evaluate(() => {
+    const control = (window as unknown as {
+      __terrainPrototypeControl: { prepareBronzeWaveProbe: () => void; setPaused: (paused: boolean) => void };
+    }).__terrainPrototypeControl;
+    control.prepareBronzeWaveProbe();
+    control.setPaused(true);
+  });
+
+  const sequence: Array<{ label: string; pose: string; cssVisibleHeight: number; cssFrameHeight: number }> = [];
+  for (const [label, phase] of [["idle-before", 0], ["windup", 0.1], ["contact", 0.75], ["idle-after", 1]] as const) {
+    await page.evaluate((nextPhase) => {
+      (window as unknown as {
+        __terrainPrototypeControl: { setAttackVisualPhase: (unitId: string, team: string, phase: number) => void };
+      }).__terrainPrototypeControl.setAttackVisualPhase("bronze_spearman", "player", nextPhase);
+    }, phase);
+    const frame = await page.evaluate(() => {
+      const snapshot = (window as unknown as {
+        __gameDebug: {
+          units: Array<{ unitId: string; pose: string }>;
+          verification: { presentation: { sampledUnits: Array<{ unitId: string; cssVisibleHeight: number; cssFrameHeight: number }> } };
+        };
+      }).__gameDebug;
+      const unit = snapshot.units.find((entry) => entry.unitId === "bronze_spearman");
+      const presentation = snapshot.verification.presentation.sampledUnits
+        .find((entry) => entry.unitId === "bronze_spearman");
+      if (!unit || !presentation) throw new Error("Bronze spearman snapshot missing");
+      return { pose: unit.pose, cssVisibleHeight: presentation.cssVisibleHeight, cssFrameHeight: presentation.cssFrameHeight };
+    });
+    sequence.push({ label, ...frame });
+    await page.screenshot({ path: `${ARTIFACT_DIR}/a2-${label}.png` });
+  }
+
+  expect(sequence.map((entry) => entry.pose)).toEqual([
+    "bronze-spearman-idle",
+    "bronze-spearman-attack-windup",
+    "bronze-spearman-attack-contact",
+    "bronze-spearman-idle",
+  ]);
+  const visibleHeights = sequence.map((entry) => entry.cssVisibleHeight);
+  expect(Math.max(...visibleHeights) - Math.min(...visibleHeights)).toBeLessThan(0.05);
+  writeFileSync(`${ARTIFACT_DIR}/a2-attack-height-sequence.json`, JSON.stringify(sequence, null, 2));
+});

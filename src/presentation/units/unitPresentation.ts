@@ -1,4 +1,4 @@
-import { getUnitAnimationDefinition } from "./unitAnimationRegistry";
+import { getFrameVisibleHeightRatio, getUnitAnimationDefinition } from "./unitAnimationRegistry";
 import type { LaneUnitId } from "../../systems/lane-units/unitStats";
 
 export interface UnitFramePresentation {
@@ -13,6 +13,7 @@ export function resolveUnitFramePresentation(
   unitId: LaneUnitId,
   targetVisibleWorldHeight: number,
   fallbackFrameAspect: number,
+  textureKey?: string,
 ): UnitFramePresentation {
   const definition = getUnitAnimationDefinition(unitId);
   if (!definition) {
@@ -24,7 +25,9 @@ export function resolveUnitFramePresentation(
       referenceVisibleHeight: targetVisibleWorldHeight,
     };
   }
-  const spriteHeight = targetVisibleWorldHeight / definition.referenceVisibleHeightRatio;
+  const frameVisibleHeightRatio = getFrameVisibleHeightRatio(unitId, textureKey)
+    ?? definition.referenceVisibleHeightRatio;
+  const spriteHeight = targetVisibleWorldHeight / frameVisibleHeightRatio;
   return {
     spriteWidth: spriteHeight * definition.canvasAspect,
     spriteHeight,

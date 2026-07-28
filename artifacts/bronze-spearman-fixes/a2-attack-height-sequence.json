@@ -1,0 +1,26 @@
+[
+  {
+    "label": "idle-before",
+    "pose": "bronze-spearman-idle",
+    "cssVisibleHeight": 100,
+    "cssFrameHeight": 195.41984732824426
+  },
+  {
+    "label": "windup",
+    "pose": "bronze-spearman-attack-windup",
+    "cssVisibleHeight": 100.00000000000001,
+    "cssFrameHeight": 242.08037825059102
+  },
+  {
+    "label": "contact",
+    "pose": "bronze-spearman-attack-contact",
+    "cssVisibleHeight": 100.00000000000001,
+    "cssFrameHeight": 163.84
+  },
+  {
+    "label": "idle-after",
+    "pose": "bronze-spearman-idle",
+    "cssVisibleHeight": 100,
+    "cssFrameHeight": 195.41984732824426
+  }
+]

@@ -11,6 +11,7 @@ export interface UnitAnimationDefinition {
   groundOriginX: number;
   groundOriginY: number;
   referenceVisibleHeightRatio: number;
+  frameVisibleHeightRatios: Readonly<Record<string, number>>;
   scaleFactor: number;
 }
 
@@ -28,6 +29,12 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
     groundOriginX: NORMALIZED_GROUND_ORIGIN_X,
     groundOriginY: NORMALIZED_GROUND_ORIGIN_Y,
     referenceVisibleHeightRatio: 620 / 1024,
+    frameVisibleHeightRatios: {
+      "stone-slinger-idle": 620 / 1024,
+      "stone-slinger-walk-a": 587 / 1024,
+      "stone-slinger-walk-b": 568 / 1024,
+      "stone-slinger-attack": 571 / 1024,
+    },
     scaleFactor: 0.96,
   },
   stone_axeman: {
@@ -39,6 +46,14 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
     groundOriginX: NORMALIZED_GROUND_ORIGIN_X,
     groundOriginY: NORMALIZED_GROUND_ORIGIN_Y,
     referenceVisibleHeightRatio: 600 / 1024,
+    frameVisibleHeightRatios: {
+      "stone-axeman-idle": 600 / 1024,
+      "stone-axeman-walk-a": 593 / 1024,
+      "stone-axeman-walk-b": 578 / 1024,
+      "stone-axeman-attack-windup": 642 / 1024,
+      "stone-axeman-attack-contact": 525 / 1024,
+      "stone-axeman-attack-recover": 493 / 1024,
+    },
     scaleFactor: 1.04,
   },
   supply_wagon: {
@@ -50,6 +65,12 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
     groundOriginX: NORMALIZED_GROUND_ORIGIN_X,
     groundOriginY: NORMALIZED_GROUND_ORIGIN_Y,
     referenceVisibleHeightRatio: 601 / 1024,
+    frameVisibleHeightRatios: {
+      "stone-supply-idle": 601 / 1024,
+      "stone-supply-walk-a": 577 / 1024,
+      "stone-supply-walk-b": 554 / 1024,
+      "stone-supply-attack": 513 / 1024,
+    },
     scaleFactor: 1,
   },
   bronze_spearman: {
@@ -61,6 +82,13 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
     groundOriginX: NORMALIZED_GROUND_ORIGIN_X,
     groundOriginY: NORMALIZED_GROUND_ORIGIN_Y,
     referenceVisibleHeightRatio: 524 / 1024,
+    frameVisibleHeightRatios: {
+      "bronze-spearman-idle": 524 / 1024,
+      "bronze-spearman-walk-a": 509 / 1024,
+      "bronze-spearman-walk-b": 445 / 1024,
+      "bronze-spearman-attack-windup": 423 / 1024,
+      "bronze-spearman-attack-contact": 625 / 1024,
+    },
     scaleFactor: 1,
   },
 };
@@ -74,6 +102,14 @@ export const UNIT_ANIMATION_ASSETS = Object.values(UNIT_ANIMATION_REGISTRY)
 
 export function getUnitAnimationDefinition(unitId: LaneUnitId): UnitAnimationDefinition | undefined {
   return UNIT_ANIMATION_REGISTRY[unitId];
+}
+
+export function getFrameVisibleHeightRatio(unitId: LaneUnitId, textureKey?: string): number | undefined {
+  const definition = getUnitAnimationDefinition(unitId);
+  if (!definition) return undefined;
+  return textureKey
+    ? definition.frameVisibleHeightRatios[textureKey] ?? definition.referenceVisibleHeightRatio
+    : definition.referenceVisibleHeightRatio;
 }
 
 export function resolveUnitAnimationTexture(

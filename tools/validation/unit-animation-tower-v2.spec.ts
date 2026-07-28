@@ -34,10 +34,12 @@ async function openGame(page: import("@playwright/test").Page): Promise<void> {
 test("normalized pose assets share canvas and ground anchor without edge clipping", async ({ page }) => {
   await openGame(page);
   const keys = [
-    "stone-axeman-idle", "stone-axeman-walk-a", "stone-axeman-walk-b", "stone-axeman-attack-contact",
+    "stone-axeman-idle", "stone-axeman-walk-a", "stone-axeman-walk-b",
+    "stone-axeman-attack-windup", "stone-axeman-attack-contact", "stone-axeman-attack-recover",
     "stone-slinger-idle", "stone-slinger-walk-a", "stone-slinger-walk-b", "stone-slinger-attack",
     "stone-supply-idle", "stone-supply-walk-a", "stone-supply-walk-b", "stone-supply-attack",
-    "bronze-spearman-idle", "bronze-spearman-walk-a", "bronze-spearman-walk-b", "bronze-spearman-attack-contact",
+    "bronze-spearman-idle", "bronze-spearman-walk-a", "bronze-spearman-walk-b",
+    "bronze-spearman-attack-windup", "bronze-spearman-attack-contact",
   ];
   const metrics = await page.evaluate(async (assetKeys) => Promise.all(assetKeys.map(async (key) => {
     const image = new Image();

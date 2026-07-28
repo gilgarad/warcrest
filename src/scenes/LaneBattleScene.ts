@@ -2145,8 +2145,8 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private getUnitProjectileAnchor(unit: LaneUnit): Phaser.Math.Vector2 {
     const visibleHeight = unit.sprite.displayHeight
-      * (resolveUnitFramePresentation(unit.unitId, 1, 1).referenceVisibleHeight
-        / resolveUnitFramePresentation(unit.unitId, 1, 1).spriteHeight);
+      * (resolveUnitFramePresentation(unit.unitId, 1, 1, unit.currentTextureKey).referenceVisibleHeight
+        / resolveUnitFramePresentation(unit.unitId, 1, 1, unit.currentTextureKey).spriteHeight);
     return new Phaser.Math.Vector2(
       unit.sprite.x,
       unit.sprite.y - (this.terrainPrototypeEnabled ? visibleHeight * 0.58 : 10),
@@ -2642,6 +2642,7 @@ export class LaneBattleScene extends Phaser.Scene {
       unit.unitId,
       targetVisibleWorldHeight,
       frameAspect,
+      desiredTexture,
     );
     const spriteWidth = this.terrainPrototypeEnabled
       ? framePresentation.spriteWidth
@@ -3013,8 +3014,8 @@ export class LaneBattleScene extends Phaser.Scene {
             cssFrameWidth: unit.sprite.displayWidth * this.cameras.main.zoom * this.getCanvasCssScale(),
             cssFrameHeight: unit.sprite.displayHeight * this.cameras.main.zoom * this.getCanvasCssScale(),
             cssVisibleHeight: unit.sprite.displayHeight
-              * (resolveUnitFramePresentation(unit.unitId, 1, 1).referenceVisibleHeight
-                / resolveUnitFramePresentation(unit.unitId, 1, 1).spriteHeight)
+              * (resolveUnitFramePresentation(unit.unitId, 1, 1, unit.currentTextureKey).referenceVisibleHeight
+                / resolveUnitFramePresentation(unit.unitId, 1, 1, unit.currentTextureKey).spriteHeight)
               * this.cameras.main.zoom
               * this.getCanvasCssScale(),
             originX: unit.sprite.originX,
