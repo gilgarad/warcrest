@@ -58,5 +58,13 @@ describe("battlefield map specs", () => {
     expect(LANE_BATTLEFIELD_MAP_SPEC.terrainProps.every((prop) => prop.occludesUnits)).toBe(true);
     expect(LANE_BATTLEFIELD_MAP_SPEC.terrainProps.every((prop) => !prop.footprint.blocksMovement)).toBe(true);
     expect(LANE_BATTLEFIELD_MAP_SPEC.terrainProps.every((prop) => prop.shadow.offsetY <= 3)).toBe(true);
+    expect(LANE_BATTLEFIELD_MAP_SPEC.terrainProps.every((prop) => prop.groundOriginY === 0.875)).toBe(true);
+    expect(new Set(LANE_BATTLEFIELD_MAP_SPEC.terrainProps.map((prop) => prop.textureKey))).toEqual(new Set([
+      "field-oak",
+      "field-pine",
+      "rock-cluster",
+      "fallen-log",
+      "field-boulder",
+    ]));
   });
 });

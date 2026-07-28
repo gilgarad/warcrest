@@ -55,7 +55,6 @@ export class BattlefieldWorldRenderer {
       const image = this.scene.add.image(prop.position.x, prop.position.y, prop.textureKey)
         .setDisplaySize(prop.displayWidth, prop.displayHeight)
         .setOrigin(0.5, prop.groundOriginY)
-        .setTint(0xd5d5bd)
         .setDepth(this.groundDepth(prop.position.y));
       this.objects.push(shadow, image);
     });

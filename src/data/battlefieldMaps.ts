@@ -44,9 +44,16 @@ export interface StructureSocketSpec {
   bypassSlots: WorldPointSpec[];
 }
 
+export type TerrainPropTextureKey =
+  | "field-oak"
+  | "field-pine"
+  | "rock-cluster"
+  | "fallen-log"
+  | "field-boulder";
+
 export interface TerrainPropSpec {
   id: string;
-  textureKey: "rock-cluster" | "tree-cluster";
+  textureKey: TerrainPropTextureKey;
   position: WorldPointSpec;
   displayWidth: number;
   displayHeight: number;
@@ -213,12 +220,12 @@ const STRUCTURE_SOCKETS = [
 ];
 
 const TERRAIN_PROPS: TerrainPropSpec[] = [
-  { id: "rock-west-ridge", textureKey: "rock-cluster", position: { x: 1730, y: 2310 }, displayWidth: 210, displayHeight: 152, groundOriginY: 0.884, footprint: { shape: "ellipse", width: 178, height: 66, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
-  { id: "trees-west-south", textureKey: "tree-cluster", position: { x: 2360, y: 3110 }, displayWidth: 180, displayHeight: 238, groundOriginY: 0.902, footprint: { shape: "ellipse", width: 128, height: 62, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
-  { id: "rock-central-north", textureKey: "rock-cluster", position: { x: 3540, y: 1170 }, displayWidth: 196, displayHeight: 144, groundOriginY: 0.884, footprint: { shape: "ellipse", width: 164, height: 62, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
-  { id: "trees-central-south", textureKey: "tree-cluster", position: { x: 3880, y: 2720 }, displayWidth: 176, displayHeight: 232, groundOriginY: 0.902, footprint: { shape: "ellipse", width: 126, height: 62, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
-  { id: "rock-east-south", textureKey: "rock-cluster", position: { x: 5050, y: 2210 }, displayWidth: 188, displayHeight: 138, groundOriginY: 0.884, footprint: { shape: "ellipse", width: 158, height: 60, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
-  { id: "trees-east-ridge", textureKey: "tree-cluster", position: { x: 5550, y: 1080 }, displayWidth: 174, displayHeight: 228, groundOriginY: 0.902, footprint: { shape: "ellipse", width: 124, height: 60, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "rock-west-ridge", textureKey: "field-boulder", position: { x: 1730, y: 2310 }, displayWidth: 220, displayHeight: 220, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 178, height: 66, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
+  { id: "trees-west-south", textureKey: "field-oak", position: { x: 2360, y: 3110 }, displayWidth: 250, displayHeight: 250, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 128, height: 62, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "rock-central-north", textureKey: "rock-cluster", position: { x: 3540, y: 1170 }, displayWidth: 210, displayHeight: 210, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 164, height: 62, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
+  { id: "trees-central-south", textureKey: "fallen-log", position: { x: 3880, y: 2720 }, displayWidth: 230, displayHeight: 230, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 126, height: 62, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "rock-east-south", textureKey: "field-boulder", position: { x: 5050, y: 2210 }, displayWidth: 208, displayHeight: 208, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 158, height: 60, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
+  { id: "trees-east-ridge", textureKey: "field-pine", position: { x: 5550, y: 1080 }, displayWidth: 248, displayHeight: 248, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 124, height: 60, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
 ];
 
 export const CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC: BattlefieldMapSpec = {

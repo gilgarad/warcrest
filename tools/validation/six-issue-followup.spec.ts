@@ -20,6 +20,7 @@ type Snapshot = {
     terrain: {
       propGrounding: Array<{
         id: string;
+        textureKey: string;
         groundOriginY: number;
         shadow: { offsetY: number; widthScale: number; heightScale: number };
       }>;
@@ -119,7 +120,14 @@ test("captures grounded rock tree and tower examples", async ({ page }) => {
   await focusAndCapture(0.375, "grounding-tower-after.png");
   const grounding = (await snapshot(page)).verification.terrain.propGrounding;
   expect(grounding.every((prop) => prop.shadow.offsetY <= 3)).toBe(true);
-  expect(grounding.every((prop) => prop.groundOriginY >= 0.884)).toBe(true);
+  expect(grounding.every((prop) => prop.groundOriginY === 0.875)).toBe(true);
+  expect(new Set(grounding.map((prop) => prop.textureKey))).toEqual(new Set([
+    "field-oak",
+    "field-pine",
+    "rock-cluster",
+    "fallen-log",
+    "field-boulder",
+  ]));
   writeFileSync(`${ARTIFACT_DIR}/ground-anchor-profiles.json`, JSON.stringify(grounding, null, 2));
 });
 

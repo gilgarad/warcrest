@@ -34,3 +34,24 @@ The 1x/2x comparison uses the same 1024x576 CSS viewport with Playwright
 `deviceScaleFactor` 1 and 2. Screenshots are emitted at CSS scale so the files
 can be compared directly without making the software-WebGL readback itself the
 performance bottleneck.
+
+## Step 2: production props
+
+- Reused all six existing `TerrainPropSpec.position` coordinates and unchanged
+  non-blocking footprints.
+- Replaced the old two-texture set with the approved oak, pine, rock cluster,
+  boulder, and fallen-log production family.
+- Applied the shared 256x256 canvas ground anchor `(128, 224)`, resulting in
+  Phaser origin `(0.5, 0.875)` for every prop.
+- Removed the renderer's old whole-sprite tint so production palette and
+  upper-left lighting remain intact.
+
+### Verification
+
+- `npm run build`: pass
+- `npm test`: pass, 26 files / 91 tests
+- Grounding Playwright probe: pass, 1/1
+- Captures and anchor profile: `artifacts/six-issue-followup/grounding-*-after.png`
+  and `ground-anchor-profiles.json`
+
+No prop position, movement obstacle, or path coordinate changed.

@@ -50,6 +50,7 @@ import {
 } from "../gfx/battlefieldPrototypeRenderer";
 import { BattlefieldWorldRenderer } from "../gfx/battlefieldWorldRenderer";
 import { PRODUCTION_TERRAIN_ASSETS } from "../presentation/terrain/productionTerrainRegistry";
+import { PRODUCTION_PROP_ASSETS } from "../presentation/terrain/productionPropRegistry";
 import { generateBattlefield, type BattlefieldResult } from "../systems/battlefieldGenerator";
 import { getAudioSystem } from "../systems/audio";
 import { LaneBattleAudioWiring } from "../systems/audio/laneBattleAudioWiring";
@@ -347,6 +348,7 @@ export class LaneBattleScene extends Phaser.Scene {
     UNIT_ANIMATION_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
     PROTOTYPE_TERRAIN_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
     PRODUCTION_TERRAIN_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
+    PRODUCTION_PROP_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
   }
 
   create(): void {
@@ -2937,6 +2939,7 @@ export class LaneBattleScene extends Phaser.Scene {
           structureSocketCount: LANE_BATTLEFIELD_MAP_SPEC.structureSockets.length,
           propGrounding: LANE_BATTLEFIELD_MAP_SPEC.terrainProps.map((prop) => ({
             id: prop.id,
+            textureKey: prop.textureKey,
             groundOriginY: prop.groundOriginY,
             shadow: prop.shadow,
           })),
