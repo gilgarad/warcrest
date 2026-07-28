@@ -1978,3 +1978,10 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
 - **사용자 피드백 요약**: 승인 계약은 유지하고 계단형 흙길, 약한 WALK A/B 차이, WALK B의 큰 체격과 교차 이중 창대를 수정한다.
 - **AI 작업 요약**: 흙길을 넓은 Bezier와 경계 제한 데칼로 다듬고 WALK A/B를 반대 보폭으로 재생성했다. 실패한 WALK B는 폐기하고 동일 체격과 단일 직선 창 교정본만 정규화했다.
 - **검증**: build, 24 files/87 tests, 자산 QA 6/6, 골든 Playwright 1/1.
+
+## 2026-07-28 (128) — attack facing 수정과 전환 형상 감사
+
+- **사용 도구**: Codex, built-in image generation, chroma-key removal helper
+- **사용자 피드백 요약**: attack 반대 facing을 고치고 포즈 전환 중 T자형 창대 재현 여부를 확인한다.
+- **AI 작업 요약**: mirror 대신 왼쪽 facing attack을 좌상단 광원으로 재생성하고 손 배치를 유지했다. 5단계 원자적 texture swap에서는 T자형 형상이 재현되지 않았다.
+- **검증**: build, 24 files/87 tests, 자산 QA 6/6, Playwright 2/2. Day 3-4는 시작하지 않았다.

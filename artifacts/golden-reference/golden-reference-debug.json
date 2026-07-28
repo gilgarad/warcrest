@@ -177,7 +177,7 @@
     "prototype-golden-bronze-spearman-idle-v1",
     "prototype-golden-bronze-spearman-walk-a-v2",
     "prototype-golden-bronze-spearman-walk-b-v2",
-    "prototype-golden-bronze-spearman-attack-v1",
+    "prototype-golden-bronze-spearman-attack-v2",
     "prototype-golden-field-boulder-v1",
     "prototype-golden-defense-tower-v1"
   ],
@@ -185,5 +185,11 @@
     "width": 1600,
     "height": 900,
     "focus": "central-structure"
+  },
+  "animationProbe": {
+    "enabled": false,
+    "currentPose": null,
+    "currentTexture": null,
+    "interpolation": "none-atomic-texture-swap"
   }
 }

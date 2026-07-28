@@ -36,6 +36,31 @@ the game.
 Both accepted frames retain `384 x 384`, ground anchor `(192, 336)`, opaque
 height `270`, and the approved palette/light contract. Asset QA remains 6/6.
 
+### Attack facing correction
+
+The original contact sheet had one confirmed inconsistency: idle and both walk
+poses faced screen-left, while attack faced screen-right. A horizontal mirror
+was rejected because it would also reverse armor highlights and the authored
+blue team-color region, conflicting with the fixed upper-left light contract.
+
+Attack was regenerated as `prototype-golden-bronze-spearman-attack-v2.png`.
+Head, torso, legs, momentum, and spearhead now face screen-left. The anatomical
+assignment remains unchanged: the right hand controls the spear and the left
+arm carries the shield. The frame uses one continuous spear and freshly rendered
+upper-left lighting, then passes the unchanged `512 x 384` wide-pose QA contract.
+
+### Transition-shape recheck
+
+`/?golden=1&sequence=1` now provides a validation-only single-sprite probe. It
+cycles `idle -> walk-a -> walk-b -> attack -> idle` through atomic Phaser
+`setTexture()` calls. There is no tween, cross-fade, skeletal interpolation, or
+generated in-between frame.
+
+The reported T-shaped/club-shaped protrusion did not reproduce in any of the
+five captured states or at the transitions. The earlier rejected Walk B source
+did contain two crossing shafts, but it was never loaded by the accepted `v2`
+asset path. The current sequence uses one spear in every applicable pose.
+
 ## Scope
 
 This work implements only the Day 1 mechanical foundation and the Day 2
@@ -110,6 +135,10 @@ shadows, text, watermark, or proprietary reference asset.
 - `artifacts/golden-reference/old-vs-new-side-by-side.png`: direct comparison.
 - `artifacts/golden-reference/golden-reference-debug.json`: loaded assets,
   terrain masks, projection contract, and camera dimensions.
+- `artifacts/golden-reference/pose-transition-sequence.png`: enlarged five-state
+  transition strip.
+- `artifacts/golden-reference/pose-transition-debug.json`: exact texture key and
+  no-interpolation record for each state.
 
 The comparison is intentionally presentation-to-presentation, not a claim that
 the new terrain has already replaced the gameplay map.
@@ -122,7 +151,7 @@ the new terrain has already replaced the gameplay map.
 | `npm run asset:qa:golden` | pass, 6/6 |
 | `npm run build` | pass |
 | `npm test -- --run` | pass, 24 files / 87 tests |
-| Golden-reference Playwright | pass, 1/1 |
+| Golden-reference + transition Playwright | pass, 2/2 |
 | Golden + two structure regressions, repeated twice | pass, 6/6 |
 
 ## Human review points

@@ -16,10 +16,34 @@ const GOLDEN_ASSETS = {
   idle: "prototype-golden-bronze-spearman-idle-v1",
   walkA: "prototype-golden-bronze-spearman-walk-a-v2",
   walkB: "prototype-golden-bronze-spearman-walk-b-v2",
-  attack: "prototype-golden-bronze-spearman-attack-v1",
+  attack: "prototype-golden-bronze-spearman-attack-v2",
   boulder: "prototype-golden-field-boulder-v1",
   tower: "prototype-golden-defense-tower-v1",
 } as const;
+
+type GoldenPose = "idle" | "walk-a" | "walk-b" | "attack";
+
+const GOLDEN_POSE_TEXTURES: Record<GoldenPose, string> = {
+  idle: GOLDEN_ASSETS.idle,
+  "walk-a": GOLDEN_ASSETS.walkA,
+  "walk-b": GOLDEN_ASSETS.walkB,
+  attack: GOLDEN_ASSETS.attack,
+};
+
+interface GoldenReferenceDebug {
+  ready: boolean;
+  projection: string;
+  terrainMasks: number[];
+  uniqueTerrainStates: number[];
+  assets: string[];
+  camera: { width: number; height: number; focus: string };
+  animationProbe: {
+    enabled: boolean;
+    currentPose: GoldenPose | null;
+    currentTexture: string | null;
+    interpolation: "none-atomic-texture-swap";
+  };
+}
 
 function seededNoise(x: number, y: number, salt: number): number {
   const value = Math.sin(x * 12.9898 + y * 78.233 + salt * 31.37) * 43758.5453;
@@ -43,14 +67,24 @@ export class GoldenReferenceScene extends Phaser.Scene {
     this.drawTerrainBoard();
     this.drawGoldenObjects();
     this.drawLabels();
-    (window as unknown as { __goldenReferenceDebug: unknown }).__goldenReferenceDebug = {
+    const debug: GoldenReferenceDebug = {
       ready: true,
       projection: "terrain:orthographic-top-down; objects:weak-three-quarter-top-down",
       terrainMasks: GOLDEN_TERRAIN_MASKS.flat(),
       uniqueTerrainStates: [...new Set(GOLDEN_TERRAIN_MASKS.flat())].sort((a, b) => a - b),
       assets: Object.values(GOLDEN_ASSETS),
       camera: { width: 1600, height: 900, focus: "central-structure" },
+      animationProbe: {
+        enabled: false,
+        currentPose: null,
+        currentTexture: null,
+        interpolation: "none-atomic-texture-swap",
+      },
     };
+    (window as unknown as { __goldenReferenceDebug: GoldenReferenceDebug }).__goldenReferenceDebug = debug;
+    if (new URLSearchParams(window.location.search).get("sequence") === "1") {
+      this.createAnimationProbe(debug);
+    }
   }
 
   private createTerrainTextures(): void {
@@ -220,5 +254,50 @@ export class GoldenReferenceScene extends Phaser.Scene {
     this.add.text(300, 790, "16-STATE DIRT OVERLAY FAMILY", {
       fontFamily: "Georgia, serif", fontSize: "14px", color: "#e5d4ac",
     }).setDepth(1001);
+  }
+
+  private createAnimationProbe(debug: GoldenReferenceDebug): void {
+    const centerX = 800;
+    const groundY = 660;
+    this.add.rectangle(centerX, 450, 560, 610, 0x080c09, 0.94)
+      .setStrokeStyle(3, 0xd0a85b, 0.9)
+      .setDepth(2000);
+    this.add.text(centerX, 174, "ATOMIC POSE TRANSITION PROBE", {
+      fontFamily: "Georgia, serif",
+      fontSize: "22px",
+      color: "#f0d89b",
+    }).setOrigin(0.5).setDepth(2001);
+    this.add.text(centerX, 205, "idle -> walk-a -> walk-b -> attack -> idle | no tween / no blend", {
+      fontFamily: "monospace",
+      fontSize: "12px",
+      color: "#bac6ad",
+    }).setOrigin(0.5).setDepth(2001);
+    this.add.ellipse(centerX + 10, groundY + 8, 170, 34, 0x11100c, 0.5)
+      .setRotation(0.18)
+      .setDepth(2001);
+    const sprite = this.add.image(centerX, groundY, GOLDEN_ASSETS.idle)
+      .setOrigin(0.5, 336 / 384)
+      .setDisplaySize(260, 260)
+      .setDepth(2002);
+    const label = this.add.text(centerX, 730, "IDLE", {
+      fontFamily: "Georgia, serif",
+      fontSize: "20px",
+      color: "#f2dfad",
+      backgroundColor: "rgba(14,18,13,0.84)",
+      padding: { x: 8, y: 4 },
+    }).setOrigin(0.5).setDepth(2003);
+
+    const setPose = (pose: GoldenPose): void => {
+      const texture = GOLDEN_POSE_TEXTURES[pose];
+      sprite.setTexture(texture).setDisplaySize(pose === "attack" ? 347 : 260, 260);
+      label.setText(pose.toUpperCase());
+      debug.animationProbe.enabled = true;
+      debug.animationProbe.currentPose = pose;
+      debug.animationProbe.currentTexture = texture;
+    };
+    setPose("idle");
+    (window as unknown as {
+      __goldenReferenceControl: { setPose: (pose: GoldenPose) => void };
+    }).__goldenReferenceControl = { setPose };
   }
 }

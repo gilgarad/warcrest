@@ -43,3 +43,42 @@ test("captures old central field and the Day 2 golden reference at the same view
   await oldPage.close();
   await newPage.close();
 });
+
+test("captures atomic pose transitions without interpolation", async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto("/?golden=1&sequence=1");
+  await page.waitForFunction(() => Boolean(
+    (window as unknown as { __goldenReferenceControl?: unknown }).__goldenReferenceControl,
+  ));
+  const sequence = ["idle", "walk-a", "walk-b", "attack", "idle"] as const;
+  const snapshots: Array<{ pose: string; texture: string | null; interpolation: string }> = [];
+  for (const [index, pose] of sequence.entries()) {
+    await page.evaluate((nextPose) => {
+      (window as unknown as {
+        __goldenReferenceControl: { setPose: (pose: string) => void };
+      }).__goldenReferenceControl.setPose(nextPose);
+    }, pose);
+    await page.waitForTimeout(80);
+    const state = await page.evaluate(() => (
+      window as unknown as {
+        __goldenReferenceDebug: GoldenReferenceDebugSnapshot;
+      }
+    ).__goldenReferenceDebug.animationProbe);
+    expect(state.currentPose).toBe(pose);
+    expect(state.currentTexture).toContain(pose === "attack" ? "attack-v2" : pose.replace("-", "-"));
+    expect(state.interpolation).toBe("none-atomic-texture-swap");
+    await page.screenshot({
+      path: `${ARTIFACT_DIR}/pose-transition-${index}-${pose}.png`,
+    });
+    snapshots.push({ pose, texture: state.currentTexture, interpolation: state.interpolation });
+  }
+  writeFileSync(`${ARTIFACT_DIR}/pose-transition-debug.json`, JSON.stringify({ sequence: snapshots }, null, 2));
+});
+
+interface GoldenReferenceDebugSnapshot {
+  animationProbe: {
+    currentPose: string | null;
+    currentTexture: string | null;
+    interpolation: string;
+  };
+}

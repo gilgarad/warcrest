@@ -6,7 +6,7 @@
     { "key": "bronze-spearman-idle", "column": 0, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
     { "key": "bronze-spearman-walk-a", "filename": "prototype-golden-bronze-spearman-walk-a-v2.png", "source": "art-source/golden-reference/prototype-golden-walk-a-alpha-v2.png", "columns": 1, "rows": 1, "column": 0, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
     { "key": "bronze-spearman-walk-b", "filename": "prototype-golden-bronze-spearman-walk-b-v2.png", "source": "art-source/golden-reference/prototype-golden-walk-b-alpha-v2.png", "columns": 1, "rows": 1, "column": 0, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
-    { "key": "bronze-spearman-attack", "column": 0, "row": 1, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "bronze-spearman-attack", "filename": "prototype-golden-bronze-spearman-attack-v2.png", "source": "art-source/golden-reference/prototype-golden-attack-alpha-v2.png", "columns": 1, "rows": 1, "column": 0, "row": 0, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
     { "key": "field-boulder", "column": 1, "row": 1, "canvas": [256, 256], "anchor": [128, 224], "opaqueHeight": 150, "minOpaqueHeight": 110, "maxOpaqueHeight": 200 },
     { "key": "defense-tower", "column": 2, "row": 1, "canvas": [512, 512], "anchor": [256, 448], "opaqueHeight": 360, "minOpaqueHeight": 280, "maxOpaqueHeight": 420 }
   ]

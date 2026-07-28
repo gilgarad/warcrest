@@ -2187,3 +2187,10 @@ Use consistent headings so entries are easy to grep.
 - 승인된 16-state 마스크는 유지하고 논리 경로를 폭 1.8의 cubic Bezier 중심선과 보드 경계 제한 데칼로 다듬었다.
 - 청동창병 WALK A/B를 반대 보폭이 명확한 v2로 교체했다. 큰 체격과 이중 창대가 생긴 WALK B 후보는 폐기하고 단일 직선 창 교정본만 썼다.
 - build, 24 files/87 tests, asset QA 6/6, 골든 Playwright 1/1이 통과했다. 다른 에셋으로 확장하지 않았다.
+
+## [2026-07-28] fix | Golden attack facing and transition audit
+
+- 오른쪽 facing이던 attack을 mirror하지 않고 왼쪽 facing/좌상단 광원으로 재생성했다. 창/방패 손 배치는 유지했다.
+- 단일 스프라이트를 idle -> walk-a -> walk-b -> attack -> idle 순서로 원자적 texture swap하고 5개 프레임을 캡처했다.
+- T자형 곤봉/창대는 재현되지 않았다. tween, blend, 보간 프레임이 없고 현재 자산은 단일 창만 쓴다.
+- build, 24 files/87 tests, asset QA 6/6, Playwright 2/2가 통과했다. Day 3-4 생산은 진행하지 않았다.

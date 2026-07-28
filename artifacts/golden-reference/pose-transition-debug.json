@@ -1,0 +1,29 @@
+{
+  "sequence": [
+    {
+      "pose": "idle",
+      "texture": "prototype-golden-bronze-spearman-idle-v1",
+      "interpolation": "none-atomic-texture-swap"
+    },
+    {
+      "pose": "walk-a",
+      "texture": "prototype-golden-bronze-spearman-walk-a-v2",
+      "interpolation": "none-atomic-texture-swap"
+    },
+    {
+      "pose": "walk-b",
+      "texture": "prototype-golden-bronze-spearman-walk-b-v2",
+      "interpolation": "none-atomic-texture-swap"
+    },
+    {
+      "pose": "attack",
+      "texture": "prototype-golden-bronze-spearman-attack-v2",
+      "interpolation": "none-atomic-texture-swap"
+    },
+    {
+      "pose": "idle",
+      "texture": "prototype-golden-bronze-spearman-idle-v1",
+      "interpolation": "none-atomic-texture-swap"
+    }
+  ]
+}

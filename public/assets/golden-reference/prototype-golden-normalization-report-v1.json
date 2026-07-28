@@ -55,15 +55,15 @@
   },
   {
     "key": "bronze-spearman-attack",
-    "output": "public/assets/golden-reference/prototype-golden-bronze-spearman-attack-v1.png",
+    "output": "public/assets/golden-reference/prototype-golden-bronze-spearman-attack-v2.png",
     "canvas": [
       512,
       384
     ],
     "alphaBbox": [
-      83,
+      60,
       66,
-      429,
+      453,
       336
     ],
     "groundAnchor": [
