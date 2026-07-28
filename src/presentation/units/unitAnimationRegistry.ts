@@ -33,78 +33,44 @@ const frameAspects = (
 const frameHeightRatios = (keys: readonly string[]): Readonly<Record<string, number>> =>
   Object.fromEntries(keys.map((key) => [key, PRODUCTION_VISIBLE_HEIGHT_RATIO]));
 
+function productionAnimation(
+  prefix: string,
+  scaleFactor: number,
+  wideAllFrames = false,
+): UnitAnimationDefinition {
+  const idle = `${prefix}-idle`;
+  const walkA = `${prefix}-walk-a`;
+  const walkB = `${prefix}-walk-b`;
+  const attack = `${prefix}-attack`;
+  const allFrames = [idle, walkA, walkB, attack];
+  return {
+    idle,
+    walkA,
+    walkB,
+    attack: [attack],
+    frameCanvasAspects: wideAllFrames
+      ? frameAspects([], allFrames)
+      : frameAspects([idle, walkA, walkB], [attack]),
+    groundOriginX: PRODUCTION_GROUND_ORIGIN_X,
+    groundOriginY: PRODUCTION_GROUND_ORIGIN_Y,
+    referenceVisibleHeightRatio: PRODUCTION_VISIBLE_HEIGHT_RATIO,
+    frameVisibleHeightRatios: frameHeightRatios(allFrames),
+    scaleFactor,
+    nativeFacingX: -1,
+  };
+}
+
 export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDefinition>> = {
-  stone_slinger: {
-    idle: "stone-slinger-idle",
-    walkA: "stone-slinger-walk-a",
-    walkB: "stone-slinger-walk-b",
-    attack: ["stone-slinger-attack"],
-    frameCanvasAspects: frameAspects(
-      ["stone-slinger-idle", "stone-slinger-walk-a", "stone-slinger-walk-b"],
-      ["stone-slinger-attack"],
-    ),
-    groundOriginX: PRODUCTION_GROUND_ORIGIN_X,
-    groundOriginY: PRODUCTION_GROUND_ORIGIN_Y,
-    referenceVisibleHeightRatio: PRODUCTION_VISIBLE_HEIGHT_RATIO,
-    frameVisibleHeightRatios: frameHeightRatios([
-      "stone-slinger-idle", "stone-slinger-walk-a", "stone-slinger-walk-b", "stone-slinger-attack",
-    ]),
-    scaleFactor: 0.96,
-    nativeFacingX: -1,
-  },
-  stone_axeman: {
-    idle: "stone-axeman-idle",
-    walkA: "stone-axeman-walk-a",
-    walkB: "stone-axeman-walk-b",
-    attack: ["stone-axeman-attack"],
-    frameCanvasAspects: frameAspects(
-      ["stone-axeman-idle", "stone-axeman-walk-a", "stone-axeman-walk-b"],
-      ["stone-axeman-attack"],
-    ),
-    groundOriginX: PRODUCTION_GROUND_ORIGIN_X,
-    groundOriginY: PRODUCTION_GROUND_ORIGIN_Y,
-    referenceVisibleHeightRatio: PRODUCTION_VISIBLE_HEIGHT_RATIO,
-    frameVisibleHeightRatios: frameHeightRatios([
-      "stone-axeman-idle", "stone-axeman-walk-a", "stone-axeman-walk-b", "stone-axeman-attack",
-    ]),
-    scaleFactor: 1.04,
-    nativeFacingX: -1,
-  },
-  supply_wagon: {
-    idle: "supply-wagon-idle",
-    walkA: "supply-wagon-walk-a",
-    walkB: "supply-wagon-walk-b",
-    attack: ["supply-wagon-attack"],
-    frameCanvasAspects: frameAspects([], [
-      "supply-wagon-idle", "supply-wagon-walk-a", "supply-wagon-walk-b", "supply-wagon-attack",
-    ]),
-    groundOriginX: PRODUCTION_GROUND_ORIGIN_X,
-    groundOriginY: PRODUCTION_GROUND_ORIGIN_Y,
-    referenceVisibleHeightRatio: PRODUCTION_VISIBLE_HEIGHT_RATIO,
-    frameVisibleHeightRatios: frameHeightRatios([
-      "supply-wagon-idle", "supply-wagon-walk-a", "supply-wagon-walk-b", "supply-wagon-attack",
-    ]),
-    scaleFactor: 1,
-    nativeFacingX: -1,
-  },
-  bronze_spearman: {
-    idle: "bronze-spearman-idle",
-    walkA: "bronze-spearman-walk-a",
-    walkB: "bronze-spearman-walk-b",
-    attack: ["bronze-spearman-attack"],
-    frameCanvasAspects: frameAspects(
-      ["bronze-spearman-idle", "bronze-spearman-walk-a", "bronze-spearman-walk-b"],
-      ["bronze-spearman-attack"],
-    ),
-    groundOriginX: PRODUCTION_GROUND_ORIGIN_X,
-    groundOriginY: PRODUCTION_GROUND_ORIGIN_Y,
-    referenceVisibleHeightRatio: PRODUCTION_VISIBLE_HEIGHT_RATIO,
-    frameVisibleHeightRatios: frameHeightRatios([
-      "bronze-spearman-idle", "bronze-spearman-walk-a", "bronze-spearman-walk-b", "bronze-spearman-attack",
-    ]),
-    scaleFactor: 1,
-    nativeFacingX: -1,
-  },
+  stone_slinger: productionAnimation("stone-slinger", 0.96),
+  stone_axeman: productionAnimation("stone-axeman", 1.04),
+  supply_wagon: productionAnimation("supply-wagon", 1, true),
+  bronze_swordsman: productionAnimation("bronze-swordsman", 1),
+  bronze_spearman: productionAnimation("bronze-spearman", 1),
+  archer: productionAnimation("archer", 0.96),
+  iron_swordsman: productionAnimation("iron-swordsman", 1.04),
+  iron_spearman: productionAnimation("iron-spearman", 1),
+  musketeer: productionAnimation("musketeer", 0.98),
+  knight: productionAnimation("knight", 1.16, true),
 };
 
 export const UNIT_ANIMATION_ASSETS = Object.values(UNIT_ANIMATION_REGISTRY)

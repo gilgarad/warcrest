@@ -35,4 +35,33 @@ Human review contact sheet:
 
 ## Runtime Integration
 
-Pending in the next commit.
+- `unitAnimationRegistry.ts` now registers all ten roster unit IDs through one
+  shared production animation-definition factory. Infantry use standard idle/
+  walk canvases with wide attack canvases; the supply porter and mounted knight
+  use wide canvases for every pose.
+- `unitStats.ts` points the six new units at their authored idle textures.
+- The scene no longer creates or invokes procedural `token-*` textures. `rg -n
+  "token-" src` returns no matches.
+- The existing combat, economy, roster, and wave values were not changed.
+
+## Runtime Verification
+
+- `npm run build`: pass.
+- `npm test -- --run`: 29 files and 114 tests pass.
+- `npx playwright test tools/validation/day7-5-unit-art.spec.ts --workers=1`:
+  pass (1/1).
+- The Playwright probe spawns one real player wave for each age, checks the
+  exact four-unit roster, and asserts every rendered texture equals an authored
+  idle pose with no token fallback.
+
+Evidence:
+
+- `artifacts/day7-5-unit-art/wave-stone.png`
+- `artifacts/day7-5-unit-art/wave-bronze.png`
+- `artifacts/day7-5-unit-art/wave-iron_early.png`
+- `artifacts/day7-5-unit-art/wave-iron_mid.png`
+- `artifacts/day7-5-unit-art/wave-iron_late.png`
+- `artifacts/day7-5-unit-art/five-age-wave-snapshots.json`
+
+Day 7.5 is complete. The roster has no remaining runtime art placeholders and
+is ready for the Day 8 full regression pass.

@@ -1,0 +1,892 @@
+{
+  "stone": [
+    {
+      "id": 9,
+      "team": "player",
+      "unitId": "stone_slinger",
+      "role": "battle",
+      "progress": 0.5,
+      "laneRow": -3,
+      "hp": 26,
+      "maxHp": 26,
+      "facingX": 1,
+      "flipX": true,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "stone-slinger-idle",
+      "renderTexture": "stone-slinger-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3588.478260869565,
+        "y": 1798.6630956528306,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "투석 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.58,
+        "eventProgress": 0.42,
+        "targetKind": "unit",
+        "eventDelayMs": 243.6
+      }
+    },
+    {
+      "id": 10,
+      "team": "player",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.5,
+      "laneRow": 0,
+      "hp": 34,
+      "maxHp": 34,
+      "facingX": 1,
+      "flipX": true,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "stone-axeman-idle",
+      "renderTexture": "stone-axeman-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3675.4347826086955,
+        "y": 1963.7154955577594,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
+    },
+    {
+      "id": 11,
+      "team": "player",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "progress": 0.5,
+      "laneRow": 3,
+      "hp": 34,
+      "maxHp": 34,
+      "facingX": -1,
+      "flipX": false,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "stone-axeman-idle",
+      "renderTexture": "stone-axeman-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3762.391304347826,
+        "y": 2126.6443100048054,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
+    },
+    {
+      "id": 12,
+      "team": "player",
+      "unitId": "supply_wagon",
+      "role": "support",
+      "progress": 0.48,
+      "laneRow": 0,
+      "hp": 54,
+      "maxHp": 54,
+      "facingX": -1,
+      "flipX": false,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "supply-wagon-idle",
+      "renderTexture": "supply-wagon-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 18,
+      "manaMax": 18,
+      "manaRegenPerSec": 1.25,
+      "healManaCost": 6,
+      "healPower": 4,
+      "presentation": {
+        "x": 3579.782608695652,
+        "y": 2013.7586383951987,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": true,
+        "labelVisible": true,
+        "labelText": "보급 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.66,
+        "eventProgress": 0.52,
+        "targetKind": "unit",
+        "eventDelayMs": 343.2
+      }
+    }
+  ],
+  "bronze": [
+    {
+      "id": 13,
+      "team": "player",
+      "unitId": "stone_slinger",
+      "role": "battle",
+      "progress": 0.5,
+      "laneRow": -3,
+      "hp": 26,
+      "maxHp": 26,
+      "facingX": 1,
+      "flipX": true,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "stone-slinger-idle",
+      "renderTexture": "stone-slinger-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3588.700755256175,
+        "y": 1798.2146780502683,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "투석 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.58,
+        "eventProgress": 0.42,
+        "targetKind": "unit",
+        "eventDelayMs": 243.6
+      }
+    },
+    {
+      "id": 14,
+      "team": "player",
+      "unitId": "bronze_swordsman",
+      "role": "battle",
+      "progress": 0.5,
+      "laneRow": 0,
+      "hp": 42,
+      "maxHp": 42,
+      "facingX": 1,
+      "flipX": true,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "bronze-swordsman-idle",
+      "renderTexture": "bronze-swordsman-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3675.6572769953054,
+        "y": 1963.3742420711108,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "청동검 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
+    },
+    {
+      "id": 15,
+      "team": "player",
+      "unitId": "bronze_spearman",
+      "role": "battle",
+      "progress": 0.5,
+      "laneRow": 3,
+      "hp": 38,
+      "maxHp": 38,
+      "facingX": -1,
+      "flipX": false,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "bronze-spearman-idle",
+      "renderTexture": "bronze-spearman-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3762.613798734436,
+        "y": 2128.47448143151,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "청동창 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
+    },
+    {
+      "id": 16,
+      "team": "player",
+      "unitId": "supply_wagon",
+      "role": "support",
+      "progress": 0.48,
+      "laneRow": 0,
+      "hp": 54,
+      "maxHp": 54,
+      "facingX": 1,
+      "flipX": true,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "supply-wagon-idle",
+      "renderTexture": "supply-wagon-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 18,
+      "manaMax": 18,
+      "manaRegenPerSec": 1.25,
+      "healManaCost": 6,
+      "healPower": 4,
+      "presentation": {
+        "x": 3580.005103082262,
+        "y": 2013.4456355879865,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": true,
+        "labelVisible": true,
+        "labelText": "보급 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.66,
+        "eventProgress": 0.52,
+        "targetKind": "unit",
+        "eventDelayMs": 343.2
+      }
+    }
+  ],
+  "iron_early": [
+    {
+      "id": 17,
+      "team": "player",
+      "unitId": "stone_slinger",
+      "role": "battle",
+      "progress": 0.5,
+      "laneRow": -3,
+      "hp": 26,
+      "maxHp": 26,
+      "facingX": 1,
+      "flipX": true,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "stone-slinger-idle",
+      "renderTexture": "stone-slinger-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3588.700755256175,
+        "y": 1798.139556059152,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "투석 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.58,
+        "eventProgress": 0.42,
+        "targetKind": "unit",
+        "eventDelayMs": 243.6
+      }
+    },
+    {
+      "id": 18,
+      "team": "player",
+      "unitId": "archer",
+      "role": "battle",
+      "progress": 0.5,
+      "laneRow": 0,
+      "hp": 30,
+      "maxHp": 30,
+      "facingX": 1,
+      "flipX": true,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "archer-idle",
+      "renderTexture": "archer-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3675.6572769953054,
+        "y": 1963.350094706308,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "활 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.58,
+        "eventProgress": 0.42,
+        "targetKind": "unit",
+        "eventDelayMs": 243.6
+      }
+    },
+    {
+      "id": 19,
+      "team": "player",
+      "unitId": "iron_swordsman",
+      "role": "battle",
+      "progress": 0.5,
+      "laneRow": 3,
+      "hp": 54,
+      "maxHp": 54,
+      "facingX": -1,
+      "flipX": false,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "iron-swordsman-idle",
+      "renderTexture": "iron-swordsman-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3762.613798734436,
+        "y": 2128.581275006718,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "철검 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
+    },
+    {
+      "id": 20,
+      "team": "player",
+      "unitId": "supply_wagon",
+      "role": "support",
+      "progress": 0.48,
+      "laneRow": 0,
+      "hp": 54,
+      "maxHp": 54,
+      "facingX": 1,
+      "flipX": true,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "supply-wagon-idle",
+      "renderTexture": "supply-wagon-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 18,
+      "manaMax": 18,
+      "manaRegenPerSec": 1.25,
+      "healManaCost": 6,
+      "healPower": 4,
+      "presentation": {
+        "x": 3580.005103082262,
+        "y": 2012.9371206904846,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": true,
+        "labelVisible": true,
+        "labelText": "보급 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.66,
+        "eventProgress": 0.52,
+        "targetKind": "unit",
+        "eventDelayMs": 343.2
+      }
+    }
+  ],
+  "iron_mid": [
+    {
+      "id": 21,
+      "team": "player",
+      "unitId": "archer",
+      "role": "battle",
+      "progress": 0.5,
+      "laneRow": -3,
+      "hp": 30,
+      "maxHp": 30,
+      "facingX": 1,
+      "flipX": true,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "archer-idle",
+      "renderTexture": "archer-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3588.700755256175,
+        "y": 1797.7083244668502,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "활 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.58,
+        "eventProgress": 0.42,
+        "targetKind": "unit",
+        "eventDelayMs": 243.6
+      }
+    },
+    {
+      "id": 22,
+      "team": "player",
+      "unitId": "iron_swordsman",
+      "role": "battle",
+      "progress": 0.5,
+      "laneRow": 0,
+      "hp": 54,
+      "maxHp": 54,
+      "facingX": 1,
+      "flipX": true,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "iron-swordsman-idle",
+      "renderTexture": "iron-swordsman-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3675.6572769953054,
+        "y": 1963.3838780182148,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "철검 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
+    },
+    {
+      "id": 23,
+      "team": "player",
+      "unitId": "iron_spearman",
+      "role": "battle",
+      "progress": 0.5,
+      "laneRow": 3,
+      "hp": 50,
+      "maxHp": 50,
+      "facingX": -1,
+      "flipX": false,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "iron-spearman-idle",
+      "renderTexture": "iron-spearman-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3762.613798734436,
+        "y": 2128.618464855844,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "철창 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
+    },
+    {
+      "id": 24,
+      "team": "player",
+      "unitId": "supply_wagon",
+      "role": "support",
+      "progress": 0.48,
+      "laneRow": 0,
+      "hp": 54,
+      "maxHp": 54,
+      "facingX": 1,
+      "flipX": true,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "supply-wagon-idle",
+      "renderTexture": "supply-wagon-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 18,
+      "manaMax": 18,
+      "manaRegenPerSec": 1.25,
+      "healManaCost": 6,
+      "healPower": 4,
+      "presentation": {
+        "x": 3580.005103082262,
+        "y": 2013.1846915180774,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": true,
+        "labelVisible": true,
+        "labelText": "보급 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.66,
+        "eventProgress": 0.52,
+        "targetKind": "unit",
+        "eventDelayMs": 343.2
+      }
+    }
+  ],
+  "iron_late": [
+    {
+      "id": 25,
+      "team": "player",
+      "unitId": "archer",
+      "role": "battle",
+      "progress": 0.5,
+      "laneRow": -3,
+      "hp": 30,
+      "maxHp": 30,
+      "facingX": 1,
+      "flipX": true,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "archer-idle",
+      "renderTexture": "archer-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3588.700755256175,
+        "y": 1798.2267124223251,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "활 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.58,
+        "eventProgress": 0.42,
+        "targetKind": "unit",
+        "eventDelayMs": 243.6
+      }
+    },
+    {
+      "id": 26,
+      "team": "player",
+      "unitId": "knight",
+      "role": "battle",
+      "progress": 0.5,
+      "laneRow": 0,
+      "hp": 72,
+      "maxHp": 72,
+      "facingX": 1,
+      "flipX": true,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "knight-idle",
+      "renderTexture": "knight-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3675.6572769953054,
+        "y": 1962.9740565664424,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "기사 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
+    },
+    {
+      "id": 27,
+      "team": "player",
+      "unitId": "musketeer",
+      "role": "battle",
+      "progress": 0.5,
+      "laneRow": 3,
+      "hp": 36,
+      "maxHp": 36,
+      "facingX": -1,
+      "flipX": false,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "musketeer-idle",
+      "renderTexture": "musketeer-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3762.613798734436,
+        "y": 2128.143168639297,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "머스킷 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.58,
+        "eventProgress": 0.42,
+        "targetKind": "unit",
+        "eventDelayMs": 243.6
+      }
+    },
+    {
+      "id": 28,
+      "team": "player",
+      "unitId": "supply_wagon",
+      "role": "support",
+      "progress": 0.48,
+      "laneRow": 0,
+      "hp": 54,
+      "maxHp": 54,
+      "facingX": 1,
+      "flipX": true,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "supply-wagon-idle",
+      "renderTexture": "supply-wagon-idle",
+      "attackAnimTime": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 18,
+      "manaMax": 18,
+      "manaRegenPerSec": 1.25,
+      "healManaCost": 6,
+      "healPower": 4,
+      "presentation": {
+        "x": 3580.005103082262,
+        "y": 2013.106863539664,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": true,
+        "labelVisible": true,
+        "labelText": "보급 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.66,
+        "eventProgress": 0.52,
+        "targetKind": "unit",
+        "eventDelayMs": 343.2
+      }
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { AGES, getAge } from "../data/ages";
+import { AGES, getAge, type AgeId } from "../data/ages";
 import {
   BASE_WORKER_COST,
   AI_INSTANT_WAVE_MIN_REMAINING_SEC,
@@ -171,7 +171,6 @@ const DEFAULT_VERIFICATION_SEED = "warcrest-central-v1";
 const QUERY_PARAMS = new URLSearchParams(window.location.search);
 const FACING_DEAD_ZONE_WORLD_PX = 0.35;
 
-type UnitTextureKey = string;
 
 interface LaneUnit {
   id: number;
@@ -387,7 +386,6 @@ export class LaneBattleScene extends Phaser.Scene {
     const initialFocus = this.progressToScreen(initialProgress, 0);
     this.cameras.main.centerOn(initialFocus.x, initialFocus.y);
 
-    this.createUnitTokenTextures();
     this.createUiIconTextures();
 
     this.player = createTeamState("player", makeResourceMap(60, 40, 18, 18), PLAYER_BASE_HP);
@@ -433,58 +431,6 @@ export class LaneBattleScene extends Phaser.Scene {
     this.refreshUi();
     this.publishDebug();
     this.updateAudioDebugOverlay();
-  }
-
-  private createUnitTokenTextures(): void {
-    if (this.textures.exists("token-axe")) return;
-
-    const defs: Array<{ key: UnitTextureKey; draw: (g: Phaser.GameObjects.Graphics) => void }> = [
-      {
-        key: "token-axe",
-        draw: (g) => {
-          g.fillStyle(0xffffff, 1).fillCircle(24, 24, 12);
-          g.fillTriangle(15, 14, 33, 24, 15, 34);
-        },
-      },
-      {
-        key: "token-spear",
-        draw: (g) => {
-          g.fillStyle(0xffffff, 1).fillRoundedRect(13, 14, 22, 20, 7);
-          g.lineStyle(4, 0xffffff, 1).beginPath().moveTo(24, 10).lineTo(24, 36).strokePath();
-        },
-      },
-      {
-        key: "token-ranged",
-        draw: (g) => {
-          g.fillStyle(0xffffff, 1).fillCircle(24, 24, 11);
-          g.fillTriangle(12, 24, 34, 14, 34, 34);
-        },
-      },
-      {
-        key: "token-elite",
-        draw: (g) => {
-          g.fillStyle(0xffffff, 1).fillCircle(24, 24, 13);
-          g.fillStyle(0xffffff, 1).fillTriangle(24, 7, 14, 24, 34, 24);
-          g.fillRect(21, 24, 6, 11);
-        },
-      },
-      {
-        key: "token-support",
-        draw: (g) => {
-          g.fillStyle(0xffffff, 1).fillRoundedRect(12, 16, 24, 16, 5);
-          g.fillCircle(16, 34, 4);
-          g.fillCircle(32, 34, 4);
-          g.lineStyle(3, 0xffffff, 1).beginPath().moveTo(24, 10).lineTo(24, 24).moveTo(17, 17).lineTo(31, 17).strokePath();
-        },
-      },
-    ];
-
-    defs.forEach(({ key, draw }) => {
-      const g = this.make.graphics({ x: 0, y: 0 }, false);
-      draw(g);
-      g.generateTexture(key, 48, 48);
-      g.destroy();
-    });
   }
 
   private createUiIconTextures(): void {
@@ -633,6 +579,20 @@ export class LaneBattleScene extends Phaser.Scene {
       keyboard.on("keydown-T", cycleTerrainMode);
       this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => keyboard.off("keydown-T", cycleTerrainMode));
     }
+
+    const prepareAgeWaveProbe = (ageId: AgeId) => {
+      this.units.forEach((unit) => this.destroyUnitPresentation(unit));
+      this.units = [];
+      this.player.ageId = ageId;
+      this.spawnWaveUnits(this.player, getWaveRoster(ageId), 0.5);
+      this.units.forEach((unit) => {
+        unit.attackTimerSec = 10;
+        this.syncUnitPresentation(unit);
+      });
+      const focus = this.progressToScreen(0.5, 0);
+      this.cameras.main.centerOn(focus.x, focus.y);
+      this.publishDebug();
+    };
 
     const control = {
       setEnabled: (enabled: boolean) => this.setTerrainMode(enabled ? "prototype" : "legacy", false),
@@ -786,19 +746,8 @@ export class LaneBattleScene extends Phaser.Scene {
         this.cameras.main.centerOn(focus.x, focus.y);
         this.publishDebug();
       },
-      prepareBronzeWaveProbe: () => {
-        this.units.forEach((unit) => this.destroyUnitPresentation(unit));
-        this.units = [];
-        this.player.ageId = "bronze";
-        this.spawnWaveUnits(this.player, getWaveRoster("bronze"), 0.5);
-        this.units.forEach((unit) => {
-          unit.attackTimerSec = 10;
-          this.syncUnitPresentation(unit);
-        });
-        const focus = this.progressToScreen(0.5, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
-        this.publishDebug();
-      },
+      prepareAgeWaveProbe,
+      prepareBronzeWaveProbe: () => prepareAgeWaveProbe("bronze"),
       prepareTowerVolleyProbe: () => {
         this.units.forEach((unit) => this.destroyUnitPresentation(unit));
         this.units = [];

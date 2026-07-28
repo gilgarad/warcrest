@@ -10,7 +10,10 @@ import {
 } from "../unitAnimationRegistry";
 
 describe("unit animation registry", () => {
-  it.each(["stone_axeman", "stone_slinger", "supply_wagon", "bronze_spearman"] as const)(
+  it.each([
+    "stone_axeman", "stone_slinger", "supply_wagon", "bronze_swordsman", "bronze_spearman",
+    "archer", "iron_swordsman", "iron_spearman", "musketeer", "knight",
+  ] as const)(
     "%s uses the shared normalized animation contract",
     (unitId) => {
       const definition = getUnitAnimationDefinition(unitId);
@@ -34,6 +37,21 @@ describe("unit animation registry", () => {
     expect(resolveUnitAnimationTexture("bronze_spearman", false, 0, 0)).toBe("bronze-spearman-idle");
     expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === "bronze-spearman-attack")).toBe(true);
     expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === "bronze-spearman-attack-enemy")).toBe(true);
+  });
+
+  it.each([
+    ["bronze_swordsman", "bronze-swordsman"],
+    ["archer", "archer"],
+    ["iron_swordsman", "iron-swordsman"],
+    ["iron_spearman", "iron-spearman"],
+    ["musketeer", "musketeer"],
+    ["knight", "knight"],
+  ] as const)("registers production poses for %s", (unitId, prefix) => {
+    expect(resolveUnitAnimationTexture(unitId, false, 0, 0)).toBe(`${prefix}-idle`);
+    expect(resolveUnitAnimationTexture(unitId, true, 1, 0)).toBe(`${prefix}-walk-a`);
+    expect(resolveUnitAnimationTexture(unitId, true, -1, 0)).toBe(`${prefix}-walk-b`);
+    expect(resolveUnitAnimationTexture(unitId, false, 0, 0.5)).toBe(`${prefix}-attack`);
+    expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === `${prefix}-attack-enemy`)).toBe(true);
   });
 
   it("records per-frame visible heights for scale normalization", () => {
