@@ -4,8 +4,6 @@ import {
   BASE_WORKER_COST,
   AI_INSTANT_WAVE_MIN_REMAINING_SEC,
   getAgeBalance,
-  getOpponentScale,
-  INSTANT_WAVE_TOKEN_COOLDOWN_AFTER_WAVE_SEC,
   RESEARCH_WORKER_CONVERSION,
   RESEARCH_WORKER_DIRECT_COST,
   WAVE_INTERVAL_SEC,
@@ -98,6 +96,14 @@ import {
   type TeamState,
   type WorkerRole,
 } from "../systems/lane-economy/laneEconomy";
+import {
+  commitWaveDeployment,
+  createWaveDeploymentPlan,
+  getInstantWaveEligibility,
+  resetWaveClock,
+  shouldAiUseInstantWave,
+  tickWaveClock,
+} from "../systems/lane-economy/laneWaveRules";
 import {
   BUILDING_DEFINITIONS,
   DISMANTLE_COST_GOLD,
@@ -1235,14 +1241,9 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private tickAi(deltaSec: number): void {
-    this.enemy.nextWaveInSec -= deltaSec;
-    this.enemy.lastWaveElapsedSec += deltaSec;
+    tickWaveClock(this.enemy, deltaSec);
     if (this.shouldAiAgeUp()) this.advanceAge(this.enemy);
-    if (
-      this.enemy.instantWaveTokens > 0
-      && this.enemy.lastWaveElapsedSec >= INSTANT_WAVE_TOKEN_COOLDOWN_AFTER_WAVE_SEC
-      && this.enemy.nextWaveInSec > AI_INSTANT_WAVE_MIN_REMAINING_SEC
-    ) {
+    if (shouldAiUseInstantWave(this.enemy, AI_INSTANT_WAVE_MIN_REMAINING_SEC)) {
       this.tryUseInstantWaveToken(this.enemy);
     }
   }
@@ -1252,13 +1253,11 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private tickWaves(deltaSec: number): void {
-    const previousPlayerWaveSec = this.player.nextWaveInSec;
-    this.player.nextWaveInSec -= deltaSec;
-    this.player.lastWaveElapsedSec += deltaSec;
-    if (previousPlayerWaveSec > 10 && this.player.nextWaveInSec <= 10) {
+    const playerClock = tickWaveClock(this.player, deltaSec);
+    if (playerClock.prepareWarning) {
       this.audio.playSfx("sfx.wave.prepare", { eventKey: `wave:prepare:${Math.floor(this.elapsedSec)}` });
     }
-    if (this.player.nextWaveInSec <= 0) this.trySpawnWave(this.player, false);
+    if (playerClock.due) this.trySpawnWave(this.player, false);
     if (this.enemy.nextWaveInSec <= 0) this.trySpawnWave(this.enemy, false);
   }
 
@@ -2311,21 +2310,16 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private trySpawnWave(team: TeamState, forced: boolean): boolean {
-    const roster = getWaveRoster(team.ageId);
-    const ageBalance = getAgeBalance(team.ageId);
-    const scale = getOpponentScale(PLAYER_OPPONENT_COUNT);
-    const foodCost = Math.round(ageBalance.baseWaveFoodCost * scale.foodCostMultiplier);
-    if (team.resources.food < foodCost) {
+    const plan = createWaveDeploymentPlan(team, PLAYER_OPPONENT_COUNT);
+    if (!plan.canDeploy) {
       if (team.id === "player") this.hud.setInfo("식량 부족으로 웨이브 출전 실패");
       if (team.id === "player") this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "wave:food-shortage" });
-      team.nextWaveInSec = WAVE_INTERVAL_SEC;
+      resetWaveClock(team);
       return false;
     }
 
-    team.resources.food -= foodCost;
-    team.nextWaveInSec = WAVE_INTERVAL_SEC;
-    team.lastWaveElapsedSec = 0;
-    this.spawnWaveUnits(team, roster);
+    commitWaveDeployment(team, plan.foodCost);
+    this.spawnWaveUnits(team, plan.roster);
 
     if (team.id === "player") this.hud.setInfo(forced ? "즉시 웨이브를 투입했습니다" : "정규 웨이브가 출전했습니다");
     if (team.id === "player") {
@@ -2338,8 +2332,7 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private deployOpeningWave(team: TeamState): void {
     this.spawnWaveUnits(team, getWaveRoster(team.ageId), team.id === "player" ? 0.12 : 0.88);
-    team.nextWaveInSec = WAVE_INTERVAL_SEC;
-    team.lastWaveElapsedSec = 0;
+    resetWaveClock(team);
     if (team.id === "player") {
       this.audio.playSfx("sfx.wave.start", { eventKey: "wave:opening" });
       this.audio.setDirectorState("battle-low");
@@ -2813,12 +2806,13 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private tryUseInstantWaveToken(team: TeamState): void {
-    if (team.instantWaveTokens <= 0) {
+    const eligibility = getInstantWaveEligibility(team);
+    if (eligibility === "no-token") {
       if (team.id === "player") this.hud.setInfo("즉시 웨이브 토큰이 없습니다");
       if (team.id === "player") this.audio.playSfx("sfx.ui.hireFail", { eventKey: "wave:instant:no-token" });
       return;
     }
-    if (team.lastWaveElapsedSec < INSTANT_WAVE_TOKEN_COOLDOWN_AFTER_WAVE_SEC) {
+    if (eligibility === "cooldown") {
       if (team.id === "player") this.hud.setInfo("직전 웨이브 후 10초 뒤 사용 가능");
       if (team.id === "player") this.audio.playSfx("sfx.ui.cancel", { eventKey: "wave:instant:cooldown" });
       return;

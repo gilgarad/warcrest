@@ -124,3 +124,20 @@ visibility.
 - `npm run build`: passed.
 - `npm test`: 20 files, 80 tests passed.
 - Playwright: audio integration plus capture-point distinction, 5 tests passed.
+
+## 2026-07-28 - Stage 1.2f: wave lifecycle rules
+
+Extracted `src/systems/lane-economy/laneWaveRules.ts`. It owns player/enemy
+wave-clock mutation, the ten-second prepare crossing, age/opponent-scaled food
+cost planning, deployment commit/reset, instant-token eligibility, and the AI
+instant-wave gate. The scene retains unit spawning, player messages, and audio
+feedback.
+
+Three tests cover threshold crossing, food-backed deployment state, and token
+cooldown branches. The extraction preserves the 30-second interval and all
+existing costs and thresholds.
+
+- `LaneBattleScene.ts`: 3,145 -> 3,139 lines (the main gain is rule ownership,
+  not line count, because orchestration remains explicit).
+- `npm run build`: passed.
+- `npm test`: 21 files, 83 tests passed.
