@@ -43,17 +43,6 @@ export const CAPTURE_POINT_DEFINITIONS: readonly CapturePointDefinition[] = [
   },
   {
     id: 1,
-    progress: 0.588,
-    pointType: "fixed-fortress",
-    allowedBuildingTypes: ["watchtower"],
-    initialBuilding: "fixed-fortress",
-    canDemolish: false,
-    canRepair: true,
-    canRebuild: true,
-    canReplaceBuilding: false,
-  },
-  {
-    id: 2,
     progress: 0.767,
     pointType: "buildable",
     allowedBuildingTypes: ["watchtower", "supply_depot", "mint"],

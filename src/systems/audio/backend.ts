@@ -279,7 +279,7 @@ export class WebAudioBackend implements AudioBackend {
     filter.connect(master);
 
     const profile = this.getScoreProfile(asset.id, asset.synth.frequency);
-    const sources = new Set<OscillatorNode>();
+    const sources = new Set<AudioScheduledSourceNode>();
     let nextStepAt = ctx.currentTime + 0.05;
     let step = 0;
     let playing = true;
@@ -362,18 +362,18 @@ export class WebAudioBackend implements AudioBackend {
         };
       case "bgm.battle.low":
         return {
-          root, beatSec: 0.36, phraseSteps: 48,
-          bass: [0, 0, 3, 0, 5, 3, 7, 5, 0, 3, 5, 7, 8, 7, 5, 3],
-          lead: [12, 10, 12, 15, 17, 15, 12, 10, 14, 15, 17, 19, 17, 15, 14, 12],
-          chord: [[0, 3, 7], [0, 3, 8], [3, 7, 10], [5, 8, 12], [0, 5, 10], [3, 8, 12], [5, 10, 15], [7, 12, 15]],
+          root, beatSec: 0.4, phraseSteps: 48,
+          bass: [0, 0, -2, 0, -5, -5, -7, -5, 0, -2, -5, -7, -8, -7, -5, -2],
+          lead: [12, 10, 7, 10, 12, 15, 14, 10, 12, 10, 8, 7, 5, 7, 10, 12],
+          chord: [[0, 3, 7], [-2, 2, 7], [-5, -2, 3], [-7, -4, 0], [0, 3, 8], [-2, 3, 7], [-5, 0, 3], [-7, -2, 2]],
           pulseEvery: 4, stringsEvery: 4, brassEvery: 8, percussionEvery: 4, tension: 0.68,
         };
       case "bgm.battle.high":
         return {
-          root, beatSec: 0.27, phraseSteps: 48,
-          bass: [0, 0, 3, 5, 7, 5, 8, 7, 0, 3, 5, 7, 10, 8, 7, 5],
-          lead: [12, 15, 17, 19, 17, 22, 19, 24, 15, 17, 19, 22, 24, 22, 19, 17],
-          chord: [[0, 3, 7], [3, 7, 10], [5, 8, 12], [7, 10, 14], [8, 12, 15], [10, 14, 17], [7, 12, 15], [5, 10, 14]],
+          root, beatSec: 0.3, phraseSteps: 48,
+          bass: [0, -2, 0, 3, -5, -2, -7, -5, 0, 3, 5, 3, -2, -5, -7, -2],
+          lead: [12, 15, 14, 19, 17, 15, 22, 19, 15, 17, 19, 22, 20, 19, 17, 14],
+          chord: [[0, 3, 7], [-2, 2, 7], [-5, 0, 3], [-7, -4, 0], [3, 7, 10], [5, 8, 12], [-2, 3, 7], [0, 3, 8]],
           pulseEvery: 2, stringsEvery: 2, brassEvery: 4, percussionEvery: 2, tension: 1,
         };
       case "bgm.victory":
@@ -398,7 +398,7 @@ export class WebAudioBackend implements AudioBackend {
   private scheduleScoreStep(
     ctx: AudioContext,
     destination: AudioNode,
-    sources: Set<OscillatorNode>,
+    sources: Set<AudioScheduledSourceNode>,
     profile: ReturnType<WebAudioBackend["getScoreProfile"]>,
     time: number,
     step: number,
@@ -436,12 +436,44 @@ export class WebAudioBackend implements AudioBackend {
       oscillator.stop(time + duration + 0.02);
       sources.add(oscillator);
     };
+    const scheduleNoise = (duration: number, gainValue: number, cutoff: number) => {
+      const frameCount = Math.max(1, Math.floor(ctx.sampleRate * duration));
+      const buffer = ctx.createBuffer(1, frameCount, ctx.sampleRate);
+      const samples = buffer.getChannelData(0);
+      let seed = (step + 1) * 2654435761;
+      for (let index = 0; index < samples.length; index += 1) {
+        seed = (seed * 1664525 + 1013904223) >>> 0;
+        samples[index] = ((seed / 0xffffffff) * 2 - 1) * (1 - index / samples.length);
+      }
+      const source = ctx.createBufferSource();
+      const filter = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+      source.buffer = buffer;
+      filter.type = "bandpass";
+      filter.frequency.value = cutoff;
+      filter.Q.value = 0.7;
+      gain.gain.setValueAtTime(0.0001, time);
+      gain.gain.exponentialRampToValueAtTime(Math.max(0.001, gainValue), time + 0.004);
+      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(destination);
+      source.onended = () => sources.delete(source);
+      source.start(time);
+      source.stop(time + duration + 0.01);
+      sources.add(source);
+    };
 
     const phraseStep = step % profile.phraseSteps;
     const section = Math.floor(phraseStep / Math.max(1, profile.phraseSteps / 4));
-    const rise = 1 + section * profile.tension * 0.08;
+    const phraseArc = [0.82, 0.96, 1.1, 1.24][section] ?? 1;
+    const rise = phraseArc * (1 + section * profile.tension * 0.08);
     const bassInterval = profile.bass[phraseStep % profile.bass.length];
     scheduleTone(profile.root / 4 * ratio(bassInterval), profile.beatSec * 0.96, 0.07 * rise, "triangle", 0.035);
+    if (phraseStep % 8 === 0) {
+      scheduleTone(profile.root / 8, profile.beatSec * 9.5, 0.032 * rise, "sine", 0.35);
+      scheduleTone(profile.root / 4, profile.beatSec * 8.5, 0.014 * rise, "triangle", 0.28);
+    }
 
     if (phraseStep % profile.stringsEvery === 0) {
       const chord = profile.chord[Math.floor(phraseStep / profile.stringsEvery) % profile.chord.length];
@@ -452,21 +484,22 @@ export class WebAudioBackend implements AudioBackend {
       });
     }
 
-    if (phraseStep % 2 === 0 && (section > 0 || profile.tension >= 0.6)) {
+    if (phraseStep % 2 === 0 && (section > 0 || profile.tension >= 0.95)) {
       const leadInterval = profile.lead[Math.floor(phraseStep / 2) % profile.lead.length];
       scheduleTone(profile.root * ratio(leadInterval), profile.beatSec * 1.45, 0.022 * rise, "triangle", 0.045);
     }
 
-    if (profile.brassEvery > 0 && phraseStep % profile.brassEvery === 0) {
+    if (profile.brassEvery > 0 && section >= 1 && phraseStep % profile.brassEvery === 0) {
       const brassInterval = profile.bass[Math.floor(phraseStep / profile.brassEvery) % profile.bass.length];
       const brassRoot = profile.root / 2 * ratio(brassInterval);
       scheduleTone(brassRoot, profile.beatSec * profile.brassEvery * 0.82, 0.024 * rise, "sawtooth", 0.14);
       scheduleTone(brassRoot * 1.5, profile.beatSec * profile.brassEvery * 0.68, 0.011 * rise, "triangle", 0.12);
     }
 
-    if (profile.percussionEvery > 0 && phraseStep % profile.percussionEvery === 0) {
+    if (profile.percussionEvery > 0 && (section >= 2 || profile.tension >= 0.95) && phraseStep % profile.percussionEvery === 0) {
       const thump = profile.root * (profile.tension >= 0.8 ? 0.72 : 0.58);
       scheduleTone(thump, profile.beatSec * 0.42, 0.038 * profile.tension, "sine", 0.004, thump * 0.44);
+      scheduleNoise(profile.beatSec * 0.32, 0.015 * rise, section >= 3 ? 1200 : 760);
     }
 
     if (profile.pulseEvery > 0 && phraseStep % profile.pulseEvery === profile.pulseEvery - 1) {

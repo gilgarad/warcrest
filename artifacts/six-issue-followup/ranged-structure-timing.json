@@ -1,0 +1,16 @@
+{
+  "hpBefore": 130,
+  "hpAfter": 123,
+  "projectileAtRelease": [
+    {
+      "textureKey": "projectile-stone",
+      "x": 4723.526100557534,
+      "y": 1290.9472697360645
+    },
+    {
+      "textureKey": "projectile-stone",
+      "x": 4759.269295001979,
+      "y": 1293.8688742046254
+    }
+  ]
+}

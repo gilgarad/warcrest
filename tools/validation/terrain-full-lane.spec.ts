@@ -95,7 +95,7 @@ test(`captures the ${CAPTURE_PHASE} full-lane terrain state without changing gam
   expect(verification.terrain.mapSpecId).toBe("warcrest-full-lane-hybrid-v1");
   expect(verification.terrain.patchCount).toBe(4);
   expect(verification.terrain.cellCount).toBeGreaterThan(300);
-  expect(verification.terrain.structureSocketCount).toBe(3);
+  expect(verification.terrain.structureSocketCount).toBe(2);
   expect(errors).toEqual([]);
 
   await page.screenshot({ path: `${ARTIFACT_DIR}/${CAPTURE_PHASE}-central.png` });

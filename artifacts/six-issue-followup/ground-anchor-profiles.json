@@ -1,0 +1,74 @@
+[
+  {
+    "id": "rock-west-ridge",
+    "groundOriginY": 0.884,
+    "shadow": {
+      "offsetX": 4,
+      "offsetY": 2,
+      "widthScale": 0.92,
+      "heightScale": 0.5,
+      "rotationRad": -0.08,
+      "alpha": 0.3
+    }
+  },
+  {
+    "id": "trees-west-south",
+    "groundOriginY": 0.902,
+    "shadow": {
+      "offsetX": 7,
+      "offsetY": 3,
+      "widthScale": 0.84,
+      "heightScale": 0.52,
+      "rotationRad": -0.1,
+      "alpha": 0.34
+    }
+  },
+  {
+    "id": "rock-central-north",
+    "groundOriginY": 0.884,
+    "shadow": {
+      "offsetX": 4,
+      "offsetY": 2,
+      "widthScale": 0.92,
+      "heightScale": 0.5,
+      "rotationRad": -0.08,
+      "alpha": 0.3
+    }
+  },
+  {
+    "id": "trees-central-south",
+    "groundOriginY": 0.902,
+    "shadow": {
+      "offsetX": 7,
+      "offsetY": 3,
+      "widthScale": 0.84,
+      "heightScale": 0.52,
+      "rotationRad": -0.1,
+      "alpha": 0.34
+    }
+  },
+  {
+    "id": "rock-east-south",
+    "groundOriginY": 0.884,
+    "shadow": {
+      "offsetX": 4,
+      "offsetY": 2,
+      "widthScale": 0.92,
+      "heightScale": 0.5,
+      "rotationRad": -0.08,
+      "alpha": 0.3
+    }
+  },
+  {
+    "id": "trees-east-ridge",
+    "groundOriginY": 0.902,
+    "shadow": {
+      "offsetX": 7,
+      "offsetY": 3,
+      "widthScale": 0.84,
+      "heightScale": 0.52,
+      "rotationRad": -0.1,
+      "alpha": 0.34
+    }
+  }
+]

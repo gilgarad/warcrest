@@ -2,11 +2,11 @@ import { expect, test } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/capture-point-distinction";
-const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-capture-distinction-v1";
+const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-capture-layout-v2";
 
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 
-test("fixed fortress is visually distinct and exposes only fortress maintenance on actual click", async ({ page }) => {
+test("removes the unordered central fortress and keeps two distant buildable points clickable", async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(GAME_URL);
   const canvas = page.locator("canvas");
@@ -20,66 +20,57 @@ test("fixed fortress is visually distinct and exposes only fortress maintenance 
     (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
   ));
   await page.evaluate(() => {
-    const control = (window as unknown as {
-      __terrainPrototypeControl: {
-        selectCapturePoint: (id: number) => void;
-        prepareCapturePointInteraction: (id: number, hpRatio: number) => void;
-      };
-    }).__terrainPrototypeControl;
-    control.selectCapturePoint(0);
-    control.prepareCapturePointInteraction(1, 0.5);
+    (window as unknown as {
+      __terrainPrototypeControl: { prepareCaptureLayoutProbe: () => void };
+    }).__terrainPrototypeControl.prepareCaptureLayoutProbe();
   });
-  await clickLogical(800, 450);
-  const fixed = await page.evaluate(() => (
+  const layout = await page.evaluate(() => (
     (window as unknown as { __gameDebug: Record<string, unknown> }).__gameDebug
   ));
-  await page.screenshot({ path: `${ARTIFACT_DIR}/fixed-fortress-clicked.png` });
-  writeFileSync(`${ARTIFACT_DIR}/fixed-debug.json`, JSON.stringify(fixed, null, 2));
-  expect((fixed.ui as { selectedCapturePointId: number }).selectedCapturePointId).toBe(1);
-  expect((fixed.ui as { visibleCaptureActions: string[] }).visibleCaptureActions).toEqual(["repair-fortress"]);
-  const fixedTowers = ((fixed.verification as { presentation: { captureTowers: Array<Record<string, unknown>> } })
-    .presentation.captureTowers);
-  expect(fixedTowers.find((tower) => tower.id === 1)?.textureKey).toBe("fixed-fortress-v1");
+  await page.screenshot({ path: `${ARTIFACT_DIR}/after-two-buildable-points.png` });
+
+  const controlPoints = (layout.battlefield as {
+    controlPoints: Array<{ id: number; pointType: string; progress: number }>;
+  }).controlPoints;
+  expect(controlPoints).toHaveLength(2);
+  expect(controlPoints.every((point) => point.pointType === "buildable")).toBe(true);
+  expect(controlPoints.map((point) => point.progress)).toEqual([0.375, 0.767]);
+
+  const towers = ((layout.verification as {
+    presentation: { captureTowers: Array<{ id: number; worldX: number; worldY: number }> };
+  }).presentation.captureTowers);
+  const worldDistance = Math.hypot(
+    towers[1].worldX - towers[0].worldX,
+    towers[1].worldY - towers[0].worldY,
+  );
+  const screenDistance = worldDistance * 0.46;
+  expect(screenDistance).toBeGreaterThan(900);
 
   await page.evaluate(() => {
-    const control = (window as unknown as {
-      __terrainPrototypeControl: {
-        selectCapturePoint: (id: number) => void;
-        prepareCapturePointInteraction: (id: number, hpRatio: number) => void;
-      };
-    }).__terrainPrototypeControl;
-    control.selectCapturePoint(1);
-    control.prepareCapturePointInteraction(0, 1);
+    (window as unknown as {
+      __terrainPrototypeControl: { prepareCapturePointInteraction: (id: number, hpRatio: number) => void };
+    }).__terrainPrototypeControl.prepareCapturePointInteraction(1, 0.5);
   });
   await clickLogical(800, 450);
-  const buildable = await page.evaluate(() => (
+  const clicked = await page.evaluate(() => (
     (window as unknown as { __gameDebug: Record<string, unknown> }).__gameDebug
   ));
-  expect((buildable.ui as { selectedCapturePointId: number }).selectedCapturePointId).toBe(0);
-  expect((buildable.ui as { visibleCaptureActions: string[] }).visibleCaptureActions).toEqual([
+  expect((clicked.ui as { selectedCapturePointId: number }).selectedCapturePointId).toBe(1);
+  expect((clicked.ui as { visibleCaptureActions: string[] }).visibleCaptureActions).toEqual([
     "build-supply-depot",
     "build-mint",
   ]);
-  await page.screenshot({ path: `${ARTIFACT_DIR}/buildable-point-clicked.png` });
+  await page.screenshot({ path: `${ARTIFACT_DIR}/after-east-buildable-clicked.png` });
 
-  const towerMetrics = fixedTowers.map((tower) => ({
-    id: tower.id as number,
-    pointType: tower.pointType as string,
-    x: tower.worldX as number,
-    y: tower.worldY as number,
-    textureKey: tower.textureKey as string,
-  }));
-  const screenDistances = towerMetrics.slice(0, -1).map((tower, index) => {
-    const next = towerMetrics[index + 1];
-    return {
-      pair: [tower.id, next.id],
-      world: Math.hypot(next.x - tower.x, next.y - tower.y),
-      screenAtDefaultZoom: Math.hypot(next.x - tower.x, next.y - tower.y) * 0.46,
-    };
-  });
-  expect(Math.min(...screenDistances.map((entry) => entry.screenAtDefaultZoom))).toBeGreaterThan(400);
   writeFileSync(
-    `${ARTIFACT_DIR}/interaction-and-distance.json`,
-    JSON.stringify({ towerMetrics, screenDistances, fixedUi: fixed.ui, buildableUi: buildable.ui }, null, 2),
+    `${ARTIFACT_DIR}/layout-v2.json`,
+    JSON.stringify({
+      optionA: "remove-fixed-fortress",
+      progressDistances: { beforeMinimum: 0.179, after: 0.392 },
+      worldDistance,
+      screenDistance,
+      controlPoints,
+      clickedUi: clicked.ui,
+    }, null, 2),
   );
 });

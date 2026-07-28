@@ -51,6 +51,14 @@ export interface TerrainPropSpec {
   displayHeight: number;
   groundOriginY: number;
   footprint: StructureFootprintSpec;
+  shadow: {
+    offsetX: number;
+    offsetY: number;
+    widthScale: number;
+    heightScale: number;
+    rotationRad: number;
+    alpha: number;
+  };
   occludesUnits: boolean;
 }
 
@@ -175,17 +183,16 @@ function createCaptureSocket(capturePointId: number, pathNodeIndex: number): Str
 
 const CAPTURE_SOCKETS = [
   createCaptureSocket(0, 1),
-  createCaptureSocket(1, 2),
-  createCaptureSocket(2, 3),
+  createCaptureSocket(1, 3),
 ];
 
 const TERRAIN_PROPS: TerrainPropSpec[] = [
-  { id: "rock-west-ridge", textureKey: "rock-cluster", position: { x: 1730, y: 2310 }, displayWidth: 210, displayHeight: 152, groundOriginY: 0.86, footprint: { shape: "ellipse", width: 178, height: 66, blocksMovement: false }, occludesUnits: true },
-  { id: "trees-west-south", textureKey: "tree-cluster", position: { x: 2360, y: 3110 }, displayWidth: 180, displayHeight: 238, groundOriginY: 0.9, footprint: { shape: "ellipse", width: 128, height: 62, blocksMovement: false }, occludesUnits: true },
-  { id: "rock-central-north", textureKey: "rock-cluster", position: { x: 3540, y: 1170 }, displayWidth: 196, displayHeight: 144, groundOriginY: 0.86, footprint: { shape: "ellipse", width: 164, height: 62, blocksMovement: false }, occludesUnits: true },
-  { id: "trees-central-south", textureKey: "tree-cluster", position: { x: 3880, y: 2720 }, displayWidth: 176, displayHeight: 232, groundOriginY: 0.9, footprint: { shape: "ellipse", width: 126, height: 62, blocksMovement: false }, occludesUnits: true },
-  { id: "rock-east-south", textureKey: "rock-cluster", position: { x: 5050, y: 2210 }, displayWidth: 188, displayHeight: 138, groundOriginY: 0.86, footprint: { shape: "ellipse", width: 158, height: 60, blocksMovement: false }, occludesUnits: true },
-  { id: "trees-east-ridge", textureKey: "tree-cluster", position: { x: 5550, y: 1080 }, displayWidth: 174, displayHeight: 228, groundOriginY: 0.9, footprint: { shape: "ellipse", width: 124, height: 60, blocksMovement: false }, occludesUnits: true },
+  { id: "rock-west-ridge", textureKey: "rock-cluster", position: { x: 1730, y: 2310 }, displayWidth: 210, displayHeight: 152, groundOriginY: 0.884, footprint: { shape: "ellipse", width: 178, height: 66, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
+  { id: "trees-west-south", textureKey: "tree-cluster", position: { x: 2360, y: 3110 }, displayWidth: 180, displayHeight: 238, groundOriginY: 0.902, footprint: { shape: "ellipse", width: 128, height: 62, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "rock-central-north", textureKey: "rock-cluster", position: { x: 3540, y: 1170 }, displayWidth: 196, displayHeight: 144, groundOriginY: 0.884, footprint: { shape: "ellipse", width: 164, height: 62, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
+  { id: "trees-central-south", textureKey: "tree-cluster", position: { x: 3880, y: 2720 }, displayWidth: 176, displayHeight: 232, groundOriginY: 0.902, footprint: { shape: "ellipse", width: 126, height: 62, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "rock-east-south", textureKey: "rock-cluster", position: { x: 5050, y: 2210 }, displayWidth: 188, displayHeight: 138, groundOriginY: 0.884, footprint: { shape: "ellipse", width: 158, height: 60, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
+  { id: "trees-east-ridge", textureKey: "tree-cluster", position: { x: 5550, y: 1080 }, displayWidth: 174, displayHeight: 228, groundOriginY: 0.902, footprint: { shape: "ellipse", width: 124, height: 60, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
 ];
 
 export const CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC: BattlefieldMapSpec = {
@@ -204,7 +211,7 @@ export const CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC: BattlefieldMapSpec = {
       cells: createTerrainCells(CENTRAL_PATCH_COLUMNS, CENTRAL_PATCH_ROWS),
     },
   ],
-  structureSockets: [CAPTURE_SOCKETS[1]],
+  structureSockets: [],
   terrainProps: [],
 };
 

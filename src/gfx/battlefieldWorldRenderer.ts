@@ -49,13 +49,13 @@ export class BattlefieldWorldRenderer {
     this.mapSpec.structureSockets.forEach((socket) => this.createStructureGround(socket));
     this.mapSpec.terrainProps.forEach((prop) => {
       const shadow = this.scene.add.ellipse(
-        prop.position.x + 18,
-        prop.position.y + 10,
-        prop.footprint.width * 1.08,
-        prop.footprint.height * 0.72,
+        prop.position.x + prop.shadow.offsetX,
+        prop.position.y + prop.shadow.offsetY,
+        prop.footprint.width * prop.shadow.widthScale,
+        prop.footprint.height * prop.shadow.heightScale,
         PROP_SHADOW_COLOR,
-        0.38,
-      ).setRotation(-0.22).setDepth(this.groundDepth(prop.position.y, -2));
+        prop.shadow.alpha,
+      ).setRotation(prop.shadow.rotationRad).setDepth(this.groundDepth(prop.position.y, -2));
       const image = this.scene.add.image(prop.position.x, prop.position.y, prop.textureKey)
         .setDisplaySize(prop.displayWidth, prop.displayHeight)
         .setOrigin(0.5, prop.groundOriginY)
@@ -138,8 +138,8 @@ export class BattlefieldWorldRenderer {
     const top = this.scene.add.ellipse(x - 2, y - 4, width - 6, height - 4, 0xaaa693, 1)
       .setStrokeStyle(2, 0xc9c2a8, 0.9)
       .setDepth(SURFACE_DEPTH + 6);
-    const shadow = this.scene.add.ellipse(x + 22, y + 13, width + 24, height * 0.7, 0x111918, 0.42)
-      .setRotation(-0.24)
+    const shadow = this.scene.add.ellipse(x + 6, y + 2, width * 0.9, height * 0.54, 0x111918, 0.34)
+      .setRotation(-0.08)
       .setDepth(this.groundDepth(y, -2));
     const foundationObjects = [dirt, foundation, top];
     this.objects.push(...foundationObjects, shadow);

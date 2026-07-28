@@ -1,0 +1,55 @@
+{
+  "optionA": "remove-fixed-fortress",
+  "progressDistances": {
+    "beforeMinimum": 0.179,
+    "after": 0.392
+  },
+  "worldDistance": 2118.6742832102536,
+  "screenDistance": 974.5901702767167,
+  "controlPoints": [
+    {
+      "id": 0,
+      "pointType": "buildable",
+      "allowedBuildingTypes": [
+        "watchtower",
+        "supply_depot",
+        "mint"
+      ],
+      "owner": "player",
+      "control": 1,
+      "progress": 0.375,
+      "towerBuilt": true,
+      "towerHp": 130,
+      "towerMaxHp": 130,
+      "buildingId": null,
+      "availableActions": [
+        "build-supply-depot",
+        "build-mint"
+      ]
+    },
+    {
+      "id": 1,
+      "pointType": "buildable",
+      "allowedBuildingTypes": [
+        "watchtower",
+        "supply_depot",
+        "mint"
+      ],
+      "owner": "enemy",
+      "control": -1,
+      "progress": 0.767,
+      "towerBuilt": true,
+      "towerHp": 130,
+      "towerMaxHp": 130,
+      "buildingId": "mint",
+      "availableActions": []
+    }
+  ],
+  "clickedUi": {
+    "selectedCapturePointId": 1,
+    "visibleCaptureActions": [
+      "build-supply-depot",
+      "build-mint"
+    ]
+  }
+}

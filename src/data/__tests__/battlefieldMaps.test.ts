@@ -20,19 +20,17 @@ describe("battlefield map specs", () => {
     });
   });
 
-  it("keeps the central-only map available for V1 comparison", () => {
+  it("keeps the central-only terrain patch available without restoring the removed fortress", () => {
     expect(CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC.terrainPatches).toHaveLength(1);
-    expect(CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC.structureSockets).toHaveLength(1);
-    expect(CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC.structureSockets[0].id).toBe(
-      getCapturePointSocketId(1),
-    );
+    expect(CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC.structureSockets).toHaveLength(0);
   });
 
-  it("provides non-blocking tower sockets and bypass slots at all three capture nodes", () => {
-    expect(LANE_BATTLEFIELD_MAP_SPEC.structureSockets).toHaveLength(3);
+  it("provides non-blocking sockets only at the two buildable capture nodes", () => {
+    const pathNodeIndexes = [1, 3];
+    expect(LANE_BATTLEFIELD_MAP_SPEC.structureSockets).toHaveLength(2);
     LANE_BATTLEFIELD_MAP_SPEC.structureSockets.forEach((socket, index) => {
       expect(socket.id).toBe(getCapturePointSocketId(index));
-      expect(socket.position).toEqual(LANE_PATH_NODES[index + 1].position);
+      expect(socket.position).toEqual(LANE_PATH_NODES[pathNodeIndexes[index]].position);
       expect(socket.footprint.blocksMovement).toBe(false);
       expect(socket.bypassSlots).toHaveLength(2);
     });
@@ -42,5 +40,6 @@ describe("battlefield map specs", () => {
     expect(LANE_BATTLEFIELD_MAP_SPEC.terrainProps).toHaveLength(6);
     expect(LANE_BATTLEFIELD_MAP_SPEC.terrainProps.every((prop) => prop.occludesUnits)).toBe(true);
     expect(LANE_BATTLEFIELD_MAP_SPEC.terrainProps.every((prop) => !prop.footprint.blocksMovement)).toBe(true);
+    expect(LANE_BATTLEFIELD_MAP_SPEC.terrainProps.every((prop) => prop.shadow.offsetY <= 3)).toBe(true);
   });
 });

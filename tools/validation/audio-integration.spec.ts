@@ -160,8 +160,8 @@ test("complete audio lifecycle, settings, focus, terminal states, and restart", 
   await expect.poll(async () => (await audioState(page)).focusMuted).toBe(false);
 
   await page.evaluate(() => {
-    const control = (window as unknown as { __terrainPrototypeControl: { setCentralFortressHpRatio: (ratio: number) => void } }).__terrainPrototypeControl;
-    control.setCentralFortressHpRatio(0.3);
+    const control = (window as unknown as { __terrainPrototypeControl: { setPlayerBaseHpRatio: (ratio: number) => void } }).__terrainPrototypeControl;
+    control.setPlayerBaseHpRatio(0.3);
   });
   await expect.poll(async () => (await audioState(page)).bgmState).toBe("fortress-under-attack");
   expect((await audioState(page)).activeBgmVoices).toBeLessThanOrEqual(2);

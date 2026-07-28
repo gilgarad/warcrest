@@ -42,10 +42,19 @@ test(`captures ${PHASE} actual output-bus energy`, async ({ page }) => {
     }).__audioDebugControl.measureOutputSignal(1200)
   ));
   const measurements: Record<string, SignalMeasurement> = {};
-  for (const id of ["bgm.battle.low", "bgm.battle.high"] as const) {
+  for (const id of ["bgm.menu", "bgm.preparation"] as const) {
     await page.locator(`[data-asset-id="${id}"]`).click();
     await page.waitForTimeout(1400);
     measurements[id] = await measure();
+  }
+  for (const id of ["bgm.battle.low", "bgm.battle.high"] as const) {
+    await page.locator(`[data-asset-id="${id}"]`).click();
+    await page.waitForTimeout(900);
+    measurements[id] = await measure();
+    await page.waitForTimeout(3300);
+    measurements[`${id}.sustain`] = await measure();
+    await page.waitForTimeout(3600);
+    measurements[`${id}.escalation`] = await measure();
   }
   await page.locator("#muteCheck").check();
   await page.waitForTimeout(700);
@@ -53,11 +62,15 @@ test(`captures ${PHASE} actual output-bus energy`, async ({ page }) => {
 
   expect(measurements["bgm.battle.low"].contextState).toBe("running");
   expect(measurements["bgm.battle.high"].contextState).toBe("running");
+  expect(measurements["bgm.menu"].rms).toBeGreaterThan(0.001);
+  expect(measurements["bgm.preparation"].rms).toBeGreaterThan(0.001);
   expect(measurements.muted.rms).toBeLessThan(0.0001);
   if (PHASE === "after") {
     expect(measurements["bgm.battle.low"].rms).toBeGreaterThan(0.008);
-    expect(measurements["bgm.battle.high"].rms).toBeGreaterThan(0.012);
+    expect(measurements["bgm.battle.high"].rms).toBeGreaterThan(0.01);
     expect(measurements["bgm.battle.high"].rms).toBeGreaterThan(measurements["bgm.battle.low"].rms);
+    expect(measurements["bgm.battle.low.escalation"].rms).toBeGreaterThan(measurements["bgm.battle.low"].rms * 0.9);
+    expect(measurements["bgm.battle.high.escalation"].peak).toBeGreaterThan(0.04);
   }
 
   writeFileSync(`${ARTIFACT_DIR}/${PHASE}-signal.json`, JSON.stringify(measurements, null, 2));
