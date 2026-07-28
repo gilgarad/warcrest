@@ -1985,3 +1985,20 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
 - **사용자 피드백 요약**: attack 반대 facing을 고치고 포즈 전환 중 T자형 창대 재현 여부를 확인한다.
 - **AI 작업 요약**: mirror 대신 왼쪽 facing attack을 좌상단 광원으로 재생성하고 손 배치를 유지했다. 5단계 원자적 texture swap에서는 T자형 형상이 재현되지 않았다.
 - **검증**: build, 24 files/87 tests, 자산 QA 6/6, Playwright 2/2. Day 3-4는 시작하지 않았다.
+
+## 2026-07-28 (129) — 골든 레퍼런스 최종 승인 및 Day 3-4 볼륨 생산 착수
+
+- **사용 도구**: Codex, built-in image generation, chroma-key removal,
+  Python/Pillow asset normalization and QA
+- **사용자 지시 원문(핵심)**: "골든 레퍼런스를 최종 승인한다 — \"이걸로
+  간다.\" ... 지금부터 Day 3-4(전체 볼륨 생산)를 시작해라." 사용자는
+  스트림 A(석기 유닛 3종), B(전체 지형·소품), C(구조물)를 순서대로
+  생산하고, Day 5 전에는 production registry에 통합하지 말라고 지시했다.
+- **AI 산출물 요약**:
+  - 스트림 A로 투석병·도끼병·보급대 3종의 idle/walk-a/walk-b/action
+    원본을 생성하고 크로마 제거 및 캔버스 정규화를 수행했다.
+  - 자동 QA 전에 contact sheet를 육안 검수해 최초 walk A/B의 같은
+    선행 다리 문제를 발견했다. 세 유닛 모두 walk B를 별도 재생성해
+    반대 실루엣으로 교체했다.
+  - 생산 후보 12개가 자산 QA 12/12를 통과했으며 build와 전체 테스트
+    (24 files/87 tests)도 통과했다. 게임 레지스트리에는 연결하지 않았다.

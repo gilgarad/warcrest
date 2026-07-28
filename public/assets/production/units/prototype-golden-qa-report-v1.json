@@ -1,0 +1,270 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "key": "stone-slinger-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        133,
+        66,
+        251,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "stone-slinger-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        101,
+        66,
+        283,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "stone-slinger-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        84,
+        66,
+        301,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "stone-slinger-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        104,
+        66,
+        408,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "stone-axeman-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        95,
+        66,
+        289,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "stone-axeman-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        84,
+        66,
+        299,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "stone-axeman-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        53,
+        66,
+        331,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "stone-axeman-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        94,
+        66,
+        417,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        168,
+        66,
+        345,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        148,
+        66,
+        365,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        166,
+        66,
+        347,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        137,
+        66,
+        375,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    }
+  ],
+  "failures": []
+}

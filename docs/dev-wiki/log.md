@@ -2194,3 +2194,15 @@ Use consistent headings so entries are easy to grep.
 - 단일 스프라이트를 idle -> walk-a -> walk-b -> attack -> idle 순서로 원자적 texture swap하고 5개 프레임을 캡처했다.
 - T자형 곤봉/창대는 재현되지 않았다. tween, blend, 보간 프레임이 없고 현재 자산은 단일 창만 쓴다.
 - build, 24 files/87 tests, asset QA 6/6, Playwright 2/2가 통과했다. Day 3-4 생산은 진행하지 않았다.
+
+## [2026-07-28] art | Day 3-4 스트림 A 석기 유닛 볼륨 생산
+
+- 골든 레퍼런스 최종 승인을 확인하고 production registry 통합 없이
+  `stone_slinger`, `stone_axeman`, `supply_wagon` 3종의 4포즈 원본과
+  정규화 자산 12개를 제작했다.
+- 최초 시트 육안 검수에서 walk A/B가 같은 다리를 앞세운 문제가 발견돼,
+  세 유닛의 walk B를 high-knee passing pose와 반대 팔/무기 스윙으로
+  별도 재생성했다. 모든 포즈는 screen-left facing을 유지한다.
+- `tools/asset-qa/volume-unit-assets.json`과 전용 contact-sheet 생성기를
+  추가했다. `npm run asset:qa:units` 12/12, build, 24 files/87 tests 통과.
+- 상세 자산 목록과 검증 근거는 `volume-production-validation.md`에 기록했다.

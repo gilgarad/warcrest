@@ -1,0 +1,21 @@
+{
+  "source": "art-source/volume-production/units/stone-slinger-contact-sheet-v1-alpha.png",
+  "columns": 2,
+  "rows": 2,
+  "assets": [
+    { "key": "stone-slinger-idle", "filename": "stone-slinger-idle.png", "source": "art-source/volume-production/units/stone-slinger-contact-sheet-v1-alpha.png", "column": 0, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "stone-slinger-walk-a", "filename": "stone-slinger-walk-a.png", "source": "art-source/volume-production/units/stone-slinger-contact-sheet-v1-alpha.png", "column": 1, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "stone-slinger-walk-b", "filename": "stone-slinger-walk-b.png", "source": "art-source/volume-production/units/stone-slinger-walk-b-v2-alpha.png", "columns": 1, "rows": 1, "column": 0, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "stone-slinger-attack", "filename": "stone-slinger-attack.png", "source": "art-source/volume-production/units/stone-slinger-contact-sheet-v1-alpha.png", "column": 1, "row": 1, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+
+    { "key": "stone-axeman-idle", "filename": "stone-axeman-idle.png", "source": "art-source/volume-production/units/stone-axeman-contact-sheet-v1-alpha.png", "column": 0, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "stone-axeman-walk-a", "filename": "stone-axeman-walk-a.png", "source": "art-source/volume-production/units/stone-axeman-contact-sheet-v1-alpha.png", "column": 1, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "stone-axeman-walk-b", "filename": "stone-axeman-walk-b.png", "source": "art-source/volume-production/units/stone-axeman-walk-b-v2-alpha.png", "columns": 1, "rows": 1, "column": 0, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "stone-axeman-attack", "filename": "stone-axeman-attack.png", "source": "art-source/volume-production/units/stone-axeman-contact-sheet-v1-alpha.png", "column": 1, "row": 1, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+
+    { "key": "supply-wagon-idle", "filename": "supply-wagon-idle.png", "source": "art-source/volume-production/units/supply-porter-contact-sheet-v1-alpha.png", "column": 0, "row": 0, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "supply-wagon-walk-a", "filename": "supply-wagon-walk-a.png", "source": "art-source/volume-production/units/supply-porter-contact-sheet-v1-alpha.png", "column": 1, "row": 0, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "supply-wagon-walk-b", "filename": "supply-wagon-walk-b.png", "source": "art-source/volume-production/units/supply-porter-walk-b-v2-alpha.png", "columns": 1, "rows": 1, "column": 0, "row": 0, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "supply-wagon-attack", "filename": "supply-wagon-attack.png", "source": "art-source/volume-production/units/supply-porter-contact-sheet-v1-alpha.png", "column": 1, "row": 1, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 }
+  ]
+}

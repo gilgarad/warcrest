@@ -1,0 +1,218 @@
+[
+  {
+    "key": "stone-slinger-idle",
+    "output": "public/assets/production/units/stone-slinger-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      133,
+      66,
+      251,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-slinger-walk-a",
+    "output": "public/assets/production/units/stone-slinger-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      101,
+      66,
+      283,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-slinger-walk-b",
+    "output": "public/assets/production/units/stone-slinger-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      84,
+      66,
+      301,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-slinger-attack",
+    "output": "public/assets/production/units/stone-slinger-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      104,
+      66,
+      408,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "stone-axeman-idle",
+    "output": "public/assets/production/units/stone-axeman-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      95,
+      66,
+      289,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-axeman-walk-a",
+    "output": "public/assets/production/units/stone-axeman-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      84,
+      66,
+      299,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-axeman-walk-b",
+    "output": "public/assets/production/units/stone-axeman-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      53,
+      66,
+      331,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-axeman-attack",
+    "output": "public/assets/production/units/stone-axeman-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      94,
+      66,
+      417,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-idle",
+    "output": "public/assets/production/units/supply-wagon-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      168,
+      66,
+      345,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-walk-a",
+    "output": "public/assets/production/units/supply-wagon-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      148,
+      66,
+      365,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-walk-b",
+    "output": "public/assets/production/units/supply-wagon-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      166,
+      66,
+      347,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-attack",
+    "output": "public/assets/production/units/supply-wagon-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      137,
+      66,
+      375,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  }
+]
