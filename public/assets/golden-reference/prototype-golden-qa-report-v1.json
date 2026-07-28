@@ -1,0 +1,138 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "key": "bronze-spearman-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        119,
+        66,
+        265,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        120,
+        66,
+        265,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        123,
+        66,
+        261,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        83,
+        66,
+        429,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "field-boulder",
+      "canvas": [
+        256,
+        256
+      ],
+      "alphaBbox": [
+        24,
+        74,
+        231,
+        224
+      ],
+      "opaqueHeight": 150,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "defense-tower",
+      "canvas": [
+        512,
+        512
+      ],
+      "alphaBbox": [
+        151,
+        88,
+        361,
+        448
+      ],
+      "opaqueHeight": 360,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    }
+  ],
+  "failures": []
+}

@@ -15,15 +15,16 @@ test("keeps two buildable points separate from the defense tower collection", as
   const clickLogical = (x: number, y: number): Promise<void> => canvas.click({
     position: { x: x * box.width / 1600, y: y * box.height / 900 },
   });
-  await page.waitForTimeout(300);
-  await clickLogical(800, 805);
-  await page.waitForFunction(() => Boolean(
-    (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-  ), undefined, { timeout: 5_000 }).catch(async () => {
+  const startGame = async (): Promise<void> => {
+    await page.waitForTimeout(300);
     await clickLogical(800, 805);
     await page.waitForFunction(() => Boolean(
       (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-    ), undefined, { timeout: 10_000 });
+    ), undefined, { timeout: 8_000 });
+  };
+  await startGame().catch(async () => {
+    await page.reload();
+    await startGame();
   });
   await page.evaluate(() => {
     (window as unknown as {

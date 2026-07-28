@@ -1964,3 +1964,10 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
 - **사용 도구**: Codex
 - **AI 작업 요약**: 기존 19개 포즈의 alpha bounds와 런타임 표시 높이를 실측해 캔버스와 ground anchor를 정했다. 16-state 지형, 약한 3/4 top-down 오브젝트, 좌상단 광원, 부분 팀 컬러, 좌우 2방향 규칙을 style-guide.md에 고정했다.
 - **제한**: 문서 링크 검사 스크립트는 저장소에 없어 실행할 수 없었다.
+
+## 2026-07-28 (126) — Day 1/2 골든 레퍼런스 제작
+
+- **사용 도구**: Codex, built-in image generation, chroma-key removal helper
+- **AI 작업 요약**: 16-state 지형과 자산 QA 도구를 만들고 동일 생성 시트에서 청동창병 4포즈, 바위, 타워를 제작했다. /?golden=1 격리 장면과 이전 중앙 화면 비교 캡처를 남겼다.
+- **검증**: build, 24 files/87 tests, 자산 QA 6/6, 반복 Playwright 6/6.
+- **중단점**: 사용자 시각 승인 전 Day 3/4 대량 생산은 진행하지 않는다.

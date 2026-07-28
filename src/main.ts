@@ -3,6 +3,7 @@ import { GAME_TITLE } from "./data/gameMeta";
 import { BootScene } from "./scenes/BootScene";
 import { LaneBattleScene } from "./scenes/LaneBattleScene";
 import { GameOverScene } from "./scenes/GameOverScene";
+import { GoldenReferenceScene } from "./scenes/GoldenReferenceScene";
 
 document.title = GAME_TITLE;
 
@@ -22,5 +23,5 @@ new Phaser.Game({
     default: "arcade",
     arcade: { debug: false },
   },
-  scene: [BootScene, LaneBattleScene, GameOverScene],
+  scene: [BootScene, LaneBattleScene, GameOverScene, GoldenReferenceScene],
 });

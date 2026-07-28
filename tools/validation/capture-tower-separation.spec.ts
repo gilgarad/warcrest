@@ -22,17 +22,19 @@ test("separates capture points and defense towers in data, position, and selecti
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(GAME_URL);
   const canvas = page.locator("canvas");
-  await page.waitForTimeout(300);
-  await canvas.click({ position: { x: 800, y: 805 } });
-  await page.waitForFunction(() => Boolean((window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl), undefined, { timeout: 10_000 })
-    .catch(async () => {
-      await canvas.click({ position: { x: 800, y: 805 } });
-      await page.waitForFunction(() => Boolean(
-        (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-      ), undefined, { timeout: 10_000 }).catch(() => {
-        throw new Error(`Game did not initialize: ${runtimeErrors.join(" | ")}`);
-      });
+  const startGame = async (): Promise<void> => {
+    await page.waitForTimeout(300);
+    await canvas.click({ position: { x: 800, y: 805 } });
+    await page.waitForFunction(() => Boolean(
+      (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+    ), undefined, { timeout: 8_000 });
+  };
+  await startGame().catch(async () => {
+    await page.reload();
+    await startGame().catch(() => {
+      throw new Error(`Game did not initialize: ${runtimeErrors.join(" | ")}`);
     });
+  });
 
   const snapshots: Array<{ side: string; captureProgress: number; towerProgress: number; selectedAfterClick: number | null }> = [];
   for (const id of [0, 1]) {

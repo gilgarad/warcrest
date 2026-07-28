@@ -2174,3 +2174,10 @@ Use consistent headings so entries are easy to grep.
 - docs/dev-wiki/style-guide.md에 top-down 지형과 약한 3/4 top-down 오브젝트의 고정 제작 계약을 기록했다.
 - 19개 포즈를 실측해 평균 빈 캔버스 80.4%, 중앙값 불투명 영역 373 x 571을 확인하고 보병 384 x 384, 넓은 포즈 512 x 384, 구조물 512 x 512와 ground anchor를 확정했다.
 - 16-state marching squares, 좌상단 광원, 지정 부위 팀 팔레트, 좌우 2방향과 공격 미세 회전을 승인 전 계약으로 고정했다.
+
+## [2026-07-28] feat | Day 1/2 golden reference
+
+- 16-state marching-squares 지형 모듈과 테스트, 캔버스/alpha bounds/ground anchor 자산 QA 도구를 추가했다.
+- 내장 이미지 생성 도구로 청동창병 4포즈, 바위, 방어 타워를 고정 계약 시트로 만들고 prototype-golden 자산으로 정규화했다.
+- /?golden=1 격리 장면과 기존 중앙 카메라 비교 검증을 추가했다. 기존 전투 장면과 생산 레지스트리는 변경하지 않았다.
+- build, 24 files/87 tests, asset QA 6/6, 반복 Playwright 6/6이 통과했다. 대량 생산은 사용자 승인까지 중단한다.

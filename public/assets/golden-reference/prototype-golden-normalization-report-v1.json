@@ -1,0 +1,110 @@
+[
+  {
+    "key": "bronze-spearman-idle",
+    "output": "public/assets/golden-reference/prototype-golden-bronze-spearman-idle-v1.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      119,
+      66,
+      265,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-walk-a",
+    "output": "public/assets/golden-reference/prototype-golden-bronze-spearman-walk-a-v1.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      120,
+      66,
+      265,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-walk-b",
+    "output": "public/assets/golden-reference/prototype-golden-bronze-spearman-walk-b-v1.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      123,
+      66,
+      261,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-attack",
+    "output": "public/assets/golden-reference/prototype-golden-bronze-spearman-attack-v1.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      83,
+      66,
+      429,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "field-boulder",
+    "output": "public/assets/golden-reference/prototype-golden-field-boulder-v1.png",
+    "canvas": [
+      256,
+      256
+    ],
+    "alphaBbox": [
+      24,
+      74,
+      231,
+      224
+    ],
+    "groundAnchor": [
+      128,
+      224
+    ]
+  },
+  {
+    "key": "defense-tower",
+    "output": "public/assets/golden-reference/prototype-golden-defense-tower-v1.png",
+    "canvas": [
+      512,
+      512
+    ],
+    "alphaBbox": [
+      151,
+      88,
+      361,
+      448
+    ],
+    "groundAnchor": [
+      256,
+      448
+    ]
+  }
+]

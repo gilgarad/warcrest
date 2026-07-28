@@ -16,6 +16,10 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
+    if (new URLSearchParams(window.location.search).get("golden") === "1") {
+      this.scene.start("golden-reference");
+      return;
+    }
     const { width, height } = this.scale;
     const audio = getAudioSystem();
     void audio.initialize();
