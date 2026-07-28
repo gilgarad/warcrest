@@ -55,3 +55,20 @@ cover production, payment, AI age gates, and atomic worker conversion.
 - `LaneBattleScene.ts`: 3,586 -> 3,506 lines.
 - `npm run build`: passed.
 - `npm test`: 17 files, 73 tests passed.
+
+## 2026-07-28 - Stage 1.2b: capture and construction rules
+
+Extracted `src/systems/lane-capture/captureRules.ts` as the authoritative
+catalogue and rule module for capture-point buildings. It owns building
+definitions, dismantle cost, age-scaled tower construction/repair costs,
+tower HP derivation, and the 70/30 destruction-versus-capture outcome with its
+one-to-three-level loss.
+
+`LaneBattleScene` still owns selection, resource mutation, timed construction,
+SFX, and visual refresh orchestration. The extracted calculations preserve the
+pre-refactor formulas, including metal costs from early iron onward and tower
+HP based on five times the first battle-line unit's HP.
+
+- `LaneBattleScene.ts`: 3,506 -> 3,458 lines.
+- `npm run build`: passed.
+- `npm test`: 18 files, 76 tests passed.

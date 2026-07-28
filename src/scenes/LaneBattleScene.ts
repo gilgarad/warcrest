@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { AGES, getAge, type AgeId } from "../data/ages";
+import { AGES, getAge } from "../data/ages";
 import {
   BASE_WORKER_COST,
   AI_INSTANT_WAVE_MIN_REMAINING_SEC,
@@ -10,7 +10,6 @@ import {
   RESEARCH_WORKER_CONVERSION,
   RESEARCH_WORKER_DIRECT_COST,
   WAVE_INTERVAL_SEC,
-  type ResourceCost,
 } from "../data/balance";
 import { getResource, type ResourceId } from "../data/resources";
 import {
@@ -40,7 +39,6 @@ import {
 import {
   CAPTURE_POINT_DEFINITIONS,
   getCapturePointActions,
-  type CaptureBuildingId,
   type CapturePointAction,
   type CapturePointDefinition,
 } from "../data/capturePointDefinitions";
@@ -104,6 +102,17 @@ import {
   type TeamState,
   type WorkerRole,
 } from "../systems/lane-economy/laneEconomy";
+import {
+  BUILDING_DEFINITIONS,
+  DISMANTLE_COST_GOLD,
+  getBuildingDefinition,
+  getTowerBuildCost,
+  getTowerMaxHp,
+  getTowerRepairCost,
+  resolveCapturedBuilding,
+  type BuildingDefinition,
+  type BuildingId,
+} from "../systems/lane-capture/captureRules";
 
 const CANVAS_W = 1600;
 const CANVAS_H = 900;
@@ -121,7 +130,6 @@ const UNIT_PROGRESS_SPEED = 0.02;
 const RANGE_TO_PROGRESS = 0.013;
 const FRIENDLY_GAP = 0.011;
 const ENGAGE_GAP = 0.022;
-const DISMANTLE_COST_GOLD = 8;
 const FIELD_CAMERA_ZOOM = 0.46;
 const TOWER_W = 148;
 const TOWER_H = 176;
@@ -138,7 +146,6 @@ const FIXED_FORTRESS_GROUND_ORIGIN_Y = 1038 / 1122;
 const FIXED_FORTRESS_VISIBLE_HEIGHT_RATIO = 1010 / 1122;
 
 type UnitTextureKey = string;
-type BuildingId = CaptureBuildingId;
 
 interface LaneUnit {
   id: number;
@@ -252,42 +259,10 @@ interface CapturePointState {
   buildingText: Phaser.GameObjects.Text;
 }
 
-interface BuildingDef {
-  id: BuildingId;
-  label: string;
-  shortLabel: string;
-  cost: ResourceCost;
-  description: string;
-}
-
 let nextUnitId = 1;
 
 const CAPTURE_RADIUS_PROGRESS = 0.06;
 const CAPTURE_RATE_PER_SEC = 0.36;
-const BUILDINGS: BuildingDef[] = [
-  {
-    id: "watchtower",
-    label: "요새",
-    shortLabel: "요새",
-    cost: { gold: 10, wood: 10 },
-    description: "파괴된 타워 재건축",
-  },
-  {
-    id: "supply_depot",
-    label: "병참",
-    shortLabel: "병참",
-    cost: { gold: 18, wood: 12, food: 10 },
-    description: "근처 아군 치유와 보급",
-  },
-  {
-    id: "mint",
-    label: "조달소",
-    shortLabel: "조달",
-    cost: { gold: 16, wood: 10, metal: 8 },
-    description: "주기적으로 금 수급",
-  },
-];
-
 function progressBetween(a: number, b: number): number {
   return Math.abs(a - b);
 }
@@ -1165,8 +1140,8 @@ export class LaneBattleScene extends Phaser.Scene {
         towerTimerSec: 0,
         towerBuildRemainingSec: 0,
         towerBuilt: definition.initialBuilding !== null,
-        towerMaxHp: this.getTowerMaxHp("stone"),
-        towerHp: this.getTowerMaxHp("stone"),
+        towerMaxHp: getTowerMaxHp("stone"),
+        towerHp: getTowerMaxHp("stone"),
         supplyTimerSec: 0,
         ring,
         core,
@@ -1933,7 +1908,7 @@ export class LaneBattleScene extends Phaser.Scene {
       point.towerBuildRemainingSec = Math.max(0, point.towerBuildRemainingSec - deltaSec);
       if (point.towerBuildRemainingSec === 0) {
         point.towerBuilt = true;
-        point.towerMaxHp = this.getTowerMaxHp(point.owner === "neutral" ? "stone" : (point.owner === "player" ? this.player.ageId : this.enemy.ageId));
+        point.towerMaxHp = getTowerMaxHp(point.owner === "neutral" ? "stone" : (point.owner === "player" ? this.player.ageId : this.enemy.ageId));
         point.towerHp = point.towerMaxHp;
         point.towerTimerSec = 0.3;
         if (point.owner === "player") this.infoText.setText("타워 재건축 완료");
@@ -2034,10 +2009,9 @@ export class LaneBattleScene extends Phaser.Scene {
       this.tryMaintainSelectedFortress();
       return;
     }
-    const building = BUILDINGS.find((entry) => entry.id === buildingId);
-    if (!building) return;
+    const building = getBuildingDefinition(buildingId);
     if (buildingId === "watchtower") {
-      const towerCost = this.getTowerBuildCost(this.player.ageId);
+      const towerCost = getTowerBuildCost(this.player.ageId);
       if (point.towerBuilt || point.towerBuildRemainingSec > 0) {
         this.infoText.setText("이 거점의 타워는 이미 존재하거나 재건 중입니다");
         this.audio.playSfx("sfx.ui.cancel", { eventKey: `tower:${point.id}:busy` });
@@ -2088,7 +2062,7 @@ export class LaneBattleScene extends Phaser.Scene {
       && point.towerBuildRemainingSec <= 0,
     );
     if (rebuildTarget) {
-      const towerCost = this.getTowerBuildCost(this.enemy.ageId);
+      const towerCost = getTowerBuildCost(this.enemy.ageId);
       if (canAfford(this.enemy.resources, towerCost)) {
         payCost(this.enemy.resources, towerCost);
         rebuildTarget.towerBuildRemainingSec = 10;
@@ -2101,7 +2075,7 @@ export class LaneBattleScene extends Phaser.Scene {
       && !point.buildingId,
     );
     if (!target) return;
-    const choices = BUILDINGS.filter((entry): entry is BuildingDef & { id: Exclude<BuildingId, "watchtower"> } =>
+    const choices = BUILDING_DEFINITIONS.filter((entry): entry is BuildingDefinition & { id: Exclude<BuildingId, "watchtower"> } =>
       entry.id !== "watchtower" && target.definition.allowedBuildingTypes.includes(entry.id),
     );
     if (choices.length === 0) return;
@@ -2147,7 +2121,7 @@ export class LaneBattleScene extends Phaser.Scene {
       this.audio.playSfx("sfx.ui.cancel", { eventKey: `fortress:${point.id}:busy` });
       return;
     }
-    const rebuildCost = this.getTowerBuildCost(this.player.ageId);
+    const rebuildCost = getTowerBuildCost(this.player.ageId);
     if (!point.towerBuilt) {
       if (!canAfford(this.player.resources, rebuildCost)) {
         this.infoText.setText("요새 재건 자원 부족");
@@ -2165,10 +2139,7 @@ export class LaneBattleScene extends Phaser.Scene {
       this.audio.playSfx("sfx.ui.cancel", { eventKey: `fortress:${point.id}:full` });
       return;
     }
-    const repairCost: ResourceCost = {
-      gold: Math.max(1, Math.ceil((rebuildCost.gold ?? 0) / 2)),
-      wood: Math.max(1, Math.ceil((rebuildCost.wood ?? 0) / 2)),
-    };
+    const repairCost = getTowerRepairCost(this.player.ageId);
     if (!canAfford(this.player.resources, repairCost)) {
       this.infoText.setText("요새 수리 자원 부족");
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `fortress:${point.id}:repair-shortage` });
@@ -2186,22 +2157,24 @@ export class LaneBattleScene extends Phaser.Scene {
     point.towerBuildRemainingSec = 0;
     point.towerHp = 0;
     point.towerTimerSec = 0;
-    if (!point.buildingId || point.buildingLevel <= 0) return;
-    const destroyed = Phaser.Math.RND.frac() < 0.7;
-    if (destroyed) {
-      point.buildingId = undefined;
-      point.buildingLevel = 0;
+    const outcome = resolveCapturedBuilding(
+      point.buildingId,
+      point.buildingLevel,
+      Phaser.Math.RND.frac(),
+      Phaser.Math.Between(1, 3),
+    );
+    point.buildingId = outcome.buildingId;
+    point.buildingLevel = outcome.buildingLevel;
+    if (outcome.result === "none") return;
+    if (outcome.result === "destroyed") {
       if (toOwner === "player") this.infoText.setText("적 거점 건물이 파괴되었습니다");
       return;
     }
-    const drop = Phaser.Math.Between(1, 3);
-    point.buildingLevel = Math.max(0, point.buildingLevel - drop);
-    if (point.buildingLevel <= 0) {
-      point.buildingId = undefined;
+    if (outcome.result === "collapsed") {
       if (toOwner === "player") this.infoText.setText("적 건물을 접수하려 했지만 붕괴했습니다");
       return;
     }
-    if (toOwner === "player") this.infoText.setText(`적 건물을 접수했습니다 (레벨 -${drop})`);
+    if (toOwner === "player") this.infoText.setText(`적 건물을 접수했습니다 (레벨 -${outcome.levelDrop})`);
   }
 
   private isPrototypeV2(): boolean {
@@ -2389,7 +2362,7 @@ export class LaneBattleScene extends Phaser.Scene {
         point.definition.pointType === "fixed-fortress"
           ? "고정 요새"
           : point.buildingId
-            ? `${this.getBuildingDef(point.buildingId).shortLabel} Lv.${point.buildingLevel}`
+            ? `${getBuildingDefinition(point.buildingId).shortLabel} Lv.${point.buildingLevel}`
             : "빈 건설 거점",
       );
       if (!point.towerBuilt && point.towerBuildRemainingSec > 0) {
@@ -2425,27 +2398,6 @@ export class LaneBattleScene extends Phaser.Scene {
           .setPadding(0);
       }
     });
-  }
-
-  private getBuildingDef(id: BuildingId): BuildingDef {
-    const found = BUILDINGS.find((entry) => entry.id === id);
-    if (!found) throw new Error(`Unknown building: ${id}`);
-    return found;
-  }
-
-  private getTowerBuildCost(ageId: AgeId): ResourceCost {
-    const ageIndex = AGES.findIndex((age) => age.id === ageId);
-    return {
-      gold: 10 + ageIndex * 4,
-      wood: 10 + ageIndex * 4,
-      ...(ageIndex >= 2 ? { metal: 4 + ageIndex * 2 } : {}),
-    };
-  }
-
-  private getTowerMaxHp(ageId: AgeId): number {
-    const sampleRoster = getWaveRoster(ageId);
-    const sampleUnit = sampleRoster.battleline[0]?.unitId ?? "stone_axeman";
-    return UNIT_STATS[sampleUnit].hp * 5;
   }
 
   private getUnitProjectileAnchor(unit: LaneUnit): Phaser.Math.Vector2 {
@@ -3206,7 +3158,7 @@ export class LaneBattleScene extends Phaser.Scene {
           `타워 ${selected.towerBuilt ? `가동 중 HP ${Math.round(selected.towerHp)}/${Math.round(selected.towerMaxHp)}` : selected.towerBuildRemainingSec > 0 ? `재건 ${Math.ceil(selected.towerBuildRemainingSec)}초` : "파괴됨"}`,
           selected.definition.pointType === "fixed-fortress"
             ? "고정 요새 전용 | 교체·폐기 불가"
-            : `건설 ${selected.buildingId ? `${this.getBuildingDef(selected.buildingId).label} Lv.${selected.buildingLevel}` : "없음"} | 폐기 ${DISMANTLE_COST_GOLD}G`,
+            : `건설 ${selected.buildingId ? `${getBuildingDefinition(selected.buildingId).label} Lv.${selected.buildingLevel}` : "없음"} | 폐기 ${DISMANTLE_COST_GOLD}G`,
         ]
       : ["거점을 터치해 선택", "점령 후 건설 가능"]);
   }
