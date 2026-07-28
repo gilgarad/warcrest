@@ -1,0 +1,17 @@
+{
+  "formula": "tower distance from own base = 2 x linked capture distance",
+  "snapshots": [
+    {
+      "side": "player",
+      "captureProgress": 0.375,
+      "towerProgress": 0.75,
+      "selectedAfterClick": 0
+    },
+    {
+      "side": "enemy",
+      "captureProgress": 0.767,
+      "towerProgress": 0.534,
+      "selectedAfterClick": 1
+    }
+  ]
+}

@@ -6,7 +6,7 @@ const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&came
 
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 
-test("removes the unordered central fortress and keeps two distant buildable points clickable", async ({ page }) => {
+test("keeps two buildable points separate from the defense tower collection", async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(GAME_URL);
   const canvas = page.locator("canvas");
@@ -44,14 +44,22 @@ test("removes the unordered central fortress and keeps two distant buildable poi
     towers[1].worldY - towers[0].worldY,
   );
   const screenDistance = worldDistance * 0.46;
-  expect(screenDistance).toBeGreaterThan(900);
+  expect(screenDistance).toBeGreaterThan(500);
 
   await page.evaluate(() => {
     (window as unknown as {
       __terrainPrototypeControl: { prepareCapturePointInteraction: (id: number, hpRatio: number) => void };
     }).__terrainPrototypeControl.prepareCapturePointInteraction(1, 0.5);
   });
-  await clickLogical(800, 450);
+  const prepared = await page.evaluate(() => (
+    (window as unknown as { __gameDebug: Record<string, unknown> }).__gameDebug
+  ));
+  const preparedPoint = (prepared.battlefield as { controlPoints: Array<{ labelWorldX: number; labelWorldY: number }> }).controlPoints[1];
+  const camera = (prepared.verification as { camera: { centerX: number; centerY: number; zoom: number } }).camera;
+  await clickLogical(
+    800 + (preparedPoint.labelWorldX - camera.centerX) * camera.zoom,
+    450 + (preparedPoint.labelWorldY - camera.centerY) * camera.zoom,
+  );
   const clicked = await page.evaluate(() => (
     (window as unknown as { __gameDebug: Record<string, unknown> }).__gameDebug
   ));

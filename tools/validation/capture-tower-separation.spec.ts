@@ -1,0 +1,62 @@
+import { expect, test } from "@playwright/test";
+import { mkdirSync, writeFileSync } from "node:fs";
+
+const ARTIFACT_DIR = "artifacts/capture-tower-separation";
+const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&seed=capture-tower-separation-v1";
+
+interface DebugSnapshot {
+  battlefield: {
+    controlPoints: Array<{ id: number; progress: number; owner: string }>;
+    defenseTowers: Array<{ id: number; progress: number; owner: string; built: boolean }>;
+  };
+  ui: { selectedCapturePointId: number | null; selectedDefenseTowerId: number | null; visibleCaptureActions: string[] };
+  verification: { camera: { scrollX: number; scrollY: number; zoom: number; centerX: number; centerY: number }; presentation: { captureTowers: Array<{ id: number; worldX: number; worldY: number }> } };
+}
+
+test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
+
+test("separates capture points and defense towers in data, position, and click selection", async ({ page }) => {
+  const runtimeErrors: string[] = [];
+  page.on("pageerror", (error) => runtimeErrors.push(error.message));
+  page.on("console", (message) => { if (message.type() === "error") runtimeErrors.push(message.text()); });
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto(GAME_URL);
+  const canvas = page.locator("canvas");
+  await canvas.click({ position: { x: 800, y: 805 } });
+  await page.waitForFunction(() => Boolean((window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl), undefined, { timeout: 10_000 })
+    .catch(() => { throw new Error(`Game did not initialize: ${runtimeErrors.join(" | ")}`); });
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error("Canvas is not visible");
+
+  const snapshots: Array<{ side: string; captureProgress: number; towerProgress: number; selectedAfterClick: number | null }> = [];
+  for (const id of [0, 1]) {
+    const initial = await page.evaluate(() => (window as unknown as { __gameDebug: DebugSnapshot }).__gameDebug);
+    const capture = initial.battlefield.controlPoints[id];
+    const tower = initial.battlefield.defenseTowers[id];
+    await page.evaluate((progress) => {
+      (window as unknown as { __terrainPrototypeControl: { focusProgress: (value: number) => void } }).__terrainPrototypeControl.focusProgress(progress);
+    }, tower.progress);
+    await page.waitForTimeout(100);
+    const focused = await page.evaluate(() => (window as unknown as { __gameDebug: DebugSnapshot }).__gameDebug);
+    const visual = focused.verification.presentation.captureTowers[id];
+    const camera = focused.verification.camera;
+    const logicalX = 800 + (visual.worldX - camera.centerX) * camera.zoom;
+    const logicalY = 450 + (visual.worldY - camera.centerY) * camera.zoom;
+    await canvas.click({ position: { x: logicalX * box.width / 1600, y: logicalY * box.height / 900 } });
+    await page.waitForTimeout(50);
+    const clicked = await page.evaluate(() => (window as unknown as { __gameDebug: DebugSnapshot }).__gameDebug);
+    expect(clicked.ui.selectedDefenseTowerId).toBe(id);
+    expect(clicked.ui.selectedCapturePointId).toBeNull();
+    await page.screenshot({ path: `${ARTIFACT_DIR}/${id === 0 ? "player" : "enemy"}-side-separated.png` });
+    snapshots.push({
+      side: id === 0 ? "player" : "enemy",
+      captureProgress: capture.progress,
+      towerProgress: tower.progress,
+      selectedAfterClick: clicked.ui.selectedDefenseTowerId,
+    });
+  }
+
+  expect(Math.abs(snapshots[0].towerProgress)).toBeCloseTo(Math.abs(snapshots[0].captureProgress) * 2, 6);
+  expect(Math.abs(1 - snapshots[1].towerProgress)).toBeCloseTo(Math.abs(1 - snapshots[1].captureProgress) * 2, 6);
+  writeFileSync(`${ARTIFACT_DIR}/coordinates.json`, JSON.stringify({ formula: "tower distance from own base = 2 x linked capture distance", snapshots }, null, 2));
+});

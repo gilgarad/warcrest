@@ -1,6 +1,7 @@
 import { getAge } from "../data/ages";
 import { getAgeBalance, getOpponentScale, MVP_ACTIVE_RESOURCE_IDS } from "../data/balance";
 import type { CapturePointDefinition } from "../data/capturePointDefinitions";
+import type { DefenseTowerDefinition } from "../data/defenseTowerDefinitions";
 import type { ResourceId } from "../data/resources";
 import { getWaveRoster } from "../data/unitRosters";
 import { DISMANTLE_COST_GOLD, getBuildingDefinition, type BuildingId } from "../systems/lane-capture/captureRules";
@@ -12,12 +13,18 @@ export interface LaneHudCapturePoint {
   definition: CapturePointDefinition;
   owner: "player" | "enemy" | "neutral";
   control: number;
-  buildingId?: Exclude<BuildingId, "watchtower">;
+  buildingId?: BuildingId;
   buildingLevel: number;
-  towerBuilt: boolean;
-  towerBuildRemainingSec: number;
-  towerHp: number;
-  towerMaxHp: number;
+}
+
+export interface LaneHudDefenseTower {
+  id: number;
+  definition: DefenseTowerDefinition;
+  owner: "player" | "enemy";
+  built: boolean;
+  buildRemainingSec: number;
+  hp: number;
+  maxHp: number;
 }
 
 export interface LaneBattleHudSnapshot {
@@ -43,6 +50,7 @@ export interface LaneBattleHudInput {
   enemyBaseMaxHp: number;
   opponentCount: 1 | 2 | 3;
   selectedCapturePoint?: LaneHudCapturePoint;
+  selectedDefenseTower?: LaneHudDefenseTower;
 }
 
 const WORKER_ROLES: WorkerRole[] = ["gold", "wood", "food", "metal", "research", "idle"];
@@ -87,6 +95,7 @@ export function createLaneBattleHudSnapshot(input: LaneBattleHudInput): LaneBatt
     canDecrease: role !== "idle" && input.player.workers[role] > 0,
   }])) as LaneBattleHudSnapshot["workers"];
   const selected = input.selectedCapturePoint;
+  const selectedTower = input.selectedDefenseTower;
 
   return {
     ageText: `시대 ${getAge(input.player.ageId).label}`,
@@ -102,19 +111,24 @@ export function createLaneBattleHudSnapshot(input: LaneBattleHudInput): LaneBatt
       `보급대 ${roster.support[0]?.count ?? 0}기 포함`,
       `웨이브 식량 ${Math.round(getAgeBalance(input.player.ageId).baseWaveFoodCost * getOpponentScale(input.opponentCount).foodCostMultiplier)}`,
     ],
-    captureTitle: selected
-      ? selected.definition.pointType === "fixed-fortress"
-        ? `고정 요새 · 거점 ${selected.id + 1}`
-        : `건설 거점 ${selected.id + 1}`
-      : "거점 선택",
-    captureLines: selected
+    captureTitle: selectedTower
+      ? `방어 타워 ${selectedTower.id + 1}`
+      : selected ? `건설 거점 ${selected.id + 1}` : "거점 또는 타워 선택",
+    captureLines: selectedTower
+      ? [
+          `소유 ${selectedTower.owner === "player" ? "아군" : "적"}`,
+          selectedTower.built
+            ? `가동 중 HP ${Math.round(selectedTower.hp)}/${Math.round(selectedTower.maxHp)}`
+            : selectedTower.buildRemainingSec > 0
+              ? `재건 중 ${Math.ceil(selectedTower.buildRemainingSec)}초`
+              : "파괴됨",
+          "거점 점령과 독립된 방어 구조물",
+        ]
+      : selected
       ? [
           `소유 ${selected.owner === "player" ? "아군" : selected.owner === "enemy" ? "적" : "중립"} | 점령 ${Math.round(Math.abs(selected.control) * 100)}%`,
-          `타워 ${selected.towerBuilt ? `가동 중 HP ${Math.round(selected.towerHp)}/${Math.round(selected.towerMaxHp)}` : selected.towerBuildRemainingSec > 0 ? `재건 ${Math.ceil(selected.towerBuildRemainingSec)}초` : "파괴됨"}`,
-          selected.definition.pointType === "fixed-fortress"
-            ? "고정 요새 전용 | 교체·폐기 불가"
-            : `건설 ${selected.buildingId ? `${getBuildingDefinition(selected.buildingId).label} Lv.${selected.buildingLevel}` : "없음"} | 폐기 ${DISMANTLE_COST_GOLD}G`,
+          `건설 ${selected.buildingId ? `${getBuildingDefinition(selected.buildingId).label} Lv.${selected.buildingLevel}` : "없음"} | 폐기 ${DISMANTLE_COST_GOLD}G`,
         ]
-      : ["거점을 터치해 선택", "점령 후 건설 가능"],
+      : ["거점이나 타워를 터치해 선택", "두 구조물은 서로 다른 위치와 규칙을 사용"],
   };
 }

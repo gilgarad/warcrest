@@ -14,7 +14,7 @@ type Snapshot = {
   activeProjectiles: Array<{ textureKey: string; x: number; y: number }>;
   engagement: { uniqueAttackers: number; battleUnits: number; currentlyAnimating: number };
   battlefield: {
-    controlPoints: Array<{ id: number; towerHp: number; towerMaxHp: number }>;
+    defenseTowers: Array<{ id: number; hp: number; maxHp: number }>;
   };
   verification: {
     terrain: {
@@ -52,25 +52,27 @@ test("melee structure damage lands on contact rather than at wind-up", async ({ 
       __terrainPrototypeControl: { prepareStructureAttackProbe: (unitId: "stone_axeman") => void };
     }).__terrainPrototypeControl.prepareStructureAttackProbe("stone_axeman");
   });
-  const hpBefore = (await snapshot(page)).battlefield.controlPoints[1].towerHp;
+  const hpBefore = (await snapshot(page)).battlefield.defenseTowers[1].hp;
   await page.waitForFunction(() => {
     const state = (window as unknown as { __gameDebug: Snapshot }).__gameDebug;
     return state.units[0]?.attackAnimTime > 0 && state.units[0]?.attackTargetKind === "structure";
   });
   await page.screenshot({ path: `${ARTIFACT_DIR}/axeman-structure-windup.png` });
-  expect((await snapshot(page)).battlefield.controlPoints[1].towerHp).toBe(hpBefore);
+  expect((await snapshot(page)).battlefield.defenseTowers[1].hp).toBe(hpBefore);
 
-  await page.waitForTimeout(260);
+  await page.waitForFunction((before) => (
+    (window as unknown as { __gameDebug: Snapshot }).__gameDebug.battlefield.defenseTowers[1].hp < before
+  ), hpBefore);
   const contact = await snapshot(page);
   await page.screenshot({ path: `${ARTIFACT_DIR}/axeman-structure-contact.png` });
-  expect(contact.battlefield.controlPoints[1].towerHp).toBeLessThan(hpBefore);
+  expect(contact.battlefield.defenseTowers[1].hp).toBeLessThan(hpBefore);
   expect(contact.units[0].attackTargetKind).toBe("structure");
 
   await page.waitForTimeout(180);
   await page.screenshot({ path: `${ARTIFACT_DIR}/axeman-structure-recover.png` });
   writeFileSync(`${ARTIFACT_DIR}/melee-structure-timing.json`, JSON.stringify({
     hpBefore,
-    hpAtContact: contact.battlefield.controlPoints[1].towerHp,
+    hpAtContact: contact.battlefield.defenseTowers[1].hp,
     contactDelayMs: 240,
   }, null, 2));
 });
@@ -82,21 +84,21 @@ test("ranged structure attack releases before projectile hit and HP loss", async
       __terrainPrototypeControl: { prepareStructureAttackProbe: (unitId: "stone_slinger") => void };
     }).__terrainPrototypeControl.prepareStructureAttackProbe("stone_slinger");
   });
-  const hpBefore = (await snapshot(page)).battlefield.controlPoints[1].towerHp;
+  const hpBefore = (await snapshot(page)).battlefield.defenseTowers[1].hp;
   await page.waitForFunction(() => (
     (window as unknown as { __gameDebug: Snapshot }).__gameDebug.activeProjectiles.length > 0
   ));
   const released = await snapshot(page);
-  expect(released.battlefield.controlPoints[1].towerHp).toBe(hpBefore);
+  expect(released.battlefield.defenseTowers[1].hp).toBe(hpBefore);
   await page.screenshot({ path: `${ARTIFACT_DIR}/slinger-structure-release.png` });
   await page.waitForFunction((before) => (
-    (window as unknown as { __gameDebug: Snapshot }).__gameDebug.battlefield.controlPoints[1].towerHp < before
+    (window as unknown as { __gameDebug: Snapshot }).__gameDebug.battlefield.defenseTowers[1].hp < before
   ), hpBefore);
   const hit = await snapshot(page);
   await page.screenshot({ path: `${ARTIFACT_DIR}/slinger-structure-hit.png` });
   writeFileSync(`${ARTIFACT_DIR}/ranged-structure-timing.json`, JSON.stringify({
     hpBefore,
-    hpAfter: hit.battlefield.controlPoints[1].towerHp,
+    hpAfter: hit.battlefield.defenseTowers[1].hp,
     projectileAtRelease: released.activeProjectiles,
   }, null, 2));
 });

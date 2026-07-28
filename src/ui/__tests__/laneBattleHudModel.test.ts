@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CAPTURE_POINT_DEFINITIONS } from "../../data/capturePointDefinitions";
+import { DEFENSE_TOWER_DEFINITIONS } from "../../data/defenseTowerDefinitions";
 import { createTeamState, makeResourceMap } from "../../systems/lane-economy/laneEconomy";
 import { createLaneBattleHudSnapshot } from "../laneBattleHudModel";
 
@@ -21,10 +21,10 @@ describe("lane battle HUD model", () => {
     expect(snapshot.resources).toMatchObject({ gold: "10", wood: "21", food: "30", metal: "40" });
     expect(snapshot.baseText).toBe("전장 병력 4 | 적 병력 3");
     expect(snapshot.workers.gold.canIncrease).toBe(true);
-    expect(snapshot.captureTitle).toBe("거점 선택");
+    expect(snapshot.captureTitle).toBe("거점 또는 타워 선택");
   });
 
-  it("distinguishes fixed-fortress copy from buildable-point copy", () => {
+  it("distinguishes a defense tower from a construction capture point", () => {
     const player = createTeamState("player", makeResourceMap(0, 0, 0, 0), 400);
     const enemy = createTeamState("enemy", makeResourceMap(0, 0, 0, 0), 400);
     const snapshot = createLaneBattleHudSnapshot({
@@ -35,28 +35,18 @@ describe("lane battle HUD model", () => {
       playerBaseMaxHp: 400,
       enemyBaseMaxHp: 400,
       opponentCount: 1,
-      selectedCapturePoint: {
+      selectedDefenseTower: {
         id: 1,
-        definition: {
-          ...CAPTURE_POINT_DEFINITIONS[1],
-          pointType: "fixed-fortress",
-          initialBuilding: "fixed-fortress",
-          allowedBuildingTypes: [],
-          canDemolish: false,
-          canRepair: true,
-          canReplaceBuilding: false,
-        },
+        definition: DEFENSE_TOWER_DEFINITIONS[1],
         owner: "player",
-        control: 1,
-        buildingLevel: 0,
-        towerBuilt: true,
-        towerBuildRemainingSec: 0,
-        towerHp: 130,
-        towerMaxHp: 130,
+        built: true,
+        buildRemainingSec: 0,
+        hp: 130,
+        maxHp: 130,
       },
     });
 
-    expect(snapshot.captureTitle).toContain("고정 요새");
-    expect(snapshot.captureLines).toContain("고정 요새 전용 | 교체·폐기 불가");
+    expect(snapshot.captureTitle).toContain("방어 타워");
+    expect(snapshot.captureLines).toContain("거점 점령과 독립된 방어 구조물");
   });
 });

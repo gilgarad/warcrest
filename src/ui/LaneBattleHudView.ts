@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { MVP_ACTIVE_RESOURCE_IDS } from "../data/balance";
 import type { CapturePointAction } from "../data/capturePointDefinitions";
+import type { DefenseTowerAction } from "../data/defenseTowerDefinitions";
 import { getResource } from "../data/resources";
 import type { AudioSystem } from "../systems/audio/audioSystem";
 import type { WorkerRole } from "../systems/lane-economy/laneEconomy";
@@ -29,18 +30,17 @@ export interface LaneBattleHudCallbacks {
   useInstantWave: () => void;
   ageUp: () => void;
   shiftWorker: (role: WorkerRole, delta: 1 | -1) => void;
-  buildWatchtower: () => void;
+  rebuildDefenseTower: () => void;
   buildSupplyDepot: () => void;
   buildMint: () => void;
   dismantle: () => void;
-  maintainFortress: () => void;
   onAudioSettingsVisibilityChange: (visible: boolean) => void;
 }
 
 export class LaneBattleHudView {
   private readonly resourceTexts = new Map<string, Phaser.GameObjects.Text>();
   private readonly workerRows = new Map<WorkerRole, WorkerUiRow>();
-  private readonly captureActionButtons = new Map<CapturePointAction, ActionButton>();
+  private readonly captureActionButtons = new Map<CapturePointAction | DefenseTowerAction, ActionButton>();
   private ageText!: Phaser.GameObjects.Text;
   private waveText!: Phaser.GameObjects.Text;
   private baseText!: Phaser.GameObjects.Text;
@@ -78,7 +78,7 @@ export class LaneBattleHudView {
     this.audioDebugText?.setText(lines);
   }
 
-  apply(snapshot: LaneBattleHudSnapshot, actions: readonly CapturePointAction[]): void {
+  apply(snapshot: LaneBattleHudSnapshot, actions: readonly (CapturePointAction | DefenseTowerAction)[]): void {
     this.ageText.setText(snapshot.ageText);
     this.waveText.setText(snapshot.waveText);
     this.baseText.setText(snapshot.baseText);
@@ -102,7 +102,7 @@ export class LaneBattleHudView {
     this.capturePanelBody.setText(snapshot.captureLines);
   }
 
-  getVisibleCaptureActions(): CapturePointAction[] {
+  getVisibleCaptureActions(): (CapturePointAction | DefenseTowerAction)[] {
     return [...this.captureActionButtons.entries()]
       .filter(([, button]) => button.rect.visible && button.text.visible)
       .map(([action]) => action);
@@ -143,12 +143,10 @@ export class LaneBattleHudView {
     this.capturePanelBody = this.scene.add.text(790, 784, "", { fontFamily: "sans-serif", fontSize: "12px", color: "#d8e7f6", align: "center", lineSpacing: 3 }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0.5);
     this.infoText = this.scene.add.text(790, 842, "", { fontFamily: "sans-serif", fontSize: "12px", color: "#a8bdd7" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0.5);
 
-    this.captureActionButtons.set("build-watchtower", this.createActionButton(882, 670, 150, 34, "요새", this.callbacks.buildWatchtower));
+    this.captureActionButtons.set("rebuild-defense-tower", this.createActionButton(882, 670, 150, 34, "타워 재건", this.callbacks.rebuildDefenseTower));
     this.captureActionButtons.set("build-supply-depot", this.createActionButton(882, 712, 150, 34, "병참", this.callbacks.buildSupplyDepot));
     this.captureActionButtons.set("build-mint", this.createActionButton(882, 754, 150, 34, "조달소", this.callbacks.buildMint));
     this.captureActionButtons.set("dismantle", this.createActionButton(882, 796, 150, 30, "폐기", this.callbacks.dismantle));
-    this.captureActionButtons.set("repair-fortress", this.createActionButton(882, 670, 150, 34, "요새 수리", this.callbacks.maintainFortress));
-    this.captureActionButtons.set("rebuild-fortress", this.createActionButton(882, 670, 150, 34, "요새 재건", this.callbacks.maintainFortress));
 
     this.playerBaseBar = this.scene.add.rectangle(160, 228, 220, 12, 0x4fc1ff, 1).setOrigin(0, 0.5).setDepth(this.depth + 2);
     this.enemyBaseBar = this.scene.add.rectangle(1218, 228, 220, 12, 0xff7373, 1).setOrigin(0, 0.5).setDepth(this.depth + 2);

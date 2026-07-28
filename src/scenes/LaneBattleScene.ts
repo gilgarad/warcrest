@@ -16,7 +16,7 @@ import {
 } from "../data/unitRosters";
 import {
   CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC,
-  getCapturePointSocketId,
+  getDefenseTowerSocketId,
   LANE_BATTLEFIELD_MAP_SPEC,
 } from "../data/battlefieldMaps";
 import {
@@ -38,6 +38,11 @@ import {
   type CapturePointAction,
   type CapturePointDefinition,
 } from "../data/capturePointDefinitions";
+import {
+  DEFENSE_TOWER_DEFINITIONS,
+  type DefenseTowerAction,
+  type DefenseTowerDefinition,
+} from "../data/defenseTowerDefinitions";
 import {
   BattlefieldPrototypeRenderer,
   PROTOTYPE_TERRAIN_ASSETS,
@@ -108,13 +113,15 @@ import {
   BUILDING_DEFINITIONS,
   DISMANTLE_COST_GOLD,
   getBuildingDefinition,
-  getTowerBuildCost,
-  getTowerMaxHp,
-  getTowerRepairCost,
   resolveCapturedBuilding,
   type BuildingDefinition,
   type BuildingId,
 } from "../systems/lane-capture/captureRules";
+import {
+  DEFENSE_TOWER_BUILD_DURATION_SEC,
+  getDefenseTowerBuildCost,
+  getDefenseTowerMaxHp,
+} from "../systems/lane-capture/defenseTowerRules";
 
 const CANVAS_W = 1600;
 const CANVAS_H = 900;
@@ -144,8 +151,6 @@ const FACING_DEAD_ZONE_WORLD_PX = 0.35;
 const ATTACK_VISUAL_DURATION_SEC = 0.48;
 const TOWER_IMAGE_GROUND_ORIGIN_Y = 1128 / 1254;
 const TOWER_IMAGE_VISIBLE_HEIGHT_RATIO = 1036 / 1254;
-const FIXED_FORTRESS_GROUND_ORIGIN_Y = 1038 / 1122;
-const FIXED_FORTRESS_VISIBLE_HEIGHT_RATIO = 1010 / 1122;
 
 type UnitTextureKey = string;
 
@@ -225,27 +230,37 @@ interface CapturePointState {
   progress: number;
   owner: TeamId | "neutral";
   control: number;
-  buildingId?: Exclude<BuildingId, "watchtower">;
+  buildingId?: BuildingId;
   buildingLevel: number;
   incomeTimerSec: number;
-  towerTimerSec: number;
-  towerBuildRemainingSec: number;
-  towerBuilt: boolean;
-  towerMaxHp: number;
-  towerHp: number;
   supplyTimerSec: number;
   ring: Phaser.GameObjects.Arc;
   core: Phaser.GameObjects.Arc;
-  towerSprite: Phaser.GameObjects.Image;
+  label: Phaser.GameObjects.Text;
+  ownerText: Phaser.GameObjects.Text;
+  buildingText: Phaser.GameObjects.Text;
+}
+
+interface DefenseTowerState {
+  id: number;
+  definition: DefenseTowerDefinition;
+  progress: number;
+  owner: TeamId;
+  attackTimerSec: number;
+  buildRemainingSec: number;
+  built: boolean;
+  maxHp: number;
+  hp: number;
+  sprite: Phaser.GameObjects.Image;
   selectionHitZone: Phaser.GameObjects.Zone;
-  towerHpBg: Phaser.GameObjects.Rectangle;
-  towerHpFill: Phaser.GameObjects.Rectangle;
+  hpBg: Phaser.GameObjects.Rectangle;
+  hpFill: Phaser.GameObjects.Rectangle;
   groundPresentation?: StructureGroundPresentation;
   groundPresentationV2?: StructureGroundPresentation;
   groundPresentationWorld?: StructureGroundPresentation;
   label: Phaser.GameObjects.Text;
   ownerText: Phaser.GameObjects.Text;
-  buildingText: Phaser.GameObjects.Text;
+  statusText: Phaser.GameObjects.Text;
 }
 
 let nextUnitId = 1;
@@ -260,7 +275,9 @@ export class LaneBattleScene extends Phaser.Scene {
   private battlefield!: BattlefieldResult;
   private units: LaneUnit[] = [];
   private capturePoints: CapturePointState[] = [];
+  private defenseTowers: DefenseTowerState[] = [];
   private selectedCapturePointId: number | null = null;
+  private selectedDefenseTowerId: number | null = null;
   private player!: TeamState;
   private enemy!: TeamState;
   private elapsedSec = 0;
@@ -616,13 +633,14 @@ export class LaneBattleScene extends Phaser.Scene {
       }),
       snapshot: () => this.createVerificationSnapshot(),
       selectCapturePoint: (id: number) => this.selectCapturePoint(id),
+      selectDefenseTower: (id: number) => this.selectDefenseTower(id),
       setCentralFortressHpRatio: (ratio: number) => {
-        const fortress = this.capturePoints.find((point) => point.definition.pointType === "fixed-fortress");
-        if (!fortress) return;
-        fortress.towerBuilt = ratio > 0;
-        fortress.towerBuildRemainingSec = 0;
-        fortress.towerHp = fortress.towerMaxHp * Phaser.Math.Clamp(ratio, 0, 1);
-        this.selectCapturePoint(fortress.id);
+        const tower = this.defenseTowers[1];
+        if (!tower) return;
+        tower.built = ratio > 0;
+        tower.buildRemainingSec = 0;
+        tower.hp = tower.maxHp * Phaser.Math.Clamp(ratio, 0, 1);
+        this.selectDefenseTower(tower.id);
         this.refreshUi();
       },
       setPlayerBaseHpRatio: (ratio: number) => {
@@ -630,14 +648,11 @@ export class LaneBattleScene extends Phaser.Scene {
         this.refreshUi();
         this.publishDebug();
       },
-      prepareCapturePointInteraction: (id: number, hpRatio = 1) => {
+      prepareCapturePointInteraction: (id: number, _hpRatio = 1) => {
         const point = this.capturePoints.find((entry) => entry.id === id);
         if (!point) return;
         point.owner = "player";
         point.control = 1;
-        point.towerBuilt = true;
-        point.towerBuildRemainingSec = 0;
-        point.towerHp = point.towerMaxHp * Phaser.Math.Clamp(hpRatio, 0.05, 1);
         point.buildingId = undefined;
         point.buildingLevel = 0;
         const focus = this.progressToScreen(point.progress, 0);
@@ -705,12 +720,11 @@ export class LaneBattleScene extends Phaser.Scene {
         this.units = [];
         this.activeProjectiles.forEach((projectile) => projectile.destroy());
         this.activeProjectiles.clear();
-        const tower = this.capturePoints[1];
+        const tower = this.defenseTowers[1];
         tower.owner = "player";
-        tower.control = 1;
-        tower.towerBuilt = true;
-        tower.towerHp = tower.towerMaxHp;
-        tower.towerTimerSec = 0;
+        tower.built = true;
+        tower.hp = tower.maxHp;
+        tower.attackTimerSec = 0;
         this.spawnLaneUnit("enemy", "battle", "stone_axeman", tower.progress + 0.065, 0);
         this.tickWatchtower(tower, 0);
         this.activeProjectiles.forEach((projectile) => setLaneProjectileProgress(projectile, 0.45));
@@ -725,13 +739,17 @@ export class LaneBattleScene extends Phaser.Scene {
         this.capturePoints.forEach((point, index) => {
           point.owner = index === 0 ? "player" : "enemy";
           point.control = index === 0 ? 1 : -1;
-          point.towerBuilt = true;
-          point.towerBuildRemainingSec = 0;
-          point.towerHp = point.towerMaxHp;
+        });
+        this.defenseTowers.forEach((tower, index) => {
+          tower.owner = index === 0 ? "player" : "enemy";
+          tower.built = true;
+          tower.buildRemainingSec = 0;
+          tower.hp = tower.maxHp;
         });
         const focus = this.progressToScreen(0.571, 0).add(new Phaser.Math.Vector2(0, -150));
         this.cameras.main.centerOn(focus.x, focus.y);
         this.refreshCapturePointVisuals();
+        this.refreshDefenseTowerVisuals();
         this.publishDebug();
       },
       prepareStructureAttackProbe: (unitId: "stone_axeman" | "stone_slinger") => {
@@ -740,12 +758,11 @@ export class LaneBattleScene extends Phaser.Scene {
         this.activeProjectiles.forEach((projectile) => projectile.destroy());
         this.activeProjectiles.clear();
         this.engagedUnitIds.clear();
-        const point = this.capturePoints[1];
+        const point = this.defenseTowers[1];
         point.owner = "enemy";
-        point.control = -1;
-        point.towerBuilt = true;
-        point.towerBuildRemainingSec = 0;
-        point.towerHp = point.towerMaxHp;
+        point.built = true;
+        point.buildRemainingSec = 0;
+        point.hp = point.maxHp;
         const offset = unitId === "stone_axeman" ? 0.012 : 0.046;
         this.spawnLaneUnit("player", "battle", unitId, point.progress - offset, 0);
         const unit = this.units[0];
@@ -759,12 +776,8 @@ export class LaneBattleScene extends Phaser.Scene {
         this.units.forEach((unit) => this.destroyUnitPresentation(unit));
         this.units = [];
         this.engagedUnitIds.clear();
-        this.capturePoints.forEach((point) => {
-          point.owner = "neutral";
-          point.control = 0;
-          point.towerBuilt = false;
-          point.towerHp = 0;
-        });
+        this.capturePoints.forEach((point) => { point.owner = "neutral"; point.control = 0; });
+        this.defenseTowers.forEach((tower) => { tower.built = false; tower.hp = 0; });
         const rows = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
         for (let index = 0; index < 12; index += 1) {
           const row = rows[index % rows.length];
@@ -805,11 +818,16 @@ export class LaneBattleScene extends Phaser.Scene {
         this.capturePoints.forEach((point) => {
           point.ring.setVisible(false);
           point.core.setVisible(false);
-          point.towerHpBg.setVisible(false);
-          point.towerHpFill.setVisible(false);
           point.label.setVisible(false);
           point.ownerText.setVisible(false);
           point.buildingText.setVisible(false);
+        });
+        this.defenseTowers.forEach((tower) => {
+          tower.hpBg.setVisible(false);
+          tower.hpFill.setVisible(false);
+          tower.label.setVisible(false);
+          tower.ownerText.setVisible(false);
+          tower.statusText.setVisible(false);
         });
       },
       prepareVisualAuditCombat: () => {
@@ -818,12 +836,8 @@ export class LaneBattleScene extends Phaser.Scene {
         this.activeProjectiles.forEach((projectile) => projectile.destroy());
         this.activeProjectiles.clear();
         this.engagedUnitIds.clear();
-        this.capturePoints.forEach((point) => {
-          point.owner = "neutral";
-          point.control = 0;
-          point.towerBuilt = false;
-          point.towerHp = 0;
-        });
+        this.capturePoints.forEach((point) => { point.owner = "neutral"; point.control = 0; });
+        this.defenseTowers.forEach((tower) => { tower.built = false; tower.hp = 0; });
         this.spawnLaneUnit("player", "battle", "stone_axeman", 0.492, -0.5);
         this.spawnLaneUnit("enemy", "battle", "stone_axeman", 0.508, 0.5);
         this.units.forEach((unit) => {
@@ -941,20 +955,17 @@ export class LaneBattleScene extends Phaser.Scene {
     this.legacyObstacleObjects.forEach((object) => object.setVisible(mode !== "world-surface"));
 
     this.capturePoints.forEach((point) => {
-      const isPrototypePoint = point.definition.pointType === "fixed-fortress";
-      const isV1 = mode === "prototype" && isPrototypePoint;
       const isV2 = mode === "prototype-v2" || mode === "world-surface";
       point.ring
-        .setScale(isV1 ? 1.42 : 1, isV1 ? 0.68 : 1)
+        .setScale(1)
         .setVisible(!isV2 || this.selectedCapturePointId === point.id);
       point.core
-        .setScale(isV1 ? 1.18 : 1, isV1 ? 0.72 : 1)
-        .setVisible(!isV2 && point.towerBuilt);
-      point.groundPresentation?.shadow.setVisible(isV1 && point.towerBuilt);
-      point.groundPresentationV2?.shadow.setVisible(isV2 && point.towerBuilt);
+        .setScale(1)
+        .setVisible(!isV2);
     });
     this.units.forEach((unit) => this.syncUnitPresentation(unit));
     this.refreshCapturePointVisuals();
+    this.refreshDefenseTowerVisuals();
 
     if (announce) {
       const label = mode === "legacy"
@@ -1044,15 +1055,6 @@ export class LaneBattleScene extends Phaser.Scene {
     this.capturePoints = CAPTURE_POINT_DEFINITIONS.map((definition) => {
       const { id: index, progress } = definition;
       const pos = this.progressToScreen(progress, 0);
-      const groundPresentation = index === 1
-        ? this.terrainPrototype.getSocketPresentation(getCapturePointSocketId(index))
-        : undefined;
-      const groundPresentationV2 = this.terrainPrototypeV2.getSocketPresentation(
-        getCapturePointSocketId(index),
-      );
-      const groundPresentationWorld = this.terrainWorld.getSocketPresentation(
-        getCapturePointSocketId(index),
-      );
       const ring = this.add.circle(pos.x, pos.y, 34, 0xf3cc6a, 0.2)
         .setDepth(this.getGroundDepth(pos.y, -6))
         .setStrokeStyle(4, 0xf8e2a5, 0.55);
@@ -1079,27 +1081,9 @@ export class LaneBattleScene extends Phaser.Scene {
         stroke: "#132033",
         strokeThickness: 3,
       }).setOrigin(0.5).setDepth(this.getGroundDepth(pos.y, 4));
-      const towerSprite = this.add.image(pos.x, pos.y, "tower-full")
-        .setDisplaySize(TOWER_W, TOWER_H)
-        .setOrigin(0.5, TOWER_IMAGE_GROUND_ORIGIN_Y)
-        .setDepth(this.getGroundDepth(pos.y));
-      const selectionHitZone = this.add.zone(pos.x, pos.y, TOWER_W, TOWER_H)
-        .setOrigin(0.5, TOWER_IMAGE_GROUND_ORIGIN_Y)
-        .setDepth(DEPTH_UI - 1)
-        .setInteractive({ useHandCursor: true });
-      const towerHpBg = this.add.rectangle(pos.x, pos.y - 158, 60, 7, 0x132033, 0.92)
-        .setDepth(towerSprite.depth + 1)
-        .setVisible(false);
-      const towerHpFill = this.add.rectangle(pos.x - 30, pos.y - 158, 60, 7, 0xf3cc6a, 1)
-        .setOrigin(0, 0.5)
-        .setDepth(towerSprite.depth + 2)
-        .setVisible(false);
-
       ring.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
       core.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
       label.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
-      towerSprite.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
-      selectionHitZone.on("pointerdown", () => this.selectCapturePoint(index));
 
       return {
         id: index,
@@ -1110,24 +1094,63 @@ export class LaneBattleScene extends Phaser.Scene {
         buildingId: undefined,
         buildingLevel: 0,
         incomeTimerSec: 0,
-        towerTimerSec: 0,
-        towerBuildRemainingSec: 0,
-        towerBuilt: definition.initialBuilding !== null,
-        towerMaxHp: getTowerMaxHp("stone"),
-        towerHp: getTowerMaxHp("stone"),
         supplyTimerSec: 0,
         ring,
         core,
-        towerSprite,
-        selectionHitZone,
-        towerHpBg,
-        towerHpFill,
-        groundPresentation,
-        groundPresentationV2,
-        groundPresentationWorld,
         label,
         ownerText,
         buildingText,
+      };
+    });
+
+    this.defenseTowers = DEFENSE_TOWER_DEFINITIONS.map((definition) => {
+      const pos = this.progressToScreen(definition.progress, 0);
+      const sprite = this.add.image(pos.x, pos.y, "tower-full")
+        .setDisplaySize(TOWER_W, TOWER_H)
+        .setOrigin(0.5, TOWER_IMAGE_GROUND_ORIGIN_Y)
+        .setDepth(this.getGroundDepth(pos.y));
+      const selectionHitZone = this.add.zone(pos.x, pos.y, TOWER_W, TOWER_H)
+        .setOrigin(0.5, TOWER_IMAGE_GROUND_ORIGIN_Y)
+        .setDepth(this.getGroundDepth(pos.y, -1))
+        .setInteractive({ useHandCursor: true });
+      const hpBg = this.add.rectangle(pos.x, pos.y - 158, 60, 7, 0x132033, 0.92)
+        .setDepth(sprite.depth + 1);
+      const hpFill = this.add.rectangle(pos.x - 30, pos.y - 158, 60, 7, 0xf3cc6a, 1)
+        .setOrigin(0, 0.5)
+        .setDepth(sprite.depth + 2);
+      const label = this.add.text(pos.x, pos.y - 190, `방어 타워 ${definition.id + 1}`, {
+        fontFamily: "sans-serif", fontSize: "14px", color: "#fff4cf", stroke: "#1a130a", strokeThickness: 3,
+      }).setOrigin(0.5).setDepth(this.getGroundDepth(pos.y, 7));
+      const ownerText = this.add.text(pos.x, pos.y + 34, definition.owner === "player" ? "아군 타워" : "적 타워", {
+        fontFamily: "sans-serif", fontSize: "12px", color: "#d3d8e8", stroke: "#132033", strokeThickness: 3,
+      }).setOrigin(0.5).setDepth(this.getGroundDepth(pos.y, 7));
+      const statusText = this.add.text(pos.x, pos.y + 52, "가동 중", {
+        fontFamily: "sans-serif", fontSize: "11px", color: "#d3d8e8", stroke: "#132033", strokeThickness: 3,
+      }).setOrigin(0.5).setDepth(this.getGroundDepth(pos.y, 7));
+      sprite.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectDefenseTower(definition.id));
+      selectionHitZone.on("pointerdown", () => this.selectDefenseTower(definition.id));
+      label.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectDefenseTower(definition.id));
+      const maxHp = getDefenseTowerMaxHp("stone");
+      return {
+        id: definition.id,
+        definition,
+        progress: definition.progress,
+        owner: definition.owner,
+        attackTimerSec: 0,
+        buildRemainingSec: 0,
+        built: true,
+        maxHp,
+        hp: maxHp,
+        sprite,
+        selectionHitZone,
+        hpBg,
+        hpFill,
+        groundPresentation: this.terrainPrototype.getSocketPresentation(getDefenseTowerSocketId(definition.id)),
+        groundPresentationV2: this.terrainPrototypeV2.getSocketPresentation(getDefenseTowerSocketId(definition.id)),
+        groundPresentationWorld: this.terrainWorld.getSocketPresentation(getDefenseTowerSocketId(definition.id)),
+        label,
+        ownerText,
+        statusText,
       };
     });
 
@@ -1167,11 +1190,10 @@ export class LaneBattleScene extends Phaser.Scene {
         useInstantWave: () => this.tryUseInstantWaveToken(this.player),
         ageUp: () => this.tryAgeUpPlayer(),
         shiftWorker: (role, delta) => this.shiftWorker(role, delta),
-        buildWatchtower: () => this.tryBuildAtSelectedPoint("watchtower"),
+        rebuildDefenseTower: () => this.tryRebuildSelectedDefenseTower(),
         buildSupplyDepot: () => this.tryBuildAtSelectedPoint("supply_depot"),
         buildMint: () => this.tryBuildAtSelectedPoint("mint"),
         dismantle: () => this.tryDismantleSelectedPoint(),
-        maintainFortress: () => this.tryMaintainSelectedFortress(),
         onAudioSettingsVisibilityChange: (visible) => {
           this.audioSettingsOpen = visible;
         },
@@ -1183,7 +1205,13 @@ export class LaneBattleScene extends Phaser.Scene {
     );
   }
 
-  private getSelectedCaptureActions(): CapturePointAction[] {
+  private getSelectedCaptureActions(): (CapturePointAction | DefenseTowerAction)[] {
+    const tower = this.defenseTowers.find((entry) => entry.id === this.selectedDefenseTowerId);
+    if (tower) {
+      return tower.owner === "player" && !tower.built && tower.buildRemainingSec <= 0
+        ? ["rebuild-defense-tower"]
+        : [];
+    }
     const point = this.capturePoints.find((entry) => entry.id === this.selectedCapturePointId);
     return point ? getCapturePointActions(point.definition, point) : [];
   }
@@ -1195,15 +1223,13 @@ export class LaneBattleScene extends Phaser.Scene {
       const engagementDistance = Math.max(ENGAGE_GAP * 2.6, unit.range * RANGE_TO_PROGRESS * 1.35);
       return this.unitDistance(unit, nearest) <= engagementDistance;
     }).length;
-    const fixedFortress = this.capturePoints.find((point) =>
-      point.definition.pointType === "fixed-fortress" && point.owner === "player",
-    );
+    const playerTower = this.defenseTowers.find((tower) => tower.owner === "player");
     this.audioWiring.update(this.elapsedSec, {
       engagedUnits,
       activeProjectiles: this.activeProjectiles.size,
       playerBaseHpRatio: this.player.baseHp / PLAYER_BASE_HP,
-      playerFortressHpRatio: fixedFortress
-        ? fixedFortress.towerBuilt ? fixedFortress.towerHp / fixedFortress.towerMaxHp : 0
+      playerFortressHpRatio: playerTower
+        ? playerTower.built ? playerTower.hp / playerTower.maxHp : 0
         : 1,
     });
   }
@@ -1305,11 +1331,11 @@ export class LaneBattleScene extends Phaser.Scene {
           if (this.isRangedUnit(unit)) {
             const start = this.getUnitProjectileAnchor(unit);
             const end = this.getTowerProjectileAnchor(enemyTower, false);
-            this.startRangedAttack(unit, enemyTower.towerSprite.x, "structure", () => {
+            this.startRangedAttack(unit, enemyTower.sprite.x, "structure", () => {
               this.launchProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToTower(enemyTower, damage, unit.team), 1.02);
             });
           } else {
-            this.startMeleeAttack(unit, enemyTower.towerSprite.x, "structure", () => {
+            this.startMeleeAttack(unit, enemyTower.sprite.x, "structure", () => {
               this.applyDamageToTower(enemyTower, damage, unit.team);
             });
           }
@@ -1584,9 +1610,9 @@ export class LaneBattleScene extends Phaser.Scene {
       .sort((a, b) => this.unitDistance(unit, a) - this.unitDistance(unit, b))[0];
   }
 
-  private findNearestEnemyTower(unit: LaneUnit): CapturePointState | undefined {
-    return this.capturePoints
-      .filter((point) => point.owner !== "neutral" && point.owner !== unit.team && point.towerBuilt)
+  private findNearestEnemyTower(unit: LaneUnit): DefenseTowerState | undefined {
+    return this.defenseTowers
+      .filter((tower) => tower.owner !== unit.team && tower.built)
       .sort((a, b) => this.towerDistance(unit, a) - this.towerDistance(unit, b))[0];
   }
 
@@ -1596,8 +1622,8 @@ export class LaneBattleScene extends Phaser.Scene {
     return Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
   }
 
-  private towerDistance(unit: LaneUnit, point: CapturePointState): number {
-    const progressDistance = progressBetween(unit.progress, point.progress);
+  private towerDistance(unit: LaneUnit, tower: DefenseTowerState): number {
+    const progressDistance = progressBetween(unit.progress, tower.progress);
     const rowDistance = Math.abs(unit.laneRow) * 0.01;
     return Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
   }
@@ -1637,46 +1663,48 @@ export class LaneBattleScene extends Phaser.Scene {
         }
       }
 
-      this.tickWatchtower(point, deltaSec);
       if (point.buildingId === "supply_depot") this.tickSupplyDepot(point, deltaSec);
       if (point.buildingId === "mint") this.tickMint(point, deltaSec);
     });
 
     this.enemyAutoBuildCapturePoint();
+    this.defenseTowers.forEach((tower) => this.tickWatchtower(tower, deltaSec));
+    this.enemyAutoRebuildDefenseTower();
     this.refreshCapturePointVisuals();
+    this.refreshDefenseTowerVisuals();
   }
 
-  private tickWatchtower(point: CapturePointState, deltaSec: number): void {
-    if (point.towerBuildRemainingSec > 0) {
-      point.towerBuildRemainingSec = Math.max(0, point.towerBuildRemainingSec - deltaSec);
-      if (point.towerBuildRemainingSec === 0) {
-        point.towerBuilt = true;
-        point.towerMaxHp = getTowerMaxHp(point.owner === "neutral" ? "stone" : (point.owner === "player" ? this.player.ageId : this.enemy.ageId));
-        point.towerHp = point.towerMaxHp;
-        point.towerTimerSec = 0.3;
-        if (point.owner === "player") this.hud.setInfo("타워 재건축 완료");
-        if (point.owner === "player") {
-          this.audio.playSfx("sfx.construction.complete", { eventKey: `tower:${point.id}:complete` });
-          this.audio.playSfx("sfx.fortress.rebuilt", { eventKey: `tower:${point.id}:rebuilt` });
+  private tickWatchtower(tower: DefenseTowerState, deltaSec: number): void {
+    if (tower.buildRemainingSec > 0) {
+      tower.buildRemainingSec = Math.max(0, tower.buildRemainingSec - deltaSec);
+      if (tower.buildRemainingSec === 0) {
+        tower.built = true;
+        tower.maxHp = getDefenseTowerMaxHp(tower.owner === "player" ? this.player.ageId : this.enemy.ageId);
+        tower.hp = tower.maxHp;
+        tower.attackTimerSec = 0.3;
+        if (tower.owner === "player") this.hud.setInfo("타워 재건축 완료");
+        if (tower.owner === "player") {
+          this.audio.playSfx("sfx.construction.complete", { eventKey: `tower:${tower.id}:complete` });
+          this.audio.playSfx("sfx.fortress.rebuilt", { eventKey: `tower:${tower.id}:rebuilt` });
         }
       }
       return;
     }
-    if (!point.towerBuilt) return;
-    point.towerTimerSec -= deltaSec;
-    if (point.owner === "neutral" || point.towerTimerSec > 0) return;
-    const spec = createTowerAttackPattern(point.owner === "player" ? this.player.ageId : this.enemy.ageId);
+    if (!tower.built) return;
+    tower.attackTimerSec -= deltaSec;
+    if (tower.attackTimerSec > 0) return;
+    const spec = createTowerAttackPattern(tower.owner === "player" ? this.player.ageId : this.enemy.ageId);
     const target = this.units
-      .filter((unit) => unit.team !== point.owner && progressBetween(unit.progress, point.progress) <= spec.rangeProgress)
+      .filter((unit) => unit.team !== tower.owner && progressBetween(unit.progress, tower.progress) <= spec.rangeProgress)
       .sort((a, b) => a.hp - b.hp)[0];
     if (!target) return;
-    point.towerTimerSec = spec.cooldownSec;
-    const start = this.getTowerProjectileAnchor(point, true);
+    tower.attackTimerSec = spec.cooldownSec;
+    const start = this.getTowerProjectileAnchor(tower, true);
     this.playWorldSfx(
       "sfx.combat.towerAttack",
       start.x,
       start.y,
-      `tower-attack:${point.id}:${target.id}:${Math.round(this.elapsedSec * 1000)}`,
+      `tower-attack:${tower.id}:${target.id}:${Math.round(this.elapsedSec * 1000)}`,
     );
     Array.from({ length: spec.projectileCount }, (_, index) => {
       const centeredIndex = index - (spec.projectileCount - 1) / 2;
@@ -1693,7 +1721,7 @@ export class LaneBattleScene extends Phaser.Scene {
         () => this.applyDamageToUnit(
           target,
           spec.perProjectileDamage,
-          point.owner === "player" ? "#8fd2ff" : "#ffb4b4",
+          tower.owner === "player" ? "#8fd2ff" : "#ffb4b4",
           "요새",
         ),
         1,
@@ -1726,8 +1754,18 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private selectCapturePoint(id: number): void {
     this.selectedCapturePointId = id;
+    this.selectedDefenseTowerId = null;
     this.audio.playSfx("sfx.ui.buildSelect", { eventKey: `capture:select:${id}` });
     this.refreshCapturePointVisuals();
+    this.refreshUi();
+  }
+
+  private selectDefenseTower(id: number): void {
+    this.selectedDefenseTowerId = id;
+    this.selectedCapturePointId = null;
+    this.audio.playSfx("sfx.ui.buildSelect", { eventKey: `tower:select:${id}` });
+    this.refreshCapturePointVisuals();
+    this.refreshDefenseTowerVisuals();
     this.refreshUi();
   }
 
@@ -1748,31 +1786,7 @@ export class LaneBattleScene extends Phaser.Scene {
       this.audio.playSfx("sfx.ui.hireFail", { eventKey: `build:${point.id}:not-allowed:${buildingId}` });
       return;
     }
-    if (point.definition.pointType === "fixed-fortress") {
-      this.tryMaintainSelectedFortress();
-      return;
-    }
     const building = getBuildingDefinition(buildingId);
-    if (buildingId === "watchtower") {
-      const towerCost = getTowerBuildCost(this.player.ageId);
-      if (point.towerBuilt || point.towerBuildRemainingSec > 0) {
-        this.hud.setInfo("이 거점의 타워는 이미 존재하거나 재건 중입니다");
-        this.audio.playSfx("sfx.ui.cancel", { eventKey: `tower:${point.id}:busy` });
-        return;
-      }
-      if (!canAfford(this.player.resources, towerCost)) {
-        this.hud.setInfo("타워 재건 자원 부족");
-        this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `tower:${point.id}:shortage` });
-        return;
-      }
-      payCost(this.player.resources, towerCost);
-      point.towerBuildRemainingSec = 10;
-      point.towerTimerSec = 0;
-      this.hud.setInfo("타워 재건축을 시작했습니다 (10초)");
-      this.audio.playSfx("sfx.construction.start", { eventKey: `tower:${point.id}:start` });
-      this.refreshCapturePointVisuals();
-      return;
-    }
     if (point.buildingId) {
       this.hud.setInfo("이미 건설된 거점입니다");
       this.audio.playSfx("sfx.ui.cancel", { eventKey: `build:${point.id}:occupied` });
@@ -1787,7 +1801,6 @@ export class LaneBattleScene extends Phaser.Scene {
     point.buildingId = buildingId;
     point.buildingLevel = 1;
     point.incomeTimerSec = 4;
-    point.towerTimerSec = 0.4;
     point.supplyTimerSec = 0.4;
     this.hud.setInfo(`${building.label} 건설 완료`);
     this.audio.playSfx("sfx.construction.start", { eventKey: `build:${point.id}:start:${buildingId}` });
@@ -1798,38 +1811,34 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private enemyAutoBuildCapturePoint(): void {
-    const rebuildTarget = this.capturePoints.find((point) =>
-      point.owner === "enemy"
-      && point.definition.canRebuild
-      && !point.towerBuilt
-      && point.towerBuildRemainingSec <= 0,
-    );
-    if (rebuildTarget) {
-      const towerCost = getTowerBuildCost(this.enemy.ageId);
-      if (canAfford(this.enemy.resources, towerCost)) {
-        payCost(this.enemy.resources, towerCost);
-        rebuildTarget.towerBuildRemainingSec = 10;
-        return;
-      }
-    }
     const target = this.capturePoints.find((point) =>
       point.owner === "enemy"
       && point.definition.pointType === "buildable"
       && !point.buildingId,
     );
     if (!target) return;
-    const choices = BUILDING_DEFINITIONS.filter((entry): entry is BuildingDefinition & { id: Exclude<BuildingId, "watchtower"> } =>
-      entry.id !== "watchtower" && target.definition.allowedBuildingTypes.includes(entry.id),
+    const choices = BUILDING_DEFINITIONS.filter((entry): entry is BuildingDefinition =>
+      target.definition.allowedBuildingTypes.includes(entry.id),
     );
     if (choices.length === 0) return;
     const choice = choices[target.id % choices.length];
     if (!canAfford(this.enemy.resources, choice.cost)) return;
     payCost(this.enemy.resources, choice.cost);
-    target.buildingId = choice.id as Exclude<BuildingId, "watchtower">;
+    target.buildingId = choice.id;
     target.buildingLevel = 1;
     target.incomeTimerSec = 4;
-    target.towerTimerSec = 0.4;
     target.supplyTimerSec = 0.4;
+  }
+
+  private enemyAutoRebuildDefenseTower(): void {
+    const tower = this.defenseTowers.find((entry) =>
+      entry.owner === "enemy" && !entry.built && entry.buildRemainingSec <= 0,
+    );
+    if (!tower) return;
+    const cost = getDefenseTowerBuildCost(this.enemy.ageId);
+    if (!canAfford(this.enemy.resources, cost)) return;
+    payCost(this.enemy.resources, cost);
+    tower.buildRemainingSec = DEFENSE_TOWER_BUILD_DURATION_SEC;
   }
 
   private tryDismantleSelectedPoint(): void {
@@ -1852,54 +1861,37 @@ export class LaneBattleScene extends Phaser.Scene {
     this.refreshCapturePointVisuals();
   }
 
-  private tryMaintainSelectedFortress(): void {
-    const point = this.capturePoints.find((entry) => entry.id === this.selectedCapturePointId);
-    if (!point || point.definition.pointType !== "fixed-fortress" || point.owner !== "player") {
-      this.hud.setInfo("수리할 아군 고정 요새가 없습니다");
-      this.audio.playSfx("sfx.ui.hireFail", { eventKey: "fortress:maintain:invalid" });
+  private tryRebuildSelectedDefenseTower(): void {
+    const tower = this.defenseTowers.find((entry) => entry.id === this.selectedDefenseTowerId);
+    if (!tower || tower.owner !== "player") {
+      this.hud.setInfo("재건할 아군 타워를 선택하십시오");
+      this.audio.playSfx("sfx.ui.hireFail", { eventKey: "tower:rebuild:invalid" });
       return;
     }
-    if (point.towerBuildRemainingSec > 0) {
-      this.hud.setInfo(`요새 재건 중 (${Math.ceil(point.towerBuildRemainingSec)}초)`);
-      this.audio.playSfx("sfx.ui.cancel", { eventKey: `fortress:${point.id}:busy` });
+    if (tower.buildRemainingSec > 0) {
+      this.hud.setInfo(`타워 재건 중 (${Math.ceil(tower.buildRemainingSec)}초)`);
+      this.audio.playSfx("sfx.ui.cancel", { eventKey: `tower:${tower.id}:busy` });
       return;
     }
-    const rebuildCost = getTowerBuildCost(this.player.ageId);
-    if (!point.towerBuilt) {
-      if (!canAfford(this.player.resources, rebuildCost)) {
-        this.hud.setInfo("요새 재건 자원 부족");
-        this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `fortress:${point.id}:rebuild-shortage` });
-        return;
-      }
-      payCost(this.player.resources, rebuildCost);
-      point.towerBuildRemainingSec = 10;
-      this.hud.setInfo("고정 요새 재건을 시작했습니다 (10초)");
-      this.audio.playSfx("sfx.construction.start", { eventKey: `fortress:${point.id}:rebuild-start` });
+    if (tower.built) {
+      this.hud.setInfo("선택한 타워가 이미 가동 중입니다");
+      this.audio.playSfx("sfx.ui.cancel", { eventKey: `tower:${tower.id}:active` });
       return;
     }
-    if (point.towerHp >= point.towerMaxHp) {
-      this.hud.setInfo("고정 요새가 최대 HP입니다");
-      this.audio.playSfx("sfx.ui.cancel", { eventKey: `fortress:${point.id}:full` });
+    const cost = getDefenseTowerBuildCost(this.player.ageId);
+    if (!canAfford(this.player.resources, cost)) {
+      this.hud.setInfo("타워 재건 자원 부족");
+      this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `tower:${tower.id}:shortage` });
       return;
     }
-    const repairCost = getTowerRepairCost(this.player.ageId);
-    if (!canAfford(this.player.resources, repairCost)) {
-      this.hud.setInfo("요새 수리 자원 부족");
-      this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `fortress:${point.id}:repair-shortage` });
-      return;
-    }
-    payCost(this.player.resources, repairCost);
-    point.towerHp = point.towerMaxHp;
-    this.hud.setInfo("고정 요새 수리 완료");
-    this.audio.playSfx("sfx.construction.repair", { eventKey: `fortress:${point.id}:repair` });
-    this.refreshCapturePointVisuals();
+    payCost(this.player.resources, cost);
+    tower.buildRemainingSec = DEFENSE_TOWER_BUILD_DURATION_SEC;
+    this.hud.setInfo(`타워 재건을 시작했습니다 (${DEFENSE_TOWER_BUILD_DURATION_SEC}초)`);
+    this.audio.playSfx("sfx.construction.start", { eventKey: `tower:${tower.id}:start` });
+    this.refreshDefenseTowerVisuals();
   }
 
   private resolveCapturedStructure(point: CapturePointState, toOwner: TeamId): void {
-    point.towerBuilt = false;
-    point.towerBuildRemainingSec = 0;
-    point.towerHp = 0;
-    point.towerTimerSec = 0;
     const outcome = resolveCapturedBuilding(
       point.buildingId,
       point.buildingLevel,
@@ -1986,138 +1978,25 @@ export class LaneBattleScene extends Phaser.Scene {
       point.core
         .setPosition(pos.x, pos.y)
         .setDepth(this.getGroundDepth(pos.y, -5))
-        .setVisible(!structuredPoint && point.towerBuilt);
-      point.towerSprite
-        .setPosition(pos.x, pos.y)
-        .setOrigin(
-          0.5,
-          point.definition.pointType === "fixed-fortress"
-            ? FIXED_FORTRESS_GROUND_ORIGIN_Y
-            : this.isPrototypeV2()
-              ? TOWER_IMAGE_GROUND_ORIGIN_Y
-              : 0.88,
-        );
-      point.towerSprite.setDepth(this.getGroundDepth(pos.y));
-      point.groundPresentation?.shadow
-        .setPosition(pos.x + 20, pos.y + 12)
-        .setDepth(this.getGroundDepth(pos.y, -2))
-        .setVisible(this.terrainMode === "prototype" && point.id === 1 && point.towerBuilt);
-      point.groundPresentationV2?.shadow
-        .setPosition(
-          pos.x
-            + this.prototypeVisualConfig.terrain.foundationOffsetX
-            + this.prototypeVisualConfig.terrain.towerShadowOffsetX,
-          pos.y
-            + this.prototypeVisualConfig.terrain.foundationOffsetY
-            + this.prototypeVisualConfig.terrain.towerShadowOffsetY,
-        )
-        .setDepth(this.getGroundDepth(pos.y, -2))
-        .setVisible(structuredPoint && point.towerBuilt);
-      point.groundPresentationWorld?.shadow
-        .setPosition(pos.x + 6, pos.y + 2)
-        .setDepth(this.getGroundDepth(pos.y, -2))
-        .setVisible(this.terrainMode === "world-surface" && point.towerBuilt);
+        .setVisible(!structuredPoint || selected);
       point.ownerText.setText(point.owner === "player" ? "아군 점령" : point.owner === "enemy" ? "적 점령" : "중립");
       point.ownerText.setColor(point.owner === "player" ? "#cfeeff" : point.owner === "enemy" ? "#ffd8d8" : "#eadfb3");
-      const selectedScale = this.isPrototypeV2() ? 1 : selected ? 1.04 : 1;
-      const towerTargetCssHeight = point.definition.pointType === "fixed-fortress"
-        ? this.scaleVisualConfig.fixedFortressCssHeight
-        : this.scaleVisualConfig.captureTowerCssHeight;
-      const visibleHeightRatio = point.definition.pointType === "fixed-fortress"
-        ? FIXED_FORTRESS_VISIBLE_HEIGHT_RATIO
-        : TOWER_IMAGE_VISIBLE_HEIGHT_RATIO;
-      const towerHeight = this.isPrototypeV2()
-        ? this.cssPxToWorld(towerTargetCssHeight / visibleHeightRatio) * selectedScale
-        : TOWER_H * selectedScale;
-      const towerWidth = this.isPrototypeV2()
-        ? towerHeight * (point.towerSprite.frame.realWidth / point.towerSprite.frame.realHeight)
-        : TOWER_W * selectedScale;
-      const towerTop = pos.y - towerHeight * point.towerSprite.originY;
-      const towerHpWidth = this.isPrototypeV2()
-        ? this.cssPxToWorld(this.scaleVisualConfig.towerHpWidthCssPx)
-        : 60;
-      const towerHpHeight = this.isPrototypeV2()
-        ? this.cssPxToWorld(this.scaleVisualConfig.towerHpHeightCssPx)
-        : 7;
-      const towerHpY = this.isPrototypeV2()
-        ? towerTop - this.cssPxToWorld(8)
-        : pos.y - 158;
-      const labelY = this.isPrototypeV2()
-        ? towerTop - this.cssPxToWorld(30)
-        : pos.y - 190;
-      const ownerY = this.isPrototypeV2()
-        ? pos.y + this.cssPxToWorld(18)
-        : pos.y + 34;
-      const buildingY = this.isPrototypeV2()
-        ? pos.y + this.cssPxToWorld(36)
-        : pos.y + 52;
+      const labelY = pos.y - (this.isPrototypeV2() ? this.cssPxToWorld(36) : 40);
+      const ownerY = pos.y + (this.isPrototypeV2() ? this.cssPxToWorld(18) : 28);
+      const buildingY = pos.y + (this.isPrototypeV2() ? this.cssPxToWorld(36) : 46);
       point.label
-        .setText(point.definition.pointType === "fixed-fortress"
-          ? `중앙 고정 요새 · Lv.1`
-          : point.towerBuilt
-            ? `건설 거점 ${point.id + 1} · 타워 Lv.1`
-            : `건설 거점 ${point.id + 1}`)
+        .setText(`건설 거점 ${point.id + 1}`)
         .setPosition(pos.x, labelY)
         .setDepth(this.getGroundDepth(pos.y, 7));
       point.ownerText.setPosition(pos.x, ownerY).setDepth(this.getGroundDepth(pos.y, 7));
       point.buildingText.setPosition(pos.x, buildingY).setDepth(this.getGroundDepth(pos.y, 7));
-      point.towerHpBg
-        .setPosition(pos.x, towerHpY)
-        .setSize(towerHpWidth, towerHpHeight)
-        .setDepth(this.getGroundDepth(pos.y, 5));
-      point.towerHpFill
-        .setPosition(pos.x - towerHpWidth / 2, towerHpY)
-        .setDepth(this.getGroundDepth(pos.y, 6));
-      point.towerHpBg.setVisible(point.towerBuilt && point.owner !== "neutral");
-      point.towerHpFill.setVisible(point.towerBuilt && point.owner !== "neutral");
-      point.towerHpFill.setSize(
-        towerHpWidth * Phaser.Math.Clamp(point.towerMaxHp > 0 ? point.towerHp / point.towerMaxHp : 0, 0, 1),
-        towerHpHeight,
-      );
-      point.towerHpFill.setFillStyle(ownerColor, 1);
-      const hpRatio = point.towerMaxHp > 0 ? point.towerHp / point.towerMaxHp : 0;
-      const towerTexture = point.towerBuildRemainingSec > 0
-        ? "tower-build"
-        : !point.towerBuilt
-          ? "tower-ruin-asset"
-          : point.definition.pointType === "fixed-fortress"
-            ? "fixed-fortress-v1"
-          : hpRatio > 0.66
-            ? "tower-full"
-            : hpRatio > 0.33
-              ? "tower-damaged"
-              : "tower-critical";
-      point.towerSprite.setTexture(towerTexture);
-      point.towerSprite.setAlpha(point.towerBuildRemainingSec > 0 ? 0.45 : 1);
-      point.towerSprite.setDisplaySize(towerWidth, towerHeight);
-      point.selectionHitZone
-        .setPosition(pos.x, pos.y)
-        .setOrigin(0.5, point.towerSprite.originY)
-        .setSize(Math.max(towerWidth, this.cssPxToWorld(96)), Math.max(towerHeight, this.cssPxToWorld(120)))
-        .setDepth(DEPTH_UI - 1);
-      point.towerSprite.clearTint();
-      if (point.owner === "enemy" && point.towerBuilt) point.towerSprite.setTint(0xffd0d0);
-      if (point.owner === "neutral" && point.towerBuilt) point.towerSprite.setTint(0xe7ddb5);
-      if (point.definition.pointType === "fixed-fortress" && point.towerBuilt && hpRatio <= 0.66) {
-        point.towerSprite.setTint(hpRatio > 0.33 ? 0xe4c6a0 : 0xc98a82);
-      }
       point.buildingText.setText(
-        point.definition.pointType === "fixed-fortress"
-          ? "고정 요새"
-          : point.buildingId
-            ? `${getBuildingDefinition(point.buildingId).shortLabel} Lv.${point.buildingLevel}`
-            : "빈 건설 거점",
+        point.buildingId
+          ? `${getBuildingDefinition(point.buildingId).shortLabel} Lv.${point.buildingLevel}`
+          : "빈 건설 거점",
       );
-      if (!point.towerBuilt && point.towerBuildRemainingSec > 0) {
-        point.buildingText.setText(`${point.buildingText.text} | 타워 재건 ${Math.ceil(point.towerBuildRemainingSec)}초`);
-      } else if (!point.towerBuilt) {
-        point.buildingText.setText(`${point.buildingText.text} | 타워 파괴`);
-      }
       if (this.isPrototypeV2()) {
-        const towerFont = point.definition.pointType === "fixed-fortress"
-          ? this.scaleVisualConfig.fixedFortressFontCssPx
-          : this.scaleVisualConfig.towerFontCssPx;
-        this.styleV2WorldText(point.label, towerFont, true);
+        this.styleV2WorldText(point.label, this.scaleVisualConfig.towerFontCssPx, true);
         this.styleV2WorldText(point.ownerText, this.scaleVisualConfig.auxiliaryFontCssPx, true);
         this.styleV2WorldText(point.buildingText, this.scaleVisualConfig.auxiliaryFontCssPx, true);
       } else {
@@ -2143,6 +2022,67 @@ export class LaneBattleScene extends Phaser.Scene {
     });
   }
 
+  private refreshDefenseTowerVisuals(): void {
+    this.defenseTowers.forEach((tower) => {
+      const selected = this.selectedDefenseTowerId === tower.id;
+      const ownerColor = tower.owner === "player" ? 0x61c3ff : 0xff7f7f;
+      const rawPos = this.progressToScreen(tower.progress, 0);
+      const pos = this.isPrototypeV2() ? this.snapWorldPointToCanvasPixel(rawPos.x, rawPos.y) : rawPos;
+      const selectedScale = this.isPrototypeV2() ? 1 : selected ? 1.04 : 1;
+      const towerHeight = this.isPrototypeV2()
+        ? this.cssPxToWorld(this.scaleVisualConfig.captureTowerCssHeight / TOWER_IMAGE_VISIBLE_HEIGHT_RATIO) * selectedScale
+        : TOWER_H * selectedScale;
+      const towerWidth = this.isPrototypeV2()
+        ? towerHeight * (tower.sprite.frame.realWidth / tower.sprite.frame.realHeight)
+        : TOWER_W * selectedScale;
+      const hpRatio = tower.maxHp > 0 ? tower.hp / tower.maxHp : 0;
+      const texture = tower.buildRemainingSec > 0
+        ? "tower-build"
+        : !tower.built
+          ? "tower-ruin-asset"
+          : hpRatio > 0.66 ? "tower-full" : hpRatio > 0.33 ? "tower-damaged" : "tower-critical";
+      tower.sprite
+        .setTexture(texture)
+        .setPosition(pos.x, pos.y)
+        .setOrigin(0.5, TOWER_IMAGE_GROUND_ORIGIN_Y)
+        .setDisplaySize(towerWidth, towerHeight)
+        .setDepth(this.getGroundDepth(pos.y))
+        .setAlpha(tower.buildRemainingSec > 0 ? 0.45 : 1)
+        .clearTint();
+      if (tower.owner === "enemy" && tower.built) tower.sprite.setTint(0xffd0d0);
+      const towerTop = pos.y - towerHeight * tower.sprite.originY;
+      const hpWidth = this.isPrototypeV2() ? this.cssPxToWorld(this.scaleVisualConfig.towerHpWidthCssPx) : 60;
+      const hpHeight = this.isPrototypeV2() ? this.cssPxToWorld(this.scaleVisualConfig.towerHpHeightCssPx) : 7;
+      const hpY = this.isPrototypeV2() ? towerTop - this.cssPxToWorld(8) : pos.y - 158;
+      tower.hpBg.setPosition(pos.x, hpY).setSize(hpWidth, hpHeight).setDepth(this.getGroundDepth(pos.y, 5)).setVisible(tower.built);
+      tower.hpFill
+        .setPosition(pos.x - hpWidth / 2, hpY)
+        .setSize(hpWidth * Phaser.Math.Clamp(hpRatio, 0, 1), hpHeight)
+        .setFillStyle(ownerColor, 1)
+        .setDepth(this.getGroundDepth(pos.y, 6))
+        .setVisible(tower.built);
+      tower.selectionHitZone
+        .setPosition(pos.x, pos.y)
+        .setOrigin(0.5, tower.sprite.originY)
+        .setSize(Math.max(towerWidth, this.cssPxToWorld(96)), Math.max(towerHeight, this.cssPxToWorld(120)))
+        .setDepth(this.getGroundDepth(pos.y, -1));
+      tower.label.setPosition(pos.x, this.isPrototypeV2() ? towerTop - this.cssPxToWorld(30) : pos.y - 190);
+      tower.label.setText(`방어 타워 ${tower.id + 1}${selected ? " · 선택" : ""}`);
+      tower.ownerText.setPosition(pos.x, pos.y + (this.isPrototypeV2() ? this.cssPxToWorld(18) : 34));
+      tower.statusText
+        .setPosition(pos.x, pos.y + (this.isPrototypeV2() ? this.cssPxToWorld(36) : 52))
+        .setText(tower.buildRemainingSec > 0 ? `재건 ${Math.ceil(tower.buildRemainingSec)}초` : tower.built ? "가동 중" : "파괴됨");
+      tower.groundPresentation?.shadow.setVisible(this.terrainMode === "prototype" && tower.built);
+      tower.groundPresentationV2?.shadow.setVisible(this.terrainMode === "prototype-v2" && tower.built);
+      tower.groundPresentationWorld?.shadow.setVisible(this.terrainMode === "world-surface" && tower.built);
+      if (this.isPrototypeV2()) {
+        this.styleV2WorldText(tower.label, this.scaleVisualConfig.towerFontCssPx, true);
+        this.styleV2WorldText(tower.ownerText, this.scaleVisualConfig.auxiliaryFontCssPx, true);
+        this.styleV2WorldText(tower.statusText, this.scaleVisualConfig.auxiliaryFontCssPx, true);
+      }
+    });
+  }
+
   private getUnitProjectileAnchor(unit: LaneUnit): Phaser.Math.Vector2 {
     const visibleHeight = unit.sprite.displayHeight
       * (resolveUnitFramePresentation(unit.unitId, 1, 1, unit.currentTextureKey).referenceVisibleHeight
@@ -2153,12 +2093,12 @@ export class LaneBattleScene extends Phaser.Scene {
     );
   }
 
-  private getTowerProjectileAnchor(point: CapturePointState, launch: boolean): Phaser.Math.Vector2 {
+  private getTowerProjectileAnchor(point: DefenseTowerState, launch: boolean): Phaser.Math.Vector2 {
     return new Phaser.Math.Vector2(
-      point.towerSprite.x,
-      point.towerSprite.y - (
+      point.sprite.x,
+      point.sprite.y - (
         this.terrainPrototypeEnabled
-          ? point.towerSprite.displayHeight * TOWER_IMAGE_VISIBLE_HEIGHT_RATIO * (launch ? 0.72 : 0.48)
+          ? point.sprite.displayHeight * TOWER_IMAGE_VISIBLE_HEIGHT_RATIO * (launch ? 0.72 : 0.48)
           : launch ? 18 : 12
       ),
     );
@@ -2224,26 +2164,26 @@ export class LaneBattleScene extends Phaser.Scene {
     if (target.hp <= 0) this.killUnit(target);
   }
 
-  private applyDamageToTower(point: CapturePointState, damage: number, attackerTeam: TeamId): void {
-    if (!point.towerBuilt) return;
-    point.towerHp = Math.max(0, point.towerHp - damage);
+  private applyDamageToTower(point: DefenseTowerState, damage: number, attackerTeam: TeamId): void {
+    if (!point.built) return;
+    point.hp = Math.max(0, point.hp - damage);
     this.playWorldSfx(
       "sfx.combat.towerHit",
-      point.towerSprite.x,
-      point.towerSprite.y,
+      point.sprite.x,
+      point.sprite.y,
       `impact:tower:${point.id}:${Math.round(this.elapsedSec * 1000)}`,
     );
     this.tweens.add({
-      targets: point.towerSprite,
+      targets: point.sprite,
       alpha: 0.45,
       duration: 70,
       yoyo: true,
     });
-    this.spawnToast(`${damage}`, point.towerSprite.x, point.towerSprite.y - 58, attackerTeam === "player" ? "#ffd67a" : "#ff8f8f");
-    if (point.towerHp <= 0) {
-      point.towerBuilt = false;
-      point.towerTimerSec = 0;
-      point.towerBuildRemainingSec = 0;
+    this.spawnToast(`${damage}`, point.sprite.x, point.sprite.y - 58, attackerTeam === "player" ? "#ffd67a" : "#ff8f8f");
+    if (point.hp <= 0) {
+      point.built = false;
+      point.attackTimerSec = 0;
+      point.buildRemainingSec = 0;
       this.audio.playSfx("sfx.fortress.destroyed", { eventKey: `tower:${point.id}:destroyed` });
       if (attackerTeam === "player") this.hud.setInfo("적 타워를 파괴했습니다");
     }
@@ -2346,17 +2286,17 @@ export class LaneBattleScene extends Phaser.Scene {
     const buildable = this.capturePoints[0];
     buildable.owner = "player";
     buildable.control = 1;
-    buildable.towerBuilt = false;
-    buildable.towerHp = 0;
-    buildable.towerBuildRemainingSec = 0;
     buildable.buildingId = undefined;
     buildable.buildingLevel = 0;
 
     const enemyPoint = this.capturePoints[1];
     enemyPoint.owner = "enemy";
     enemyPoint.control = -1;
-    enemyPoint.towerBuilt = true;
-    enemyPoint.towerHp = enemyPoint.towerMaxHp;
+    this.defenseTowers.forEach((tower) => {
+      tower.built = true;
+      tower.buildRemainingSec = 0;
+      tower.hp = tower.maxHp;
+    });
 
     const units: Array<[TeamId, "battle" | "support", BattleUnitId | SupportUnitId, number, number]> = [
       ["player", "battle", "stone_axeman", 0.572, -3],
@@ -2848,7 +2788,8 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private refreshUi(): void {
-    const selected = this.capturePoints.find((point) => point.id === this.selectedCapturePointId) ?? this.capturePoints[0];
+    const selected = this.capturePoints.find((point) => point.id === this.selectedCapturePointId);
+    const selectedTower = this.defenseTowers.find((tower) => tower.id === this.selectedDefenseTowerId);
     const snapshot = createLaneBattleHudSnapshot({
       player: this.player,
       enemy: this.enemy,
@@ -2858,6 +2799,7 @@ export class LaneBattleScene extends Phaser.Scene {
       enemyBaseMaxHp: ENEMY_BASE_HP,
       opponentCount: PLAYER_OPPONENT_COUNT,
       selectedCapturePoint: selected,
+      selectedDefenseTower: selectedTower,
     });
     const selectedActions = this.getSelectedCaptureActions();
     this.hud.apply(snapshot, selectedActions);
@@ -2916,17 +2858,29 @@ export class LaneBattleScene extends Phaser.Scene {
           owner: point.owner,
           control: point.control,
           progress: point.progress,
-          towerBuilt: point.towerBuilt,
-          towerHp: point.towerHp,
-          towerMaxHp: point.towerMaxHp,
+          worldX: point.core.x,
+          worldY: point.core.y,
+          labelWorldX: point.label.x,
+          labelWorldY: point.label.y,
           buildingId: point.buildingId ?? null,
           availableActions: getCapturePointActions(point.definition, point),
+        })),
+        defenseTowers: this.defenseTowers.map((tower) => ({
+          id: tower.id,
+          owner: tower.owner,
+          linkedCapturePointId: tower.definition.linkedCapturePointId,
+          progress: tower.progress,
+          built: tower.built,
+          hp: tower.hp,
+          maxHp: tower.maxHp,
+          buildRemainingSec: tower.buildRemainingSec,
         })),
         laneStart: { x: this.laneStart.x, y: this.laneStart.y },
         laneEnd: { x: this.laneEnd.x, y: this.laneEnd.y },
       },
       ui: {
         selectedCapturePointId: this.selectedCapturePointId,
+        selectedDefenseTowerId: this.selectedDefenseTowerId,
         visibleCaptureActions: this.hud.getVisibleCaptureActions(),
       },
       activeProjectiles: [...this.activeProjectiles].map((projectile) => ({
@@ -3038,44 +2992,44 @@ export class LaneBattleScene extends Phaser.Scene {
             flipX: unit.sprite.flipX,
             motion: { x: unit.motionX, y: unit.motionY },
           })),
-          captureTowers: this.capturePoints.map((point) => ({
+          captureTowers: this.defenseTowers.map((point) => ({
             id: point.id,
-            pointType: point.definition.pointType,
-            textureKey: point.towerSprite.texture.key,
-            worldX: point.towerSprite.x,
-            worldY: point.towerSprite.y,
-            cssFrameHeight: point.towerSprite.displayHeight
+            pointType: "defense-tower",
+            textureKey: point.sprite.texture.key,
+            worldX: point.sprite.x,
+            worldY: point.sprite.y,
+            cssFrameHeight: point.sprite.displayHeight
               * this.cameras.main.zoom
               * this.getCanvasCssScale(),
-            cssVisibleHeight: point.towerSprite.displayHeight
+            cssVisibleHeight: point.sprite.displayHeight
               * TOWER_IMAGE_VISIBLE_HEIGHT_RATIO
               * this.cameras.main.zoom
               * this.getCanvasCssScale(),
-            originY: point.towerSprite.originY,
+            originY: point.sprite.originY,
           })),
           centralTower: (() => {
-            const point = this.capturePoints[1];
+            const point = this.defenseTowers[1];
             return point ? {
-              pointType: point.definition.pointType,
-              worldWidth: point.towerSprite.displayWidth,
-              worldHeight: point.towerSprite.displayHeight,
-              cssFrameWidth: point.towerSprite.displayWidth * this.cameras.main.zoom * this.getCanvasCssScale(),
-              cssFrameHeight: point.towerSprite.displayHeight * this.cameras.main.zoom * this.getCanvasCssScale(),
-              cssVisibleHeight: point.towerSprite.displayHeight
+              pointType: "defense-tower",
+              worldWidth: point.sprite.displayWidth,
+              worldHeight: point.sprite.displayHeight,
+              cssFrameWidth: point.sprite.displayWidth * this.cameras.main.zoom * this.getCanvasCssScale(),
+              cssFrameHeight: point.sprite.displayHeight * this.cameras.main.zoom * this.getCanvasCssScale(),
+              cssVisibleHeight: point.sprite.displayHeight
                 * TOWER_IMAGE_VISIBLE_HEIGHT_RATIO
                 * this.cameras.main.zoom
                 * this.getCanvasCssScale(),
-              originY: point.towerSprite.originY,
-              hpWorldWidth: point.towerHpBg.width,
-              hpWorldHeight: point.towerHpBg.height,
-              hpCssWidth: point.towerHpBg.width * this.cameras.main.zoom * this.getCanvasCssScale(),
-              hpCssHeight: point.towerHpBg.height * this.cameras.main.zoom * this.getCanvasCssScale(),
+              originY: point.sprite.originY,
+              hpWorldWidth: point.hpBg.width,
+              hpWorldHeight: point.hpBg.height,
+              hpCssWidth: point.hpBg.width * this.cameras.main.zoom * this.getCanvasCssScale(),
+              hpCssHeight: point.hpBg.height * this.cameras.main.zoom * this.getCanvasCssScale(),
               labelCssFontSize: Number.parseFloat(String(point.label.style.fontSize))
                 * this.cameras.main.zoom
                 * this.getCanvasCssScale(),
               labelResolution: point.label.style.resolution,
               labelScale: point.label.scaleX,
-              availableActions: getCapturePointActions(point.definition, point),
+              availableActions: point.owner === "player" && !point.built ? ["rebuild-defense-tower"] : [],
             } : null;
           })(),
         },

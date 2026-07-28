@@ -37,7 +37,8 @@ export interface StructureFootprintSpec {
 
 export interface StructureSocketSpec {
   id: string;
-  kind: "capture-tower";
+  kind: "capture-point" | "defense-tower";
+  progress: number;
   position: WorldPointSpec;
   footprint: StructureFootprintSpec;
   bypassSlots: WorldPointSpec[];
@@ -144,23 +145,44 @@ function createLaneTerrainPatches(): TerrainPatchSpec[] {
 }
 
 export function getCapturePointSocketId(capturePointId: number): string {
-  return `capture-point-${capturePointId}-tower`;
+  return `capture-point-${capturePointId}`;
 }
 
-function createCaptureSocket(capturePointId: number, pathNodeIndex: number): StructureSocketSpec {
-  const previous = LANE_PATH_NODES[pathNodeIndex - 1].position;
-  const current = LANE_PATH_NODES[pathNodeIndex].position;
-  const next = LANE_PATH_NODES[pathNodeIndex + 1].position;
-  const tangentX = next.x - previous.x;
-  const tangentY = next.y - previous.y;
+export function getDefenseTowerSocketId(towerId: number): string {
+  return `defense-tower-${towerId}`;
+}
+
+export function getLanePositionAtProgress(progress: number): WorldPointSpec {
+  const clamped = Math.max(0, Math.min(1, progress));
+  const endIndex = Math.max(1, LANE_PATH_NODES.findIndex((node) => node.progress >= clamped));
+  const start = LANE_PATH_NODES[endIndex - 1];
+  const end = LANE_PATH_NODES[endIndex] ?? LANE_PATH_NODES[LANE_PATH_NODES.length - 1];
+  const local = (clamped - start.progress) / Math.max(0.0001, end.progress - start.progress);
+  return {
+    x: start.position.x + (end.position.x - start.position.x) * local,
+    y: start.position.y + (end.position.y - start.position.y) * local,
+  };
+}
+
+function createStructureSocket(
+  id: string,
+  kind: StructureSocketSpec["kind"],
+  progress: number,
+): StructureSocketSpec {
+  const current = getLanePositionAtProgress(progress);
+  const before = getLanePositionAtProgress(Math.max(0, progress - 0.01));
+  const after = getLanePositionAtProgress(Math.min(1, progress + 0.01));
+  const tangentX = after.x - before.x;
+  const tangentY = after.y - before.y;
   const tangentLength = Math.hypot(tangentX, tangentY);
   const bypassDistance = 122;
   const perpendicularX = -tangentY / tangentLength;
   const perpendicularY = tangentX / tangentLength;
 
   return {
-    id: getCapturePointSocketId(capturePointId),
-    kind: "capture-tower",
+    id,
+    kind,
+    progress,
     position: { ...current },
     footprint: {
       shape: "ellipse",
@@ -181,9 +203,15 @@ function createCaptureSocket(capturePointId: number, pathNodeIndex: number): Str
   };
 }
 
-const CAPTURE_SOCKETS = [
-  createCaptureSocket(0, 1),
-  createCaptureSocket(1, 3),
+const CAPTURE_POINT_PROGRESS = [0.375, 0.767] as const;
+export const DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID = [
+  CAPTURE_POINT_PROGRESS[0] * 2,
+  1 - (1 - CAPTURE_POINT_PROGRESS[1]) * 2,
+] as const;
+
+const STRUCTURE_SOCKETS = [
+  ...CAPTURE_POINT_PROGRESS.map((progress, id) => createStructureSocket(getCapturePointSocketId(id), "capture-point", progress)),
+  ...DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID.map((progress, id) => createStructureSocket(getDefenseTowerSocketId(id), "defense-tower", progress)),
 ];
 
 const TERRAIN_PROPS: TerrainPropSpec[] = [
@@ -220,6 +248,6 @@ export const LANE_BATTLEFIELD_MAP_SPEC: BattlefieldMapSpec = {
   id: "warcrest-full-lane-hybrid-v1",
   lanePath: LANE_PATH_NODES,
   terrainPatches: createLaneTerrainPatches(),
-  structureSockets: CAPTURE_SOCKETS,
+  structureSockets: STRUCTURE_SOCKETS,
   terrainProps: TERRAIN_PROPS,
 };
