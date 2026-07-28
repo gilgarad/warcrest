@@ -1,15 +1,15 @@
 [
   {
-    "key": "stone-slinger-idle",
-    "output": "public/assets/production/units/stone-slinger-idle.png",
+    "key": "bronze-swordsman-idle",
+    "output": "public/assets/production/units/bronze-swordsman-idle.png",
     "canvas": [
       384,
       384
     ],
     "alphaBbox": [
-      133,
+      88,
       66,
-      251,
+      296,
       336
     ],
     "groundAnchor": [
@@ -18,16 +18,16 @@
     ]
   },
   {
-    "key": "stone-slinger-walk-a",
-    "output": "public/assets/production/units/stone-slinger-walk-a.png",
+    "key": "bronze-swordsman-walk-a",
+    "output": "public/assets/production/units/bronze-swordsman-walk-a.png",
     "canvas": [
       384,
       384
     ],
     "alphaBbox": [
-      101,
+      78,
       66,
-      283,
+      305,
       336
     ],
     "groundAnchor": [
@@ -36,14 +36,122 @@
     ]
   },
   {
-    "key": "stone-slinger-walk-b",
-    "output": "public/assets/production/units/stone-slinger-walk-b.png",
+    "key": "bronze-swordsman-walk-b",
+    "output": "public/assets/production/units/bronze-swordsman-walk-b.png",
     "canvas": [
       384,
       384
     ],
     "alphaBbox": [
-      84,
+      80,
+      66,
+      303,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-attack",
+    "output": "public/assets/production/units/bronze-swordsman-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      88,
+      66,
+      425,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "archer-idle",
+    "output": "public/assets/production/units/archer-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      105,
+      66,
+      279,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-walk-a",
+    "output": "public/assets/production/units/archer-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      116,
+      66,
+      269,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-walk-b",
+    "output": "public/assets/production/units/archer-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      34,
+      66,
+      351,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-attack",
+    "output": "public/assets/production/units/archer-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      118,
+      66,
+      393,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-idle",
+    "output": "public/assets/production/units/iron-swordsman-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      83,
       66,
       301,
       336
@@ -54,8 +162,44 @@
     ]
   },
   {
-    "key": "stone-slinger-attack",
-    "output": "public/assets/production/units/stone-slinger-attack.png",
+    "key": "iron-swordsman-walk-a",
+    "output": "public/assets/production/units/iron-swordsman-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      70,
+      66,
+      314,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-walk-b",
+    "output": "public/assets/production/units/iron-swordsman-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      69,
+      66,
+      315,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-attack",
+    "output": "public/assets/production/units/iron-swordsman-attack.png",
     "canvas": [
       512,
       384
@@ -63,7 +207,7 @@
     "alphaBbox": [
       104,
       66,
-      408,
+      407,
       336
     ],
     "groundAnchor": [
@@ -72,16 +216,16 @@
     ]
   },
   {
-    "key": "stone-axeman-idle",
-    "output": "public/assets/production/units/stone-axeman-idle.png",
+    "key": "iron-spearman-idle",
+    "output": "public/assets/production/units/iron-spearman-idle.png",
     "canvas": [
       384,
       384
     ],
     "alphaBbox": [
-      95,
+      122,
       66,
-      289,
+      262,
       336
     ],
     "groundAnchor": [
@@ -90,16 +234,16 @@
     ]
   },
   {
-    "key": "stone-axeman-walk-a",
-    "output": "public/assets/production/units/stone-axeman-walk-a.png",
+    "key": "iron-spearman-walk-a",
+    "output": "public/assets/production/units/iron-spearman-walk-a.png",
     "canvas": [
       384,
       384
     ],
     "alphaBbox": [
-      84,
+      110,
       66,
-      299,
+      273,
       336
     ],
     "groundAnchor": [
@@ -108,16 +252,16 @@
     ]
   },
   {
-    "key": "stone-axeman-walk-b",
-    "output": "public/assets/production/units/stone-axeman-walk-b.png",
+    "key": "iron-spearman-walk-b",
+    "output": "public/assets/production/units/iron-spearman-walk-b.png",
     "canvas": [
       384,
       384
     ],
     "alphaBbox": [
-      53,
+      111,
       66,
-      331,
+      273,
       336
     ],
     "groundAnchor": [
@@ -126,16 +270,16 @@
     ]
   },
   {
-    "key": "stone-axeman-attack",
-    "output": "public/assets/production/units/stone-axeman-attack.png",
+    "key": "iron-spearman-attack",
+    "output": "public/assets/production/units/iron-spearman-attack.png",
     "canvas": [
       512,
       384
     ],
     "alphaBbox": [
-      94,
+      76,
       66,
-      417,
+      437,
       336
     ],
     "groundAnchor": [
@@ -144,16 +288,70 @@
     ]
   },
   {
-    "key": "supply-wagon-idle",
-    "output": "public/assets/production/units/supply-wagon-idle.png",
+    "key": "musketeer-idle",
+    "output": "public/assets/production/units/musketeer-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      112,
+      66,
+      272,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "musketeer-walk-a",
+    "output": "public/assets/production/units/musketeer-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      78,
+      66,
+      307,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "musketeer-walk-b",
+    "output": "public/assets/production/units/musketeer-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      120,
+      66,
+      264,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "musketeer-attack",
+    "output": "public/assets/production/units/musketeer-attack.png",
     "canvas": [
       512,
       384
     ],
     "alphaBbox": [
-      168,
+      96,
       66,
-      345,
+      416,
       336
     ],
     "groundAnchor": [
@@ -162,16 +360,16 @@
     ]
   },
   {
-    "key": "supply-wagon-walk-a",
-    "output": "public/assets/production/units/supply-wagon-walk-a.png",
+    "key": "knight-idle",
+    "output": "public/assets/production/units/knight-idle.png",
     "canvas": [
       512,
       384
     ],
     "alphaBbox": [
-      148,
+      132,
       66,
-      365,
+      380,
       336
     ],
     "groundAnchor": [
@@ -180,16 +378,16 @@
     ]
   },
   {
-    "key": "supply-wagon-walk-b",
-    "output": "public/assets/production/units/supply-wagon-walk-b.png",
+    "key": "knight-walk-a",
+    "output": "public/assets/production/units/knight-walk-a.png",
     "canvas": [
       512,
       384
     ],
     "alphaBbox": [
-      166,
+      119,
       66,
-      347,
+      393,
       336
     ],
     "groundAnchor": [
@@ -198,16 +396,34 @@
     ]
   },
   {
-    "key": "supply-wagon-attack",
-    "output": "public/assets/production/units/supply-wagon-attack.png",
+    "key": "knight-walk-b",
+    "output": "public/assets/production/units/knight-walk-b.png",
     "canvas": [
       512,
       384
     ],
     "alphaBbox": [
-      137,
+      128,
       66,
-      375,
+      384,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-attack",
+    "output": "public/assets/production/units/knight-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      98,
+      66,
+      415,
       336
     ],
     "groundAnchor": [

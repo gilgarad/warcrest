@@ -1,7 +1,23 @@
 {
   "passed": true,
-  "assetCount": 16,
+  "assetCount": 40,
   "results": [
+    {
+      "key": "archer-attack",
+      "changedPixels": 642
+    },
+    {
+      "key": "archer-idle",
+      "changedPixels": 1100
+    },
+    {
+      "key": "archer-walk-a",
+      "changedPixels": 658
+    },
+    {
+      "key": "archer-walk-b",
+      "changedPixels": 1151
+    },
     {
       "key": "bronze-spearman-attack",
       "changedPixels": 662
@@ -17,6 +33,86 @@
     {
       "key": "bronze-spearman-walk-b",
       "changedPixels": 359
+    },
+    {
+      "key": "bronze-swordsman-attack",
+      "changedPixels": 836
+    },
+    {
+      "key": "bronze-swordsman-idle",
+      "changedPixels": 621
+    },
+    {
+      "key": "bronze-swordsman-walk-a",
+      "changedPixels": 700
+    },
+    {
+      "key": "bronze-swordsman-walk-b",
+      "changedPixels": 674
+    },
+    {
+      "key": "iron-spearman-attack",
+      "changedPixels": 1676
+    },
+    {
+      "key": "iron-spearman-idle",
+      "changedPixels": 747
+    },
+    {
+      "key": "iron-spearman-walk-a",
+      "changedPixels": 868
+    },
+    {
+      "key": "iron-spearman-walk-b",
+      "changedPixels": 872
+    },
+    {
+      "key": "iron-swordsman-attack",
+      "changedPixels": 2413
+    },
+    {
+      "key": "iron-swordsman-idle",
+      "changedPixels": 2101
+    },
+    {
+      "key": "iron-swordsman-walk-a",
+      "changedPixels": 1960
+    },
+    {
+      "key": "iron-swordsman-walk-b",
+      "changedPixels": 2041
+    },
+    {
+      "key": "knight-attack",
+      "changedPixels": 3171
+    },
+    {
+      "key": "knight-idle",
+      "changedPixels": 2741
+    },
+    {
+      "key": "knight-walk-a",
+      "changedPixels": 2861
+    },
+    {
+      "key": "knight-walk-b",
+      "changedPixels": 2705
+    },
+    {
+      "key": "musketeer-attack",
+      "changedPixels": 718
+    },
+    {
+      "key": "musketeer-idle",
+      "changedPixels": 469
+    },
+    {
+      "key": "musketeer-walk-a",
+      "changedPixels": 513
+    },
+    {
+      "key": "musketeer-walk-b",
+      "changedPixels": 414
     },
     {
       "key": "stone-axeman-attack",

@@ -1,0 +1,36 @@
+{
+  "source": "art-source/day7-5-units/bronze-swordsman-contact-sheet-v1-alpha.png",
+  "columns": 2,
+  "rows": 2,
+  "assets": [
+    { "key": "bronze-swordsman-idle", "filename": "bronze-swordsman-idle.png", "source": "art-source/day7-5-units/bronze-swordsman-contact-sheet-v1-alpha.png", "column": 0, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "bronze-swordsman-walk-a", "filename": "bronze-swordsman-walk-a.png", "source": "art-source/day7-5-units/bronze-swordsman-contact-sheet-v1-alpha.png", "column": 1, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "bronze-swordsman-walk-b", "filename": "bronze-swordsman-walk-b.png", "source": "art-source/day7-5-units/bronze-swordsman-contact-sheet-v1-alpha.png", "column": 0, "row": 1, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "bronze-swordsman-attack", "filename": "bronze-swordsman-attack.png", "source": "art-source/day7-5-units/bronze-swordsman-contact-sheet-v1-alpha.png", "column": 1, "row": 1, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+
+    { "key": "archer-idle", "filename": "archer-idle.png", "source": "art-source/day7-5-units/archer-contact-sheet-v1-alpha.png", "column": 0, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "archer-walk-a", "filename": "archer-walk-a.png", "source": "art-source/day7-5-units/archer-contact-sheet-v1-alpha.png", "column": 1, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "archer-walk-b", "filename": "archer-walk-b.png", "source": "art-source/day7-5-units/archer-contact-sheet-v1-alpha.png", "column": 0, "row": 1, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "archer-attack", "filename": "archer-attack.png", "source": "art-source/day7-5-units/archer-contact-sheet-v1-alpha.png", "column": 1, "row": 1, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+
+    { "key": "iron-swordsman-idle", "filename": "iron-swordsman-idle.png", "source": "art-source/day7-5-units/iron-swordsman-contact-sheet-v1-alpha.png", "column": 0, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "iron-swordsman-walk-a", "filename": "iron-swordsman-walk-a.png", "source": "art-source/day7-5-units/iron-swordsman-contact-sheet-v1-alpha.png", "column": 1, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "iron-swordsman-walk-b", "filename": "iron-swordsman-walk-b.png", "source": "art-source/day7-5-units/iron-swordsman-contact-sheet-v1-alpha.png", "column": 0, "row": 1, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "iron-swordsman-attack", "filename": "iron-swordsman-attack.png", "source": "art-source/day7-5-units/iron-swordsman-contact-sheet-v1-alpha.png", "column": 1, "row": 1, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+
+    { "key": "iron-spearman-idle", "filename": "iron-spearman-idle.png", "source": "art-source/day7-5-units/iron-spearman-contact-sheet-v1-alpha.png", "column": 0, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "iron-spearman-walk-a", "filename": "iron-spearman-walk-a.png", "source": "art-source/day7-5-units/iron-spearman-contact-sheet-v1-alpha.png", "column": 1, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "iron-spearman-walk-b", "filename": "iron-spearman-walk-b.png", "source": "art-source/day7-5-units/iron-spearman-walk-b-v2-alpha.png", "columns": 1, "rows": 1, "column": 0, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "iron-spearman-attack", "filename": "iron-spearman-attack.png", "source": "art-source/day7-5-units/iron-spearman-contact-sheet-v1-alpha.png", "column": 1, "row": 1, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+
+    { "key": "musketeer-idle", "filename": "musketeer-idle.png", "source": "art-source/day7-5-units/musketeer-contact-sheet-v1-alpha.png", "column": 0, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "musketeer-walk-a", "filename": "musketeer-walk-a.png", "source": "art-source/day7-5-units/musketeer-contact-sheet-v1-alpha.png", "column": 1, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "musketeer-walk-b", "filename": "musketeer-walk-b.png", "source": "art-source/day7-5-units/musketeer-walk-b-v2-alpha.png", "columns": 1, "rows": 1, "column": 0, "row": 0, "canvas": [384, 384], "anchor": [192, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "musketeer-attack", "filename": "musketeer-attack.png", "source": "art-source/day7-5-units/musketeer-contact-sheet-v1-alpha.png", "column": 1, "row": 1, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+
+    { "key": "knight-idle", "filename": "knight-idle.png", "source": "art-source/day7-5-units/knight-contact-sheet-v1-alpha.png", "column": 0, "row": 0, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "knight-walk-a", "filename": "knight-walk-a.png", "source": "art-source/day7-5-units/knight-contact-sheet-v1-alpha.png", "column": 1, "row": 0, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "knight-walk-b", "filename": "knight-walk-b.png", "source": "art-source/day7-5-units/knight-contact-sheet-v1-alpha.png", "column": 0, "row": 1, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 },
+    { "key": "knight-attack", "filename": "knight-attack.png", "source": "art-source/day7-5-units/knight-contact-sheet-v1-alpha.png", "column": 1, "row": 1, "canvas": [512, 384], "anchor": [256, 336], "opaqueHeight": 270, "minOpaqueHeight": 230, "maxOpaqueHeight": 288 }
+  ]
+}
