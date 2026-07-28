@@ -80,3 +80,42 @@ test("captures baked-matte versus opaque world-surface at four identical camera 
 
   writeFileSync(`${ARTIFACT_DIR}/gameplay-equivalence.json`, JSON.stringify(snapshots, null, 2));
 });
+
+test("captures production terrain at 1x and 2x device scale", async ({ browser }) => {
+  test.setTimeout(90_000);
+  for (const deviceScaleFactor of [1, 2]) {
+    const context = await browser.newContext({
+      deviceScaleFactor,
+      // Keep the 2x software-WebGL surface bounded while comparing identical
+      // CSS pixels at both device scales.
+      viewport: { width: 1024, height: 576 },
+    });
+    const page = await context.newPage();
+    await page.goto(GAME_URL);
+    const canvas = page.locator("canvas");
+    const box = await canvas.boundingBox();
+    if (!box) throw new Error("Canvas is not visible");
+    await canvas.click({ position: { x: box.width * 0.5, y: box.height * 0.894 } });
+    await page.waitForFunction(() => Boolean(
+      (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+    ));
+    await page.evaluate(() => {
+      const control = (window as unknown as {
+        __terrainPrototypeControl: {
+          setMode: (mode: "world-surface") => void;
+          setPaused: (paused: boolean) => void;
+          focusProgress: (progress: number) => void;
+        };
+      }).__terrainPrototypeControl;
+      control.setMode("world-surface");
+      control.setPaused(true);
+      control.focusProgress(0.588);
+    });
+    await page.waitForTimeout(80);
+    await page.screenshot({
+      path: `${ARTIFACT_DIR}/production-terrain-${deviceScaleFactor}x.png`,
+      scale: "css",
+    });
+    await context.close();
+  }
+});

@@ -6,24 +6,20 @@ import type {
   TerrainPatchSpec,
 } from "../data/battlefieldMaps";
 import type { StructureGroundPresentation } from "./battlefieldPrototypeRenderer";
+import {
+  getPatchMaterialMask,
+  getProductionTerrainBaseKey,
+  getProductionTerrainTextureKey,
+  includesDirtShoulder,
+  includesRoad,
+  type ProductionTerrainMaterial,
+} from "../presentation/terrain/productionTerrainRegistry";
 
 const SURFACE_DEPTH = 2;
 const PROP_SHADOW_COLOR = 0x172018;
 
 type VisibleGameObject = Phaser.GameObjects.GameObject & {
   setVisible(visible: boolean): Phaser.GameObjects.GameObject;
-};
-
-const TEXTURES: Record<TerrainMaterial, string> = {
-  grass: "prototype-placeholder-grass",
-  dirt: "prototype-placeholder-dirt",
-  stone: "prototype-placeholder-stone",
-};
-
-const TINTS: Record<TerrainMaterial, number> = {
-  grass: 0xa6b083,
-  dirt: 0xa18c6f,
-  stone: 0xaaa998,
 };
 
 /**
@@ -86,11 +82,9 @@ export class BattlefieldWorldRenderer {
           row * chunkSize + height / 2,
           width,
           height,
-          TEXTURES.grass,
+          getProductionTerrainBaseKey("grass"),
         )
-          .setTilePosition(column * 311 + row * 97, row * 277 + column * 53)
-          .setTileScale(0.58 + ((column + row) % 3) * 0.025)
-          .setTint(TINTS.grass)
+          .setTilePosition(column * chunkSize, row * chunkSize)
           .setDepth(SURFACE_DEPTH);
         this.objects.push(chunk);
       }
@@ -98,40 +92,48 @@ export class BattlefieldWorldRenderer {
   }
 
   private createLaneSurface(patch: TerrainPatchSpec): void {
-    const length = patch.columns * patch.cellWidth + 36;
-    const dirtWidth = patch.cellHeight * 6.2;
-    const stoneWidth = patch.cellHeight * 3.15;
-    this.createRoundedBand(patch, "dirt", length, dirtWidth, SURFACE_DEPTH + 2, 104);
-    this.createRoundedBand(patch, "stone", length, stoneWidth, SURFACE_DEPTH + 3, 48);
+    this.createMaterialLayer(patch, "dirt", includesDirtShoulder, SURFACE_DEPTH + 2);
+    this.createMaterialLayer(patch, "road", includesRoad, SURFACE_DEPTH + 3);
   }
 
-  private createRoundedBand(
+  private createMaterialLayer(
     patch: TerrainPatchSpec,
-    material: TerrainMaterial,
-    width: number,
-    height: number,
+    material: ProductionTerrainMaterial,
+    includesMaterial: (material: TerrainMaterial) => boolean,
     depth: number,
-    radius: number,
   ): void {
-    const tile = this.scene.add.tileSprite(patch.center.x, patch.center.y, width, height, TEXTURES[material])
-      .setRotation(patch.rotationRad)
-      .setTilePosition(patch.center.x * 0.13, patch.center.y * 0.11)
-      .setTileScale(material === "stone" ? 0.38 : 0.5)
-      .setTint(TINTS[material])
-      .setDepth(depth);
-    const maskShape = this.scene.make.graphics({ x: patch.center.x, y: patch.center.y }, false)
-      .setRotation(patch.rotationRad);
-    maskShape.fillStyle(0xffffff, 1);
-    maskShape.fillRoundedRect(-width / 2, -height / 2, width, height, Math.min(radius, height / 2));
-    tile.setMask(maskShape.createGeometryMask());
-    this.objects.push(tile);
+    const cos = Math.cos(patch.rotationRad);
+    const sin = Math.sin(patch.rotationRad);
+    for (let row = 0; row < patch.rows; row += 1) {
+      for (let column = 0; column < patch.columns; column += 1) {
+        const mask = getPatchMaterialMask(patch, column, row, includesMaterial);
+        const textureKey = getProductionTerrainTextureKey(material, mask);
+        if (!textureKey) continue;
+        const localX = (column - (patch.columns - 1) / 2) * patch.cellWidth;
+        const localY = (row - (patch.rows - 1) / 2) * patch.cellHeight;
+        const tile = this.scene.add.image(
+          patch.center.x + localX * cos - localY * sin,
+          patch.center.y + localX * sin + localY * cos,
+          textureKey,
+        )
+          .setDisplaySize(patch.cellWidth + 1, patch.cellHeight + 1)
+          .setRotation(patch.rotationRad)
+          .setDepth(depth);
+        this.objects.push(tile);
+      }
+    }
   }
 
   private createStructureGround(socket: StructureSocketSpec): void {
     const { x, y } = socket.position;
     const { width, height } = socket.footprint;
-    const dirt = this.scene.add.ellipse(x, y + 4, width + 96, height + 54, 0x6e5d42, 1)
+    const dirt = this.scene.add.image(x, y + 4, getProductionTerrainBaseKey("stone"))
+      .setDisplaySize(width + 96, height + 54)
       .setDepth(SURFACE_DEPTH + 4);
+    const dirtMask = this.scene.make.graphics({ x, y: y + 4 }, false);
+    dirtMask.fillStyle(0xffffff, 1);
+    dirtMask.fillEllipse(0, 0, width + 96, height + 54);
+    dirt.setMask(dirtMask.createGeometryMask());
     const foundation = this.scene.add.ellipse(x, y, width + 34, height + 22, 0x77766c, 1)
       .setStrokeStyle(5, 0x3d4543, 1)
       .setDepth(SURFACE_DEPTH + 5);

@@ -49,6 +49,7 @@ import {
   type StructureGroundPresentation,
 } from "../gfx/battlefieldPrototypeRenderer";
 import { BattlefieldWorldRenderer } from "../gfx/battlefieldWorldRenderer";
+import { PRODUCTION_TERRAIN_ASSETS } from "../presentation/terrain/productionTerrainRegistry";
 import { generateBattlefield, type BattlefieldResult } from "../systems/battlefieldGenerator";
 import { getAudioSystem } from "../systems/audio";
 import { LaneBattleAudioWiring } from "../systems/audio/laneBattleAudioWiring";
@@ -345,6 +346,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.load.image("stone-supply-unit", "/assets/lane-units/stone-supply-unit.png");
     UNIT_ANIMATION_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
     PROTOTYPE_TERRAIN_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
+    PRODUCTION_TERRAIN_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
   }
 
   create(): void {
