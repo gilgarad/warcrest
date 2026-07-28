@@ -7,17 +7,31 @@ export interface UnitAnimationDefinition {
   walkA: string;
   walkB: string;
   attack: readonly string[];
-  canvasAspect: number;
+  frameCanvasAspects: Readonly<Record<string, number>>;
   groundOriginX: number;
   groundOriginY: number;
   referenceVisibleHeightRatio: number;
   frameVisibleHeightRatios: Readonly<Record<string, number>>;
   scaleFactor: number;
+  nativeFacingX: -1 | 1;
 }
 
-const NORMALIZED_CANVAS_ASPECT = 1152 / 1024;
-const NORMALIZED_GROUND_ORIGIN_X = 450 / 1152;
-const NORMALIZED_GROUND_ORIGIN_Y = 900 / 1024;
+const STANDARD_ASPECT = 1;
+const WIDE_ASPECT = 512 / 384;
+const PRODUCTION_GROUND_ORIGIN_X = 0.5;
+const PRODUCTION_GROUND_ORIGIN_Y = 336 / 384;
+const PRODUCTION_VISIBLE_HEIGHT_RATIO = 270 / 384;
+
+const frameAspects = (
+  standard: readonly string[],
+  wide: readonly string[] = [],
+): Readonly<Record<string, number>> => Object.fromEntries([
+  ...standard.map((key) => [key, STANDARD_ASPECT]),
+  ...wide.map((key) => [key, WIDE_ASPECT]),
+]);
+
+const frameHeightRatios = (keys: readonly string[]): Readonly<Record<string, number>> =>
+  Object.fromEntries(keys.map((key) => [key, PRODUCTION_VISIBLE_HEIGHT_RATIO]));
 
 export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDefinition>> = {
   stone_slinger: {
@@ -25,71 +39,71 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
     walkA: "stone-slinger-walk-a",
     walkB: "stone-slinger-walk-b",
     attack: ["stone-slinger-attack"],
-    canvasAspect: NORMALIZED_CANVAS_ASPECT,
-    groundOriginX: NORMALIZED_GROUND_ORIGIN_X,
-    groundOriginY: NORMALIZED_GROUND_ORIGIN_Y,
-    referenceVisibleHeightRatio: 620 / 1024,
-    frameVisibleHeightRatios: {
-      "stone-slinger-idle": 620 / 1024,
-      "stone-slinger-walk-a": 587 / 1024,
-      "stone-slinger-walk-b": 568 / 1024,
-      "stone-slinger-attack": 571 / 1024,
-    },
+    frameCanvasAspects: frameAspects(
+      ["stone-slinger-idle", "stone-slinger-walk-a", "stone-slinger-walk-b"],
+      ["stone-slinger-attack"],
+    ),
+    groundOriginX: PRODUCTION_GROUND_ORIGIN_X,
+    groundOriginY: PRODUCTION_GROUND_ORIGIN_Y,
+    referenceVisibleHeightRatio: PRODUCTION_VISIBLE_HEIGHT_RATIO,
+    frameVisibleHeightRatios: frameHeightRatios([
+      "stone-slinger-idle", "stone-slinger-walk-a", "stone-slinger-walk-b", "stone-slinger-attack",
+    ]),
     scaleFactor: 0.96,
+    nativeFacingX: -1,
   },
   stone_axeman: {
     idle: "stone-axeman-idle",
     walkA: "stone-axeman-walk-a",
     walkB: "stone-axeman-walk-b",
-    attack: ["stone-axeman-attack-windup", "stone-axeman-attack-contact", "stone-axeman-attack-recover"],
-    canvasAspect: NORMALIZED_CANVAS_ASPECT,
-    groundOriginX: NORMALIZED_GROUND_ORIGIN_X,
-    groundOriginY: NORMALIZED_GROUND_ORIGIN_Y,
-    referenceVisibleHeightRatio: 600 / 1024,
-    frameVisibleHeightRatios: {
-      "stone-axeman-idle": 600 / 1024,
-      "stone-axeman-walk-a": 593 / 1024,
-      "stone-axeman-walk-b": 578 / 1024,
-      "stone-axeman-attack-windup": 642 / 1024,
-      "stone-axeman-attack-contact": 525 / 1024,
-      "stone-axeman-attack-recover": 493 / 1024,
-    },
+    attack: ["stone-axeman-attack"],
+    frameCanvasAspects: frameAspects(
+      ["stone-axeman-idle", "stone-axeman-walk-a", "stone-axeman-walk-b"],
+      ["stone-axeman-attack"],
+    ),
+    groundOriginX: PRODUCTION_GROUND_ORIGIN_X,
+    groundOriginY: PRODUCTION_GROUND_ORIGIN_Y,
+    referenceVisibleHeightRatio: PRODUCTION_VISIBLE_HEIGHT_RATIO,
+    frameVisibleHeightRatios: frameHeightRatios([
+      "stone-axeman-idle", "stone-axeman-walk-a", "stone-axeman-walk-b", "stone-axeman-attack",
+    ]),
     scaleFactor: 1.04,
+    nativeFacingX: -1,
   },
   supply_wagon: {
-    idle: "stone-supply-idle",
-    walkA: "stone-supply-walk-a",
-    walkB: "stone-supply-walk-b",
-    attack: ["stone-supply-attack"],
-    canvasAspect: NORMALIZED_CANVAS_ASPECT,
-    groundOriginX: NORMALIZED_GROUND_ORIGIN_X,
-    groundOriginY: NORMALIZED_GROUND_ORIGIN_Y,
-    referenceVisibleHeightRatio: 601 / 1024,
-    frameVisibleHeightRatios: {
-      "stone-supply-idle": 601 / 1024,
-      "stone-supply-walk-a": 577 / 1024,
-      "stone-supply-walk-b": 554 / 1024,
-      "stone-supply-attack": 513 / 1024,
-    },
+    idle: "supply-wagon-idle",
+    walkA: "supply-wagon-walk-a",
+    walkB: "supply-wagon-walk-b",
+    attack: ["supply-wagon-attack"],
+    frameCanvasAspects: frameAspects([], [
+      "supply-wagon-idle", "supply-wagon-walk-a", "supply-wagon-walk-b", "supply-wagon-attack",
+    ]),
+    groundOriginX: PRODUCTION_GROUND_ORIGIN_X,
+    groundOriginY: PRODUCTION_GROUND_ORIGIN_Y,
+    referenceVisibleHeightRatio: PRODUCTION_VISIBLE_HEIGHT_RATIO,
+    frameVisibleHeightRatios: frameHeightRatios([
+      "supply-wagon-idle", "supply-wagon-walk-a", "supply-wagon-walk-b", "supply-wagon-attack",
+    ]),
     scaleFactor: 1,
+    nativeFacingX: -1,
   },
   bronze_spearman: {
     idle: "bronze-spearman-idle",
     walkA: "bronze-spearman-walk-a",
     walkB: "bronze-spearman-walk-b",
-    attack: ["bronze-spearman-attack-windup", "bronze-spearman-attack-contact"],
-    canvasAspect: NORMALIZED_CANVAS_ASPECT,
-    groundOriginX: NORMALIZED_GROUND_ORIGIN_X,
-    groundOriginY: NORMALIZED_GROUND_ORIGIN_Y,
-    referenceVisibleHeightRatio: 524 / 1024,
-    frameVisibleHeightRatios: {
-      "bronze-spearman-idle": 524 / 1024,
-      "bronze-spearman-walk-a": 509 / 1024,
-      "bronze-spearman-walk-b": 445 / 1024,
-      "bronze-spearman-attack-windup": 423 / 1024,
-      "bronze-spearman-attack-contact": 625 / 1024,
-    },
+    attack: ["bronze-spearman-attack"],
+    frameCanvasAspects: frameAspects(
+      ["bronze-spearman-idle", "bronze-spearman-walk-a", "bronze-spearman-walk-b"],
+      ["bronze-spearman-attack"],
+    ),
+    groundOriginX: PRODUCTION_GROUND_ORIGIN_X,
+    groundOriginY: PRODUCTION_GROUND_ORIGIN_Y,
+    referenceVisibleHeightRatio: PRODUCTION_VISIBLE_HEIGHT_RATIO,
+    frameVisibleHeightRatios: frameHeightRatios([
+      "bronze-spearman-idle", "bronze-spearman-walk-a", "bronze-spearman-walk-b", "bronze-spearman-attack",
+    ]),
     scaleFactor: 1,
+    nativeFacingX: -1,
   },
 };
 
@@ -98,7 +112,10 @@ export const UNIT_ANIMATION_ASSETS = Object.values(UNIT_ANIMATION_REGISTRY)
     ? [definition.idle, definition.walkA, definition.walkB, ...definition.attack]
     : [])
   .filter((key, index, all) => all.indexOf(key) === index)
-  .map((key) => ({ key, path: `/assets/lane-poses/frames/${key}.png` }));
+  .flatMap((key) => [
+    { key, path: `/assets/production/units/${key}.png` },
+    { key: `${key}-enemy`, path: `/assets/production/units/${key}-enemy.png` },
+  ]);
 
 export function getUnitAnimationDefinition(unitId: LaneUnitId): UnitAnimationDefinition | undefined {
   return UNIT_ANIMATION_REGISTRY[unitId];
@@ -110,6 +127,21 @@ export function getFrameVisibleHeightRatio(unitId: LaneUnitId, textureKey?: stri
   return textureKey
     ? definition.frameVisibleHeightRatios[textureKey] ?? definition.referenceVisibleHeightRatio
     : definition.referenceVisibleHeightRatio;
+}
+
+export function getFrameCanvasAspect(unitId: LaneUnitId, textureKey?: string): number | undefined {
+  const definition = getUnitAnimationDefinition(unitId);
+  if (!definition || !textureKey) return undefined;
+  return definition.frameCanvasAspects[textureKey];
+}
+
+export function resolveTeamUnitTextureKey(textureKey: string, team: "player" | "enemy"): string {
+  return team === "enemy" ? `${textureKey}-enemy` : textureKey;
+}
+
+export function shouldFlipUnitFrame(unitId: LaneUnitId, facingX: number): boolean {
+  const nativeFacingX = getUnitAnimationDefinition(unitId)?.nativeFacingX ?? 1;
+  return (facingX < 0 ? -1 : 1) !== nativeFacingX;
 }
 
 export function resolveUnitAnimationTexture(

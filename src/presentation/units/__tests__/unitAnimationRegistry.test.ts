@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
   UNIT_ANIMATION_ASSETS,
+  getFrameCanvasAspect,
   getFrameVisibleHeightRatio,
   getUnitAnimationDefinition,
   resolveUnitAnimationTexture,
+  resolveTeamUnitTextureKey,
+  shouldFlipUnitFrame,
 } from "../unitAnimationRegistry";
 
 describe("unit animation registry", () => {
@@ -12,27 +15,36 @@ describe("unit animation registry", () => {
     (unitId) => {
       const definition = getUnitAnimationDefinition(unitId);
       expect(definition).toBeDefined();
-      expect(definition?.canvasAspect).toBe(1.125);
-      expect(definition?.groundOriginX).toBeCloseTo(450 / 1152);
-      expect(definition?.groundOriginY).toBeCloseTo(900 / 1024);
+      expect(definition?.groundOriginX).toBe(0.5);
+      expect(definition?.groundOriginY).toBe(0.875);
+      expect(definition?.referenceVisibleHeightRatio).toBeCloseTo(270 / 384);
+      expect(definition?.nativeFacingX).toBe(-1);
       expect(definition?.attack.length).toBeGreaterThan(0);
     },
   );
 
-  it("resolves the axeman wind-up, contact, and recover frames", () => {
-    expect(resolveUnitAnimationTexture("stone_axeman", false, 0, 0.1)).toBe("stone-axeman-attack-windup");
-    expect(resolveUnitAnimationTexture("stone_axeman", false, 0, 0.5)).toBe("stone-axeman-attack-contact");
-    expect(resolveUnitAnimationTexture("stone_axeman", false, 0, 0.9)).toBe("stone-axeman-attack-recover");
+  it("uses the approved wide production attack frame throughout the attack window", () => {
+    expect(resolveUnitAnimationTexture("stone_axeman", false, 0, 0.1)).toBe("stone-axeman-attack");
+    expect(resolveUnitAnimationTexture("stone_axeman", false, 0, 0.9)).toBe("stone-axeman-attack");
+    expect(getFrameCanvasAspect("stone_axeman", "stone-axeman-idle")).toBe(1);
+    expect(getFrameCanvasAspect("stone_axeman", "stone-axeman-attack")).toBeCloseTo(512 / 384);
   });
 
   it("registers the bronze spearman without a token fallback", () => {
     expect(resolveUnitAnimationTexture("bronze_spearman", false, 0, 0)).toBe("bronze-spearman-idle");
-    expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === "bronze-spearman-attack-contact")).toBe(true);
+    expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === "bronze-spearman-attack")).toBe(true);
+    expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === "bronze-spearman-attack-enemy")).toBe(true);
   });
 
   it("records per-frame visible heights for scale normalization", () => {
-    expect(getFrameVisibleHeightRatio("bronze_spearman", "bronze-spearman-attack-windup")).toBeCloseTo(423 / 1024);
-    expect(getFrameVisibleHeightRatio("bronze_spearman", "bronze-spearman-attack-contact")).toBeCloseTo(625 / 1024);
-    expect(getFrameVisibleHeightRatio("stone_axeman", "stone-axeman-attack-recover")).toBeCloseTo(493 / 1024);
+    expect(getFrameVisibleHeightRatio("bronze_spearman", "bronze-spearman-attack")).toBeCloseTo(270 / 384);
+    expect(getFrameVisibleHeightRatio("stone_axeman", "stone-axeman-attack")).toBeCloseTo(270 / 384);
+  });
+
+  it("selects team palette variants without whole-sprite tinting", () => {
+    expect(resolveTeamUnitTextureKey("stone-axeman-idle", "player")).toBe("stone-axeman-idle");
+    expect(resolveTeamUnitTextureKey("stone-axeman-idle", "enemy")).toBe("stone-axeman-idle-enemy");
+    expect(shouldFlipUnitFrame("stone_axeman", -1)).toBe(false);
+    expect(shouldFlipUnitFrame("stone_axeman", 1)).toBe(true);
   });
 });

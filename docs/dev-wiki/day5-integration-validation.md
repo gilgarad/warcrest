@@ -55,3 +55,30 @@ performance bottleneck.
   and `ground-anchor-profiles.json`
 
 No prop position, movement obstacle, or path coordinate changed.
+
+## Step 3: production units
+
+- Replaced all four registry families with production assets: stone slinger,
+  stone axeman, supply porter, and the approved bronze spearman attack-v2 set.
+- Removed the old 1152x1024 canvas assumption. Every frame now records its own
+  384x384 or 512x384 aspect while sharing visible height `270/384` and ground
+  anchor `(0.5, 0.875)`.
+- Recorded the approved native left-facing direction; runtime flip now compares
+  movement facing against that contract instead of assuming right-facing art.
+- Added deterministic blue-to-red authored-region variants. The generator
+  changed designated pixels in all 16 frames while preserving alpha and all
+  non-team materials; no persistent whole-sprite tint is used.
+
+### Verification
+
+- `npm run build`: pass
+- `npm test`: pass, 26 files / 92 tests
+- `npm run asset:qa:units`: pass, 12/12 volume assets
+- Team palette generation: pass, 16/16 (`team-palette-report.json`)
+- Unit animation/tower Playwright suite: pass, 6/6
+- Pose galleries, team comparison, metrics, and bronze-wave capture:
+  `artifacts/unit-animation-tower-v2/`
+
+The approved volume set has one authored attack pose per unit. Existing combat
+timing and attack contact rules are unchanged; Day 6 can add temporal staging
+without changing these integrated frame contracts.

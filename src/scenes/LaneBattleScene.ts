@@ -60,6 +60,8 @@ import {
   UNIT_ANIMATION_ASSETS,
   getUnitAnimationDefinition,
   resolveUnitAnimationTexture,
+  resolveTeamUnitTextureKey,
+  shouldFlipUnitFrame,
 } from "../presentation/units/unitAnimationRegistry";
 import {
   getUnitScaleFactor,
@@ -703,6 +705,20 @@ export class LaneBattleScene extends Phaser.Scene {
           this.syncUnitPresentation(unit);
         });
         const focus = this.progressToScreen(0.505, 0);
+        this.cameras.main.centerOn(focus.x, focus.y);
+        this.publishDebug();
+      },
+      prepareTeamPaletteProbe: (unitId: BattleUnitId | SupportUnitId) => {
+        this.units.forEach((unit) => this.destroyUnitPresentation(unit));
+        this.units = [];
+        const role = unitId === "supply_wagon" ? "support" : "battle";
+        this.spawnLaneUnit("player", role, unitId, 0.48, -1.8);
+        this.spawnLaneUnit("enemy", role, unitId, 0.52, 1.8);
+        this.units.forEach((unit) => {
+          unit.attackTimerSec = 10;
+          this.syncUnitPresentation(unit);
+        });
+        const focus = this.progressToScreen(0.5, 0);
         this.cameras.main.centerOn(focus.x, focus.y);
         this.publishDebug();
       },
@@ -2398,7 +2414,11 @@ export class LaneBattleScene extends Phaser.Scene {
       .setStrokeStyle(3, team === "player" ? 0x8bd7ff : 0xffa0a0, 0.9)
       .setDepth(this.getGroundDepth(pos.y, -2))
       .setVisible(false);
-    const sprite = this.add.image(pos.x, pos.y, initialTextureKey).setDepth(this.getGroundDepth(pos.y));
+    const sprite = this.add.image(
+      pos.x,
+      pos.y,
+      resolveTeamUnitTextureKey(initialTextureKey, team),
+    ).setDepth(this.getGroundDepth(pos.y));
     sprite.setDisplaySize(displaySize, displaySize);
     const hpBg = this.add.rectangle(pos.x, pos.y - 44, 34, 5, 0x132033, 0.92).setDepth(sprite.depth + 1);
     const hpFill = this.add.rectangle(pos.x - 17, pos.y - 44, 34, 5, team === "player" ? 0x62d4a3 : 0xf06f6f, 1).setOrigin(0, 0.5).setDepth(sprite.depth + 2);
@@ -2546,7 +2566,7 @@ export class LaneBattleScene extends Phaser.Scene {
     ) ?? UNIT_STATS[unit.unitId].textureKey;
     if (desiredTexture !== unit.currentTextureKey) {
       unit.currentTextureKey = desiredTexture;
-      unit.sprite.setTexture(desiredTexture);
+      unit.sprite.setTexture(resolveTeamUnitTextureKey(desiredTexture, unit.team));
     }
     unit.motionX = pos.x - unit.lastPresentationX;
     unit.motionY = pos.y - unit.lastPresentationY;
@@ -2642,7 +2662,7 @@ export class LaneBattleScene extends Phaser.Scene {
       .setPosition(pos.x + attackOffsetX, pos.y - bob - attackLift)
       .setOrigin(originX, originY)
       .setRotation(attackMotion.rotationRad)
-      .setFlipX(unit.facingX < 0)
+      .setFlipX(shouldFlipUnitFrame(unit.unitId, unit.facingX))
       .setDisplaySize(spriteWidth, spriteHeight)
       .setDepth(this.getGroundDepth(pos.y));
     unit.hpBg
@@ -2845,6 +2865,7 @@ export class LaneBattleScene extends Phaser.Scene {
         tint: unit.sprite.tintTopLeft,
         motion: { x: unit.motionX, y: unit.motionY },
         pose: unit.currentTextureKey,
+        renderTexture: unit.sprite.texture.key,
         attackAnimTime: unit.attackAnimTime,
         attackTargetKind: unit.attackTargetKind,
         manaCurrent: unit.manaCurrent,

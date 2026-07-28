@@ -7,7 +7,7 @@ const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&came
 type UnitId = "stone_axeman" | "stone_slinger" | "supply_wagon" | "bronze_spearman";
 
 interface DebugSnapshot {
-  units: Array<{ unitId: string; pose: string; attackAnimTime: number }>;
+  units: Array<{ unitId: string; pose: string; renderTexture: string; attackAnimTime: number }>;
   activeProjectiles: Array<{ textureKey: string; x: number; y: number }>;
   towerAttackPatterns: Record<string, {
     projectileCount: number;
@@ -35,15 +35,15 @@ test("normalized pose assets share canvas and ground anchor without edge clippin
   await openGame(page);
   const keys = [
     "stone-axeman-idle", "stone-axeman-walk-a", "stone-axeman-walk-b",
-    "stone-axeman-attack-windup", "stone-axeman-attack-contact", "stone-axeman-attack-recover",
+    "stone-axeman-attack",
     "stone-slinger-idle", "stone-slinger-walk-a", "stone-slinger-walk-b", "stone-slinger-attack",
-    "stone-supply-idle", "stone-supply-walk-a", "stone-supply-walk-b", "stone-supply-attack",
+    "supply-wagon-idle", "supply-wagon-walk-a", "supply-wagon-walk-b", "supply-wagon-attack",
     "bronze-spearman-idle", "bronze-spearman-walk-a", "bronze-spearman-walk-b",
-    "bronze-spearman-attack-windup", "bronze-spearman-attack-contact",
+    "bronze-spearman-attack",
   ];
   const metrics = await page.evaluate(async (assetKeys) => Promise.all(assetKeys.map(async (key) => {
     const image = new Image();
-    image.src = `/assets/lane-poses/frames/${key}.png`;
+    image.src = `/assets/production/units/${key}.png`;
     await image.decode();
     const canvas = document.createElement("canvas");
     canvas.width = image.width;
@@ -68,8 +68,8 @@ test("normalized pose assets share canvas and ground anchor without edge clippin
     return { key, width: canvas.width, height: canvas.height, minX, minY, maxX, maxY };
   })), keys);
 
-  expect(metrics.every((entry) => entry.width === 1152 && entry.height === 1024)).toBe(true);
-  expect(metrics.every((entry) => entry.maxY === 899)).toBe(true);
+  expect(metrics.every((entry) => (entry.width === 384 || entry.width === 512) && entry.height === 384)).toBe(true);
+  expect(metrics.every((entry) => entry.maxY === 335)).toBe(true);
   expect(metrics.every((entry) => entry.minX > 0 && entry.maxX < entry.width - 1)).toBe(true);
   writeFileSync(`${ARTIFACT_DIR}/normalized-frame-metrics.json`, JSON.stringify(metrics, null, 2));
 });
@@ -95,7 +95,26 @@ test("captures all four shared-registry unit pose galleries", async ({ page }) =
 
 });
 
-test("captures the axeman wind-up, contact, and recover sequence", async ({ page }) => {
+test("renders authored player and enemy team-color regions without whole tint", async ({ page }) => {
+  await openGame(page);
+  await page.evaluate(() => {
+    const control = (window as unknown as {
+      __terrainPrototypeControl: { prepareTeamPaletteProbe: (unitId: UnitId) => void; setPaused: (paused: boolean) => void };
+    }).__terrainPrototypeControl;
+    control.prepareTeamPaletteProbe("bronze_spearman");
+    control.setPaused(true);
+  });
+  const units = (await page.evaluate(() => (
+    (window as unknown as { __gameDebug: DebugSnapshot }).__gameDebug.units
+  ))).filter((unit) => unit.unitId === "bronze_spearman");
+  expect(units.map((unit) => unit.renderTexture).sort()).toEqual([
+    "bronze-spearman-idle",
+    "bronze-spearman-idle-enemy",
+  ]);
+  await page.screenshot({ path: `${ARTIFACT_DIR}/bronze-spearman-team-palette.png` });
+});
+
+test("captures the axeman attack motion phases with the production frame", async ({ page }) => {
   await openGame(page);
   const controlType = {} as {
     setAttackVisualPhase: (unitId: UnitId, team: "player", phase: number) => void;
@@ -121,11 +140,7 @@ test("captures the axeman wind-up, contact, and recover sequence", async ({ page
     attackFrames.push({ phase, pose });
     await page.screenshot({ path: `${ARTIFACT_DIR}/stone-axeman-attack-${label}.png` });
   }
-  expect(attackFrames.map((entry) => entry.pose)).toEqual([
-    "stone-axeman-attack-windup",
-    "stone-axeman-attack-contact",
-    "stone-axeman-attack-recover",
-  ]);
+  expect(attackFrames.map((entry) => entry.pose)).toEqual(Array(3).fill("stone-axeman-attack"));
   writeFileSync(`${ARTIFACT_DIR}/axeman-attack-sequence.json`, JSON.stringify(attackFrames, null, 2));
 });
 

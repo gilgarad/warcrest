@@ -1,0 +1,70 @@
+{
+  "passed": true,
+  "assetCount": 16,
+  "results": [
+    {
+      "key": "bronze-spearman-attack",
+      "changedPixels": 662
+    },
+    {
+      "key": "bronze-spearman-idle",
+      "changedPixels": 486
+    },
+    {
+      "key": "bronze-spearman-walk-a",
+      "changedPixels": 419
+    },
+    {
+      "key": "bronze-spearman-walk-b",
+      "changedPixels": 359
+    },
+    {
+      "key": "stone-axeman-attack",
+      "changedPixels": 1233
+    },
+    {
+      "key": "stone-axeman-idle",
+      "changedPixels": 958
+    },
+    {
+      "key": "stone-axeman-walk-a",
+      "changedPixels": 981
+    },
+    {
+      "key": "stone-axeman-walk-b",
+      "changedPixels": 672
+    },
+    {
+      "key": "stone-slinger-attack",
+      "changedPixels": 1395
+    },
+    {
+      "key": "stone-slinger-idle",
+      "changedPixels": 1083
+    },
+    {
+      "key": "stone-slinger-walk-a",
+      "changedPixels": 1221
+    },
+    {
+      "key": "stone-slinger-walk-b",
+      "changedPixels": 917
+    },
+    {
+      "key": "supply-wagon-attack",
+      "changedPixels": 678
+    },
+    {
+      "key": "supply-wagon-idle",
+      "changedPixels": 650
+    },
+    {
+      "key": "supply-wagon-walk-a",
+      "changedPixels": 671
+    },
+    {
+      "key": "supply-wagon-walk-b",
+      "changedPixels": 457
+    }
+  ]
+}

@@ -13,6 +13,7 @@
     "asset:qa:golden": "python3 tools/asset-qa/validate_golden_reference.py",
     "asset:prepare:units": "python3 tools/asset-qa/normalize_golden_reference.py --spec tools/asset-qa/volume-unit-assets.json --output public/assets/production/units && python3 tools/asset-qa/compose_volume_unit_contact_sheet.py",
     "asset:qa:units": "python3 tools/asset-qa/validate_golden_reference.py --spec tools/asset-qa/volume-unit-assets.json --assets public/assets/production/units",
+    "asset:prepare:unit-teams": "python3 tools/asset-qa/generate_unit_team_variants.py",
     "asset:prepare:terrain": "python3 tools/asset-qa/generate_terrain_volume.py",
     "asset:qa:terrain": "python3 tools/asset-qa/validate_terrain_volume.py",
     "asset:prepare:props": "python3 tools/asset-qa/normalize_golden_reference.py --spec tools/asset-qa/volume-prop-assets.json --output public/assets/production/props && python3 tools/asset-qa/clean_alpha_assets.py --directory public/assets/production/props --minimum-component 64 && python3 tools/asset-qa/compose_volume_unit_contact_sheet.py --spec tools/asset-qa/volume-prop-assets.json --assets public/assets/production/props --output artifacts/volume-production/props-contact-sheet.png --columns 5",
