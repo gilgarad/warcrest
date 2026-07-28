@@ -1,0 +1,14 @@
+[
+  {
+    "owner": "neutral",
+    "markerTexture": "capture-marker-neutral"
+  },
+  {
+    "owner": "player",
+    "markerTexture": "capture-marker"
+  },
+  {
+    "owner": "enemy",
+    "markerTexture": "capture-marker-enemy"
+  }
+]

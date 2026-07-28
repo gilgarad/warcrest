@@ -1,0 +1,34 @@
+{
+  "passed": true,
+  "assetCount": 7,
+  "results": [
+    {
+      "key": "capture-marker",
+      "enemyChangedPixels": 4546
+    },
+    {
+      "key": "defense-tower-construction",
+      "enemyChangedPixels": 2628
+    },
+    {
+      "key": "defense-tower-critical",
+      "enemyChangedPixels": 1268
+    },
+    {
+      "key": "defense-tower-damaged",
+      "enemyChangedPixels": 1536
+    },
+    {
+      "key": "defense-tower-full",
+      "enemyChangedPixels": 1581
+    },
+    {
+      "key": "defense-tower-ruins",
+      "enemyChangedPixels": 4
+    },
+    {
+      "key": "main-base",
+      "enemyChangedPixels": 6442
+    }
+  ]
+}

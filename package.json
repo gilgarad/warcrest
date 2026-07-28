@@ -19,7 +19,8 @@
     "asset:prepare:props": "python3 tools/asset-qa/normalize_golden_reference.py --spec tools/asset-qa/volume-prop-assets.json --output public/assets/production/props && python3 tools/asset-qa/clean_alpha_assets.py --directory public/assets/production/props --minimum-component 64 && python3 tools/asset-qa/compose_volume_unit_contact_sheet.py --spec tools/asset-qa/volume-prop-assets.json --assets public/assets/production/props --output artifacts/volume-production/props-contact-sheet.png --columns 5",
     "asset:qa:props": "python3 tools/asset-qa/validate_golden_reference.py --spec tools/asset-qa/volume-prop-assets.json --assets public/assets/production/props",
     "asset:prepare:structures": "python3 tools/asset-qa/normalize_golden_reference.py --spec tools/asset-qa/volume-structure-assets.json --output public/assets/production/structures && python3 tools/asset-qa/clean_alpha_assets.py --directory public/assets/production/structures --minimum-component 64 && python3 tools/asset-qa/compose_volume_unit_contact_sheet.py --spec tools/asset-qa/volume-structure-assets.json --assets public/assets/production/structures --output artifacts/volume-production/structures-contact-sheet.png --columns 4",
-    "asset:qa:structures": "python3 tools/asset-qa/validate_golden_reference.py --spec tools/asset-qa/volume-structure-assets.json --assets public/assets/production/structures"
+    "asset:qa:structures": "python3 tools/asset-qa/validate_golden_reference.py --spec tools/asset-qa/volume-structure-assets.json --assets public/assets/production/structures",
+    "asset:prepare:structure-teams": "python3 tools/asset-qa/generate_structure_team_variants.py"
   },
   "dependencies": {
     "phaser": "^3.90.0"

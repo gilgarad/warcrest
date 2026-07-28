@@ -82,3 +82,31 @@ No prop position, movement obstacle, or path coordinate changed.
 The approved volume set has one authored attack pose per unit. Existing combat
 timing and attack contact rules are unchanged; Day 6 can add temporal staging
 without changing these integrated frame contracts.
+
+## Step 4: production structures
+
+- Replaced the main bases, five defense-tower states, and capture marker with
+  the approved `structure-medium` production family.
+- Added deterministic player/enemy structure palettes and a neutral capture
+  marker. Runtime selection changes authored team-color regions only; no
+  whole-sprite tint is applied.
+- Kept every structure progress/socket coordinate unchanged. The existing
+  minimum separation and ownership/capture rules are unaffected.
+- Applied one ground origin `(0.5, 0.875)` and state-specific visible bounds so
+  full, damaged, critical, ruins, and construction tower states remain at the
+  same perceived gameplay height.
+
+### Verification
+
+- `npm run build`: pass
+- `npm test`: pass, 27 files / 94 tests
+- `npm run asset:qa:structures`: pass, 7/7 source assets
+- Structure Playwright suite: pass, 3/3
+- Five-state metrics, three marker palettes, both bases, and construction
+  review: `artifacts/day5-structures/`
+
+The isolated construction capture reads primarily as an incomplete stone tower
+with scaffolding. It does not read as a well or freestanding gallows at gameplay
+scale because the pulley is attached to the tower body. The small upper crossbar
+can still read as a cross-shaped silhouette at a glance; retain this as a manual
+play-review point rather than blocking Day 5 integration.

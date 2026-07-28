@@ -51,6 +51,17 @@ import {
 import { BattlefieldWorldRenderer } from "../gfx/battlefieldWorldRenderer";
 import { PRODUCTION_TERRAIN_ASSETS } from "../presentation/terrain/productionTerrainRegistry";
 import { PRODUCTION_PROP_ASSETS } from "../presentation/terrain/productionPropRegistry";
+import {
+  CAPTURE_MARKER_VISIBLE_HEIGHT_RATIO,
+  MAIN_BASE_VISIBLE_HEIGHT_RATIO,
+  PRODUCTION_STRUCTURE_ASSETS,
+  STRUCTURE_GROUND_ORIGIN,
+  getCaptureMarkerTexture,
+  getDefenseTowerTexture,
+  getDefenseTowerVisibleHeightRatio,
+  getMainBaseTexture,
+  type DefenseTowerVisualState,
+} from "../presentation/structures/productionStructureRegistry";
 import { generateBattlefield, type BattlefieldResult } from "../systems/battlefieldGenerator";
 import { getAudioSystem } from "../systems/audio";
 import { LaneBattleAudioWiring } from "../systems/audio/laneBattleAudioWiring";
@@ -146,15 +157,11 @@ const ENGAGE_GAP = 0.022;
 const FIELD_CAMERA_ZOOM = 0.46;
 const TOWER_W = 148;
 const TOWER_H = 176;
-const BASE_W = 340;
-const BASE_H = 300;
 const CENTRAL_CAPTURE_PROGRESS = 0.588;
 const DEFAULT_VERIFICATION_SEED = "warcrest-central-v1";
 const QUERY_PARAMS = new URLSearchParams(window.location.search);
 const FACING_DEAD_ZONE_WORLD_PX = 0.35;
 const ATTACK_VISUAL_DURATION_SEC = 0.48;
-const TOWER_IMAGE_GROUND_ORIGIN_Y = 1128 / 1254;
-const TOWER_IMAGE_VISIBLE_HEIGHT_RATIO = 1036 / 1254;
 
 type UnitTextureKey = string;
 
@@ -240,6 +247,7 @@ interface CapturePointState {
   supplyTimerSec: number;
   ring: Phaser.GameObjects.Arc;
   core: Phaser.GameObjects.Arc;
+  marker: Phaser.GameObjects.Image;
   label: Phaser.GameObjects.Text;
   ownerText: Phaser.GameObjects.Text;
   buildingText: Phaser.GameObjects.Text;
@@ -351,6 +359,7 @@ export class LaneBattleScene extends Phaser.Scene {
     PROTOTYPE_TERRAIN_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
     PRODUCTION_TERRAIN_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
     PRODUCTION_PROP_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
+    PRODUCTION_STRUCTURE_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
   }
 
   create(): void {
@@ -648,6 +657,49 @@ export class LaneBattleScene extends Phaser.Scene {
         tower.hp = tower.maxHp * Phaser.Math.Clamp(ratio, 0, 1);
         this.selectDefenseTower(tower.id);
         this.refreshUi();
+      },
+      prepareTowerConstructionProbe: () => {
+        this.units.forEach((unit) => this.destroyUnitPresentation(unit));
+        this.units = [];
+        this.activeProjectiles.forEach((projectile) => projectile.destroy());
+        this.activeProjectiles.clear();
+        const tower = this.defenseTowers[0];
+        tower.owner = "player";
+        tower.built = false;
+        tower.hp = 0;
+        tower.buildRemainingSec = DEFENSE_TOWER_BUILD_DURATION_SEC;
+        const focus = this.progressToScreen(tower.progress, 0);
+        this.cameras.main.centerOn(focus.x, focus.y);
+        this.refreshDefenseTowerVisuals();
+        this.publishDebug();
+        this.scene.pause();
+      },
+      prepareTowerStateProbe: (state: DefenseTowerVisualState, owner: TeamId = "player") => {
+        const tower = this.defenseTowers[0];
+        tower.owner = owner;
+        tower.buildRemainingSec = state === "construction" ? DEFENSE_TOWER_BUILD_DURATION_SEC : 0;
+        tower.built = state !== "ruins" && state !== "construction";
+        tower.hp = state === "full"
+          ? tower.maxHp
+          : state === "damaged"
+            ? tower.maxHp * 0.5
+            : state === "critical" ? tower.maxHp * 0.2 : 0;
+        const focus = this.progressToScreen(tower.progress, 0);
+        this.cameras.main.centerOn(focus.x, focus.y);
+        this.refreshDefenseTowerVisuals();
+        this.publishDebug();
+        this.scene.pause();
+      },
+      prepareCaptureMarkerProbe: (owner: CapturePointState["owner"]) => {
+        const point = this.capturePoints[0];
+        if (!point) return;
+        point.owner = owner;
+        point.control = owner === "player" ? 1 : owner === "enemy" ? -1 : 0;
+        const focus = this.progressToScreen(point.progress, 0);
+        this.cameras.main.centerOn(focus.x, focus.y);
+        this.refreshCapturePointVisuals();
+        this.publishDebug();
+        this.scene.pause();
       },
       setPlayerBaseHpRatio: (ratio: number) => {
         this.player.baseHp = PLAYER_BASE_HP * Phaser.Math.Clamp(ratio, 0, 1);
@@ -1080,6 +1132,10 @@ export class LaneBattleScene extends Phaser.Scene {
         .setStrokeStyle(4, 0xf8e2a5, 0.55);
       const core = this.add.circle(pos.x, pos.y, 14, 0xf8e2a5, 0.78)
         .setDepth(this.getGroundDepth(pos.y, -5));
+      const marker = this.add.image(pos.x, pos.y, getCaptureMarkerTexture("neutral"))
+        .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
+        .setDepth(this.getGroundDepth(pos.y))
+        .setVisible(this.terrainMode === "world-surface");
       const label = this.add.text(pos.x, pos.y - 40, `거점 ${index + 1}`, {
         fontFamily: "sans-serif",
         fontSize: "14px",
@@ -1103,6 +1159,7 @@ export class LaneBattleScene extends Phaser.Scene {
       }).setOrigin(0.5).setDepth(this.getGroundDepth(pos.y, 4));
       ring.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
       core.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
+      marker.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
       label.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
 
       return {
@@ -1117,6 +1174,7 @@ export class LaneBattleScene extends Phaser.Scene {
         supplyTimerSec: 0,
         ring,
         core,
+        marker,
         label,
         ownerText,
         buildingText,
@@ -1125,12 +1183,12 @@ export class LaneBattleScene extends Phaser.Scene {
 
     this.defenseTowers = DEFENSE_TOWER_DEFINITIONS.map((definition) => {
       const pos = this.progressToScreen(definition.progress, 0);
-      const sprite = this.add.image(pos.x, pos.y, "tower-full")
+      const sprite = this.add.image(pos.x, pos.y, getDefenseTowerTexture("full", definition.owner))
         .setDisplaySize(TOWER_W, TOWER_H)
-        .setOrigin(0.5, TOWER_IMAGE_GROUND_ORIGIN_Y)
+        .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
         .setDepth(this.getGroundDepth(pos.y));
       const selectionHitZone = this.add.zone(pos.x, pos.y, TOWER_W, TOWER_H)
-        .setOrigin(0.5, TOWER_IMAGE_GROUND_ORIGIN_Y)
+        .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
         .setDepth(this.getGroundDepth(pos.y, -1))
         .setInteractive({ useHandCursor: true });
       const hpBg = this.add.rectangle(pos.x, pos.y - 158, 60, 7, 0x132033, 0.92)
@@ -1176,22 +1234,30 @@ export class LaneBattleScene extends Phaser.Scene {
 
     const playerBase = this.progressToScreen(0, 0);
     const enemyBase = this.progressToScreen(1, 0);
-    this.add.image(playerBase.x, playerBase.y, "base-player")
-      .setDisplaySize(BASE_W, BASE_H)
-      .setOrigin(0.5, 0.84)
+    const baseVisibleWorldHeight = this.cssPxToWorld(220);
+    const baseDisplaySize = baseVisibleWorldHeight / MAIN_BASE_VISIBLE_HEIGHT_RATIO;
+    this.add.ellipse(playerBase.x + 8, playerBase.y + 3, 250, 82, 0x111918, 0.34)
+      .setRotation(-0.08)
+      .setDepth(this.getGroundDepth(playerBase.y, -1));
+    this.add.image(playerBase.x, playerBase.y, getMainBaseTexture("player"))
+      .setDisplaySize(baseDisplaySize, baseDisplaySize)
+      .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
       .setDepth(this.getGroundDepth(playerBase.y));
-    this.add.image(enemyBase.x, enemyBase.y, "base-enemy")
-      .setDisplaySize(BASE_W, BASE_H)
-      .setOrigin(0.5, 0.84)
+    this.add.ellipse(enemyBase.x + 8, enemyBase.y + 3, 250, 82, 0x111918, 0.34)
+      .setRotation(-0.08)
+      .setDepth(this.getGroundDepth(enemyBase.y, -1));
+    this.add.image(enemyBase.x, enemyBase.y, getMainBaseTexture("enemy"))
+      .setDisplaySize(baseDisplaySize, baseDisplaySize)
+      .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
       .setDepth(this.getGroundDepth(enemyBase.y));
-    this.add.text(playerBase.x - 8, playerBase.y - 274, "아군 본진", {
+    this.add.text(playerBase.x - 8, playerBase.y - baseVisibleWorldHeight - this.cssPxToWorld(20), "아군 본진", {
       fontFamily: "Georgia, serif",
       fontSize: "16px",
       color: "#dceeff",
       stroke: "#16202a",
       strokeThickness: 4,
     }).setOrigin(0.5).setDepth(this.getGroundDepth(playerBase.y, 4));
-    this.add.text(enemyBase.x + 4, enemyBase.y - 274, "적 본진", {
+    this.add.text(enemyBase.x + 4, enemyBase.y - baseVisibleWorldHeight - this.cssPxToWorld(20), "적 본진", {
       fontFamily: "Georgia, serif",
       fontSize: "16px",
       color: "#ffe1e1",
@@ -1999,9 +2065,21 @@ export class LaneBattleScene extends Phaser.Scene {
         .setPosition(pos.x, pos.y)
         .setDepth(this.getGroundDepth(pos.y, -5))
         .setVisible(!structuredPoint || selected);
+      const markerHeight = this.cssPxToWorld(96 / CAPTURE_MARKER_VISIBLE_HEIGHT_RATIO);
+      point.marker
+        .setTexture(getCaptureMarkerTexture(point.owner))
+        .setPosition(pos.x, pos.y)
+        .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
+        .setDisplaySize(markerHeight, markerHeight)
+        .setDepth(this.getGroundDepth(pos.y))
+        .setVisible(this.terrainMode === "world-surface");
       point.ownerText.setText(point.owner === "player" ? "아군 점령" : point.owner === "enemy" ? "적 점령" : "중립");
       point.ownerText.setColor(point.owner === "player" ? "#cfeeff" : point.owner === "enemy" ? "#ffd8d8" : "#eadfb3");
-      const labelY = pos.y - (this.isPrototypeV2() ? this.cssPxToWorld(36) : 40);
+      const labelY = pos.y - (
+        this.terrainMode === "world-surface"
+          ? this.cssPxToWorld(114)
+          : this.isPrototypeV2() ? this.cssPxToWorld(36) : 40
+      );
       const ownerY = pos.y + (this.isPrototypeV2() ? this.cssPxToWorld(18) : 28);
       const buildingY = pos.y + (this.isPrototypeV2() ? this.cssPxToWorld(36) : 46);
       point.label
@@ -2049,27 +2127,24 @@ export class LaneBattleScene extends Phaser.Scene {
       const rawPos = this.progressToScreen(tower.progress, 0);
       const pos = this.isPrototypeV2() ? this.snapWorldPointToCanvasPixel(rawPos.x, rawPos.y) : rawPos;
       const selectedScale = this.isPrototypeV2() ? 1 : selected ? 1.04 : 1;
+      const visualState = this.getDefenseTowerVisualState(tower);
+      const visibleHeightRatio = getDefenseTowerVisibleHeightRatio(visualState);
       const towerHeight = this.isPrototypeV2()
-        ? this.cssPxToWorld(this.scaleVisualConfig.captureTowerCssHeight / TOWER_IMAGE_VISIBLE_HEIGHT_RATIO) * selectedScale
+        ? this.cssPxToWorld(this.scaleVisualConfig.captureTowerCssHeight / visibleHeightRatio) * selectedScale
         : TOWER_H * selectedScale;
       const towerWidth = this.isPrototypeV2()
         ? towerHeight * (tower.sprite.frame.realWidth / tower.sprite.frame.realHeight)
         : TOWER_W * selectedScale;
       const hpRatio = tower.maxHp > 0 ? tower.hp / tower.maxHp : 0;
-      const texture = tower.buildRemainingSec > 0
-        ? "tower-build"
-        : !tower.built
-          ? "tower-ruin-asset"
-          : hpRatio > 0.66 ? "tower-full" : hpRatio > 0.33 ? "tower-damaged" : "tower-critical";
+      const texture = getDefenseTowerTexture(visualState, tower.owner);
       tower.sprite
         .setTexture(texture)
         .setPosition(pos.x, pos.y)
-        .setOrigin(0.5, TOWER_IMAGE_GROUND_ORIGIN_Y)
+        .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
         .setDisplaySize(towerWidth, towerHeight)
         .setDepth(this.getGroundDepth(pos.y))
-        .setAlpha(tower.buildRemainingSec > 0 ? 0.45 : 1)
+        .setAlpha(1)
         .clearTint();
-      if (tower.owner === "enemy" && tower.built) tower.sprite.setTint(0xffd0d0);
       const towerTop = pos.y - towerHeight * tower.sprite.originY;
       const hpWidth = this.isPrototypeV2() ? this.cssPxToWorld(this.scaleVisualConfig.towerHpWidthCssPx) : 60;
       const hpHeight = this.isPrototypeV2() ? this.cssPxToWorld(this.scaleVisualConfig.towerHpHeightCssPx) : 7;
@@ -2103,6 +2178,13 @@ export class LaneBattleScene extends Phaser.Scene {
     });
   }
 
+  private getDefenseTowerVisualState(tower: DefenseTowerState): DefenseTowerVisualState {
+    if (tower.buildRemainingSec > 0) return "construction";
+    if (!tower.built) return "ruins";
+    const hpRatio = tower.maxHp > 0 ? tower.hp / tower.maxHp : 0;
+    return hpRatio > 0.66 ? "full" : hpRatio > 0.33 ? "damaged" : "critical";
+  }
+
   private getUnitProjectileAnchor(unit: LaneUnit): Phaser.Math.Vector2 {
     const visibleHeight = unit.sprite.displayHeight
       * (resolveUnitFramePresentation(unit.unitId, 1, 1, unit.currentTextureKey).referenceVisibleHeight
@@ -2114,11 +2196,12 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private getTowerProjectileAnchor(point: DefenseTowerState, launch: boolean): Phaser.Math.Vector2 {
+    const visibleHeightRatio = getDefenseTowerVisibleHeightRatio(this.getDefenseTowerVisualState(point));
     return new Phaser.Math.Vector2(
       point.sprite.x,
       point.sprite.y - (
         this.terrainPrototypeEnabled
-          ? point.sprite.displayHeight * TOWER_IMAGE_VISIBLE_HEIGHT_RATIO * (launch ? 0.72 : 0.48)
+          ? point.sprite.displayHeight * visibleHeightRatio * (launch ? 0.72 : 0.48)
           : launch ? 18 : 12
       ),
     );
@@ -2887,6 +2970,7 @@ export class LaneBattleScene extends Phaser.Scene {
           worldY: point.core.y,
           labelWorldX: point.label.x,
           labelWorldY: point.label.y,
+          markerTexture: point.marker.texture.key,
           buildingId: point.buildingId ?? null,
           availableActions: getCapturePointActions(point.definition, point),
         })),
@@ -3028,7 +3112,7 @@ export class LaneBattleScene extends Phaser.Scene {
               * this.cameras.main.zoom
               * this.getCanvasCssScale(),
             cssVisibleHeight: point.sprite.displayHeight
-              * TOWER_IMAGE_VISIBLE_HEIGHT_RATIO
+              * getDefenseTowerVisibleHeightRatio(this.getDefenseTowerVisualState(point))
               * this.cameras.main.zoom
               * this.getCanvasCssScale(),
             originY: point.sprite.originY,
@@ -3042,7 +3126,7 @@ export class LaneBattleScene extends Phaser.Scene {
               cssFrameWidth: point.sprite.displayWidth * this.cameras.main.zoom * this.getCanvasCssScale(),
               cssFrameHeight: point.sprite.displayHeight * this.cameras.main.zoom * this.getCanvasCssScale(),
               cssVisibleHeight: point.sprite.displayHeight
-                * TOWER_IMAGE_VISIBLE_HEIGHT_RATIO
+                * getDefenseTowerVisibleHeightRatio(this.getDefenseTowerVisualState(point))
                 * this.cameras.main.zoom
                 * this.getCanvasCssScale(),
               originY: point.sprite.originY,

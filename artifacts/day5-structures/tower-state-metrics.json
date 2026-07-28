@@ -1,0 +1,27 @@
+[
+  {
+    "state": "full",
+    "textureKey": "defense-tower-full",
+    "cssVisibleHeight": 144
+  },
+  {
+    "state": "damaged",
+    "textureKey": "defense-tower-damaged-enemy",
+    "cssVisibleHeight": 144
+  },
+  {
+    "state": "critical",
+    "textureKey": "defense-tower-critical",
+    "cssVisibleHeight": 143.99999999999997
+  },
+  {
+    "state": "ruins",
+    "textureKey": "defense-tower-ruins-enemy",
+    "cssVisibleHeight": 143.99999999999997
+  },
+  {
+    "state": "construction",
+    "textureKey": "defense-tower-construction",
+    "cssVisibleHeight": 144
+  }
+]
