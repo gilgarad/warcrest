@@ -53,6 +53,12 @@ import { getAudioSystem } from "../systems/audio";
 import { LaneBattleAudioWiring } from "../systems/audio/laneBattleAudioWiring";
 import { AudioSettingsPanel } from "../ui/AudioSettingsPanel";
 import {
+  createLaneBattleHudSnapshot,
+  getResourceIconKey,
+  getWorkerIconKey,
+  getWorkerRoleLabel,
+} from "../ui/laneBattleHudModel";
+import {
   UNIT_ANIMATION_ASSETS,
   getUnitAnimationDefinition,
   resolveUnitAnimationTexture,
@@ -1213,7 +1219,7 @@ export class LaneBattleScene extends Phaser.Scene {
 
     const resourceXs = [360, 680, 1080, 1400];
     MVP_ACTIVE_RESOURCE_IDS.forEach((resourceId, index) => {
-      const icon = this.add.image(resourceXs[index], 34, this.getResourceIconKey(resourceId)).setDisplaySize(26, 26).setDepth(DEPTH_UI + 2).setScrollFactor(0);
+      const icon = this.add.image(resourceXs[index], 34, getResourceIconKey(resourceId)).setDisplaySize(26, 26).setDepth(DEPTH_UI + 2).setScrollFactor(0);
       this.add.text(resourceXs[index], 10, getResource(resourceId).label, { fontFamily: "sans-serif", fontSize: "11px", color: "#97abd0" })
         .setDepth(DEPTH_UI + 2)
         .setScrollFactor(0)
@@ -1319,8 +1325,8 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private createWorkerRow(role: WorkerRole, y: number): WorkerUiRow {
-    const icon = this.add.image(72, y + 10, this.getWorkerIconKey(role)).setDisplaySize(22, 22).setDepth(DEPTH_UI + 2).setScrollFactor(0);
-    const label = this.add.text(92, y, this.getWorkerRoleLabel(role), {
+    const icon = this.add.image(72, y + 10, getWorkerIconKey(role)).setDisplaySize(22, 22).setDepth(DEPTH_UI + 2).setScrollFactor(0);
+    const label = this.add.text(92, y, getWorkerRoleLabel(role), {
       fontFamily: "sans-serif",
       fontSize: "13px",
       color: "#e6dcc5",
@@ -1430,27 +1436,6 @@ export class LaneBattleScene extends Phaser.Scene {
   private updateAudioDebugOverlay(): void {
     if (!this.audioDebugText) return;
     this.audioDebugText.setText(this.audioWiring.getDebugLines());
-  }
-
-  private getResourceIconKey(resourceId: ResourceId): string {
-    switch (resourceId) {
-      case "gold":
-        return "icon-gold";
-      case "wood":
-        return "icon-wood";
-      case "food":
-        return "icon-food";
-      case "metal":
-        return "icon-metal";
-      default:
-        return "icon-gold";
-    }
-  }
-
-  private getWorkerIconKey(role: WorkerRole): string {
-    if (role === "research") return "icon-research";
-    if (role === "idle") return "icon-idle";
-    return "icon-worker";
   }
 
   private tickEconomy(deltaSec: number): void {
@@ -3079,55 +3064,46 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private refreshUi(): void {
-    this.ageText.setText(`시대 ${getAge(this.player.ageId).label}`);
-    this.waveText.setText(`다음 웨이브 ${Math.max(0, Math.ceil(this.player.nextWaveInSec))}초 | 적 ${Math.max(0, Math.ceil(this.enemy.nextWaveInSec))}초`);
-    this.baseText.setText(`전장 병력 ${this.units.filter((unit) => unit.team === "player").length} | 적 병력 ${this.units.filter((unit) => unit.team === "enemy").length}`);
-    this.tokensText.setText(`즉시 웨이브 토큰 ${this.player.instantWaveTokens}`);
+    const selected = this.capturePoints.find((point) => point.id === this.selectedCapturePointId) ?? this.capturePoints[0];
+    const snapshot = createLaneBattleHudSnapshot({
+      player: this.player,
+      enemy: this.enemy,
+      playerUnitCount: this.units.filter((unit) => unit.team === "player").length,
+      enemyUnitCount: this.units.filter((unit) => unit.team === "enemy").length,
+      playerBaseMaxHp: PLAYER_BASE_HP,
+      enemyBaseMaxHp: ENEMY_BASE_HP,
+      opponentCount: PLAYER_OPPONENT_COUNT,
+      selectedCapturePoint: selected,
+    });
+    this.ageText.setText(snapshot.ageText);
+    this.waveText.setText(snapshot.waveText);
+    this.baseText.setText(snapshot.baseText);
+    this.tokensText.setText(snapshot.tokensText);
 
     MVP_ACTIVE_RESOURCE_IDS.forEach((resourceId) => {
-      const value = this.player.resources[resourceId];
-      this.resourceTexts.get(resourceId)?.setText(resourceId === "food" ? Math.floor(value).toString() : Math.round(value).toString());
+      this.resourceTexts.get(resourceId)?.setText(snapshot.resources[resourceId]);
     });
 
     this.workerRows.forEach((row, role) => {
-      row.value.setText(String(this.player.workers[role]));
-      const active = role !== "idle" && this.player.workers.idle > 0;
-      row.plus.setFillStyle(active ? 0x324a73 : 0x1d2634, 0.96);
-      row.minus.setFillStyle(this.player.workers[role] > 0 && role !== "idle" ? 0x324a73 : 0x1d2634, 0.96);
+      const worker = snapshot.workers[role];
+      row.value.setText(worker.value);
+      row.plus.setFillStyle(worker.canIncrease ? 0x324a73 : 0x1d2634, 0.96);
+      row.minus.setFillStyle(worker.canDecrease ? 0x324a73 : 0x1d2634, 0.96);
     });
 
-    this.playerBaseBar.width = 220 * Phaser.Math.Clamp(this.player.baseHp / PLAYER_BASE_HP, 0, 1);
-    this.enemyBaseBar.width = 220 * Phaser.Math.Clamp(this.enemy.baseHp / ENEMY_BASE_HP, 0, 1);
+    this.playerBaseBar.width = 220 * snapshot.playerBaseRatio;
+    this.enemyBaseBar.width = 220 * snapshot.enemyBaseRatio;
     this.playerBaseBar.setOrigin(0, 0.5);
     this.enemyBaseBar.setOrigin(0, 0.5);
 
-    const roster = getWaveRoster(this.player.ageId);
-    const rosterSummary = roster.battleline.map((entry) => `${UNIT_STATS[entry.unitId].label}${entry.count}`).join(" · ");
-    this.rosterText.setText([
-      `다음 웨이브: ${rosterSummary}`,
-      `보급대 ${roster.support[0]?.count ?? 0}기 포함`,
-      `웨이브 식량 ${Math.round(getAgeBalance(this.player.ageId).baseWaveFoodCost * getOpponentScale(PLAYER_OPPONENT_COUNT).foodCostMultiplier)}`,
-    ]);
+    this.rosterText.setText(snapshot.rosterLines);
 
-    const selected = this.capturePoints.find((point) => point.id === this.selectedCapturePointId) ?? this.capturePoints[0];
     const selectedActions = this.getSelectedCaptureActions();
     this.captureActionButtons.forEach((button, action) => {
       this.setCaptureActionButtonVisible(button, selectedActions.includes(action));
     });
-    this.capturePanelTitle.setText(selected
-      ? selected.definition.pointType === "fixed-fortress"
-        ? `고정 요새 · 거점 ${selected.id + 1}`
-        : `건설 거점 ${selected.id + 1}`
-      : "거점 선택");
-    this.capturePanelBody.setText(selected
-      ? [
-          `소유 ${selected.owner === "player" ? "아군" : selected.owner === "enemy" ? "적" : "중립"} | 점령 ${Math.round(Math.abs(selected.control) * 100)}%`,
-          `타워 ${selected.towerBuilt ? `가동 중 HP ${Math.round(selected.towerHp)}/${Math.round(selected.towerMaxHp)}` : selected.towerBuildRemainingSec > 0 ? `재건 ${Math.ceil(selected.towerBuildRemainingSec)}초` : "파괴됨"}`,
-          selected.definition.pointType === "fixed-fortress"
-            ? "고정 요새 전용 | 교체·폐기 불가"
-            : `건설 ${selected.buildingId ? `${getBuildingDefinition(selected.buildingId).label} Lv.${selected.buildingLevel}` : "없음"} | 폐기 ${DISMANTLE_COST_GOLD}G`,
-        ]
-      : ["거점을 터치해 선택", "점령 후 건설 가능"]);
+    this.capturePanelTitle.setText(snapshot.captureTitle);
+    this.capturePanelBody.setText(snapshot.captureLines);
   }
 
   private publishDebug(): void {
@@ -3361,25 +3337,6 @@ export class LaneBattleScene extends Phaser.Scene {
         ])),
       },
     };
-  }
-
-  private getWorkerRoleLabel(role: WorkerRole): string {
-    switch (role) {
-      case "gold":
-        return "금";
-      case "wood":
-        return "목재";
-      case "food":
-        return "식량";
-      case "metal":
-        return "금속";
-      case "research":
-        return "연구";
-      case "idle":
-        return "대기";
-      default:
-        return role;
-    }
   }
 
   private progressToScreen(progress: number, laneRow: number): Phaser.Math.Vector2 {

@@ -88,3 +88,21 @@ Two unit tests cover state-update throttling and camera-relative SFX options.
 - `LaneBattleScene.ts`: 3,458 -> 3,413 lines.
 - `npm run build`: passed.
 - `npm test`: 19 files, 78 tests passed.
+
+## 2026-07-28 - Stage 1.2d: HUD presentation model
+
+Extracted `src/ui/laneBattleHudModel.ts` as a Phaser-free presentation model.
+It now formats age/wave/army/token status, resource values, worker button
+availability, base HP ratios, next-wave roster copy, capture-point copy, and
+resource/worker icon selection. `LaneBattleScene.refreshUi` is reduced to
+collecting runtime entities and binding the resulting snapshot to Phaser game
+objects.
+
+The visual layout and input callbacks deliberately remain in the scene for
+this commit so the extraction is behaviour-preserving and independently
+reviewable. Two unit tests cover economy/wave formatting and the distinct
+fixed-fortress HUD branch.
+
+- `LaneBattleScene.ts`: 3,413 -> 3,355 lines.
+- `npm run build`: passed.
+- `npm test`: 20 files, 80 tests passed.
