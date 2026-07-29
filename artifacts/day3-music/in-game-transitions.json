@@ -1,0 +1,257 @@
+{
+  "menuState": {
+    "initialized": true,
+    "unlocked": true,
+    "contextState": "running",
+    "currentBgmId": "bgm.menu",
+    "bgmState": "menu",
+    "activeBgmVoices": 1,
+    "activeSfxVoices": 0,
+    "settings": {
+      "version": 2,
+      "masterVolume": 0.8,
+      "bgmVolume": 0.8,
+      "sfxVolume": 0.9,
+      "mute": false,
+      "muteWhenUnfocused": true,
+      "combatSfxMode": "reduced",
+      "crossfadeDurationMs": 1200
+    },
+    "recentEvents": [
+      {
+        "id": "sfx.ui.confirm",
+        "result": "played",
+        "atMs": 23
+      },
+      {
+        "id": "sfx.ui.buildSelect",
+        "result": "played",
+        "atMs": 8696
+      },
+      {
+        "id": "sfx.wave.start",
+        "result": "played",
+        "atMs": 8754
+      },
+      {
+        "id": "sfx.ui.buildSelect",
+        "result": "cooldown",
+        "atMs": 8789
+      },
+      {
+        "id": "sfx.combat.towerAttack",
+        "result": "played",
+        "atMs": 8835
+      }
+    ],
+    "skippedEventCount": 1,
+    "unlockAttemptCount": 1,
+    "missingAssetFallback": true,
+    "focusMuted": false,
+    "lastError": null
+  },
+  "preparationState": {
+    "initialized": true,
+    "unlocked": true,
+    "contextState": "running",
+    "currentBgmId": "bgm.preparation",
+    "bgmState": "preparation",
+    "activeBgmVoices": 1,
+    "activeSfxVoices": 0,
+    "settings": {
+      "version": 2,
+      "masterVolume": 0.8,
+      "bgmVolume": 0.8,
+      "sfxVolume": 0.9,
+      "mute": false,
+      "muteWhenUnfocused": true,
+      "combatSfxMode": "reduced",
+      "crossfadeDurationMs": 1200
+    },
+    "recentEvents": [
+      {
+        "id": "sfx.ui.confirm",
+        "result": "played",
+        "atMs": 23
+      },
+      {
+        "id": "sfx.ui.buildSelect",
+        "result": "played",
+        "atMs": 8696
+      },
+      {
+        "id": "sfx.wave.start",
+        "result": "played",
+        "atMs": 8754
+      },
+      {
+        "id": "sfx.ui.buildSelect",
+        "result": "cooldown",
+        "atMs": 8789
+      },
+      {
+        "id": "sfx.combat.towerAttack",
+        "result": "played",
+        "atMs": 8835
+      }
+    ],
+    "skippedEventCount": 1,
+    "unlockAttemptCount": 1,
+    "missingAssetFallback": true,
+    "focusMuted": false,
+    "lastError": null
+  },
+  "battleLowState": {
+    "initialized": true,
+    "unlocked": true,
+    "contextState": "running",
+    "currentBgmId": "bgm.battle.low",
+    "bgmState": "battle-low",
+    "activeBgmVoices": 1,
+    "activeSfxVoices": 0,
+    "settings": {
+      "version": 2,
+      "masterVolume": 0.8,
+      "bgmVolume": 0.8,
+      "sfxVolume": 0.9,
+      "mute": false,
+      "muteWhenUnfocused": true,
+      "combatSfxMode": "reduced",
+      "crossfadeDurationMs": 1200
+    },
+    "recentEvents": [
+      {
+        "id": "sfx.ui.confirm",
+        "result": "played",
+        "atMs": 23
+      },
+      {
+        "id": "sfx.ui.buildSelect",
+        "result": "played",
+        "atMs": 8696
+      },
+      {
+        "id": "sfx.wave.start",
+        "result": "played",
+        "atMs": 8754
+      },
+      {
+        "id": "sfx.ui.buildSelect",
+        "result": "cooldown",
+        "atMs": 8789
+      },
+      {
+        "id": "sfx.combat.towerAttack",
+        "result": "played",
+        "atMs": 8835
+      }
+    ],
+    "skippedEventCount": 1,
+    "unlockAttemptCount": 1,
+    "missingAssetFallback": true,
+    "focusMuted": false,
+    "lastError": null
+  },
+  "battleHighState": {
+    "initialized": true,
+    "unlocked": true,
+    "contextState": "running",
+    "currentBgmId": "bgm.battle.high",
+    "bgmState": "battle-high",
+    "activeBgmVoices": 1,
+    "activeSfxVoices": 0,
+    "settings": {
+      "version": 2,
+      "masterVolume": 0.8,
+      "bgmVolume": 0.8,
+      "sfxVolume": 0.9,
+      "mute": false,
+      "muteWhenUnfocused": true,
+      "combatSfxMode": "reduced",
+      "crossfadeDurationMs": 1200
+    },
+    "recentEvents": [
+      {
+        "id": "sfx.ui.confirm",
+        "result": "played",
+        "atMs": 23
+      },
+      {
+        "id": "sfx.ui.buildSelect",
+        "result": "played",
+        "atMs": 8696
+      },
+      {
+        "id": "sfx.wave.start",
+        "result": "played",
+        "atMs": 8754
+      },
+      {
+        "id": "sfx.ui.buildSelect",
+        "result": "cooldown",
+        "atMs": 8789
+      },
+      {
+        "id": "sfx.combat.towerAttack",
+        "result": "played",
+        "atMs": 8835
+      }
+    ],
+    "skippedEventCount": 1,
+    "unlockAttemptCount": 1,
+    "missingAssetFallback": true,
+    "focusMuted": false,
+    "lastError": null
+  },
+  "battleLowReturnState": {
+    "initialized": true,
+    "unlocked": true,
+    "contextState": "running",
+    "currentBgmId": "bgm.battle.low",
+    "bgmState": "battle-low",
+    "activeBgmVoices": 1,
+    "activeSfxVoices": 0,
+    "settings": {
+      "version": 2,
+      "masterVolume": 0.8,
+      "bgmVolume": 0.8,
+      "sfxVolume": 0.9,
+      "mute": false,
+      "muteWhenUnfocused": true,
+      "combatSfxMode": "reduced",
+      "crossfadeDurationMs": 1200
+    },
+    "recentEvents": [
+      {
+        "id": "sfx.ui.confirm",
+        "result": "played",
+        "atMs": 23
+      },
+      {
+        "id": "sfx.ui.buildSelect",
+        "result": "played",
+        "atMs": 8696
+      },
+      {
+        "id": "sfx.wave.start",
+        "result": "played",
+        "atMs": 8754
+      },
+      {
+        "id": "sfx.ui.buildSelect",
+        "result": "cooldown",
+        "atMs": 8789
+      },
+      {
+        "id": "sfx.combat.towerAttack",
+        "result": "played",
+        "atMs": 8835
+      }
+    ],
+    "skippedEventCount": 1,
+    "unlockAttemptCount": 1,
+    "missingAssetFallback": true,
+    "focusMuted": false,
+    "lastError": null
+  }
+}

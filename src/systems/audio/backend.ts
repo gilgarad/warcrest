@@ -26,7 +26,24 @@ export interface OfflineArrangementMeasurement {
   layers: Record<string, Pick<AudioSignalMeasurement, "rms" | "peak">>;
 }
 
-type BattleLowLayer = "percussion" | "bass" | "harmony" | "lowColor" | "lead";
+type ArrangementLayer = "percussion" | "bass" | "harmony" | "lowColor" | "lead" | "counterline";
+
+interface ArrangementProfile {
+  assetId: "bgm.menu" | "bgm.preparation" | "bgm.battle.low" | "bgm.battle.high";
+  root: number;
+  beatSec: number;
+  phraseSteps: number;
+  filterCutoff: number;
+  bassLine: readonly number[];
+  chordPlan: ReadonlyArray<readonly number[]>;
+  leadPlan: Readonly<Record<number, readonly number[]>>;
+  counterPlan?: Readonly<Record<number, readonly number[]>>;
+  sectionGains: readonly number[];
+  harmonyEveryBars: number;
+  lowColorEveryBars: number;
+  percussionStyle: "menu" | "preparation" | "battle-low" | "battle-high";
+  bassStyle: "sparse" | "march" | "pulse" | "driving";
+}
 
 export interface AudioBackend {
   readonly nowMs: number;
@@ -138,30 +155,33 @@ export class WebAudioBackend implements AudioBackend {
   }
 
   async measureOfflineArrangement(assetId: string, durationMs = 8000): Promise<OfflineArrangementMeasurement | null> {
-    if (assetId !== "bgm.battle.low") return null;
+    const profile = this.getArrangementProfile(assetId);
+    if (!profile) return null;
+    const layerIds: ArrangementLayer[] = profile.counterPlan
+      ? ["percussion", "bass", "harmony", "lowColor", "lead", "counterline"]
+      : ["percussion", "bass", "harmony", "lowColor", "lead"];
     const measureLayer = async (
-      layer: BattleLowLayer | "mix",
+      layer: ArrangementLayer | "mix",
     ): Promise<Pick<AudioSignalMeasurement, "rms" | "peak">> => {
       const context = new OfflineAudioContext(1, Math.ceil(48_000 * (durationMs / 1000)), 48_000);
       const destination = context.createGain();
       destination.gain.value = 1;
       destination.connect(context.destination);
       const sources = new Set<AudioScheduledSourceNode>();
-      const beatSec = 60 / 104;
-      const phraseSteps = 64;
       let step = 0;
       let nextAt = 0.05;
       while (nextAt < durationMs / 1000) {
-        this.scheduleBattleLowStep(
+        this.scheduleArrangementStep(
           context,
           destination,
           sources,
+          profile,
           nextAt,
           step,
           layer,
         );
-        nextAt += beatSec;
-        step = (step + 1) % phraseSteps;
+        nextAt += profile.beatSec;
+        step = (step + 1) % profile.phraseSteps;
       }
       const rendered = await context.startRendering();
       const samples = rendered.getChannelData(0);
@@ -179,13 +199,9 @@ export class WebAudioBackend implements AudioBackend {
     return {
       durationMs,
       mix: await measureLayer("mix"),
-      layers: {
-        percussion: await measureLayer("percussion"),
-        bass: await measureLayer("bass"),
-        harmony: await measureLayer("harmony"),
-        lowColor: await measureLayer("lowColor"),
-        lead: await measureLayer("lead"),
-      },
+      layers: Object.fromEntries(
+        await Promise.all(layerIds.map(async (layerId) => [layerId, await measureLayer(layerId)])),
+      ),
     };
   }
 
@@ -329,17 +345,16 @@ export class WebAudioBackend implements AudioBackend {
 
     const filter = ctx.createBiquadFilter();
     filter.type = "lowpass";
-    filter.frequency.value = asset.id === "bgm.battle.high"
-      ? 3600
-      : asset.id === "bgm.battle.low"
-        ? 2200
-        : asset.id === "bgm.victory"
-          ? 3200
-          : 1800;
+    const arrangementProfile = this.getArrangementProfile(asset.id);
+    filter.frequency.value = arrangementProfile
+      ? arrangementProfile.filterCutoff
+      : asset.id === "bgm.victory"
+        ? 3200
+        : 1800;
     filter.Q.value = 0.55;
     filter.connect(master);
 
-    const profile = this.getScoreProfile(asset.id, asset.synth.frequency);
+    const scoreProfile = arrangementProfile ? null : this.getScoreProfile(asset.id, asset.synth.frequency);
     const sources = new Set<AudioScheduledSourceNode>();
     let nextStepAt = ctx.currentTime + 0.05;
     let step = 0;
@@ -348,9 +363,13 @@ export class WebAudioBackend implements AudioBackend {
     const scheduleAhead = () => {
       if (!playing) return;
       const horizon = ctx.currentTime + 0.8;
-      while (nextStepAt < horizon && (asset.loop || step < profile.phraseSteps)) {
-        this.scheduleScoreStep(ctx, filter, sources, profile, nextStepAt, step);
-        nextStepAt += profile.beatSec;
+      while (nextStepAt < horizon && (asset.loop || step < (arrangementProfile?.phraseSteps ?? scoreProfile?.phraseSteps ?? 0))) {
+        if (arrangementProfile) {
+          this.scheduleArrangementStep(ctx, filter, sources, arrangementProfile, nextStepAt, step, "mix");
+        } else {
+          this.scheduleScoreStep(ctx, filter, sources, scoreProfile!, nextStepAt, step);
+        }
+        nextStepAt += arrangementProfile?.beatSec ?? scoreProfile!.beatSec;
         step += 1;
       }
     };
@@ -361,7 +380,7 @@ export class WebAudioBackend implements AudioBackend {
       ? null
       : setTimeout(() => {
           playing = false;
-        }, (profile.beatSec * profile.phraseSteps + 1.2) * 1000);
+        }, (((arrangementProfile?.beatSec ?? scoreProfile!.beatSec) * (arrangementProfile?.phraseSteps ?? scoreProfile!.phraseSteps)) + 1.2) * 1000);
 
     return {
       get isPlaying() {
@@ -389,6 +408,103 @@ export class WebAudioBackend implements AudioBackend {
         }, fadeMs + 60);
       },
     };
+  }
+
+  private getArrangementProfile(assetId: string): ArrangementProfile | null {
+    switch (assetId) {
+      case "bgm.menu":
+        return {
+          assetId,
+          root: 196,
+          beatSec: 60 / 72,
+          phraseSteps: 64,
+          filterCutoff: 1900,
+          bassLine: [0, 0, -2, -2, -5, -5, -3, -3, 0, 0, 2, 2, -2, -2, -5, -3],
+          chordPlan: [[0, 7, 10], [-2, 5, 8], [-5, 2, 7], [-3, 4, 7], [0, 7, 12], [2, 7, 10], [-2, 3, 8], [-5, 2, 7]],
+          leadPlan: {
+            0: [12, 0, 10, 0],
+            4: [7, 0, 5, 0],
+            8: [12, 0, 14, 0],
+            12: [10, 0, 7, 0],
+          },
+          sectionGains: [0.72, 0.82, 0.94, 1.02],
+          harmonyEveryBars: 2,
+          lowColorEveryBars: 4,
+          percussionStyle: "menu",
+          bassStyle: "sparse",
+        };
+      case "bgm.preparation":
+        return {
+          assetId,
+          root: 174.6,
+          beatSec: 60 / 84,
+          phraseSteps: 64,
+          filterCutoff: 2400,
+          bassLine: [0, 0, 3, 3, 5, 5, 7, 7, 0, 3, 5, 7, 8, 7, 5, 3],
+          chordPlan: [[0, 3, 7], [3, 7, 10], [5, 8, 12], [7, 10, 14], [0, 3, 8], [3, 7, 12], [5, 10, 14], [7, 12, 15]],
+          leadPlan: {
+            0: [7, 10, 12, 10],
+            4: [14, 12, 15, 14],
+            8: [17, 15, 14, 12],
+            12: [10, 12, 14, 15],
+          },
+          sectionGains: [0.84, 0.92, 1.02, 1.12],
+          harmonyEveryBars: 2,
+          lowColorEveryBars: 4,
+          percussionStyle: "preparation",
+          bassStyle: "march",
+        };
+      case "bgm.battle.low":
+        return {
+          assetId,
+          root: 146.8,
+          beatSec: 60 / 104,
+          phraseSteps: 64,
+          filterCutoff: 3200,
+          bassLine: [0, 0, -2, 0, 3, 1, -4, -2, 0, 2, 5, 3, -2, 0, 1, -5],
+          chordPlan: [[0, 7, 10], [-2, 5, 8], [3, 7, 10], [1, 5, 8], [0, 7, 12], [-4, 3, 8], [2, 5, 10], [-2, 5, 8]],
+          leadPlan: {
+            0: [12, 15, 14],
+            4: [10, 12, 8],
+            8: [14, 17, 15],
+            12: [12, 10, 7],
+          },
+          sectionGains: [0.78, 0.92, 1.02, 1.16],
+          harmonyEveryBars: 1,
+          lowColorEveryBars: 2,
+          percussionStyle: "battle-low",
+          bassStyle: "pulse",
+        };
+      case "bgm.battle.high":
+        return {
+          assetId,
+          root: 146.8,
+          beatSec: 60 / 124,
+          phraseSteps: 64,
+          filterCutoff: 4200,
+          bassLine: [0, -2, 0, 3, -5, -2, -7, -5, 0, 3, 5, 3, -2, -5, -7, -2],
+          chordPlan: [[0, 3, 7], [-2, 2, 7], [-5, 0, 3], [-7, -4, 0], [3, 7, 10], [5, 8, 12], [-2, 3, 7], [0, 3, 8]],
+          leadPlan: {
+            0: [12, 15, 17, 15],
+            4: [14, 17, 19, 17],
+            8: [15, 19, 22, 19],
+            12: [17, 20, 19, 15],
+          },
+          counterPlan: {
+            2: [7, 10, 12, 10],
+            6: [8, 12, 14, 12],
+            10: [10, 14, 15, 14],
+            14: [12, 15, 17, 15],
+          },
+          sectionGains: [0.92, 1.04, 1.18, 1.32],
+          harmonyEveryBars: 1,
+          lowColorEveryBars: 2,
+          percussionStyle: "battle-high",
+          bassStyle: "driving",
+        };
+      default:
+        return null;
+    }
   }
 
   private getScoreProfile(assetId: string, root: number): {
@@ -471,10 +587,6 @@ export class WebAudioBackend implements AudioBackend {
     time: number,
     step: number,
   ): void {
-    if (profile.assetId === "bgm.battle.low") {
-      this.scheduleBattleLowStep(ctx, destination, sources, time, step, "mix");
-      return;
-    }
     const ratio = (semitones: number) => 2 ** (semitones / 12);
     const orchestrationGain = profile.tension >= 0.95
       ? 2.05
@@ -646,86 +758,145 @@ export class WebAudioBackend implements AudioBackend {
     sources.add(source);
   }
 
-  private scheduleBattleLowStep(
+  private scheduleArrangementStep(
     ctx: BaseAudioContext,
     destination: AudioNode,
     sources: Set<AudioScheduledSourceNode>,
+    profile: ArrangementProfile,
     time: number,
     step: number,
-    soloLayer: BattleLowLayer | "mix",
+    soloLayer: ArrangementLayer | "mix",
   ): void {
-    const beatSec = 60 / 104;
     const ratio = (semitones: number) => 2 ** (semitones / 12);
-    const root = 146.8;
-    const phraseStep = step % 64;
+    const phraseStep = step % profile.phraseSteps;
     const beatInBar = phraseStep % 4;
     const bar = Math.floor(phraseStep / 4);
-    const phraseSection = Math.floor(bar / 4);
-    const sectionGain = [0.78, 0.92, 1.02, 1.16][phraseSection] ?? 1;
-    const bassLine = [0, 0, -2, 0, 3, 1, -4, -2, 0, 2, 5, 3, -2, 0, 1, -5];
-    const chordPlan = [
-      [0, 7, 10],
-      [-2, 5, 8],
-      [3, 7, 10],
-      [1, 5, 8],
-      [0, 7, 12],
-      [-4, 3, 8],
-      [2, 5, 10],
-      [-2, 5, 8],
-    ];
-    const leadPlan: Record<number, readonly number[]> = {
-      0: [12, 15, 14],
-      4: [10, 12, 8],
-      8: [14, 17, 15],
-      12: [12, 10, 7],
-    };
-    const allow = (layer: BattleLowLayer): boolean => soloLayer === "mix" || soloLayer === layer;
+    const phraseSection = Math.min(
+      profile.sectionGains.length - 1,
+      Math.floor(bar / Math.max(1, profile.phraseSteps / (profile.sectionGains.length * 4))),
+    );
+    const sectionGain = profile.sectionGains[phraseSection] ?? 1;
+    const allow = (layer: ArrangementLayer): boolean => soloLayer === "mix" || soloLayer === layer;
+    const root = profile.root;
+    const beatSec = profile.beatSec;
 
     if (allow("bass")) {
-      const bassInterval = bassLine[phraseStep % bassLine.length];
+      const bassInterval = profile.bassLine[phraseStep % profile.bassLine.length];
       const bassRoot = root / 4 * ratio(bassInterval);
-      this.scheduleTone(ctx, destination, sources, time, bassRoot, beatSec * 0.9, 0.088 * sectionGain, "triangle", 0.01, bassRoot * 0.72);
-      this.scheduleTone(ctx, destination, sources, time, bassRoot * 2, beatSec * 0.24, 0.032 * sectionGain, "sine", 0.004, bassRoot * 1.6);
+      switch (profile.bassStyle) {
+        case "sparse":
+          if (beatInBar === 0 || beatInBar === 2) {
+            this.scheduleTone(ctx, destination, sources, time, bassRoot, beatSec * 1.75, 0.055 * sectionGain, "triangle", 0.02, bassRoot * 0.84);
+            this.scheduleTone(ctx, destination, sources, time, bassRoot * 2, beatSec * 0.3, 0.016 * sectionGain, "sine", 0.01);
+          }
+          break;
+        case "march":
+          this.scheduleTone(ctx, destination, sources, time, bassRoot, beatSec * 0.88, 0.072 * sectionGain, "triangle", 0.012, bassRoot * 0.74);
+          if (beatInBar === 1 || beatInBar === 3) {
+            this.scheduleTone(ctx, destination, sources, time, bassRoot * 2, beatSec * 0.16, 0.014 * sectionGain, "sine", 0.004);
+          }
+          break;
+        case "driving":
+          this.scheduleTone(ctx, destination, sources, time, bassRoot, beatSec * 0.76, 0.1 * sectionGain, "triangle", 0.006, bassRoot * 0.68);
+          this.scheduleTone(ctx, destination, sources, time, bassRoot * 2, beatSec * 0.2, 0.036 * sectionGain, "sine", 0.003, bassRoot * 1.55);
+          if (beatInBar === 3) {
+            this.scheduleTone(ctx, destination, sources, time + beatSec * 0.5, bassRoot * 2.24, beatSec * 0.12, 0.018 * sectionGain, "triangle", 0.003);
+          }
+          break;
+        case "pulse":
+        default:
+          this.scheduleTone(ctx, destination, sources, time, bassRoot, beatSec * 0.9, 0.088 * sectionGain, "triangle", 0.01, bassRoot * 0.72);
+          this.scheduleTone(ctx, destination, sources, time, bassRoot * 2, beatSec * 0.24, 0.032 * sectionGain, "sine", 0.004, bassRoot * 1.6);
+          break;
+      }
     }
 
     if (allow("percussion")) {
-      const tomRoot = beatInBar === 0 || beatInBar === 2 ? 108 : 82;
-      this.scheduleTone(ctx, destination, sources, time, tomRoot, beatSec * 0.28, 0.048 * sectionGain, "sine", 0.004, tomRoot * 0.46);
-      this.scheduleNoise(ctx, destination, sources, time, step, beatSec * 0.14, 0.014 * sectionGain, beatInBar % 2 === 0 ? 420 : 1800);
-      if (beatInBar === 1 || beatInBar === 3) {
-        this.scheduleNoise(ctx, destination, sources, time + beatSec * 0.06, step + 91, beatSec * 0.16, 0.024 * sectionGain, 2400);
-      }
-      if (phraseSection >= 2 && beatInBar === 3) {
-        this.scheduleNoise(ctx, destination, sources, time + beatSec * 0.5, step + 137, beatSec * 0.08, 0.012 * sectionGain, 3000);
+      switch (profile.percussionStyle) {
+        case "menu":
+          if (beatInBar === 0 || beatInBar === 2) {
+            const drum = beatInBar === 0 ? 84 : 72;
+            this.scheduleTone(ctx, destination, sources, time, drum, beatSec * 0.42, 0.03 * sectionGain, "sine", 0.006, drum * 0.52);
+            this.scheduleNoise(ctx, destination, sources, time, step, beatSec * 0.1, 0.006 * sectionGain, 380);
+          }
+          break;
+        case "preparation":
+          if (beatInBar === 0 || beatInBar === 2) {
+            const drum = beatInBar === 0 ? 96 : 78;
+            this.scheduleTone(ctx, destination, sources, time, drum, beatSec * 0.3, 0.04 * sectionGain, "sine", 0.005, drum * 0.52);
+            this.scheduleNoise(ctx, destination, sources, time, step, beatSec * 0.11, 0.01 * sectionGain, 560);
+          }
+          if (beatInBar === 1 || beatInBar === 3) {
+            this.scheduleNoise(ctx, destination, sources, time + beatSec * 0.08, step + 43, beatSec * 0.08, 0.012 * sectionGain, 2600);
+          }
+          break;
+        case "battle-high":
+          this.scheduleTone(ctx, destination, sources, time, beatInBar === 0 || beatInBar === 2 ? 118 : 88, beatSec * 0.24, 0.058 * sectionGain, "sine", 0.003, 56);
+          this.scheduleNoise(ctx, destination, sources, time, step, beatSec * 0.12, 0.02 * sectionGain, beatInBar % 2 === 0 ? 520 : 2100);
+          this.scheduleNoise(ctx, destination, sources, time + beatSec * 0.055, step + 91, beatSec * 0.12, 0.026 * sectionGain, 2800);
+          if (beatInBar === 3) {
+            this.scheduleNoise(ctx, destination, sources, time + beatSec * 0.5, step + 137, beatSec * 0.08, 0.015 * sectionGain, 3400);
+            this.scheduleTone(ctx, destination, sources, time + beatSec * 0.5, 132, beatSec * 0.14, 0.02 * sectionGain, "triangle", 0.003, 74);
+          }
+          break;
+        case "battle-low":
+        default: {
+          const tomRoot = beatInBar === 0 || beatInBar === 2 ? 108 : 82;
+          this.scheduleTone(ctx, destination, sources, time, tomRoot, beatSec * 0.28, 0.048 * sectionGain, "sine", 0.004, tomRoot * 0.46);
+          this.scheduleNoise(ctx, destination, sources, time, step, beatSec * 0.14, 0.014 * sectionGain, beatInBar % 2 === 0 ? 420 : 1800);
+          if (beatInBar === 1 || beatInBar === 3) {
+            this.scheduleNoise(ctx, destination, sources, time + beatSec * 0.06, step + 91, beatSec * 0.16, 0.024 * sectionGain, 2400);
+          }
+          if (phraseSection >= 2 && beatInBar === 3) {
+            this.scheduleNoise(ctx, destination, sources, time + beatSec * 0.5, step + 137, beatSec * 0.08, 0.012 * sectionGain, 3000);
+          }
+          break;
+        }
       }
     }
 
-    if (allow("harmony") && beatInBar === 0) {
-      const chord = chordPlan[bar % chordPlan.length];
+    if (allow("harmony") && beatInBar === 0 && bar % profile.harmonyEveryBars === 0) {
+      const chord = profile.chordPlan[bar % profile.chordPlan.length];
       chord.forEach((interval, index) => {
         const frequency = root / 2 * ratio(interval);
-        this.scheduleTone(ctx, destination, sources, time, frequency, beatSec * 3.7, (0.03 - index * 0.006) * sectionGain, "triangle", 0.18);
-        this.scheduleTone(ctx, destination, sources, time, frequency * 1.004, beatSec * 3.2, (0.012 - index * 0.002) * sectionGain, "sine", 0.24);
+        const sustain = beatSec * (profile.harmonyEveryBars * 4 - 0.3);
+        this.scheduleTone(ctx, destination, sources, time, frequency, sustain, (0.03 - index * 0.006) * sectionGain, "triangle", 0.18);
+        this.scheduleTone(ctx, destination, sources, time, frequency * 1.004, sustain * 0.86, (0.012 - index * 0.002) * sectionGain, "sine", 0.24);
       });
     }
 
-    if (allow("lowColor") && beatInBar === 0 && bar % 2 === 0) {
-      const chord = chordPlan[bar % chordPlan.length];
+    if (allow("lowColor") && beatInBar === 0 && bar % profile.lowColorEveryBars === 0) {
+      const chord = profile.chordPlan[bar % profile.chordPlan.length];
       const brassRoot = root / 2 * ratio(chord[0]);
-      this.scheduleTone(ctx, destination, sources, time, brassRoot, beatSec * 7.3, 0.024 * sectionGain, "sawtooth", 0.32);
-      this.scheduleTone(ctx, destination, sources, time, brassRoot * 1.5, beatSec * 5.8, 0.011 * sectionGain, "triangle", 0.28);
+      const sustain = beatSec * (profile.lowColorEveryBars * 4 * 1.8);
+      this.scheduleTone(ctx, destination, sources, time, brassRoot, sustain, 0.024 * sectionGain, "sawtooth", 0.32);
+      this.scheduleTone(ctx, destination, sources, time, brassRoot * 1.5, sustain * 0.8, 0.011 * sectionGain, "triangle", 0.28);
     }
 
     if (allow("lead")) {
-      const motif = leadPlan[bar];
+      const motif = profile.leadPlan[bar];
       if (motif && beatInBar < motif.length) {
         const interval = motif[beatInBar];
-        const frequency = root * ratio(interval);
-        this.scheduleTone(ctx, destination, sources, time, frequency, beatSec * 0.95, 0.032 * sectionGain, "triangle", 0.04);
-        this.scheduleTone(ctx, destination, sources, time, frequency * 0.5, beatSec * 0.78, 0.011 * sectionGain, "sine", 0.03);
+        if (interval !== 0) {
+          const frequency = root * ratio(interval);
+          this.scheduleTone(ctx, destination, sources, time, frequency, beatSec * 0.95, 0.032 * sectionGain, "triangle", 0.04);
+          this.scheduleTone(ctx, destination, sources, time, frequency * 0.5, beatSec * 0.78, 0.011 * sectionGain, "sine", 0.03);
+        }
       } else if (bar % 4 === 3 && beatInBar === 2) {
         const horn = root * ratio(17);
         this.scheduleTone(ctx, destination, sources, time, horn, beatSec * 1.2, 0.018 * sectionGain, "triangle", 0.05);
+      }
+    }
+
+    if (allow("counterline") && profile.counterPlan) {
+      const motif = profile.counterPlan[bar];
+      if (motif && beatInBar < motif.length) {
+        const interval = motif[beatInBar];
+        if (interval !== 0) {
+          const frequency = root * ratio(interval);
+          this.scheduleTone(ctx, destination, sources, time, frequency, beatSec * 0.78, 0.018 * sectionGain, "sine", 0.03);
+          this.scheduleTone(ctx, destination, sources, time, frequency * 1.5, beatSec * 0.55, 0.008 * sectionGain, "triangle", 0.02);
+        }
       }
     }
   }

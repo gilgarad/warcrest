@@ -2318,3 +2318,15 @@ Use consistent headings so entries are easy to grep.
 - Result: all ten production lane units now use the eight-direction animation
   schema at runtime. Next Day 3 tasks are music expansion and full-map
   candidate completion.
+
+## [2026-07-29] codex | Day 3 step 2 - validate and secure remaining layered BGM states
+
+- Continued from directional-unit commits `d301888` and `818c193` without touching the unfinished map work.
+- Finalized the shared layered-arrangement path in `src/systems/audio/backend.ts` so `bgm.menu`, `bgm.preparation`, `bgm.battle.low`, and `bgm.battle.high` all use the same arrangement scheduler and can all be measured through the existing offline debug hook.
+- Added Playwright validation `tools/validation/day3-music-expansion.spec.ts` and captured offline arrangement evidence for all four looping BGM states under `artifacts/day3-music/`:
+  - `offline-arrangements.json`
+  - `in-game-transitions.json`
+  - transition screenshots for `menu`, `preparation`, `battle-low`, `battle-high`, and `battle-low` return.
+- Validation confirms non-zero RMS/peak for the required layers on every state and verifies the in-game transitions `menu -> preparation -> battle-low -> battle-high -> battle-low`.
+- Verification: `npm run build` passed, `npm test` passed (`29` files, `120` tests), and `npx playwright test tools/validation/day3-music-expansion.spec.ts` passed (`2` tests).
+- Result: Day 3 music expansion is now evidenced and safe to keep even if the session drops before the map step starts.

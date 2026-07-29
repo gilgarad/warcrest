@@ -2095,3 +2095,14 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - `unitAnimationRegistry.ts`의 남은 3종도 전부 full 8-direction registry로 전환했고, `unitStats.ts` 기본 텍스처 키와 테스트를 갱신했다. 이 단계가 끝나면서 lane roster 10종 전체가 런타임에서 8방향 스키마를 사용하게 되었다.
 - **검증**: `npm run build` 통과, `npm test` 통과 (`29` files / `120` tests).
 - **비고**: Day 3의 유닛 스트림은 완료. 다음 순서는 음악 3개 상태(`bgm.menu`, `bgm.preparation`, `bgm.battle.high`) 편곡과 맵 나머지 구간 확장이다.
+
+## 2026-07-29 (146) — Day 3 step 2: remaining BGM states validated and secured
+
+- **사용 도구**: Codex (GPT-5), Web Audio arrangement backend, Playwright, `npm run build`, `npm test`
+- **사용자 지시 요약**: 4개 BGM 상태용 편곡 코드는 이미 안전하게 구현돼 있으니 새로 만들지 말고, `menu`/`preparation`/`battle.high`까지 `battle.low`와 같은 수준의 오프라인 측정 JSON과 인게임 전환 캡처를 만든 뒤 즉시 커밋하라고 했다.
+- **AI 작업/산출물**:
+  - `src/systems/audio/backend.ts`를 정리해 `bgm.menu`, `bgm.preparation`, `bgm.battle.low`, `bgm.battle.high`가 공통 `ArrangementProfile`/레이어 스케줄러를 타도록 맞췄고, 네 상태 모두 `measureArrangement()`로 측정 가능하게 했다.
+  - `tools/validation/day3-music-expansion.spec.ts`를 추가해 네 상태 전부의 OfflineAudioContext 계측을 자동화했고, `artifacts/day3-music/offline-arrangements.json`에 상태별 `mix` 및 레이어(`percussion`, `bass`, `harmony`, `lowColor`, `lead`, 고강도는 `counterline`) RMS/peak를 저장했다.
+  - 같은 스펙에서 실제 게임 화면 기준 `menu -> preparation -> battle-low -> battle-high -> battle-low` 상태 전환을 캡처해 `artifacts/day3-music/transition-*.png`와 `in-game-transitions.json`을 남겼다.
+- **검증**: `npm run build` 통과, `npm test` 통과 (`29` files / `120` tests), `npx playwright test tools/validation/day3-music-expansion.spec.ts` 통과 (`2` tests).
+- **비고**: 맵 나머지 구간(step 3)은 아직 시작하지 않았고, 이 커밋 이후 별도 단계로 진행한다.
