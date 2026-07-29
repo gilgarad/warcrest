@@ -2350,3 +2350,9 @@ Use consistent headings so entries are easy to grep.
 - Verified that the active, committed replacement is `tools/validation/day3-music-expansion.spec.ts`; only docs mentioned the older filename.
 - Removed the orphan file so the validation directory reflects the real second-cycle coverage.
 - No behavior or assets changed; this was repository hygiene before the integrated regression pass.
+
+## [2026-07-29] codex | Second-cycle integration step 1 - consolidate Day 3 validation evidence
+
+- Added `docs/dev-wiki/day3-second-cycle-validation.md` to gather the completed second-cycle Day 3 streams in one place.
+- The document links the four Day 3 commits (`d301888`, `818c193`, `0f3136e`, `4b9952f`), summarizes unit/music/map outcomes, and points directly to the runtime registries, validation specs, screenshots, and JSON evidence already produced.
+- No new code paths or assets were introduced in this step; it is a documentation bridge so the approved second-cycle work can be reviewed without chasing commit logs.

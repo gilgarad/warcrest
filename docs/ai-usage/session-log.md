@@ -2131,3 +2131,14 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - 이에 따라 `tools/validation/day3-audio-expansion.spec.ts`를 삭제했다.
 - **검증**: 참조 검색상 미사용 확인. 기능 동작 변경 없음.
 - **비고**: 다음 단계에서 2차 사이클 통합 검증 문서 작성과 전체 회귀를 이어간다.
+
+## 2026-07-29 (149) — Second-cycle integration step 1: consolidated Day 3 validation doc
+
+- **사용 도구**: Codex (GPT-5), 기존 Day 3 산출물/커밋 로그 정리
+- **사용자 지시 요약**: `docs/dev-wiki/day3-second-cycle-validation.md`를 새로 만들어 유닛/음악/맵 세 스트림을 한 곳에서 볼 수 있게 정리하라고 했다.
+- **AI 작업/산출물**:
+  - `docs/dev-wiki/day3-second-cycle-validation.md`를 추가했다.
+  - 문서에는 Day 3의 네 커밋(`d301888`, `818c193`, `0f3136e`, `4b9952f`)과 각각의 결과물, 검증 스펙, 스크린샷/JSON 산출물 링크를 모았다.
+  - 유닛 10종 8방향 완료, 4상태 음악 확장, `warcrest-day3-three-fronts-v1` 전체 맵 후보 완성과 비승격 판단까지 한 문서에서 추적 가능하게 정리했다.
+- **검증**: 새 실행 검증은 추가하지 않았고, 기존 Day 3 증거만 재배치했다.
+- **비고**: 다음 단계는 기존 프로덕션 맵 기준 전체 회귀(build/Vitest/전체 Playwright)다.
