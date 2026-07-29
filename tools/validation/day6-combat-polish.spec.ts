@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/day6-combat-polish";
 const CAPTURE_PHASE = process.env.DAY6_CAPTURE_PHASE ?? "after";
-const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-day6-combat";
+const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-day6-combat";
 
 type UnitId = "stone_axeman" | "stone_slinger" | "supply_wagon" | "bronze_spearman";
 type Role = "melee" | "ranged" | "support";
@@ -110,7 +110,7 @@ test(`captures ${CAPTURE_PHASE} role-specific attack silhouettes`, async ({ page
       .__terrainPrototypeControl.setAttackVisualPhase("bronze_spearman", "player", 0.48);
   });
   const spearman = (await snapshot(page)).units.find((unit) => unit.unitId === "bronze_spearman");
-  expect(spearman?.pose).toBe("bronze-spearman-attack");
+  expect(spearman?.pose.endsWith("-attack")).toBe(true);
   expect(spearman?.attackTiming.eventProgress).toBe(0.48);
   await page.screenshot({ path: `${ARTIFACT_DIR}/after-bronze-spearman-contact.png` });
 });

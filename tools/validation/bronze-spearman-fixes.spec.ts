@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/bronze-spearman-fixes";
-const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-bronze-spearman-fixes";
+const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-bronze-spearman-fixes";
 
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 
@@ -29,7 +29,8 @@ test("bronze spearman keeps source colors at gameplay scale", async ({ page }) =
     }).__gameDebug.units.filter((unit) => unit.unitId === "bronze_spearman")
   ));
   expect(spearmen).toHaveLength(1);
-  expect(spearmen[0]).toMatchObject({ pose: "bronze-spearman-idle", tint: 0xffffff });
+  expect(spearmen[0].pose.endsWith("-idle")).toBe(true);
+  expect(spearmen[0].tint).toBe(0xffffff);
   await page.screenshot({ path: `${ARTIFACT_DIR}/a1-after-source-color.png` });
   writeFileSync(`${ARTIFACT_DIR}/a1-render-state.json`, JSON.stringify({ spearmen }, null, 2));
 });
@@ -76,11 +77,11 @@ test("bronze spearman keeps one silhouette height through attack poses", async (
     await page.screenshot({ path: `${ARTIFACT_DIR}/a2-${label}.png` });
   }
 
-  expect(sequence.map((entry) => entry.pose)).toEqual([
-    "bronze-spearman-idle",
-    "bronze-spearman-attack",
-    "bronze-spearman-attack",
-    "bronze-spearman-idle",
+  expect(sequence.map((entry) => entry.pose.endsWith("-idle") ? "idle" : "attack")).toEqual([
+    "idle",
+    "attack",
+    "attack",
+    "idle",
   ]);
   const visibleHeights = sequence.map((entry) => entry.cssVisibleHeight);
   expect(Math.max(...visibleHeights) - Math.min(...visibleHeights)).toBeLessThan(0.05);

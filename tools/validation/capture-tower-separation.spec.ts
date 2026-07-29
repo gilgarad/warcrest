@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/capture-tower-separation";
-const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&seed=capture-tower-separation-v1";
+const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&seed=capture-tower-separation-v1";
 
 interface DebugSnapshot {
   battlefield: {
@@ -22,12 +22,18 @@ test("separates capture points and defense towers in data, position, and selecti
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(GAME_URL);
   const canvas = page.locator("canvas");
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error("Canvas is not visible");
   const startGame = async (): Promise<void> => {
-    await page.waitForTimeout(300);
-    await canvas.click({ position: { x: 800, y: 805 } });
-    await page.waitForFunction(() => Boolean(
-      (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-    ), undefined, { timeout: 8_000 });
+    await page.waitForTimeout(1_000);
+    for (let attempt = 0; attempt < 15; attempt += 1) {
+      await canvas.click({ position: { x: 800 * box.width / 1600, y: 805 * box.height / 900 } });
+      await page.waitForTimeout(750);
+      if (await page.evaluate(() => Boolean(
+        (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+      ))) return;
+    }
+    throw new Error("Capture-tower separation probe did not initialize");
   };
   await startGame().catch(async () => {
     await page.reload();

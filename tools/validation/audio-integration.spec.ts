@@ -54,6 +54,12 @@ async function startGame(page: Page): Promise<void> {
 
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 
+async function openAudioLab(page: Page): Promise<void> {
+  await page.goto("/game_project1/tools/audio-lab/index.html", { waitUntil: "domcontentloaded" });
+  await page.waitForLoadState("networkidle");
+  await expect(page.locator("#unlockBtn")).toBeVisible({ timeout: 60_000 });
+}
+
 test("Audio Lab plays the layered score and distinct combat synthesis families", async ({ page }) => {
   const runtimeErrors: string[] = [];
   const failedResponses: Array<{ status: number; url: string }> = [];
@@ -68,7 +74,7 @@ test("Audio Lab plays the layered score and distinct combat synthesis families",
     if (response.status() >= 400) failedResponses.push({ status: response.status(), url: response.url() });
   });
 
-  await page.goto("/tools/audio-lab/index.html");
+  await openAudioLab(page);
   await page.locator("#unlockBtn").click();
   await expect(page.locator("#unlockStatus")).toContainText("활성화됨");
   await page.locator("#combatSfxMode").selectOption("full");

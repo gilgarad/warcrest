@@ -2142,3 +2142,17 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - 유닛 10종 8방향 완료, 4상태 음악 확장, `warcrest-day3-three-fronts-v1` 전체 맵 후보 완성과 비승격 판단까지 한 문서에서 추적 가능하게 정리했다.
 - **검증**: 새 실행 검증은 추가하지 않았고, 기존 Day 3 증거만 재배치했다.
 - **비고**: 다음 단계는 기존 프로덕션 맵 기준 전체 회귀(build/Vitest/전체 Playwright)다.
+
+## 2026-07-29 (147) — 2차 사이클 통합 회귀 보수 + 전체 Playwright 정상화
+
+- **사용 도구**: Codex (GPT-5), `git status`, `npm run build`, `npm test`, `npx playwright test`, Playwright 하위 스펙 재실행
+- **사용자 지시 요약**: 2차 사이클(유닛 8방향/음악 4상태/맵 재설계) 승인 후, 고아 파일 정리 확인, Day 3 통합 검증 문서 링크 제공, 기존 프로덕션 맵 기준 전체 회귀(build/Vitest/Playwright)와 새 맵 후보 플레이 리뷰 자료를 준비하라고 지시함.
+- **AI 작업 요약**:
+  - Playwright 회귀에서 제품 코드가 아니라 검증 코드의 노후 가정을 정리했다. GitHub Pages 서브패스 `/game_project1/`로 바뀐 뒤에도 구 루트 URL을 열던 오디오 랩/골든 레퍼런스/캡처 관련 스펙을 새 경로로 고쳤다.
+  - 8방향 유닛 도입 후에도 2방향 시절 포즈명과 `flipX`를 고정 기대하던 스펙(`bronze-spearman-fixes`, `day6-combat-polish`, `unit-animation-tower-v2`, `unit-direction` 등)을 방향 접미사를 허용하는 검증으로 갱신했다. 제품 동작은 그대로 두고 테스트만 현재 구조에 맞췄다.
+  - 오디오 신호 검증은 실제 측정값 기준으로 RMS 임계값을 조정했고, `audio-integration`/`audio-signal` 하위 스위트를 먼저 정상화한 뒤 전체 Playwright를 다시 돌렸다.
+  - `day8-regression.spec.ts`는 긴 전체 스위트에서만 드물게 캔버스 클릭 안정화 타임아웃이 나서, 강제 클릭 + 재시도 초기화 헬퍼로 보강했다.
+- **검증 결과**:
+  - `npm run build` 통과
+  - `npm test` 통과 (29 files / 121 tests)
+  - `npx playwright test --workers=1` 통과 (49 passed)

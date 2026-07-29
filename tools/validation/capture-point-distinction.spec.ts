@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/capture-point-distinction";
-const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-capture-layout-v2";
+const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-capture-layout-v2";
 
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 
@@ -16,11 +16,15 @@ test("keeps two buildable points separate from the defense tower collection", as
     position: { x: x * box.width / 1600, y: y * box.height / 900 },
   });
   const startGame = async (): Promise<void> => {
-    await page.waitForTimeout(300);
-    await clickLogical(800, 805);
-    await page.waitForFunction(() => Boolean(
-      (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-    ), undefined, { timeout: 8_000 });
+    await page.waitForTimeout(1_000);
+    for (let attempt = 0; attempt < 15; attempt += 1) {
+      await clickLogical(800, 805);
+      await page.waitForTimeout(750);
+      if (await page.evaluate(() => Boolean(
+        (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+      ))) return;
+    }
+    throw new Error("Capture-point distinction probe did not initialize");
   };
   await startGame().catch(async () => {
     await page.reload();

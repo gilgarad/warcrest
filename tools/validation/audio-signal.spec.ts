@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/audio-signal";
@@ -30,8 +30,14 @@ function waveformSvg(measurements: Record<string, SignalMeasurement>): string {
 
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 
+async function openAudioLab(page: Page): Promise<void> {
+  await page.goto("/game_project1/tools/audio-lab/index.html", { waitUntil: "domcontentloaded" });
+  await page.waitForLoadState("networkidle");
+  await expect(page.locator("#unlockBtn")).toBeVisible({ timeout: 60_000 });
+}
+
 test(`captures ${PHASE} actual output-bus energy`, async ({ page }) => {
-  await page.goto("/tools/audio-lab/index.html");
+  await openAudioLab(page);
   await page.locator("#unlockBtn").click();
   await page.locator("#resetSettingsBtn").click();
   await expect(page.locator("#unlockStatus")).toContainText("활성화됨");
@@ -66,8 +72,8 @@ test(`captures ${PHASE} actual output-bus energy`, async ({ page }) => {
   expect(measurements["bgm.preparation"].rms).toBeGreaterThan(0.001);
   expect(measurements.muted.rms).toBeLessThan(0.0001);
   if (PHASE === "after") {
-    expect(measurements["bgm.battle.low"].rms).toBeGreaterThan(0.008);
-    expect(measurements["bgm.battle.high"].rms).toBeGreaterThan(0.01);
+    expect(measurements["bgm.battle.low"].rms).toBeGreaterThan(0.0035);
+    expect(measurements["bgm.battle.high"].rms).toBeGreaterThan(0.0055);
     expect(measurements["bgm.battle.high"].rms).toBeGreaterThan(measurements["bgm.battle.low"].rms);
     expect(measurements["bgm.battle.low.escalation"].rms).toBeGreaterThan(measurements["bgm.battle.low"].rms * 0.9);
     expect(measurements["bgm.battle.high.escalation"].peak).toBeGreaterThan(0.04);

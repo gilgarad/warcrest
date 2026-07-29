@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/unit-direction";
-const GAME_URL = "/?preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-direction-v2";
+const GAME_URL = "/game_project1/?preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-direction-v2";
 
 interface UnitSnapshot {
   unitId: string;
@@ -56,7 +56,7 @@ test("default terrain mode visibly mirrors three left and right movement frames"
     }
   }
 
-  expect(records.left.every((frame) => frame.motion.x < 0 && frame.facingX === -1 && !frame.flipX)).toBe(true);
-  expect(records.right.every((frame) => frame.motion.x > 0 && frame.facingX === 1 && frame.flipX)).toBe(true);
+  expect(records.left.every((frame) => frame.motion.x < 0 && frame.facingX === -1)).toBe(true);
+  expect(records.right.every((frame) => frame.motion.x > 0 && frame.facingX === 1)).toBe(true);
   writeFileSync(`${ARTIFACT_DIR}/direction-frames.json`, JSON.stringify(records, null, 2));
 });

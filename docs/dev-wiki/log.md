@@ -2356,3 +2356,21 @@ Use consistent headings so entries are easy to grep.
 - Added `docs/dev-wiki/day3-second-cycle-validation.md` to gather the completed second-cycle Day 3 streams in one place.
 - The document links the four Day 3 commits (`d301888`, `818c193`, `0f3136e`, `4b9952f`), summarizes unit/music/map outcomes, and points directly to the runtime registries, validation specs, screenshots, and JSON evidence already produced.
 - No new code paths or assets were introduced in this step; it is a documentation bridge so the approved second-cycle work can be reviewed without chasing commit logs.
+
+## [2026-07-29] test | 2차 사이클 통합 회귀 보수 (서브패스/8방향 검증 갱신)
+
+- 같은 상담 세션의 연속. GitHub Issue 없음, 최소 기록 예외로 이 항목과
+  `docs/ai-usage/session-log.md`를 사용했다.
+- GitHub Pages 서브패스(`/game_project1/`) 이후에도 구 루트 경로를 열던
+  Playwright 오디오 랩/골든 레퍼런스/캡처 검증을 전부 갱신했다.
+- 8방향 유닛 도입 뒤에도 2방향 시절 포즈명(`bronze-spearman-idle`,
+  `stone-axeman-attack`)과 `flipX`를 고정 기대하던 회귀 스펙들을
+  방향 접미사 허용 형태로 바꿨다. 실제 제품 로직은 손대지 않고 검증만
+  현 구조에 맞췄다.
+- `day8-regression.spec.ts`의 캔버스 클릭을 강제 클릭 + 재시도 방식으로
+  바꿔 긴 전체 Playwright 실행에서 간헐적으로 나던 안정화 타임아웃을
+  제거했다.
+- 검증 결과:
+  - `npm run build` 통과
+  - `npm test` 통과 (29 files / 121 tests)
+  - `npx playwright test --workers=1` 통과 (49 passed)

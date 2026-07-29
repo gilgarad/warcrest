@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/day8-regression";
-const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&seed=warcrest-day8&audioDebug=1";
+const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&seed=warcrest-day8&audioDebug=1";
 
 type AgeId = "stone" | "bronze" | "iron_early" | "iron_mid" | "iron_late";
 
@@ -67,16 +67,24 @@ async function clickLogical(page: Page, x: number, y: number): Promise<void> {
   const canvas = page.locator("canvas");
   const box = await canvas.boundingBox();
   if (!box) throw new Error("Canvas is not visible");
-  await canvas.click({ position: { x: x * box.width / 1600, y: y * box.height / 900 } });
+  await canvas.click({
+    position: { x: x * box.width / 1600, y: y * box.height / 900 },
+    force: true,
+  });
 }
 
 async function openGame(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(GAME_URL);
-  await clickLogical(page, 800, 805);
-  await page.waitForFunction(() => Boolean(
-    (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-  ));
+  await page.waitForTimeout(1_000);
+  for (let attempt = 0; attempt < 15; attempt += 1) {
+    await clickLogical(page, 800, 805);
+    await page.waitForTimeout(750);
+    if (await page.evaluate(() => Boolean(
+      (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+    ))) return;
+  }
+  throw new Error("Day 8 regression probe did not initialize");
 }
 
 const snapshot = (page: Page): Promise<GameSnapshot> => page.evaluate(() => (
