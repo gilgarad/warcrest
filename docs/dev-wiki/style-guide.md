@@ -1,8 +1,8 @@
 # Warcrest Golden Reference Style Guide
 
 Date: 2026-07-28
-Status: locked for Day 2 golden-reference production; volume production requires
-human approval.
+Status: first-cycle production contract retained; second-cycle eight-direction
+extension confirmed on 2026-07-29.
 
 ## 1. Rendering contract
 
@@ -16,9 +16,54 @@ The camera contract must not be changed per asset.
 - Terrain transition grammar: 16-state marching squares.
 - Transition artwork: transparent material overlays over a continuous base
   material. A transition does not contain its own unrelated base texture.
-- Facing: left/right two-direction output. Right-facing is the source pose;
-  left-facing may use horizontal reflection. Attacks may add the existing
-  small presentation rotation, but do not introduce an eight-direction set.
+- Facing: eight authored directions (`N/NE/E/SE/S/SW/W/NW`). The existing
+  west-facing production art is the migration source, not disposable work.
+  Horizontal reflection is allowed only as a temporary compatibility fallback
+  while a unit is incomplete; it is not accepted as final production art.
+
+### 1.1 Eight-direction animation contract
+
+Every completed production unit owns one pose set per direction:
+
+```ts
+type UnitFacingDirection = "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw";
+
+interface UnitDirectionalPoseSet {
+  idle: string;
+  walkA: string;
+  walkB: string;
+  attack: readonly string[];
+}
+
+interface UnitAnimationDefinition {
+  directions: Partial<Record<UnitFacingDirection, UnitDirectionalPoseSet>>;
+  fallbackDirection: UnitFacingDirection;
+  legacyHorizontalMirror: boolean;
+  // Existing canvas, anchor, visible-height, and scale metrics follow unchanged.
+}
+```
+
+- Final production requires all eight direction keys. A partial record exists
+  only so units can migrate one at a time without breaking the playable build.
+- Motion vectors are quantized into eight equal `45deg` screen-space sectors.
+  A stopped unit retains its last non-zero direction.
+- Direction selection changes texture lookup only. The canvas class, ground
+  anchor, visible-height normalization, team palette region, and combat timing
+  contracts remain unchanged.
+- The final eight-direction set uses independently authored views. A
+  four-cardinal-plus-mirror compromise was rejected because reflection cannot
+  synthesize diagonal body volume and reverses handed equipment, directional
+  lighting, and asymmetric team-color regions.
+- New directional keys use
+  `<unit-id>-<direction>-<pose>` (for example,
+  `bronze-spearman-ne-walk-a`). Existing west assets keep their current keys
+  during migration so the approved first-cycle art remains usable.
+- Each direction keeps the same silhouette and equipment identity. Facing
+  changes camera-relative orientation, not character design, proportions,
+  palette, or weapon loadout.
+- Day 2 is the migration gate: one unit must provide `8 x 4 = 32` direction-pose
+  frames, pass the existing canvas/anchor QA, and be approved before the other
+  nine units are expanded.
 
 ## 2. Measured source problem
 

@@ -2228,3 +2228,31 @@ Use consistent headings so entries are easy to grep.
 - 구조물 QA 7/7 및 전체 자산 QA(golden 6, units 12, terrain 68, props 5),
   build, 24 files/87 tests가 통과했다. 배치 데이터와 registry는 변경하지
   않았다.
+
+## [2026-07-29] feat/docs | 2차 사이클 Day 1: 8방향 계약·음악 브리프·맵 재설계안
+
+- 브랜치 `terrain-prototype-central`. GitHub Issue 없이 이번 항목을
+  The One Rule의 최소 기록으로 사용했다.
+- `classic-rts-fidelity-reset.md`의 확정 결정을 기준으로 기존
+  지형/구조물/경제/UI/10종 유닛 자산을 삭제하지 않고 재조립하는 범위를
+  지켰다. 실제 신규 원화, 음악, 맵 데이터는 아직 만들지 않았다.
+- `unitAnimationRegistry.ts`를 방향별 포즈셋을 담는
+  `Partial<Record<UnitFacingDirection, UnitDirectionalPoseSet>>` 구조로
+  확장했다. 최종 생산 방식은 8방향 독립 원화로 결정했으며 현재 10종의
+  W 원화는 명시적 마이그레이션 fallback으로 유지했다. 8방향 벡터
+  양자화와 완성도 검사 API를 추가했고 기존 좌우 런타임 동작은 호환
+  래퍼로 보존했다.
+- `style-guide.md`에 8방향 스키마, 키 규칙, 캔버스/anchor 불변 조건,
+  4방향+미러 절충안을 기각한 근거를 기록했다.
+- `music-style-brief.md`를 추가해 4개 루프 상태별 BPM, 레이어, 다이나믹,
+  절차 합성 구현 경로와 원곡 작곡 제한을 정의했다.
+- `battlefieldMaps.ts`를 감사했다. 현재 레인은 5노드/4구간, 총 약
+  5,408px이며 방향 변화가 최대 8.3도, 모든 구간이 같은 8행 단면,
+  구조물 4개와 소품 6개다. `map-redesign-brief.md`에 엔진을 유지하는
+  9노드 S자 레인, 폭/재질 변화, 18-24개 군집 소품, 구조물 배치 원칙과
+  Day 2 부분 시안을 정리했다.
+- 검증: `npm run build` 통과, `npm test` 29 files / 116 tests 통과.
+  Vite의 기존 대형 청크 경고만 남았다.
+- Day 2 체크포인트는 청동창병 8방향 32프레임, `bgm.battle.low` 다중
+  레이어 편곡 1개, 플레이어측 0.00-0.34 구간 맵 시안 1개를 함께
+  승인받는 단계로 고정했다.

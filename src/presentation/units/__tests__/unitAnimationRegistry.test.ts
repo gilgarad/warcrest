@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   UNIT_ANIMATION_ASSETS,
+  UNIT_FACING_DIRECTIONS,
+  getAuthoredUnitDirections,
   getFrameCanvasAspect,
   getFrameVisibleHeightRatio,
   getUnitAnimationDefinition,
+  hasCompleteUnitDirectionalSet,
   resolveUnitAnimationTexture,
+  resolveUnitFacingDirection,
   resolveTeamUnitTextureKey,
   shouldFlipUnitFrame,
 } from "../unitAnimationRegistry";
@@ -21,8 +25,11 @@ describe("unit animation registry", () => {
       expect(definition?.groundOriginX).toBe(0.5);
       expect(definition?.groundOriginY).toBe(0.875);
       expect(definition?.referenceVisibleHeightRatio).toBeCloseTo(270 / 384);
-      expect(definition?.nativeFacingX).toBe(-1);
-      expect(definition?.attack.length).toBeGreaterThan(0);
+      expect(definition?.fallbackDirection).toBe("w");
+      expect(definition?.legacyHorizontalMirror).toBe(true);
+      expect(definition?.directions.w?.attack.length).toBeGreaterThan(0);
+      expect(getAuthoredUnitDirections(unitId)).toEqual(["w"]);
+      expect(hasCompleteUnitDirectionalSet(unitId)).toBe(false);
     },
   );
 
@@ -64,5 +71,25 @@ describe("unit animation registry", () => {
     expect(resolveTeamUnitTextureKey("stone-axeman-idle", "enemy")).toBe("stone-axeman-idle-enemy");
     expect(shouldFlipUnitFrame("stone_axeman", -1)).toBe(false);
     expect(shouldFlipUnitFrame("stone_axeman", 1)).toBe(true);
+  });
+
+  it("defines the complete production direction contract and quantizes screen motion", () => {
+    expect(UNIT_FACING_DIRECTIONS).toEqual(["n", "ne", "e", "se", "s", "sw", "w", "nw"]);
+    expect(resolveUnitFacingDirection(0, -1)).toBe("n");
+    expect(resolveUnitFacingDirection(1, -1)).toBe("ne");
+    expect(resolveUnitFacingDirection(1, 0)).toBe("e");
+    expect(resolveUnitFacingDirection(1, 1)).toBe("se");
+    expect(resolveUnitFacingDirection(0, 1)).toBe("s");
+    expect(resolveUnitFacingDirection(-1, 1)).toBe("sw");
+    expect(resolveUnitFacingDirection(-1, 0)).toBe("w");
+    expect(resolveUnitFacingDirection(-1, -1)).toBe("nw");
+    expect(resolveUnitFacingDirection(0, 0, "s")).toBe("s");
+  });
+
+  it("keeps west art as an explicit migration fallback without faking eight authored sets", () => {
+    expect(resolveUnitAnimationTexture("bronze_spearman", false, 0, 0, "w"))
+      .toBe("bronze-spearman-idle");
+    expect(resolveUnitAnimationTexture("bronze_spearman", false, 0, 0, "n"))
+      .toBe("bronze-spearman-idle");
   });
 });

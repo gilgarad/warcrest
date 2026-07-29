@@ -71,6 +71,7 @@ import { createLaneBattleHudSnapshot } from "../ui/laneBattleHudModel";
 import {
   UNIT_ANIMATION_ASSETS,
   getUnitAnimationDefinition,
+  getUnitDirectionalPoses,
   resolveUnitAnimationTexture,
   resolveTeamUnitTextureKey,
   shouldFlipUnitFrame,
@@ -737,14 +738,15 @@ export class LaneBattleScene extends Phaser.Scene {
       },
       prepareUnitPoseGallery: (unitId: BattleUnitId | SupportUnitId) => {
         const definition = getUnitAnimationDefinition(unitId);
-        if (!definition) return;
+        const poses = getUnitDirectionalPoses(unitId, definition?.fallbackDirection ?? "w");
+        if (!definition || !poses) return;
         this.units.forEach((unit) => this.destroyUnitPresentation(unit));
         this.units = [];
         const textures = [
-          definition.idle,
-          definition.walkA,
-          definition.walkB,
-          definition.attack[definition.attack.length - 1] ?? definition.idle,
+          poses.idle,
+          poses.walkA,
+          poses.walkB,
+          poses.attack[poses.attack.length - 1] ?? poses.idle,
         ];
         textures.forEach((texture, index) => {
           this.spawnLaneUnit(

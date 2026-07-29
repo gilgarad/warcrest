@@ -2,19 +2,28 @@ import { assetUrl } from "../../config/assetUrl";
 import type { LaneUnitId } from "../../systems/lane-units/unitStats";
 
 export type UnitLocomotionPose = "idle" | "walk-a" | "walk-b";
+export const UNIT_FACING_DIRECTIONS = [
+  "n", "ne", "e", "se", "s", "sw", "w", "nw",
+] as const;
+export type UnitFacingDirection = typeof UNIT_FACING_DIRECTIONS[number];
 
-export interface UnitAnimationDefinition {
+export interface UnitDirectionalPoseSet {
   idle: string;
   walkA: string;
   walkB: string;
   attack: readonly string[];
+}
+
+export interface UnitAnimationDefinition {
+  directions: Partial<Readonly<Record<UnitFacingDirection, UnitDirectionalPoseSet>>>;
+  fallbackDirection: UnitFacingDirection;
+  legacyHorizontalMirror: boolean;
   frameCanvasAspects: Readonly<Record<string, number>>;
   groundOriginX: number;
   groundOriginY: number;
   referenceVisibleHeightRatio: number;
   frameVisibleHeightRatios: Readonly<Record<string, number>>;
   scaleFactor: number;
-  nativeFacingX: -1 | 1;
 }
 
 const STANDARD_ASPECT = 1;
@@ -44,11 +53,16 @@ function productionAnimation(
   const walkB = `${prefix}-walk-b`;
   const attack = `${prefix}-attack`;
   const allFrames = [idle, walkA, walkB, attack];
-  return {
+  const westPoses: UnitDirectionalPoseSet = {
     idle,
     walkA,
     walkB,
     attack: [attack],
+  };
+  return {
+    directions: { w: westPoses },
+    fallbackDirection: "w",
+    legacyHorizontalMirror: true,
     frameCanvasAspects: wideAllFrames
       ? frameAspects([], allFrames)
       : frameAspects([idle, walkA, walkB], [attack]),
@@ -57,7 +71,6 @@ function productionAnimation(
     referenceVisibleHeightRatio: PRODUCTION_VISIBLE_HEIGHT_RATIO,
     frameVisibleHeightRatios: frameHeightRatios(allFrames),
     scaleFactor,
-    nativeFacingX: -1,
   };
 }
 
@@ -76,7 +89,9 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
 
 export const UNIT_ANIMATION_ASSETS = Object.values(UNIT_ANIMATION_REGISTRY)
   .flatMap((definition) => definition
-    ? [definition.idle, definition.walkA, definition.walkB, ...definition.attack]
+    ? Object.values(definition.directions).flatMap((poses) => poses
+      ? [poses.idle, poses.walkA, poses.walkB, ...poses.attack]
+      : [])
     : [])
   .filter((key, index, all) => all.indexOf(key) === index)
   .flatMap((key) => [
@@ -86,6 +101,37 @@ export const UNIT_ANIMATION_ASSETS = Object.values(UNIT_ANIMATION_REGISTRY)
 
 export function getUnitAnimationDefinition(unitId: LaneUnitId): UnitAnimationDefinition | undefined {
   return UNIT_ANIMATION_REGISTRY[unitId];
+}
+
+export function getAuthoredUnitDirections(unitId: LaneUnitId): readonly UnitFacingDirection[] {
+  const directions = getUnitAnimationDefinition(unitId)?.directions;
+  return directions
+    ? UNIT_FACING_DIRECTIONS.filter((direction) => directions[direction] !== undefined)
+    : [];
+}
+
+export function hasCompleteUnitDirectionalSet(unitId: LaneUnitId): boolean {
+  return getAuthoredUnitDirections(unitId).length === UNIT_FACING_DIRECTIONS.length;
+}
+
+export function resolveUnitFacingDirection(
+  motionX: number,
+  motionY: number,
+  fallback: UnitFacingDirection = "w",
+): UnitFacingDirection {
+  if (Math.abs(motionX) < 0.0001 && Math.abs(motionY) < 0.0001) return fallback;
+  const sectors: readonly UnitFacingDirection[] = ["e", "se", "s", "sw", "w", "nw", "n", "ne"];
+  const octant = Math.round(Math.atan2(motionY, motionX) / (Math.PI / 4));
+  return sectors[(octant + sectors.length) % sectors.length];
+}
+
+export function getUnitDirectionalPoses(
+  unitId: LaneUnitId,
+  direction: UnitFacingDirection,
+): UnitDirectionalPoseSet | undefined {
+  const definition = getUnitAnimationDefinition(unitId);
+  if (!definition) return undefined;
+  return definition.directions[direction] ?? definition.directions[definition.fallbackDirection];
 }
 
 export function getFrameVisibleHeightRatio(unitId: LaneUnitId, textureKey?: string): number | undefined {
@@ -107,8 +153,8 @@ export function resolveTeamUnitTextureKey(textureKey: string, team: "player" | "
 }
 
 export function shouldFlipUnitFrame(unitId: LaneUnitId, facingX: number): boolean {
-  const nativeFacingX = getUnitAnimationDefinition(unitId)?.nativeFacingX ?? 1;
-  return (facingX < 0 ? -1 : 1) !== nativeFacingX;
+  const definition = getUnitAnimationDefinition(unitId);
+  return Boolean(definition?.legacyHorizontalMirror && facingX > 0);
 }
 
 export function resolveUnitAnimationTexture(
@@ -116,16 +162,17 @@ export function resolveUnitAnimationTexture(
   moving: boolean,
   walkPhase: number,
   attackProgress: number,
+  direction: UnitFacingDirection = "w",
 ): string | undefined {
-  const definition = getUnitAnimationDefinition(unitId);
-  if (!definition) return undefined;
+  const poses = getUnitDirectionalPoses(unitId, direction);
+  if (!poses) return undefined;
   if (attackProgress > 0) {
     const frameIndex = Math.min(
-      definition.attack.length - 1,
-      Math.floor(Math.min(0.9999, attackProgress) * definition.attack.length),
+      poses.attack.length - 1,
+      Math.floor(Math.min(0.9999, attackProgress) * poses.attack.length),
     );
-    return definition.attack[frameIndex];
+    return poses.attack[frameIndex];
   }
-  if (!moving) return definition.idle;
-  return walkPhase >= 0 ? definition.walkA : definition.walkB;
+  if (!moving) return poses.idle;
+  return walkPhase >= 0 ? poses.walkA : poses.walkB;
 }
