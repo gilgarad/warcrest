@@ -1,0 +1,578 @@
+[
+  {
+    "key": "archer-n-idle",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-n-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      106,
+      66,
+      277,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-n-walk-a",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-n-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      126,
+      66,
+      259,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-n-walk-b",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-n-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      96,
+      66,
+      287,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-n-attack",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-n-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      161,
+      66,
+      351,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "archer-ne-idle",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-ne-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      120,
+      66,
+      264,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-ne-walk-a",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-ne-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      127,
+      66,
+      257,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-ne-walk-b",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-ne-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      112,
+      66,
+      273,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-ne-attack",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-ne-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      168,
+      66,
+      344,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "archer-e-idle",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-e-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      115,
+      66,
+      269,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-e-walk-a",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-e-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      128,
+      66,
+      256,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-e-walk-b",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-e-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      122,
+      66,
+      262,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-e-attack",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-e-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      168,
+      66,
+      344,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "archer-se-idle",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-se-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      133,
+      66,
+      251,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-se-walk-a",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-se-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      126,
+      66,
+      257,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-se-walk-b",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-se-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      132,
+      66,
+      252,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-se-attack",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-se-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      172,
+      66,
+      339,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "archer-s-idle",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-s-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      130,
+      66,
+      254,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-s-walk-a",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-s-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      135,
+      66,
+      249,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-s-walk-b",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-s-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      118,
+      66,
+      266,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-s-attack",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-s-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      172,
+      66,
+      339,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "archer-sw-idle",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-sw-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      133,
+      66,
+      251,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-sw-walk-a",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-sw-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      139,
+      66,
+      245,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-sw-walk-b",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-sw-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      138,
+      66,
+      247,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-sw-attack",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-sw-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      182,
+      66,
+      330,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "archer-w-idle",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-w-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      142,
+      66,
+      243,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-w-walk-a",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-w-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      134,
+      66,
+      250,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-w-walk-b",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-w-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      147,
+      66,
+      237,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-w-attack",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-w-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      184,
+      66,
+      328,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "archer-nw-idle",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-nw-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      15,
+      66,
+      369,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-nw-walk-a",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-nw-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      12,
+      124,
+      372,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-nw-walk-b",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-nw-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      12,
+      70,
+      372,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "archer-nw-attack",
+    "output": "artifacts/day3-directional-units/archer/normalized/archer-nw-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      28,
+      66,
+      483,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  }
+]

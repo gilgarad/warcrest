@@ -1,0 +1,710 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "key": "iron-swordsman-n-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        72,
+        66,
+        313,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-n-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        74,
+        66,
+        311,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-n-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        36,
+        66,
+        349,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-n-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        122,
+        66,
+        389,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-ne-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        89,
+        66,
+        295,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-ne-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        96,
+        66,
+        289,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-ne-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        62,
+        66,
+        322,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-ne-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        143,
+        66,
+        369,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-e-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        98,
+        66,
+        285,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-e-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        99,
+        66,
+        285,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-e-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        62,
+        66,
+        321,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-e-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        144,
+        66,
+        369,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-se-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        98,
+        66,
+        285,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-se-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        99,
+        66,
+        285,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-se-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        92,
+        66,
+        291,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-se-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        157,
+        66,
+        355,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-s-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        120,
+        66,
+        265,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-s-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        97,
+        66,
+        287,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-s-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        64,
+        66,
+        321,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-s-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        150,
+        66,
+        363,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-sw-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        90,
+        66,
+        293,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-sw-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        98,
+        66,
+        287,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-sw-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        68,
+        66,
+        315,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-sw-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        148,
+        66,
+        364,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-w-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        92,
+        66,
+        291,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-w-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        94,
+        66,
+        290,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-w-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        60,
+        66,
+        323,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-w-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        152,
+        66,
+        359,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-nw-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        74,
+        66,
+        311,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-nw-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        76,
+        66,
+        308,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-nw-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        41,
+        66,
+        343,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "iron-swordsman-nw-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        121,
+        66,
+        391,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    }
+  ],
+  "failures": []
+}

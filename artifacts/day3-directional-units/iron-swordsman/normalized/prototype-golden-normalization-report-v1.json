@@ -1,0 +1,578 @@
+[
+  {
+    "key": "iron-swordsman-n-idle",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-n-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      72,
+      66,
+      313,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-n-walk-a",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-n-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      74,
+      66,
+      311,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-n-walk-b",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-n-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      36,
+      66,
+      349,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-n-attack",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-n-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      122,
+      66,
+      389,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-ne-idle",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-ne-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      89,
+      66,
+      295,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-ne-walk-a",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-ne-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      96,
+      66,
+      289,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-ne-walk-b",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-ne-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      62,
+      66,
+      322,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-ne-attack",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-ne-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      143,
+      66,
+      369,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-e-idle",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-e-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      98,
+      66,
+      285,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-e-walk-a",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-e-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      99,
+      66,
+      285,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-e-walk-b",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-e-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      62,
+      66,
+      321,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-e-attack",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-e-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      144,
+      66,
+      369,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-se-idle",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-se-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      98,
+      66,
+      285,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-se-walk-a",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-se-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      99,
+      66,
+      285,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-se-walk-b",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-se-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      92,
+      66,
+      291,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-se-attack",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-se-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      157,
+      66,
+      355,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-s-idle",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-s-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      120,
+      66,
+      265,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-s-walk-a",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-s-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      97,
+      66,
+      287,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-s-walk-b",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-s-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      64,
+      66,
+      321,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-s-attack",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-s-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      150,
+      66,
+      363,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-sw-idle",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-sw-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      90,
+      66,
+      293,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-sw-walk-a",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-sw-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      98,
+      66,
+      287,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-sw-walk-b",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-sw-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      68,
+      66,
+      315,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-sw-attack",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-sw-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      148,
+      66,
+      364,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-w-idle",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-w-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      92,
+      66,
+      291,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-w-walk-a",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-w-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      94,
+      66,
+      290,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-w-walk-b",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-w-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      60,
+      66,
+      323,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-w-attack",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-w-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      152,
+      66,
+      359,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-nw-idle",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-nw-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      74,
+      66,
+      311,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-nw-walk-a",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-nw-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      76,
+      66,
+      308,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-nw-walk-b",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-nw-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      41,
+      66,
+      343,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-nw-attack",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-nw-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      121,
+      66,
+      391,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  }
+]

@@ -1,0 +1,551 @@
+{
+  "source": "art-source/second-cycle/day3/supply-wagon/supply-wagon-8dir-sheet-alpha.png",
+  "columns": 4,
+  "rows": 8,
+  "assets": [
+    {
+      "key": "supply-wagon-n-idle",
+      "filename": "supply-wagon-n-idle.png",
+      "column": 0,
+      "row": 0,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-n-walk-a",
+      "filename": "supply-wagon-n-walk-a.png",
+      "column": 1,
+      "row": 0,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-n-walk-b",
+      "filename": "supply-wagon-n-walk-b.png",
+      "column": 2,
+      "row": 0,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-n-attack",
+      "filename": "supply-wagon-n-attack.png",
+      "column": 3,
+      "row": 0,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-ne-idle",
+      "filename": "supply-wagon-ne-idle.png",
+      "column": 0,
+      "row": 1,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-ne-walk-a",
+      "filename": "supply-wagon-ne-walk-a.png",
+      "column": 1,
+      "row": 1,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-ne-walk-b",
+      "filename": "supply-wagon-ne-walk-b.png",
+      "column": 2,
+      "row": 1,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-ne-attack",
+      "filename": "supply-wagon-ne-attack.png",
+      "column": 3,
+      "row": 1,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-e-idle",
+      "filename": "supply-wagon-e-idle.png",
+      "column": 0,
+      "row": 2,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-e-walk-a",
+      "filename": "supply-wagon-e-walk-a.png",
+      "column": 1,
+      "row": 2,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-e-walk-b",
+      "filename": "supply-wagon-e-walk-b.png",
+      "column": 2,
+      "row": 2,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-e-attack",
+      "filename": "supply-wagon-e-attack.png",
+      "column": 3,
+      "row": 2,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-se-idle",
+      "filename": "supply-wagon-se-idle.png",
+      "column": 0,
+      "row": 3,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-se-walk-a",
+      "filename": "supply-wagon-se-walk-a.png",
+      "column": 1,
+      "row": 3,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-se-walk-b",
+      "filename": "supply-wagon-se-walk-b.png",
+      "column": 2,
+      "row": 3,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-se-attack",
+      "filename": "supply-wagon-se-attack.png",
+      "column": 3,
+      "row": 3,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-s-idle",
+      "filename": "supply-wagon-s-idle.png",
+      "column": 0,
+      "row": 4,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-s-walk-a",
+      "filename": "supply-wagon-s-walk-a.png",
+      "column": 1,
+      "row": 4,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-s-walk-b",
+      "filename": "supply-wagon-s-walk-b.png",
+      "column": 2,
+      "row": 4,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-s-attack",
+      "filename": "supply-wagon-s-attack.png",
+      "column": 3,
+      "row": 4,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-sw-idle",
+      "filename": "supply-wagon-sw-idle.png",
+      "column": 0,
+      "row": 5,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-sw-walk-a",
+      "filename": "supply-wagon-sw-walk-a.png",
+      "column": 1,
+      "row": 5,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-sw-walk-b",
+      "filename": "supply-wagon-sw-walk-b.png",
+      "column": 2,
+      "row": 5,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-sw-attack",
+      "filename": "supply-wagon-sw-attack.png",
+      "column": 3,
+      "row": 5,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-w-idle",
+      "filename": "supply-wagon-w-idle.png",
+      "column": 0,
+      "row": 6,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-w-walk-a",
+      "filename": "supply-wagon-w-walk-a.png",
+      "column": 1,
+      "row": 6,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-w-walk-b",
+      "filename": "supply-wagon-w-walk-b.png",
+      "column": 2,
+      "row": 6,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-w-attack",
+      "filename": "supply-wagon-w-attack.png",
+      "column": 3,
+      "row": 6,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-nw-idle",
+      "filename": "supply-wagon-nw-idle.png",
+      "column": 0,
+      "row": 7,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-nw-walk-a",
+      "filename": "supply-wagon-nw-walk-a.png",
+      "column": 1,
+      "row": 7,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-nw-walk-b",
+      "filename": "supply-wagon-nw-walk-b.png",
+      "column": 2,
+      "row": 7,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "supply-wagon-nw-attack",
+      "filename": "supply-wagon-nw-attack.png",
+      "column": 3,
+      "row": 7,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    }
+  ]
+}

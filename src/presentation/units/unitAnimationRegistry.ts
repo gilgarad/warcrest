@@ -112,13 +112,13 @@ function directionalProductionAnimation(
 }
 
 export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDefinition>> = {
-  stone_slinger: productionAnimation("stone-slinger", 0.96),
-  stone_axeman: productionAnimation("stone-axeman", 1.04),
-  supply_wagon: productionAnimation("supply-wagon", 1, true),
-  bronze_swordsman: productionAnimation("bronze-swordsman", 1),
+  stone_slinger: directionalProductionAnimation("stone-slinger", 0.96),
+  stone_axeman: directionalProductionAnimation("stone-axeman", 1.04),
+  supply_wagon: directionalProductionAnimation("supply-wagon", 1, true),
+  bronze_swordsman: directionalProductionAnimation("bronze-swordsman", 1),
   bronze_spearman: directionalProductionAnimation("bronze-spearman", 1),
-  archer: productionAnimation("archer", 0.96),
-  iron_swordsman: productionAnimation("iron-swordsman", 1.04),
+  archer: directionalProductionAnimation("archer", 0.96),
+  iron_swordsman: directionalProductionAnimation("iron-swordsman", 1.04),
   iron_spearman: productionAnimation("iron-spearman", 1),
   musketeer: productionAnimation("musketeer", 0.98),
   knight: productionAnimation("knight", 1.16, true),

@@ -1,0 +1,551 @@
+{
+  "source": "art-source/second-cycle/day3/iron-swordsman/iron-swordsman-8dir-sheet-alpha.png",
+  "columns": 4,
+  "rows": 8,
+  "assets": [
+    {
+      "key": "iron-swordsman-n-idle",
+      "filename": "iron-swordsman-n-idle.png",
+      "column": 0,
+      "row": 0,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-n-walk-a",
+      "filename": "iron-swordsman-n-walk-a.png",
+      "column": 1,
+      "row": 0,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-n-walk-b",
+      "filename": "iron-swordsman-n-walk-b.png",
+      "column": 2,
+      "row": 0,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-n-attack",
+      "filename": "iron-swordsman-n-attack.png",
+      "column": 3,
+      "row": 0,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-ne-idle",
+      "filename": "iron-swordsman-ne-idle.png",
+      "column": 0,
+      "row": 1,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-ne-walk-a",
+      "filename": "iron-swordsman-ne-walk-a.png",
+      "column": 1,
+      "row": 1,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-ne-walk-b",
+      "filename": "iron-swordsman-ne-walk-b.png",
+      "column": 2,
+      "row": 1,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-ne-attack",
+      "filename": "iron-swordsman-ne-attack.png",
+      "column": 3,
+      "row": 1,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-e-idle",
+      "filename": "iron-swordsman-e-idle.png",
+      "column": 0,
+      "row": 2,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-e-walk-a",
+      "filename": "iron-swordsman-e-walk-a.png",
+      "column": 1,
+      "row": 2,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-e-walk-b",
+      "filename": "iron-swordsman-e-walk-b.png",
+      "column": 2,
+      "row": 2,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-e-attack",
+      "filename": "iron-swordsman-e-attack.png",
+      "column": 3,
+      "row": 2,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-se-idle",
+      "filename": "iron-swordsman-se-idle.png",
+      "column": 0,
+      "row": 3,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-se-walk-a",
+      "filename": "iron-swordsman-se-walk-a.png",
+      "column": 1,
+      "row": 3,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-se-walk-b",
+      "filename": "iron-swordsman-se-walk-b.png",
+      "column": 2,
+      "row": 3,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-se-attack",
+      "filename": "iron-swordsman-se-attack.png",
+      "column": 3,
+      "row": 3,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-s-idle",
+      "filename": "iron-swordsman-s-idle.png",
+      "column": 0,
+      "row": 4,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-s-walk-a",
+      "filename": "iron-swordsman-s-walk-a.png",
+      "column": 1,
+      "row": 4,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-s-walk-b",
+      "filename": "iron-swordsman-s-walk-b.png",
+      "column": 2,
+      "row": 4,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-s-attack",
+      "filename": "iron-swordsman-s-attack.png",
+      "column": 3,
+      "row": 4,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-sw-idle",
+      "filename": "iron-swordsman-sw-idle.png",
+      "column": 0,
+      "row": 5,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-sw-walk-a",
+      "filename": "iron-swordsman-sw-walk-a.png",
+      "column": 1,
+      "row": 5,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-sw-walk-b",
+      "filename": "iron-swordsman-sw-walk-b.png",
+      "column": 2,
+      "row": 5,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-sw-attack",
+      "filename": "iron-swordsman-sw-attack.png",
+      "column": 3,
+      "row": 5,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-w-idle",
+      "filename": "iron-swordsman-w-idle.png",
+      "column": 0,
+      "row": 6,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-w-walk-a",
+      "filename": "iron-swordsman-w-walk-a.png",
+      "column": 1,
+      "row": 6,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-w-walk-b",
+      "filename": "iron-swordsman-w-walk-b.png",
+      "column": 2,
+      "row": 6,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-w-attack",
+      "filename": "iron-swordsman-w-attack.png",
+      "column": 3,
+      "row": 6,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-nw-idle",
+      "filename": "iron-swordsman-nw-idle.png",
+      "column": 0,
+      "row": 7,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-nw-walk-a",
+      "filename": "iron-swordsman-nw-walk-a.png",
+      "column": 1,
+      "row": 7,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-nw-walk-b",
+      "filename": "iron-swordsman-nw-walk-b.png",
+      "column": 2,
+      "row": 7,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-swordsman-nw-attack",
+      "filename": "iron-swordsman-nw-attack.png",
+      "column": 3,
+      "row": 7,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    }
+  ]
+}

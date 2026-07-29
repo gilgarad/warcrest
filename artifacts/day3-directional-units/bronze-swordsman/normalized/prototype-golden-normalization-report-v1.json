@@ -1,0 +1,578 @@
+[
+  {
+    "key": "bronze-swordsman-n-idle",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-n-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      94,
+      66,
+      291,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-n-walk-a",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-n-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      92,
+      66,
+      293,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-n-walk-b",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-n-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      19,
+      66,
+      365,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-n-attack",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-n-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      106,
+      66,
+      406,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-ne-idle",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-ne-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      117,
+      66,
+      267,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-ne-walk-a",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-ne-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      115,
+      66,
+      269,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-ne-walk-b",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-ne-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      70,
+      66,
+      314,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-ne-attack",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-ne-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      148,
+      66,
+      365,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-e-idle",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-e-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      130,
+      66,
+      253,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-e-walk-a",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-e-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      126,
+      66,
+      259,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-e-walk-b",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-e-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      74,
+      66,
+      310,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-e-attack",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-e-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      145,
+      66,
+      367,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-se-idle",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-se-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      139,
+      66,
+      245,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-se-walk-a",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-se-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      130,
+      66,
+      255,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-se-walk-b",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-se-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      79,
+      66,
+      305,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-se-attack",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-se-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      144,
+      66,
+      368,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-s-idle",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-s-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      122,
+      66,
+      261,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-s-walk-a",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-s-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      122,
+      66,
+      261,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-s-walk-b",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-s-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      122,
+      66,
+      262,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-s-attack",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-s-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      150,
+      66,
+      363,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-sw-idle",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-sw-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      142,
+      66,
+      242,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-sw-walk-a",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-sw-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      136,
+      66,
+      248,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-sw-walk-b",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-sw-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      137,
+      66,
+      247,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-sw-attack",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-sw-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      151,
+      66,
+      361,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-w-idle",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-w-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      130,
+      66,
+      253,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-w-walk-a",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-w-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      118,
+      66,
+      266,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-w-walk-b",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-w-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      68,
+      66,
+      317,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-w-attack",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-w-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      168,
+      66,
+      345,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-nw-idle",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-nw-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      118,
+      66,
+      267,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-nw-walk-a",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-nw-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      117,
+      66,
+      267,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-nw-walk-b",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-nw-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      69,
+      66,
+      315,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-swordsman-nw-attack",
+    "output": "artifacts/day3-directional-units/bronze-swordsman/normalized/bronze-swordsman-nw-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      162,
+      66,
+      350,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  }
+]

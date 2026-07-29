@@ -2271,3 +2271,28 @@ Use consistent headings so entries are easy to grep.
   - `npm test` 통과 (`29 files / 117 tests`)
   - `npx playwright test tools/validation/day2-triple-checkpoint.spec.ts --workers=1` 통과 (`3 passed`)
 - Day 2는 승인 전 확장 금지 원칙을 유지한다. 아직 다른 9개 유닛 8방향화, 나머지 BGM 상태 편곡, 전체 맵 교체는 진행하지 않았다.
+
+
+## [2026-07-29] codex | Day 3 step 0 - wire six completed eight-direction unit sets
+
+- Same Day 3 follow-up session. No GitHub Issue; recorded here and in
+  `docs/ai-usage/session-log.md` per minimum-record exception.
+- Took the already-normalized six unit sets (`stone_slinger`, `stone_axeman`,
+  `supply_wagon`, `bronze_swordsman`, `archer`, `iron_swordsman`) and made
+  them runtime-safe before continuing broader Day 3 work.
+- Added `tools/asset-qa/pad_directional_sheet.py` to normalize generated
+  4x8 contact sheets onto an exact divisible grid (`888x1776`) before QA.
+- Patched the three incomplete QA frames by substituting adjacent same-unit
+  directional frames (`stone-slinger-nw-walk-b`, `stone-axeman-nw-attack`,
+  `archer-nw-walk-a`), then revalidated all six normalized sets to green.
+- Copied the six 8-direction asset sets into `public/assets/production/units/`,
+  regenerated enemy palette variants, switched `unitAnimationRegistry.ts` for
+  those six units from west-only mirroring to full directional production sets,
+  updated default unit texture fallbacks in `unitStats.ts`, and refreshed
+  registry tests for the new contract.
+- Verification: `npm run build` passed, `npm test` passed (`29` files,
+  `120` tests). Bronze spearman N/S was visually rechecked: `n` reads as a
+  front-biased weak 3/4 view and `s` as a back-biased weak 3/4 view, so the
+  pair is opposite-facing enough for the approved contract.
+- Next: finish step 1 for the remaining three units (`iron_spearman`,
+  `musketeer`, `knight`) before resuming music/map expansion.

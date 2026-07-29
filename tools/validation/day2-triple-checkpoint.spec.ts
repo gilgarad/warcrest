@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
+import type { OfflineArrangementMeasurement } from "../../src/systems/audio/backend";
 
 const ARTIFACT_DIR = "artifacts/day2-triple-checkpoint";
 const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-day2-triple&audioDebug=1";
@@ -9,12 +10,6 @@ interface GoldenDirectionProbe {
   currentDirection: string;
   currentPose: string;
   currentTexture: string | null;
-}
-
-interface ArrangementMeasurement {
-  assetId: string;
-  durationMs: number;
-  layers: Array<{ id: string; rms: number; peak: number }>;
 }
 
 interface AudioState {
@@ -135,7 +130,7 @@ test("measures the layered battle-low arrangement and captures preparation -> ba
   const arrangement = await page.evaluate(() => (
     (window as unknown as {
       __audioDebugControl: {
-        measureArrangement: (assetId: string, durationMs: number) => Promise<ArrangementMeasurement | null>;
+        measureArrangement: (assetId: string, durationMs: number) => Promise<OfflineArrangementMeasurement | null>;
       };
     }).__audioDebugControl.measureArrangement("bgm.battle.low", 8000)
   ));

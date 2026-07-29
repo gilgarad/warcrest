@@ -1,0 +1,551 @@
+{
+  "source": "art-source/second-cycle/day3/archer/archer-8dir-sheet-alpha.png",
+  "columns": 4,
+  "rows": 8,
+  "assets": [
+    {
+      "key": "archer-n-idle",
+      "filename": "archer-n-idle.png",
+      "column": 0,
+      "row": 0,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-n-walk-a",
+      "filename": "archer-n-walk-a.png",
+      "column": 1,
+      "row": 0,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-n-walk-b",
+      "filename": "archer-n-walk-b.png",
+      "column": 2,
+      "row": 0,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-n-attack",
+      "filename": "archer-n-attack.png",
+      "column": 3,
+      "row": 0,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-ne-idle",
+      "filename": "archer-ne-idle.png",
+      "column": 0,
+      "row": 1,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-ne-walk-a",
+      "filename": "archer-ne-walk-a.png",
+      "column": 1,
+      "row": 1,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-ne-walk-b",
+      "filename": "archer-ne-walk-b.png",
+      "column": 2,
+      "row": 1,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-ne-attack",
+      "filename": "archer-ne-attack.png",
+      "column": 3,
+      "row": 1,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-e-idle",
+      "filename": "archer-e-idle.png",
+      "column": 0,
+      "row": 2,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-e-walk-a",
+      "filename": "archer-e-walk-a.png",
+      "column": 1,
+      "row": 2,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-e-walk-b",
+      "filename": "archer-e-walk-b.png",
+      "column": 2,
+      "row": 2,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-e-attack",
+      "filename": "archer-e-attack.png",
+      "column": 3,
+      "row": 2,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-se-idle",
+      "filename": "archer-se-idle.png",
+      "column": 0,
+      "row": 3,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-se-walk-a",
+      "filename": "archer-se-walk-a.png",
+      "column": 1,
+      "row": 3,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-se-walk-b",
+      "filename": "archer-se-walk-b.png",
+      "column": 2,
+      "row": 3,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-se-attack",
+      "filename": "archer-se-attack.png",
+      "column": 3,
+      "row": 3,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-s-idle",
+      "filename": "archer-s-idle.png",
+      "column": 0,
+      "row": 4,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-s-walk-a",
+      "filename": "archer-s-walk-a.png",
+      "column": 1,
+      "row": 4,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-s-walk-b",
+      "filename": "archer-s-walk-b.png",
+      "column": 2,
+      "row": 4,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-s-attack",
+      "filename": "archer-s-attack.png",
+      "column": 3,
+      "row": 4,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-sw-idle",
+      "filename": "archer-sw-idle.png",
+      "column": 0,
+      "row": 5,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-sw-walk-a",
+      "filename": "archer-sw-walk-a.png",
+      "column": 1,
+      "row": 5,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-sw-walk-b",
+      "filename": "archer-sw-walk-b.png",
+      "column": 2,
+      "row": 5,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-sw-attack",
+      "filename": "archer-sw-attack.png",
+      "column": 3,
+      "row": 5,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-w-idle",
+      "filename": "archer-w-idle.png",
+      "column": 0,
+      "row": 6,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-w-walk-a",
+      "filename": "archer-w-walk-a.png",
+      "column": 1,
+      "row": 6,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-w-walk-b",
+      "filename": "archer-w-walk-b.png",
+      "column": 2,
+      "row": 6,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-w-attack",
+      "filename": "archer-w-attack.png",
+      "column": 3,
+      "row": 6,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-nw-idle",
+      "filename": "archer-nw-idle.png",
+      "column": 0,
+      "row": 7,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-nw-walk-a",
+      "filename": "archer-nw-walk-a.png",
+      "column": 1,
+      "row": 7,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-nw-walk-b",
+      "filename": "archer-nw-walk-b.png",
+      "column": 2,
+      "row": 7,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "archer-nw-attack",
+      "filename": "archer-nw-attack.png",
+      "column": 3,
+      "row": 7,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    }
+  ]
+}

@@ -1,0 +1,578 @@
+[
+  {
+    "key": "supply-wagon-n-idle",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-n-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      174,
+      66,
+      337,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-n-walk-a",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-n-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      171,
+      66,
+      341,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-n-walk-b",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-n-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      172,
+      66,
+      341,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-n-attack",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-n-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      126,
+      66,
+      387,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-ne-idle",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-ne-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      178,
+      66,
+      334,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-ne-walk-a",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-ne-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      179,
+      66,
+      333,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-ne-walk-b",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-ne-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      179,
+      66,
+      333,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-ne-attack",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-ne-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      150,
+      66,
+      363,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-e-idle",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-e-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      181,
+      66,
+      331,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-e-walk-a",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-e-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      176,
+      66,
+      335,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-e-walk-b",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-e-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      132,
+      66,
+      381,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-e-attack",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-e-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      155,
+      66,
+      357,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-se-idle",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-se-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      178,
+      66,
+      334,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-se-walk-a",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-se-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      166,
+      66,
+      345,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-se-walk-b",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-se-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      124,
+      66,
+      388,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-se-attack",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-se-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      153,
+      66,
+      359,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-s-idle",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-s-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      188,
+      66,
+      323,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-s-walk-a",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-s-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      182,
+      66,
+      330,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-s-walk-b",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-s-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      186,
+      66,
+      327,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-s-attack",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-s-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      160,
+      66,
+      353,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-sw-idle",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-sw-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      182,
+      66,
+      329,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-sw-walk-a",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-sw-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      182,
+      66,
+      329,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-sw-walk-b",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-sw-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      128,
+      66,
+      383,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-sw-attack",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-sw-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      157,
+      66,
+      355,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-w-idle",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-w-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      182,
+      66,
+      330,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-w-walk-a",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-w-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      172,
+      66,
+      340,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-w-walk-b",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-w-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      132,
+      66,
+      380,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-w-attack",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-w-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      156,
+      66,
+      357,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-nw-idle",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-nw-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      34,
+      66,
+      477,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-nw-walk-a",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-nw-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      12,
+      77,
+      500,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-nw-walk-b",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-nw-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      12,
+      81,
+      500,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "supply-wagon-nw-attack",
+    "output": "artifacts/day3-directional-units/supply-wagon/normalized/supply-wagon-nw-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      44,
+      66,
+      467,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  }
+]

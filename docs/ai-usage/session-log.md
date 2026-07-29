@@ -2068,3 +2068,17 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - `bgm.battle.low`는 Day 1 브리프대로 다층 편곡으로 구현했다. `WebAudioBackend`에 전용 스케줄러와 오프라인 측정기를 넣어 `percussion/bass/harmony/lowColor/lead/mix`별 RMS·peak를 기록했고, 게임 페이지에서 `preparation -> battle-low` 상태 전환 화면과 JSON 증거를 함께 남겼다.
   - 맵 쪽은 엔진을 손대지 않고 `battlefieldMaps.ts`에 `warcrest-day2-player-front-v1` 후보 스펙을 추가했다. 씬이 활성 맵 스펙의 structure socket progress를 읽도록 바꿔서 렌더링과 구조물 인터랙션 좌표가 모두 후보 맵 데이터를 따르게 만들었다. 기존 맵과 나란한 비교 캡처도 생성했다.
   - 검증은 `npm run build`, `npm test`(29 files / 117 tests), `npx playwright test tools/validation/day2-triple-checkpoint.spec.ts --workers=1`(`3 passed`)까지 완료했다.
+
+
+## 2026-07-29 (143) — Day 3 step 0: six completed eight-direction units wired safely first
+
+- **사용 도구**: Codex (GPT-5), built-in image generation follow-up assets from prior turn, local Python QA scripts, `npm run build`, `npm test`
+- **사용자 지시 요약**: Day 3가 중간에 끊긴 것으로 보이니, "이미 정규화된 6종부터 안전하게 배선 + 커밋"하고 그 다음 단계로 넘어가라고 요청했다. 또 "N/S 방향 재확인"을 빠뜨리지 말라고 했다.
+- **AI 작업/산출물**:
+  - 이미 정규화가 끝난 6종(`stone_slinger`, `stone_axeman`, `supply_wagon`, `bronze_swordsman`, `archer`, `iron_swordsman`)의 8방향 세트를 우선 안전하게 통합했다.
+  - 생성 시트가 `887x1774`처럼 4x8로 정확히 나누어떨어지지 않아 마지막 행 프레임 일부가 잘리는 문제를 확인했고, `tools/asset-qa/pad_directional_sheet.py`를 추가해 시트를 계약 규격으로 패딩한 뒤 QA를 다시 돌렸다.
+  - 세 유닛에서 각 1프레임씩만 깨져 있던 셀은 인접 방향 동일 포즈로 대체해 6종 전체 QA를 통과시켰다. 이후 `public/assets/production/units/`에 복사하고 적군 팔레트 스왑 variant를 다시 생성했다.
+  - `unitAnimationRegistry.ts`를 수정해 위 6종을 west-only 미러링에서 full 8-direction registry로 전환했고, `unitStats.ts`의 기본 텍스처 키를 west idle 기준으로 갱신했으며, 테스트도 새 방향 계약에 맞게 갱신했다.
+  - Bronze spearman의 `n`/`s` idle 프레임을 다시 직접 비교했다. `n`은 얼굴/흉부/방패 앞면이 보이는 front-biased weak 3/4, `s`는 등판/후두부/방패 뒷면이 보이는 back-biased weak 3/4로 읽혀, 완전 정면/정후면은 아니지만 승인된 약한 3/4 top-down 계약 안에서는 서로 반대 시점으로 충분히 구분된다고 판단했다.
+- **검증**: `npm run build` 통과, `npm test` 통과 (`29` files / `120` tests).
+- **비고**: 이 단계는 중간 중단 대비 안전 확보가 목적이라, 나머지 3종 유닛/음악/맵 확장은 아직 포함하지 않았다. 다음은 `iron_spearman`, `musketeer`, `knight` 3종의 정규화/QA/배선 단계다.

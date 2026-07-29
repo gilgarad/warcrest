@@ -1,0 +1,710 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "key": "supply-wagon-n-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        174,
+        66,
+        337,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-n-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        171,
+        66,
+        341,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-n-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        172,
+        66,
+        341,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-n-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        126,
+        66,
+        387,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-ne-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        178,
+        66,
+        334,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-ne-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        179,
+        66,
+        333,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-ne-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        179,
+        66,
+        333,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-ne-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        150,
+        66,
+        363,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-e-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        181,
+        66,
+        331,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-e-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        176,
+        66,
+        335,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-e-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        132,
+        66,
+        381,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-e-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        155,
+        66,
+        357,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-se-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        178,
+        66,
+        334,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-se-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        166,
+        66,
+        345,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-se-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        124,
+        66,
+        388,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-se-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        153,
+        66,
+        359,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-s-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        188,
+        66,
+        323,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-s-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        182,
+        66,
+        330,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-s-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        186,
+        66,
+        327,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-s-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        160,
+        66,
+        353,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-sw-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        182,
+        66,
+        329,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-sw-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        182,
+        66,
+        329,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-sw-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        128,
+        66,
+        383,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-sw-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        157,
+        66,
+        355,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-w-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        182,
+        66,
+        330,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-w-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        172,
+        66,
+        340,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-w-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        132,
+        66,
+        380,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-w-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        156,
+        66,
+        357,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-nw-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        34,
+        66,
+        477,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-nw-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        12,
+        77,
+        500,
+        336
+      ],
+      "opaqueHeight": 259,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-nw-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        12,
+        81,
+        500,
+        336
+      ],
+      "opaqueHeight": 255,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "supply-wagon-nw-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        44,
+        66,
+        467,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    }
+  ],
+  "failures": []
+}
