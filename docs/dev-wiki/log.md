@@ -2396,3 +2396,24 @@ Use consistent headings so entries are easy to grep.
   - `npm run build` 통과
   - `npm test` 통과 (29 files / 121 tests)
   - `npx playwright test tools/validation/day3-second-cycle-map-review.spec.ts --workers=1` 통과 (1 passed)
+
+## [2026-07-29] fix | A1/A2/A3 버그 교정: 방향 유닛 셀 오염 제거, 타워 진행도 재배치, 구조물 타깃팅 재확인
+
+- 같은 상담 세션의 연속. GitHub Issue 없음, 최소 기록 예외로 이 항목과
+  `docs/ai-usage/session-log.md`를 사용했다.
+- A1 원인 조사 결과, `candidate-center-engaged.png`의 몸통/다리 분리 증상은
+  렌더 단계가 아니라 Day 3 8방향 유닛 정규화 산출물의 **인접 셀 오염**이었다.
+  원본 8방향 시트는 정상인데 `normalize_golden_reference.py`가 균등 셀 크롭만
+  가정해 위/옆 슬롯의 파편이 섞여 들어갔다. 스크립트에 connected-component 기반
+  슬롯 배정(`assignByComponent`) 모드를 추가하고 Day 3 방향 유닛 스펙 9종에
+  적용해 프로덕션 유닛 PNG와 적군 팔레트 스왑 variant를 다시 생성했다.
+- A2는 `battlefieldMaps.ts`/`capturePointDefinitions.ts`의 구조물 진행도를
+  재배치해 `player capture 0.17 < player tower 0.37 < 0.5 < enemy tower 0.63 < enemy capture 0.83`
+  규칙으로 바로잡았다. 기존 최소 이격 0.15 규칙은 유지하면서 양쪽 타워가
+  자기 진영 절반 안에 있도록 테스트도 보강했다.
+- A3는 A2 수정 후 라이브 교전만으로는 재현 여부가 애매해, `prepareStructureAttackProbe`
+  검증 훅으로 근접 도끼병이 인접 적 타워를 실제로 `attackTargetKind: structure`로
+  잡는지 재확인했다. 구조물 타깃팅 로직 자체는 정상이며, 이상하게 보이던 현상은
+  A2의 타워 배치 오류가 핵심이었다고 판단했다.
+- 검증: `npm run build`, `npm test`, `npx playwright test tools/validation/a-bugfix-review.spec.ts --workers=1`
+  전부 통과. 산출물은 `artifacts/a-bugfix-review/`에 남겼다.

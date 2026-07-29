@@ -269,9 +269,11 @@ function createStructureSocket(
   return createStructureSocketForPath(LANE_PATH_NODES, id, kind, progress);
 }
 
-const CAPTURE_POINT_PROGRESS = [0.375, 0.767] as const;
+export const PLAYER_SIDE_PROGRESS_MAX = 0.5;
+export const ENEMY_SIDE_PROGRESS_MIN = 0.5;
+export const CAPTURE_POINT_PROGRESS = [0.17, 0.83] as const;
 export const MIN_STRUCTURE_SOCKET_PROGRESS_GAP = 0.15;
-export const DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID = [0.6, 0.2] as const;
+export const DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID = [0.37, 0.63] as const;
 
 const STRUCTURE_SOCKETS = [
   ...CAPTURE_POINT_PROGRESS.map((progress, id) => createStructureSocket(getCapturePointSocketId(id), "capture-point", progress)),

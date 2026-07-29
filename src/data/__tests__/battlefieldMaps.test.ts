@@ -1,17 +1,21 @@
 import { describe, expect, it } from "vitest";
 import {
+  CAPTURE_POINT_PROGRESS,
   CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC,
   DAY3_THREE_FRONTS_LANE_PATH_NODES,
   DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC,
   DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC,
   DAY2_PLAYER_FRONT_LANE_PATH_NODES,
   DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID,
+  ENEMY_SIDE_PROGRESS_MIN,
   getBattlefieldMapSpec,
   getCapturePointSocketId,
   getDefenseTowerSocketId,
+  getLanePositionAtProgress,
   LANE_BATTLEFIELD_MAP_SPEC,
   LANE_PATH_NODES,
   MIN_STRUCTURE_SOCKET_PROGRESS_GAP,
+  PLAYER_SIDE_PROGRESS_MAX,
 } from "../battlefieldMaps";
 
 describe("battlefield map specs", () => {
@@ -34,13 +38,13 @@ describe("battlefield map specs", () => {
   });
 
   it("separates every structure socket while keeping towers beyond linked captures", () => {
-    const pathNodeIndexes = [1, 3];
     expect(LANE_BATTLEFIELD_MAP_SPEC.structureSockets).toHaveLength(4);
     const captureSockets = LANE_BATTLEFIELD_MAP_SPEC.structureSockets.filter((socket) => socket.kind === "capture-point");
     const towerSockets = LANE_BATTLEFIELD_MAP_SPEC.structureSockets.filter((socket) => socket.kind === "defense-tower");
     captureSockets.forEach((socket, index) => {
       expect(socket.id).toBe(getCapturePointSocketId(index));
-      expect(socket.position).toEqual(LANE_PATH_NODES[pathNodeIndexes[index]].position);
+      expect(socket.progress).toBeCloseTo(CAPTURE_POINT_PROGRESS[index]);
+      expect(socket.position).toEqual(getLanePositionAtProgress(CAPTURE_POINT_PROGRESS[index]));
       expect(socket.footprint.blocksMovement).toBe(false);
       expect(socket.bypassSlots).toHaveLength(2);
     });
@@ -50,6 +54,10 @@ describe("battlefield map specs", () => {
     });
     expect(DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID[0]).toBeGreaterThan(captureSockets[0].progress);
     expect(DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID[1]).toBeLessThan(captureSockets[1].progress);
+    expect(captureSockets[0].progress).toBeLessThan(PLAYER_SIDE_PROGRESS_MAX);
+    expect(towerSockets[0].progress).toBeLessThan(PLAYER_SIDE_PROGRESS_MAX);
+    expect(captureSockets[1].progress).toBeGreaterThan(ENEMY_SIDE_PROGRESS_MIN);
+    expect(towerSockets[1].progress).toBeGreaterThan(ENEMY_SIDE_PROGRESS_MIN);
     const progresses = LANE_BATTLEFIELD_MAP_SPEC.structureSockets.map((socket) => socket.progress);
     progresses.forEach((progress, index) => {
       progresses.slice(index + 1).forEach((other) => {

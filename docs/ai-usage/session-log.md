@@ -2169,3 +2169,29 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - `npm run build` 통과
   - `npm test` 통과 (29 files / 121 tests)
   - `npx playwright test tools/validation/day3-second-cycle-map-review.spec.ts --workers=1` 통과 (1 passed)
+
+
+## 2026-07-29 (149) — A1/A2/A3 버그 교정 완료, B1 2레인 설계 체크포인트 착수 전 상태 고정
+
+- **사용자 지시 요약**:
+  - A를 먼저 끝내고 build/test 통과 후에만 B로 넘어갈 것.
+  - A1: `candidate-center-engaged.png`의 몸통/다리 분리 원인 조사 및 교정.
+  - A2: 아군/적 타워 위치 뒤바뀜 수정 + 자기 진영 절반 원칙 유지.
+  - A3: A2 뒤에도 근접 유닛이 가까운 타워를 무시하면 실제 원인을 찾아 수정.
+- **AI 작업 요약**:
+  - `stone-axeman`/`bronze-swordsman`/`iron-swordsman` 문제 프레임을 직접 열어,
+    PNG 내부에 분리 파편이 들어 있는 것을 확인했다. 원본 8방향 시트는 정상이고,
+    Day 3 정규화에서 균등 셀 크롭으로 인접 슬롯이 섞여 들어간 것이 원인이었다.
+  - `normalize_golden_reference.py`에 connected-component 기반 슬롯 배정 모드를
+    추가하고 Day 3 방향 유닛 스펙 9종에 `assignByComponent`를 넣어 전 유닛을
+    다시 정규화했다. 이후 `public/assets/production/units/`와 적군 팀컬러 variant를
+    다시 생성했다.
+  - `battlefieldMaps.ts`/`capturePointDefinitions.ts`를 수정해 구조물 진행도를
+    `0.17 / 0.37 / 0.63 / 0.83` 규칙으로 재배치하고, `battlefieldMaps.test.ts`에
+    자기 진영 절반 규칙까지 assertion을 추가했다.
+  - Playwright 검증 스펙 `tools/validation/a-bugfix-review.spec.ts`를 추가해:
+    1) A1 before/after 캡처,
+    2) 아군 타워가 아군 본진 쪽에 있는 캡처,
+    3) 구조물 공격 프로브에서 근접 도끼병이 `attackTargetKind: structure`로
+       적 타워를 실제 타깃팅하는 증거를 남겼다.
+  - 검증은 `npm run build`, `npm test`, `npx playwright test tools/validation/a-bugfix-review.spec.ts --workers=1`.

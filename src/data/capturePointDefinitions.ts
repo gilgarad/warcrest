@@ -1,3 +1,5 @@
+import { CAPTURE_POINT_PROGRESS } from "./battlefieldMaps";
+
 export type CaptureBuildingId = "supply_depot" | "mint";
 export type CapturePointType = "buildable";
 export type CapturePointAction =
@@ -23,7 +25,7 @@ export interface CapturePointActionState {
 export const CAPTURE_POINT_DEFINITIONS: readonly CapturePointDefinition[] = [
   {
     id: 0,
-    progress: 0.375,
+    progress: CAPTURE_POINT_PROGRESS[0],
     pointType: "buildable",
     allowedBuildingTypes: ["supply_depot", "mint"],
     initialBuilding: null,
@@ -32,7 +34,7 @@ export const CAPTURE_POINT_DEFINITIONS: readonly CapturePointDefinition[] = [
   },
   {
     id: 1,
-    progress: 0.767,
+    progress: CAPTURE_POINT_PROGRESS[1],
     pointType: "buildable",
     allowedBuildingTypes: ["supply_depot", "mint"],
     initialBuilding: null,

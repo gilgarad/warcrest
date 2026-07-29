@@ -1,0 +1,67 @@
+{
+  "playerTower": {
+    "id": 0,
+    "owner": "player",
+    "linkedCapturePointId": 0,
+    "progress": 0.37,
+    "built": true,
+    "hp": 130,
+    "maxHp": 130,
+    "buildRemainingSec": 0
+  },
+  "enemyTower": {
+    "id": 1,
+    "owner": "enemy",
+    "linkedCapturePointId": 1,
+    "progress": 0.63,
+    "built": true,
+    "hp": 130,
+    "maxHp": 130,
+    "buildRemainingSec": 0
+  },
+  "playerCapture": {
+    "id": 0,
+    "pointType": "buildable",
+    "allowedBuildingTypes": [
+      "supply_depot",
+      "mint"
+    ],
+    "owner": "neutral",
+    "control": 0.036,
+    "progress": 0.17,
+    "worldX": 2073.2608695652175,
+    "worldY": 2744.3478260869565,
+    "labelWorldX": 2073.2608695652175,
+    "labelWorldY": 2496.521739130435,
+    "markerTexture": "capture-marker-neutral",
+    "buildingId": null,
+    "buildingLevel": 0,
+    "availableActions": []
+  },
+  "enemyCapture": {
+    "id": 1,
+    "pointType": "buildable",
+    "allowedBuildingTypes": [
+      "supply_depot",
+      "mint"
+    ],
+    "owner": "neutral",
+    "control": -0.036,
+    "progress": 0.83,
+    "worldX": 5240.652173913044,
+    "worldY": 1109.5652173913043,
+    "labelWorldX": 5240.652173913044,
+    "labelWorldY": 861.7391304347825,
+    "markerTexture": "capture-marker-neutral",
+    "buildingId": null,
+    "buildingLevel": 0,
+    "availableActions": []
+  },
+  "towerAttackers": [
+    {
+      "id": 9,
+      "renderTexture": "stone-axeman-ne-attack",
+      "progress": 0.618
+    }
+  ]
+}

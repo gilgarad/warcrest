@@ -71,6 +71,7 @@ def build_asset_spec(unit_key: str) -> dict[str, object]:
         "source": config["source"],
         "columns": len(POSES),
         "rows": len(DIRECTIONS),
+        "assignByComponent": True,
         "assets": assets,
     }
 

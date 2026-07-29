@@ -2,6 +2,7 @@
   "source": "art-source/second-cycle/day3/stone-slinger/stone-slinger-8dir-sheet-alpha.png",
   "columns": 4,
   "rows": 8,
+  "assignByComponent": true,
   "assets": [
     {
       "key": "stone-slinger-n-idle",

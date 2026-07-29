@@ -2,6 +2,7 @@
   "source": "art-source/second-cycle/day3/musketeer/musketeer-8dir-sheet-alpha.png",
   "columns": 4,
   "rows": 8,
+  "assignByComponent": true,
   "assets": [
     {
       "key": "musketeer-n-idle",
