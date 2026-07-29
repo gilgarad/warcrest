@@ -2120,3 +2120,14 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - 새 `warcrest-day3-three-fronts-v1`는 구조적으로 완성된 전체 후보이지만, 이번 단계에서는 기본 프로덕션 맵으로 즉시 승격하지 않고 **switchable candidate**로 유지했다. 이유는 직전 기본 맵 `warcrest-full-lane-hybrid-v1`가 이미 회귀를 통과한 라이브 기준선이고, 새 맵은 사람 플레이 체감 확인 한 번을 더 거치는 편이 안전하기 때문이다.
 - **검증**: `npm run build` 통과, `npm test` 통과 (`29` files / `121` tests), `npx playwright test tools/validation/day3-map-redesign.spec.ts` 통과 (`1` test).
 - **비고**: 이로써 Day 3의 맵 설계 작업은 후보 생성까지 완료됐다. 기본 맵 교체 여부만 사용자 승인 판단이 남아 있다.
+
+## 2026-07-29 (148) — Second-cycle integration step 0: removed superseded audio validation draft
+
+- **사용 도구**: Codex (GPT-5), `rg`, git 상태 확인
+- **사용자 지시 요약**: `tools/validation/day3-audio-expansion.spec.ts`가 실제로 안 쓰이는 고아 파일이면 먼저 삭제하라고 했다.
+- **AI 작업/산출물**:
+  - 코드/문서 전체 검색으로 `day3-audio-expansion.spec.ts`의 런타임·테스트 참조 여부를 확인했다.
+  - 실제로는 커밋된 `tools/validation/day3-music-expansion.spec.ts`가 Day 3 음악 검증 스펙 역할을 대체하고 있었고, 오래된 파일명은 문서 언급 외 실사용 참조가 없었다.
+  - 이에 따라 `tools/validation/day3-audio-expansion.spec.ts`를 삭제했다.
+- **검증**: 참조 검색상 미사용 확인. 기능 동작 변경 없음.
+- **비고**: 다음 단계에서 2차 사이클 통합 검증 문서 작성과 전체 회귀를 이어간다.

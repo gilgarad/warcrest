@@ -2343,3 +2343,10 @@ Use consistent headings so entries are easy to grep.
 - Captured baseline vs candidate screenshots at player-front, center, and enemy-front under `artifacts/day3-map/`, plus `comparison.json`.
 - Decision: **do not promote the old Day 2 partial checkpoint (`warcrest-day2-player-front-v1`) or the new Day 3 full-map candidate to default production yet**. The redesign is now complete as a safe switchable candidate, but the current default map remains `warcrest-full-lane-hybrid-v1` until a human play/readability pass explicitly approves replacing the live baseline.
 - Verification: `npm run build` passed, `npm test` passed (`29` files, `121` tests), and `npx playwright test tools/validation/day3-map-redesign.spec.ts` passed (`1` test).
+
+## [2026-07-29] codex | Second-cycle integration step 0 - remove superseded audio validation draft
+
+- Confirmed that `tools/validation/day3-audio-expansion.spec.ts` was an unreferenced draft left over from the first attempt at Day 3 music validation.
+- Verified that the active, committed replacement is `tools/validation/day3-music-expansion.spec.ts`; only docs mentioned the older filename.
+- Removed the orphan file so the validation directory reflects the real second-cycle coverage.
+- No behavior or assets changed; this was repository hygiene before the integrated regression pass.
