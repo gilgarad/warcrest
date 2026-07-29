@@ -26,10 +26,16 @@ describe("unit animation registry", () => {
       expect(definition?.groundOriginY).toBe(0.875);
       expect(definition?.referenceVisibleHeightRatio).toBeCloseTo(270 / 384);
       expect(definition?.fallbackDirection).toBe("w");
-      expect(definition?.legacyHorizontalMirror).toBe(true);
       expect(definition?.directions.w?.attack.length).toBeGreaterThan(0);
-      expect(getAuthoredUnitDirections(unitId)).toEqual(["w"]);
-      expect(hasCompleteUnitDirectionalSet(unitId)).toBe(false);
+      if (unitId === "bronze_spearman") {
+        expect(definition?.legacyHorizontalMirror).toBe(false);
+        expect(getAuthoredUnitDirections(unitId)).toEqual(UNIT_FACING_DIRECTIONS);
+        expect(hasCompleteUnitDirectionalSet(unitId)).toBe(true);
+      } else {
+        expect(definition?.legacyHorizontalMirror).toBe(true);
+        expect(getAuthoredUnitDirections(unitId)).toEqual(["w"]);
+        expect(hasCompleteUnitDirectionalSet(unitId)).toBe(false);
+      }
     },
   );
 
@@ -41,9 +47,9 @@ describe("unit animation registry", () => {
   });
 
   it("registers the bronze spearman without a token fallback", () => {
-    expect(resolveUnitAnimationTexture("bronze_spearman", false, 0, 0)).toBe("bronze-spearman-idle");
-    expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === "bronze-spearman-attack")).toBe(true);
-    expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === "bronze-spearman-attack-enemy")).toBe(true);
+    expect(resolveUnitAnimationTexture("bronze_spearman", false, 0, 0)).toBe("bronze-spearman-w-idle");
+    expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === "bronze-spearman-ne-attack")).toBe(true);
+    expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === "bronze-spearman-se-attack-enemy")).toBe(true);
   });
 
   it.each([
@@ -62,7 +68,7 @@ describe("unit animation registry", () => {
   });
 
   it("records per-frame visible heights for scale normalization", () => {
-    expect(getFrameVisibleHeightRatio("bronze_spearman", "bronze-spearman-attack")).toBeCloseTo(270 / 384);
+    expect(getFrameVisibleHeightRatio("bronze_spearman", "bronze-spearman-ne-attack")).toBeCloseTo(270 / 384);
     expect(getFrameVisibleHeightRatio("stone_axeman", "stone-axeman-attack")).toBeCloseTo(270 / 384);
   });
 
@@ -86,10 +92,14 @@ describe("unit animation registry", () => {
     expect(resolveUnitFacingDirection(0, 0, "s")).toBe("s");
   });
 
-  it("keeps west art as an explicit migration fallback without faking eight authored sets", () => {
+  it("uses authored bronze-spearman directional frames instead of falling back to west art", () => {
     expect(resolveUnitAnimationTexture("bronze_spearman", false, 0, 0, "w"))
-      .toBe("bronze-spearman-idle");
+      .toBe("bronze-spearman-w-idle");
     expect(resolveUnitAnimationTexture("bronze_spearman", false, 0, 0, "n"))
-      .toBe("bronze-spearman-idle");
+      .toBe("bronze-spearman-n-idle");
+    expect(resolveUnitAnimationTexture("bronze_spearman", true, 1, 0, "se"))
+      .toBe("bronze-spearman-se-walk-a");
+    expect(resolveUnitAnimationTexture("bronze_spearman", false, 0, 0.25, "sw"))
+      .toBe("bronze-spearman-sw-attack");
   });
 });

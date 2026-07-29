@@ -8,6 +8,11 @@ import {
   GOLDEN_TERRAIN_TILE_SIZE,
 } from "../data/terrain/goldenReferenceTerrain";
 import { getMarchingPolygons } from "../systems/terrain/marchingSquares";
+import {
+  UNIT_FACING_DIRECTIONS,
+  getUnitDirectionalPoses,
+  type UnitFacingDirection,
+} from "../presentation/units/unitAnimationRegistry";
 
 const ASSET_ROOT = assetUrl("assets/golden-reference");
 const BOARD_X = 288;
@@ -23,6 +28,7 @@ const GOLDEN_ASSETS = {
 } as const;
 
 type GoldenPose = "idle" | "walk-a" | "walk-b" | "attack";
+type DirectionProbePose = GoldenPose;
 
 const GOLDEN_POSE_TEXTURES: Record<GoldenPose, string> = {
   idle: GOLDEN_ASSETS.idle,
@@ -44,6 +50,12 @@ interface GoldenReferenceDebug {
     currentTexture: string | null;
     interpolation: "none-atomic-texture-swap";
   };
+  directionProbe?: {
+    enabled: boolean;
+    currentPose: DirectionProbePose | null;
+    currentDirection: UnitFacingDirection | null;
+    currentTexture: string | null;
+  };
 }
 
 function seededNoise(x: number, y: number, salt: number): number {
@@ -59,6 +71,17 @@ export class GoldenReferenceScene extends Phaser.Scene {
   preload(): void {
     Object.values(GOLDEN_ASSETS).forEach((key) => {
       this.load.image(key, `${ASSET_ROOT}/${key}.png`);
+    });
+    const bronzeDirections = UNIT_FACING_DIRECTIONS
+      .flatMap((direction) => {
+        const poses = getUnitDirectionalPoses("bronze_spearman", direction);
+        return poses
+          ? [poses.idle, poses.walkA, poses.walkB, ...poses.attack]
+          : [];
+      })
+      .filter((key, index, all) => all.indexOf(key) === index);
+    bronzeDirections.forEach((key) => {
+      this.load.image(key, assetUrl(`assets/production/units/${key}.png`));
     });
   }
 
@@ -85,6 +108,9 @@ export class GoldenReferenceScene extends Phaser.Scene {
     (window as unknown as { __goldenReferenceDebug: GoldenReferenceDebug }).__goldenReferenceDebug = debug;
     if (new URLSearchParams(window.location.search).get("sequence") === "1") {
       this.createAnimationProbe(debug);
+    }
+    if (new URLSearchParams(window.location.search).get("directions") === "1") {
+      this.createDirectionProbe(debug);
     }
   }
 
@@ -300,5 +326,76 @@ export class GoldenReferenceScene extends Phaser.Scene {
     (window as unknown as {
       __goldenReferenceControl: { setPose: (pose: GoldenPose) => void };
     }).__goldenReferenceControl = { setPose };
+  }
+
+  private createDirectionProbe(debug: GoldenReferenceDebug): void {
+    const centerX = 1320;
+    const groundY = 728;
+    const current = {
+      pose: "idle" as DirectionProbePose,
+      direction: "w" as UnitFacingDirection,
+    };
+    this.add.rectangle(centerX, 470, 440, 560, 0x09100b, 0.94)
+      .setStrokeStyle(3, 0xd0a85b, 0.9)
+      .setDepth(2100);
+    this.add.text(centerX, 208, "8-DIRECTION PROBE", {
+      fontFamily: "Georgia, serif",
+      fontSize: "20px",
+      color: "#f0d89b",
+    }).setOrigin(0.5).setDepth(2101);
+    this.add.text(centerX, 234, "bronze spearman | N NE E SE S SW W NW", {
+      fontFamily: "monospace",
+      fontSize: "11px",
+      color: "#bac6ad",
+    }).setOrigin(0.5).setDepth(2101);
+    this.add.ellipse(centerX + 8, groundY + 8, 170, 34, 0x11100c, 0.5)
+      .setRotation(0.18)
+      .setDepth(2101);
+    const sprite = this.add.image(centerX, groundY, "bronze-spearman-w-idle")
+      .setOrigin(0.5, 336 / 384)
+      .setDisplaySize(260, 260)
+      .setDepth(2102);
+    const label = this.add.text(centerX, 790, "W · IDLE", {
+      fontFamily: "Georgia, serif",
+      fontSize: "18px",
+      color: "#f2dfad",
+      backgroundColor: "rgba(14,18,13,0.84)",
+      padding: { x: 8, y: 4 },
+    }).setOrigin(0.5).setDepth(2103);
+
+    const setState = (direction: UnitFacingDirection, pose: DirectionProbePose): void => {
+      const directional = getUnitDirectionalPoses("bronze_spearman", direction);
+      if (!directional) return;
+      current.direction = direction;
+      current.pose = pose;
+      const texture = pose === "idle"
+        ? directional.idle
+        : pose === "walk-a"
+          ? directional.walkA
+          : pose === "walk-b"
+            ? directional.walkB
+            : directional.attack[0];
+      sprite
+        .setTexture(texture)
+        .setDisplaySize(pose === "attack" ? 347 : 260, 260);
+      label.setText(`${direction.toUpperCase()} · ${pose.toUpperCase()}`);
+      debug.directionProbe = {
+        enabled: true,
+        currentPose: pose,
+        currentDirection: direction,
+        currentTexture: texture,
+      };
+    };
+
+    setState("w", "idle");
+    (window as unknown as {
+      __goldenDirectionControl: {
+        setDirection: (direction: UnitFacingDirection) => void;
+        setPose: (pose: DirectionProbePose) => void;
+      };
+    }).__goldenDirectionControl = {
+      setDirection: (direction) => setState(direction, current.pose),
+      setPose: (pose) => setState(current.direction, pose),
+    };
   }
 }

@@ -20,6 +20,14 @@ export interface AudioSignalMeasurement {
   contextState: string;
 }
 
+export interface OfflineArrangementMeasurement {
+  durationMs: number;
+  mix: Pick<AudioSignalMeasurement, "rms" | "peak">;
+  layers: Record<string, Pick<AudioSignalMeasurement, "rms" | "peak">>;
+}
+
+type BattleLowLayer = "percussion" | "bass" | "harmony" | "lowColor" | "lead";
+
 export interface AudioBackend {
   readonly nowMs: number;
   readonly contextState: string;
@@ -36,6 +44,7 @@ export interface AudioBackend {
   /** One-shot. */
   playSfxVoice(asset: SfxAssetDef, volume: number, pitchMultiplier: number, pan?: number): VoiceHandle;
   measureOutputSignal(durationMs?: number): Promise<AudioSignalMeasurement>;
+  measureOfflineArrangement?(assetId: string, durationMs?: number): Promise<OfflineArrangementMeasurement | null>;
   destroy(): void;
 }
 
@@ -125,6 +134,58 @@ export class WebAudioBackend implements AudioBackend {
       frameRms,
       waveform,
       contextState: ctx.state,
+    };
+  }
+
+  async measureOfflineArrangement(assetId: string, durationMs = 8000): Promise<OfflineArrangementMeasurement | null> {
+    if (assetId !== "bgm.battle.low") return null;
+    const measureLayer = async (
+      layer: BattleLowLayer | "mix",
+    ): Promise<Pick<AudioSignalMeasurement, "rms" | "peak">> => {
+      const context = new OfflineAudioContext(1, Math.ceil(48_000 * (durationMs / 1000)), 48_000);
+      const destination = context.createGain();
+      destination.gain.value = 1;
+      destination.connect(context.destination);
+      const sources = new Set<AudioScheduledSourceNode>();
+      const beatSec = 60 / 104;
+      const phraseSteps = 64;
+      let step = 0;
+      let nextAt = 0.05;
+      while (nextAt < durationMs / 1000) {
+        this.scheduleBattleLowStep(
+          context,
+          destination,
+          sources,
+          nextAt,
+          step,
+          layer,
+        );
+        nextAt += beatSec;
+        step = (step + 1) % phraseSteps;
+      }
+      const rendered = await context.startRendering();
+      const samples = rendered.getChannelData(0);
+      let sumSquares = 0;
+      let peak = 0;
+      for (const value of samples) {
+        sumSquares += value * value;
+        peak = Math.max(peak, Math.abs(value));
+      }
+      return {
+        rms: Math.sqrt(sumSquares / Math.max(1, samples.length)),
+        peak,
+      };
+    };
+    return {
+      durationMs,
+      mix: await measureLayer("mix"),
+      layers: {
+        percussion: await measureLayer("percussion"),
+        bass: await measureLayer("bass"),
+        harmony: await measureLayer("harmony"),
+        lowColor: await measureLayer("lowColor"),
+        lead: await measureLayer("lead"),
+      },
     };
   }
 
@@ -331,6 +392,7 @@ export class WebAudioBackend implements AudioBackend {
   }
 
   private getScoreProfile(assetId: string, root: number): {
+    assetId: string;
     root: number;
     beatSec: number;
     phraseSteps: number;
@@ -346,6 +408,7 @@ export class WebAudioBackend implements AudioBackend {
     switch (assetId) {
       case "bgm.menu":
         return {
+          assetId,
           root, beatSec: 0.62, phraseSteps: 32,
           bass: [0, 0, -2, -2, -5, -5, -7, -7, 0, 0, 3, -2, -5, -7, -2, 0],
           lead: [12, 10, 7, 5, 3, 5, 7, 10, 12, 15, 14, 10, 7, 5, 3, 2],
@@ -354,6 +417,7 @@ export class WebAudioBackend implements AudioBackend {
         };
       case "bgm.preparation":
         return {
+          assetId,
           root, beatSec: 0.46, phraseSteps: 32,
           bass: [0, 0, 3, 3, 5, 5, 7, 7, 0, 3, 5, 7, 8, 7, 5, 3],
           lead: [7, 10, 12, 10, 14, 12, 15, 14, 17, 15, 14, 12, 10, 12, 14, 15],
@@ -362,7 +426,8 @@ export class WebAudioBackend implements AudioBackend {
         };
       case "bgm.battle.low":
         return {
-          root, beatSec: 0.4, phraseSteps: 48,
+          assetId,
+          root, beatSec: 60 / 104, phraseSteps: 64,
           bass: [0, 0, -2, 0, -5, -5, -7, -5, 0, -2, -5, -7, -8, -7, -5, -2],
           lead: [12, 10, 7, 10, 12, 15, 14, 10, 12, 10, 8, 7, 5, 7, 10, 12],
           chord: [[0, 3, 7], [-2, 2, 7], [-5, -2, 3], [-7, -4, 0], [0, 3, 8], [-2, 3, 7], [-5, 0, 3], [-7, -2, 2]],
@@ -370,6 +435,7 @@ export class WebAudioBackend implements AudioBackend {
         };
       case "bgm.battle.high":
         return {
+          assetId,
           root, beatSec: 0.3, phraseSteps: 48,
           bass: [0, -2, 0, 3, -5, -2, -7, -5, 0, 3, 5, 3, -2, -5, -7, -2],
           lead: [12, 15, 14, 19, 17, 15, 22, 19, 15, 17, 19, 22, 20, 19, 17, 14],
@@ -378,6 +444,7 @@ export class WebAudioBackend implements AudioBackend {
         };
       case "bgm.victory":
         return {
+          assetId,
           root, beatSec: 0.38, phraseSteps: 16,
           bass: [0, 5, 7, 12, 5, 7, 12, 12],
           lead: [0, 4, 7, 12, 16, 19, 24, 19, 16, 19, 24, 28, 24, 19, 16, 12],
@@ -386,6 +453,7 @@ export class WebAudioBackend implements AudioBackend {
         };
       default:
         return {
+          assetId,
           root, beatSec: 0.5, phraseSteps: 16,
           bass: [7, 5, 3, 0, -2, -5, -7, -12],
           lead: [12, 10, 7, 5, 3, 0, -2, -5, -7, -5, -9, -12],
@@ -403,6 +471,10 @@ export class WebAudioBackend implements AudioBackend {
     time: number,
     step: number,
   ): void {
+    if (profile.assetId === "bgm.battle.low") {
+      this.scheduleBattleLowStep(ctx, destination, sources, time, step, "mix");
+      return;
+    }
     const ratio = (semitones: number) => 2 ** (semitones / 12);
     const orchestrationGain = profile.tension >= 0.95
       ? 2.05
@@ -504,6 +576,157 @@ export class WebAudioBackend implements AudioBackend {
 
     if (profile.pulseEvery > 0 && phraseStep % profile.pulseEvery === profile.pulseEvery - 1) {
       scheduleTone(profile.root * 2, profile.beatSec * 0.22, 0.01 * rise, "square", 0.004);
+    }
+  }
+
+  private scheduleTone(
+    ctx: BaseAudioContext,
+    destination: AudioNode,
+    sources: Set<AudioScheduledSourceNode>,
+    time: number,
+    frequency: number,
+    duration: number,
+    gainValue: number,
+    type: OscillatorType,
+    attack = 0.025,
+    endFrequency?: number,
+  ): void {
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, time);
+    if (endFrequency) {
+      oscillator.frequency.exponentialRampToValueAtTime(endFrequency, time + duration);
+    }
+    gain.gain.setValueAtTime(0.0001, time);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.001, gainValue), time + attack);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+    oscillator.connect(gain);
+    gain.connect(destination);
+    oscillator.onended = () => sources.delete(oscillator);
+    oscillator.start(time);
+    oscillator.stop(time + duration + 0.02);
+    sources.add(oscillator);
+  }
+
+  private scheduleNoise(
+    ctx: BaseAudioContext,
+    destination: AudioNode,
+    sources: Set<AudioScheduledSourceNode>,
+    time: number,
+    step: number,
+    duration: number,
+    gainValue: number,
+    cutoff: number,
+  ): void {
+    const frameCount = Math.max(1, Math.floor(ctx.sampleRate * duration));
+    const buffer = ctx.createBuffer(1, frameCount, ctx.sampleRate);
+    const samples = buffer.getChannelData(0);
+    let seed = (step + 1) * 2654435761;
+    for (let index = 0; index < samples.length; index += 1) {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      samples[index] = ((seed / 0xffffffff) * 2 - 1) * (1 - index / samples.length);
+    }
+    const source = ctx.createBufferSource();
+    const filter = ctx.createBiquadFilter();
+    const gain = ctx.createGain();
+    source.buffer = buffer;
+    filter.type = "bandpass";
+    filter.frequency.value = cutoff;
+    filter.Q.value = 0.7;
+    gain.gain.setValueAtTime(0.0001, time);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.001, gainValue), time + 0.004);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(destination);
+    source.onended = () => sources.delete(source);
+    source.start(time);
+    source.stop(time + duration + 0.01);
+    sources.add(source);
+  }
+
+  private scheduleBattleLowStep(
+    ctx: BaseAudioContext,
+    destination: AudioNode,
+    sources: Set<AudioScheduledSourceNode>,
+    time: number,
+    step: number,
+    soloLayer: BattleLowLayer | "mix",
+  ): void {
+    const beatSec = 60 / 104;
+    const ratio = (semitones: number) => 2 ** (semitones / 12);
+    const root = 146.8;
+    const phraseStep = step % 64;
+    const beatInBar = phraseStep % 4;
+    const bar = Math.floor(phraseStep / 4);
+    const phraseSection = Math.floor(bar / 4);
+    const sectionGain = [0.78, 0.92, 1.02, 1.16][phraseSection] ?? 1;
+    const bassLine = [0, 0, -2, 0, 3, 1, -4, -2, 0, 2, 5, 3, -2, 0, 1, -5];
+    const chordPlan = [
+      [0, 7, 10],
+      [-2, 5, 8],
+      [3, 7, 10],
+      [1, 5, 8],
+      [0, 7, 12],
+      [-4, 3, 8],
+      [2, 5, 10],
+      [-2, 5, 8],
+    ];
+    const leadPlan: Record<number, readonly number[]> = {
+      0: [12, 15, 14],
+      4: [10, 12, 8],
+      8: [14, 17, 15],
+      12: [12, 10, 7],
+    };
+    const allow = (layer: BattleLowLayer): boolean => soloLayer === "mix" || soloLayer === layer;
+
+    if (allow("bass")) {
+      const bassInterval = bassLine[phraseStep % bassLine.length];
+      const bassRoot = root / 4 * ratio(bassInterval);
+      this.scheduleTone(ctx, destination, sources, time, bassRoot, beatSec * 0.9, 0.088 * sectionGain, "triangle", 0.01, bassRoot * 0.72);
+      this.scheduleTone(ctx, destination, sources, time, bassRoot * 2, beatSec * 0.24, 0.032 * sectionGain, "sine", 0.004, bassRoot * 1.6);
+    }
+
+    if (allow("percussion")) {
+      const tomRoot = beatInBar === 0 || beatInBar === 2 ? 108 : 82;
+      this.scheduleTone(ctx, destination, sources, time, tomRoot, beatSec * 0.28, 0.048 * sectionGain, "sine", 0.004, tomRoot * 0.46);
+      this.scheduleNoise(ctx, destination, sources, time, step, beatSec * 0.14, 0.014 * sectionGain, beatInBar % 2 === 0 ? 420 : 1800);
+      if (beatInBar === 1 || beatInBar === 3) {
+        this.scheduleNoise(ctx, destination, sources, time + beatSec * 0.06, step + 91, beatSec * 0.16, 0.024 * sectionGain, 2400);
+      }
+      if (phraseSection >= 2 && beatInBar === 3) {
+        this.scheduleNoise(ctx, destination, sources, time + beatSec * 0.5, step + 137, beatSec * 0.08, 0.012 * sectionGain, 3000);
+      }
+    }
+
+    if (allow("harmony") && beatInBar === 0) {
+      const chord = chordPlan[bar % chordPlan.length];
+      chord.forEach((interval, index) => {
+        const frequency = root / 2 * ratio(interval);
+        this.scheduleTone(ctx, destination, sources, time, frequency, beatSec * 3.7, (0.03 - index * 0.006) * sectionGain, "triangle", 0.18);
+        this.scheduleTone(ctx, destination, sources, time, frequency * 1.004, beatSec * 3.2, (0.012 - index * 0.002) * sectionGain, "sine", 0.24);
+      });
+    }
+
+    if (allow("lowColor") && beatInBar === 0 && bar % 2 === 0) {
+      const chord = chordPlan[bar % chordPlan.length];
+      const brassRoot = root / 2 * ratio(chord[0]);
+      this.scheduleTone(ctx, destination, sources, time, brassRoot, beatSec * 7.3, 0.024 * sectionGain, "sawtooth", 0.32);
+      this.scheduleTone(ctx, destination, sources, time, brassRoot * 1.5, beatSec * 5.8, 0.011 * sectionGain, "triangle", 0.28);
+    }
+
+    if (allow("lead")) {
+      const motif = leadPlan[bar];
+      if (motif && beatInBar < motif.length) {
+        const interval = motif[beatInBar];
+        const frequency = root * ratio(interval);
+        this.scheduleTone(ctx, destination, sources, time, frequency, beatSec * 0.95, 0.032 * sectionGain, "triangle", 0.04);
+        this.scheduleTone(ctx, destination, sources, time, frequency * 0.5, beatSec * 0.78, 0.011 * sectionGain, "sine", 0.03);
+      } else if (bar % 4 === 3 && beatInBar === 2) {
+        const horn = root * ratio(17);
+        this.scheduleTone(ctx, destination, sources, time, horn, beatSec * 1.2, 0.018 * sectionGain, "triangle", 0.05);
+      }
     }
   }
 

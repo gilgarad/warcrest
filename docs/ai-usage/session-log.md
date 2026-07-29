@@ -2057,3 +2057,14 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
     렌더링 엔진은 수정하지 않았다.
   - 중간에 세션이 반복 중단됐으나 적용 상태를 재확인해 이어서 완료했다.
   - `npm run build`, `npm test`(29 files / 116 tests)가 통과했다.
+
+
+## 2026-07-29 (140) — Day 2 삼중 체크포인트 구현
+
+- **사용 도구**: Codex `image_gen.imagegen`, Playwright, Vitest, Vite build, Python asset QA scripts
+- **사용자 지시 요약**: Day 2 삼중 체크포인트만 진행. 청동창병 8방향 32프레임, `bgm.battle.low` 1개 상태의 실제 편곡, 플레이어 출발 구역~첫 통로(0.00-0.34) 맵 일부 시안만 만들고 승인 전 대량 확장 금지.
+- **AI 산출물 요약**:
+  - 청동창병 8방향 세트를 처음으로 실제 생산 자산에 연결했다. 기존 west 원화는 재사용하고, 나머지 7방향은 같은 비례/팔레트/팀컬러 규칙으로 생성 후 크로마키 제거, 정규화, QA를 거쳐 `32/32` 통과시켰다. 런타임 레지스트리도 8방향 데이터를 읽도록 확장했고 Golden Reference 방향 프로브를 추가해 실제 방향 전환을 캡처했다.
+  - `bgm.battle.low`는 Day 1 브리프대로 다층 편곡으로 구현했다. `WebAudioBackend`에 전용 스케줄러와 오프라인 측정기를 넣어 `percussion/bass/harmony/lowColor/lead/mix`별 RMS·peak를 기록했고, 게임 페이지에서 `preparation -> battle-low` 상태 전환 화면과 JSON 증거를 함께 남겼다.
+  - 맵 쪽은 엔진을 손대지 않고 `battlefieldMaps.ts`에 `warcrest-day2-player-front-v1` 후보 스펙을 추가했다. 씬이 활성 맵 스펙의 structure socket progress를 읽도록 바꿔서 렌더링과 구조물 인터랙션 좌표가 모두 후보 맵 데이터를 따르게 만들었다. 기존 맵과 나란한 비교 캡처도 생성했다.
+  - 검증은 `npm run build`, `npm test`(29 files / 117 tests), `npx playwright test tools/validation/day2-triple-checkpoint.spec.ts --workers=1`(`3 passed`)까지 완료했다.

@@ -1,0 +1,50 @@
+[
+  {
+    "enabled": true,
+    "currentPose": "idle",
+    "currentDirection": "n",
+    "currentTexture": "bronze-spearman-n-idle"
+  },
+  {
+    "enabled": true,
+    "currentPose": "idle",
+    "currentDirection": "ne",
+    "currentTexture": "bronze-spearman-ne-idle"
+  },
+  {
+    "enabled": true,
+    "currentPose": "idle",
+    "currentDirection": "e",
+    "currentTexture": "bronze-spearman-e-idle"
+  },
+  {
+    "enabled": true,
+    "currentPose": "idle",
+    "currentDirection": "se",
+    "currentTexture": "bronze-spearman-se-idle"
+  },
+  {
+    "enabled": true,
+    "currentPose": "idle",
+    "currentDirection": "s",
+    "currentTexture": "bronze-spearman-s-idle"
+  },
+  {
+    "enabled": true,
+    "currentPose": "idle",
+    "currentDirection": "sw",
+    "currentTexture": "bronze-spearman-sw-idle"
+  },
+  {
+    "enabled": true,
+    "currentPose": "idle",
+    "currentDirection": "w",
+    "currentTexture": "bronze-spearman-w-idle"
+  },
+  {
+    "enabled": true,
+    "currentPose": "idle",
+    "currentDirection": "nw",
+    "currentTexture": "bronze-spearman-nw-idle"
+  }
+]

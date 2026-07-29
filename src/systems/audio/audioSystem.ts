@@ -319,6 +319,11 @@ export class AudioSystem {
       },
       setCombatSfxMode: (mode: CombatSfxMode) => this.setCombatSfxMode(mode),
       measureOutputSignal: (durationMs = 1000) => this.backend.measureOutputSignal(durationMs),
+      measureArrangement: (assetId = "bgm.battle.low", durationMs = 8000) => (
+        this.backend.measureOfflineArrangement
+          ? this.backend.measureOfflineArrangement(assetId, durationMs)
+          : Promise.resolve(null)
+      ),
     };
   }
 }

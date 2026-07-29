@@ -74,12 +74,49 @@ function productionAnimation(
   };
 }
 
+function directionalProductionAnimation(
+  prefix: string,
+  scaleFactor: number,
+  wideAllFrames = false,
+): UnitAnimationDefinition {
+  const poseSet = (direction: UnitFacingDirection): UnitDirectionalPoseSet => ({
+    idle: `${prefix}-${direction}-idle`,
+    walkA: `${prefix}-${direction}-walk-a`,
+    walkB: `${prefix}-${direction}-walk-b`,
+    attack: [`${prefix}-${direction}-attack`],
+  });
+  const directions = Object.fromEntries(
+    UNIT_FACING_DIRECTIONS.map((direction) => [direction, poseSet(direction)]),
+  ) as Readonly<Record<UnitFacingDirection, UnitDirectionalPoseSet>>;
+  const allFrames = UNIT_FACING_DIRECTIONS.flatMap((direction) => {
+    const poses = directions[direction];
+    return [poses.idle, poses.walkA, poses.walkB, ...poses.attack];
+  });
+  const standardFrames = allFrames.filter((key) => !key.endsWith("-attack") || wideAllFrames);
+  const wideFrames = wideAllFrames
+    ? []
+    : allFrames.filter((key) => key.endsWith("-attack"));
+  return {
+    directions,
+    fallbackDirection: "w",
+    legacyHorizontalMirror: false,
+    frameCanvasAspects: wideAllFrames
+      ? frameAspects([], allFrames)
+      : frameAspects(standardFrames, wideFrames),
+    groundOriginX: PRODUCTION_GROUND_ORIGIN_X,
+    groundOriginY: PRODUCTION_GROUND_ORIGIN_Y,
+    referenceVisibleHeightRatio: PRODUCTION_VISIBLE_HEIGHT_RATIO,
+    frameVisibleHeightRatios: frameHeightRatios(allFrames),
+    scaleFactor,
+  };
+}
+
 export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDefinition>> = {
   stone_slinger: productionAnimation("stone-slinger", 0.96),
   stone_axeman: productionAnimation("stone-axeman", 1.04),
   supply_wagon: productionAnimation("supply-wagon", 1, true),
   bronze_swordsman: productionAnimation("bronze-swordsman", 1),
-  bronze_spearman: productionAnimation("bronze-spearman", 1),
+  bronze_spearman: directionalProductionAnimation("bronze-spearman", 1),
   archer: productionAnimation("archer", 0.96),
   iron_swordsman: productionAnimation("iron-swordsman", 1.04),
   iron_spearman: productionAnimation("iron-spearman", 1),

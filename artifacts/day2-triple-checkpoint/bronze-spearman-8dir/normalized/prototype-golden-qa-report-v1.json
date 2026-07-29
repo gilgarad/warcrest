@@ -1,0 +1,710 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "key": "bronze-spearman-n-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        118,
+        66,
+        265,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-ne-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        74,
+        66,
+        309,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-e-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        134,
+        66,
+        251,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-se-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        126,
+        66,
+        257,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-s-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        121,
+        66,
+        263,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-sw-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        122,
+        66,
+        261,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-w-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        119,
+        66,
+        265,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-nw-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        119,
+        66,
+        265,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-n-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        118,
+        66,
+        267,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-ne-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        107,
+        66,
+        277,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-e-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        116,
+        66,
+        269,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-se-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        113,
+        66,
+        271,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-s-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        124,
+        66,
+        260,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-sw-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        118,
+        66,
+        266,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-w-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        108,
+        66,
+        277,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-nw-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        118,
+        66,
+        267,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-n-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        128,
+        66,
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-ne-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        111,
+        66,
+        273,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-e-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        116,
+        66,
+        269,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-se-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        124,
+        66,
+        261,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-s-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        130,
+        66,
+        253,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-sw-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        127,
+        66,
+        257,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-w-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        66,
+        66,
+        317,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-nw-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        116,
+        66,
+        267,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-n-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        166,
+        66,
+        346,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-ne-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        74,
+        66,
+        437,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-e-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        71,
+        66,
+        441,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-se-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        120,
+        66,
+        391,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-s-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        134,
+        66,
+        378,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-sw-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        70,
+        66,
+        443,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-w-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        60,
+        66,
+        453,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "bronze-spearman-nw-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        140,
+        66,
+        371,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    }
+  ],
+  "failures": []
+}

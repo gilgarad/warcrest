@@ -2,19 +2,19 @@ import { describe, expect, it } from "vitest";
 import { resolveUnitFramePresentation } from "../unitPresentation";
 
 describe("unit frame presentation", () => {
-  it("keeps bronze spearman silhouette height stable across standard and wide frames", () => {
+  it("keeps bronze spearman silhouette height stable across directional frames", () => {
     const targetHeight = 96;
     const idle = resolveUnitFramePresentation(
       "bronze_spearman",
       targetHeight,
       1,
-      "bronze-spearman-idle",
+      "bronze-spearman-w-idle",
     );
     const attack = resolveUnitFramePresentation(
       "bronze_spearman",
       targetHeight,
       1,
-      "bronze-spearman-attack",
+      "bronze-spearman-ne-attack",
     );
 
     expect(idle.spriteHeight * (270 / 384)).toBeCloseTo(targetHeight);

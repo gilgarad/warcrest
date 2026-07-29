@@ -1,0 +1,578 @@
+[
+  {
+    "key": "bronze-spearman-n-idle",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-n-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      118,
+      66,
+      265,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-ne-idle",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-ne-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      74,
+      66,
+      309,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-e-idle",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-e-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      134,
+      66,
+      251,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-se-idle",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-se-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      126,
+      66,
+      257,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-s-idle",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-s-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      121,
+      66,
+      263,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-sw-idle",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-sw-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      122,
+      66,
+      261,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-w-idle",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-w-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      119,
+      66,
+      265,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-nw-idle",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-nw-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      119,
+      66,
+      265,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-n-walk-a",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-n-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      118,
+      66,
+      267,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-ne-walk-a",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-ne-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      107,
+      66,
+      277,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-e-walk-a",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-e-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      116,
+      66,
+      269,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-se-walk-a",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-se-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      113,
+      66,
+      271,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-s-walk-a",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-s-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      124,
+      66,
+      260,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-sw-walk-a",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-sw-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      118,
+      66,
+      266,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-w-walk-a",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-w-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      108,
+      66,
+      277,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-nw-walk-a",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-nw-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      118,
+      66,
+      267,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-n-walk-b",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-n-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      128,
+      66,
+      256,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-ne-walk-b",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-ne-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      111,
+      66,
+      273,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-e-walk-b",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-e-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      116,
+      66,
+      269,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-se-walk-b",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-se-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      124,
+      66,
+      261,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-s-walk-b",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-s-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      130,
+      66,
+      253,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-sw-walk-b",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-sw-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      127,
+      66,
+      257,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-w-walk-b",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-w-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      66,
+      66,
+      317,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-nw-walk-b",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-nw-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      116,
+      66,
+      267,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-n-attack",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-n-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      166,
+      66,
+      346,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-ne-attack",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-ne-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      74,
+      66,
+      437,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-e-attack",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-e-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      71,
+      66,
+      441,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-se-attack",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-se-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      120,
+      66,
+      391,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-s-attack",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-s-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      134,
+      66,
+      378,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-sw-attack",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-sw-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      70,
+      66,
+      443,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-w-attack",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-w-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      60,
+      66,
+      453,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "bronze-spearman-nw-attack",
+    "output": "artifacts/day2-triple-checkpoint/bronze-spearman-8dir/normalized/bronze-spearman-nw-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      140,
+      66,
+      371,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  }
+]

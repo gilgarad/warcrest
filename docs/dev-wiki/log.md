@@ -2256,3 +2256,18 @@ Use consistent headings so entries are easy to grep.
 - Day 2 체크포인트는 청동창병 8방향 32프레임, `bgm.battle.low` 다중
   레이어 편곡 1개, 플레이어측 0.00-0.34 구간 맵 시안 1개를 함께
   승인받는 단계로 고정했다.
+
+
+## [2026-07-29] feat | Day 2 삼중 체크포인트 구현 완료 (8방향 청동창병 / battle-low 편곡 / 플레이어 전방 맵 후보)
+
+- 브랜치: `terrain-prototype-central`
+- 관련 기록: 최소 기록 예외로 이 항목, [docs/dev-wiki/day2-triple-checkpoint-validation.md](/data/projects/game_project1/docs/dev-wiki/day2-triple-checkpoint-validation.md), `docs/ai-usage/session-log.md`에 남긴다.
+- `bronze_spearman`을 첫 8방향 실전 대상 유닛으로 확장했다. `unitAnimationRegistry.ts`에 방향별 포즈셋을 등록하고, `LaneBattleScene.ts`가 이동 벡터를 8방향으로 양자화해 방향별 텍스처를 고르게 바꿨다. Golden Reference 씬에는 `?golden=1&directions=1` 프로브를 추가해 런타임 방향 전환을 검증 가능하게 했다.
+- 청동창병 8방향 32프레임 자산을 Day 2 전용 스펙 [tools/asset-qa/day2-bronze-spearman-eight-direction-assets.json](/data/projects/game_project1/tools/asset-qa/day2-bronze-spearman-eight-direction-assets.json)으로 정규화/검증했다. 결과는 `32/32` 통과였고, 아티팩트는 [artifacts/day2-triple-checkpoint/bronze-spearman-8dir](/data/projects/game_project1/artifacts/day2-triple-checkpoint/bronze-spearman-8dir)에 남겼다.
+- 오디오 쪽은 `WebAudioBackend`에 `bgm.battle.low` 전용 다층 편곡 스케줄러와 `measureOfflineArrangement()`를 추가했다. `percussion`, `bass`, `harmony`, `lowColor`, `lead`, `mix` RMS/peak를 오프라인 렌더로 측정하고, 실제 게임 페이지에서 `preparation -> battle-low` 전환 캡처까지 남겼다. 측정 결과와 화면 증거는 [artifacts/day2-triple-checkpoint/audio](/data/projects/game_project1/artifacts/day2-triple-checkpoint/audio)에 있다.
+- 맵 후보는 엔진을 바꾸지 않고 `battlefieldMaps.ts`에 `warcrest-day2-player-front-v1` 스펙을 추가하는 방식으로 구현했다. `LaneBattleScene.ts`는 활성 맵 스펙의 구조물 소켓 progress를 읽어 capture/tower 상태를 만들도록 좁게 수정해, 렌더링뿐 아니라 인터랙션 좌표도 후보 맵과 동기화되게 했다. 비교 결과는 [artifacts/day2-triple-checkpoint/map](/data/projects/game_project1/artifacts/day2-triple-checkpoint/map)에 기록했다.
+- 검증:
+  - `npm run build` 통과
+  - `npm test` 통과 (`29 files / 117 tests`)
+  - `npx playwright test tools/validation/day2-triple-checkpoint.spec.ts --workers=1` 통과 (`3 passed`)
+- Day 2는 승인 전 확장 금지 원칙을 유지한다. 아직 다른 9개 유닛 8방향화, 나머지 BGM 상태 편곡, 전체 맵 교체는 진행하지 않았다.

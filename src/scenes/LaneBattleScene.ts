@@ -17,8 +17,10 @@ import {
 } from "../data/unitRosters";
 import {
   CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC,
+  getBattlefieldMapSpec,
+  getCapturePointSocketId,
   getDefenseTowerSocketId,
-  LANE_BATTLEFIELD_MAP_SPEC,
+  getStructureSocket,
 } from "../data/battlefieldMaps";
 import {
   getPrototypeScaleConfig,
@@ -73,8 +75,10 @@ import {
   getUnitAnimationDefinition,
   getUnitDirectionalPoses,
   resolveUnitAnimationTexture,
+  resolveUnitFacingDirection,
   resolveTeamUnitTextureKey,
   shouldFlipUnitFrame,
+  type UnitFacingDirection,
 } from "../presentation/units/unitAnimationRegistry";
 import {
   getUnitScaleFactor,
@@ -206,6 +210,7 @@ interface LaneUnit {
   currentTextureKey: string;
   presentationOverrideTexture?: string;
   facingX: -1 | 1;
+  facingDirection: UnitFacingDirection;
   lastPresentationX: number;
   lastPresentationY: number;
   motionX: number;
@@ -318,7 +323,8 @@ export class LaneBattleScene extends Phaser.Scene {
   private readonly verificationSeed = QUERY_PARAMS.get("seed") ?? DEFAULT_VERIFICATION_SEED;
   private readonly visualValidationScenario = QUERY_PARAMS.get("scenario") === "visual-validation";
   private readonly terrainDebugInputEnabled = isTerrainDebugInputEnabled(QUERY_PARAMS.get("terrainDebug"));
-  private readonly lanePath: LanePathNode[] = LANE_BATTLEFIELD_MAP_SPEC.lanePath.map((node) => ({
+  private readonly mapSpec = getBattlefieldMapSpec(QUERY_PARAMS.get("map"));
+  private readonly lanePath: LanePathNode[] = this.mapSpec.lanePath.map((node) => ({
     progress: node.progress,
     position: new Phaser.Math.Vector2(node.position.x, node.position.y),
   }));
@@ -1117,7 +1123,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.terrainPrototype.setEnabled(this.terrainMode === "prototype");
     this.terrainPrototypeV2 = new BattlefieldPrototypeRenderer(
       this,
-      LANE_BATTLEFIELD_MAP_SPEC,
+      this.mapSpec,
       (groundY, offset) => this.getGroundDepth(groundY, offset),
       "v2",
       {
@@ -1133,7 +1139,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.terrainPrototypeV2.setEnabled(this.terrainMode === "prototype-v2");
     this.terrainWorld = new BattlefieldWorldRenderer(
       this,
-      LANE_BATTLEFIELD_MAP_SPEC,
+      this.mapSpec,
       WORLD_W,
       WORLD_H,
       (groundY, offset) => this.getGroundDepth(groundY, offset),
@@ -1165,7 +1171,11 @@ export class LaneBattleScene extends Phaser.Scene {
     });
 
     this.capturePoints = CAPTURE_POINT_DEFINITIONS.map((definition) => {
-      const { id: index, progress } = definition;
+      const { id: index } = definition;
+      const progress = getStructureSocket(
+        this.mapSpec,
+        getCapturePointSocketId(index),
+      )?.progress ?? definition.progress;
       const pos = this.progressToScreen(progress, 0);
       const ring = this.add.circle(pos.x, pos.y, 34, 0xf3cc6a, 0.2)
         .setDepth(this.getGroundDepth(pos.y, -6))
@@ -1222,7 +1232,11 @@ export class LaneBattleScene extends Phaser.Scene {
     });
 
     this.defenseTowers = DEFENSE_TOWER_DEFINITIONS.map((definition) => {
-      const pos = this.progressToScreen(definition.progress, 0);
+      const progress = getStructureSocket(
+        this.mapSpec,
+        getDefenseTowerSocketId(definition.id),
+      )?.progress ?? definition.progress;
+      const pos = this.progressToScreen(progress, 0);
       const sprite = this.add.image(pos.x, pos.y, getDefenseTowerTexture("full", definition.owner))
         .setDisplaySize(TOWER_W, TOWER_H)
         .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
@@ -1252,7 +1266,7 @@ export class LaneBattleScene extends Phaser.Scene {
       return {
         id: definition.id,
         definition,
-        progress: definition.progress,
+        progress,
         owner: definition.owner,
         attackTimerSec: 0,
         buildRemainingSec: 0,
@@ -2564,7 +2578,8 @@ export class LaneBattleScene extends Phaser.Scene {
     const teamAgeId = team === "player" ? this.player.ageId : this.enemy.ageId;
     const pos = this.progressToScreen(progress, laneRow);
     const displaySize = role === "support" ? 86 : 76;
-    const initialTextureKey = resolveUnitAnimationTexture(unitId, false, 0, 0) ?? stats.textureKey;
+    const initialFacingDirection: UnitFacingDirection = team === "player" ? "ne" : "sw";
+    const initialTextureKey = resolveUnitAnimationTexture(unitId, false, 0, 0, initialFacingDirection) ?? stats.textureKey;
     const shadow = this.add.ellipse(pos.x, pos.y + 22, role === "support" ? 56 : 46, role === "support" ? 20 : 16, 0x000000, 0.2)
       .setDepth(this.getGroundDepth(pos.y, -1));
     const selectionRing = this.add.ellipse(pos.x, pos.y, 62, 24, 0x72c8ff, 0.12)
@@ -2623,6 +2638,7 @@ export class LaneBattleScene extends Phaser.Scene {
       bobPhase: Phaser.Math.FloatBetween(0, Math.PI * 2),
       currentTextureKey: initialTextureKey,
       facingX: team === "player" ? 1 : -1,
+      facingDirection: initialFacingDirection,
       lastPresentationX: pos.x,
       lastPresentationY: pos.y,
       motionX: 0,
@@ -2780,6 +2796,7 @@ export class LaneBattleScene extends Phaser.Scene {
       moving,
       Math.sin(this.elapsedSec * 9 + unit.bobPhase),
       attackProgress,
+      unit.facingDirection,
     ) ?? UNIT_STATS[unit.unitId].textureKey;
     if (desiredTexture !== unit.currentTextureKey) {
       unit.currentTextureKey = desiredTexture;
@@ -2789,8 +2806,12 @@ export class LaneBattleScene extends Phaser.Scene {
     unit.motionY = pos.y - unit.lastPresentationY;
     if (
       unit.attackFacingLockSec <= 0
-      && Math.abs(unit.motionX) > FACING_DEAD_ZONE_WORLD_PX
+      && (
+        Math.abs(unit.motionX) > FACING_DEAD_ZONE_WORLD_PX
+        || Math.abs(unit.motionY) > FACING_DEAD_ZONE_WORLD_PX
+      )
     ) {
+      unit.facingDirection = resolveUnitFacingDirection(unit.motionX, unit.motionY, unit.facingDirection);
       unit.facingX = unit.motionX >= 0 ? 1 : -1;
     }
     unit.lastPresentationX = pos.x;
@@ -3191,14 +3212,14 @@ export class LaneBattleScene extends Phaser.Scene {
           laneRowSpacing: LANE_ROW_SPACING,
         },
         terrain: {
-          mapSpecId: LANE_BATTLEFIELD_MAP_SPEC.id,
-          patchCount: LANE_BATTLEFIELD_MAP_SPEC.terrainPatches.length,
-          cellCount: LANE_BATTLEFIELD_MAP_SPEC.terrainPatches.reduce(
+          mapSpecId: this.mapSpec.id,
+          patchCount: this.mapSpec.terrainPatches.length,
+          cellCount: this.mapSpec.terrainPatches.reduce(
             (total, patch) => total + patch.cells.length,
             0,
           ),
-          structureSocketCount: LANE_BATTLEFIELD_MAP_SPEC.structureSockets.length,
-          propGrounding: LANE_BATTLEFIELD_MAP_SPEC.terrainProps.map((prop) => ({
+          structureSocketCount: this.mapSpec.structureSockets.length,
+          propGrounding: this.mapSpec.terrainProps.map((prop) => ({
             id: prop.id,
             textureKey: prop.textureKey,
             groundOriginY: prop.groundOriginY,
