@@ -2296,3 +2296,25 @@ Use consistent headings so entries are easy to grep.
   pair is opposite-facing enough for the approved contract.
 - Next: finish step 1 for the remaining three units (`iron_spearman`,
   `musketeer`, `knight`) before resuming music/map expansion.
+
+
+## [2026-07-29] codex | Day 3 step 1 - wire remaining three eight-direction unit sets
+
+- Continued immediately after `d301888` to finish the last three Day 3 units:
+  `iron_spearman`, `musketeer`, and `knight`.
+- Reused the same Day 3 directional pipeline: generated/contact-sheet raw
+  source -> chroma-key alpha extraction -> divisible-grid padding ->
+  normalization -> QA -> runtime wiring.
+- `musketeer` and `knight` passed QA on first normalization pass.
+  `iron_spearman` had one empty source cell (`nw attack`), so the missing
+  direction cell was repaired by substituting the west attack frame and the
+  full set then passed QA.
+- Copied the three 8-direction sets into `public/assets/production/units/`,
+  regenerated enemy palette variants, converted the remaining west-only units
+  in `unitAnimationRegistry.ts` to full directional production animation, and
+  updated `unitStats.ts` fallbacks plus registry tests.
+- Verification: `npm run build` passed, `npm test` passed (`29` files,
+  `120` tests).
+- Result: all ten production lane units now use the eight-direction animation
+  schema at runtime. Next Day 3 tasks are music expansion and full-map
+  candidate completion.

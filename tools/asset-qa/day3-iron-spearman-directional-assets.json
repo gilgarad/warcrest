@@ -1,0 +1,551 @@
+{
+  "source": "art-source/second-cycle/day3/iron-spearman/iron-spearman-8dir-sheet-alpha.png",
+  "columns": 4,
+  "rows": 8,
+  "assets": [
+    {
+      "key": "iron-spearman-n-idle",
+      "filename": "iron-spearman-n-idle.png",
+      "column": 0,
+      "row": 0,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-n-walk-a",
+      "filename": "iron-spearman-n-walk-a.png",
+      "column": 1,
+      "row": 0,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-n-walk-b",
+      "filename": "iron-spearman-n-walk-b.png",
+      "column": 2,
+      "row": 0,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-n-attack",
+      "filename": "iron-spearman-n-attack.png",
+      "column": 3,
+      "row": 0,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-ne-idle",
+      "filename": "iron-spearman-ne-idle.png",
+      "column": 0,
+      "row": 1,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-ne-walk-a",
+      "filename": "iron-spearman-ne-walk-a.png",
+      "column": 1,
+      "row": 1,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-ne-walk-b",
+      "filename": "iron-spearman-ne-walk-b.png",
+      "column": 2,
+      "row": 1,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-ne-attack",
+      "filename": "iron-spearman-ne-attack.png",
+      "column": 3,
+      "row": 1,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-e-idle",
+      "filename": "iron-spearman-e-idle.png",
+      "column": 0,
+      "row": 2,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-e-walk-a",
+      "filename": "iron-spearman-e-walk-a.png",
+      "column": 1,
+      "row": 2,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-e-walk-b",
+      "filename": "iron-spearman-e-walk-b.png",
+      "column": 2,
+      "row": 2,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-e-attack",
+      "filename": "iron-spearman-e-attack.png",
+      "column": 3,
+      "row": 2,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-se-idle",
+      "filename": "iron-spearman-se-idle.png",
+      "column": 0,
+      "row": 3,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-se-walk-a",
+      "filename": "iron-spearman-se-walk-a.png",
+      "column": 1,
+      "row": 3,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-se-walk-b",
+      "filename": "iron-spearman-se-walk-b.png",
+      "column": 2,
+      "row": 3,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-se-attack",
+      "filename": "iron-spearman-se-attack.png",
+      "column": 3,
+      "row": 3,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-s-idle",
+      "filename": "iron-spearman-s-idle.png",
+      "column": 0,
+      "row": 4,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-s-walk-a",
+      "filename": "iron-spearman-s-walk-a.png",
+      "column": 1,
+      "row": 4,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-s-walk-b",
+      "filename": "iron-spearman-s-walk-b.png",
+      "column": 2,
+      "row": 4,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-s-attack",
+      "filename": "iron-spearman-s-attack.png",
+      "column": 3,
+      "row": 4,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-sw-idle",
+      "filename": "iron-spearman-sw-idle.png",
+      "column": 0,
+      "row": 5,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-sw-walk-a",
+      "filename": "iron-spearman-sw-walk-a.png",
+      "column": 1,
+      "row": 5,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-sw-walk-b",
+      "filename": "iron-spearman-sw-walk-b.png",
+      "column": 2,
+      "row": 5,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-sw-attack",
+      "filename": "iron-spearman-sw-attack.png",
+      "column": 3,
+      "row": 5,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-w-idle",
+      "filename": "iron-spearman-w-idle.png",
+      "column": 0,
+      "row": 6,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-w-walk-a",
+      "filename": "iron-spearman-w-walk-a.png",
+      "column": 1,
+      "row": 6,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-w-walk-b",
+      "filename": "iron-spearman-w-walk-b.png",
+      "column": 2,
+      "row": 6,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-w-attack",
+      "filename": "iron-spearman-w-attack.png",
+      "column": 3,
+      "row": 6,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-nw-idle",
+      "filename": "iron-spearman-nw-idle.png",
+      "column": 0,
+      "row": 7,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-nw-walk-a",
+      "filename": "iron-spearman-nw-walk-a.png",
+      "column": 1,
+      "row": 7,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-nw-walk-b",
+      "filename": "iron-spearman-nw-walk-b.png",
+      "column": 2,
+      "row": 7,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "iron-spearman-nw-attack",
+      "filename": "iron-spearman-nw-attack.png",
+      "column": 3,
+      "row": 7,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    }
+  ]
+}

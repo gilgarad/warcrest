@@ -1,0 +1,710 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "key": "knight-n-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        180,
+        66,
+        332,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-n-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        171,
+        66,
+        341,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-n-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        157,
+        66,
+        355,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-n-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        122,
+        66,
+        390,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-ne-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        168,
+        66,
+        344,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-ne-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        124,
+        66,
+        387,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-ne-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        132,
+        66,
+        379,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-ne-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        93,
+        66,
+        419,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-e-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        150,
+        66,
+        363,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-e-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        148,
+        66,
+        364,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-e-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        123,
+        66,
+        389,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-e-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        143,
+        66,
+        369,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-se-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        180,
+        66,
+        332,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-se-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        175,
+        66,
+        337,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-se-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        137,
+        66,
+        375,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-se-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        154,
+        66,
+        358,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-s-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        174,
+        66,
+        339,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-s-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        162,
+        66,
+        349,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-s-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        132,
+        66,
+        379,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-s-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        156,
+        66,
+        357,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-sw-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        168,
+        66,
+        343,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-sw-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        154,
+        66,
+        358,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-sw-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        134,
+        66,
+        378,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-sw-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        146,
+        66,
+        365,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-w-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        188,
+        66,
+        324,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-w-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        178,
+        66,
+        335,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-w-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        144,
+        66,
+        368,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-w-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        151,
+        66,
+        361,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-nw-idle",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        134,
+        66,
+        379,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-nw-walk-a",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        132,
+        66,
+        381,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-nw-walk-b",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        112,
+        66,
+        401,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "knight-nw-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        85,
+        66,
+        427,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    }
+  ],
+  "failures": []
+}

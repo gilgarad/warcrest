@@ -22,9 +22,9 @@ export const UNIT_STATS: Record<LaneUnitId, UnitStatDef> = {
   bronze_spearman: { hp: 38, attack: 11, defense: 5, range: 2.2, speed: 1.0, attackCooldownSec: 1.05, label: "청동창", textureKey: "bronze-spearman-w-idle", tint: 0xd1c28f },
   archer: { hp: 30, attack: 13, defense: 3, range: 5.2, speed: 1.15, attackCooldownSec: 2.0, label: "활", textureKey: "archer-w-idle", tint: 0x90c6ff },
   iron_swordsman: { hp: 54, attack: 16, defense: 8, range: 1.6, speed: 1.12, attackCooldownSec: 0.9, label: "철검", textureKey: "iron-swordsman-w-idle", tint: 0xdfe7f4 },
-  iron_spearman: { hp: 50, attack: 15, defense: 7, range: 2.4, speed: 1.06, attackCooldownSec: 1.0, label: "철창", textureKey: "iron-spearman-idle", tint: 0xa7c8dd },
-  musketeer: { hp: 36, attack: 21, defense: 4, range: 6.4, speed: 1.0, attackCooldownSec: 2.1, label: "머스킷", textureKey: "musketeer-idle", tint: 0xc09aff },
-  knight: { hp: 72, attack: 22, defense: 10, range: 1.8, speed: 1.35, attackCooldownSec: 1.45, label: "기사", textureKey: "knight-idle", tint: 0xffe1a1 },
+  iron_spearman: { hp: 50, attack: 15, defense: 7, range: 2.4, speed: 1.06, attackCooldownSec: 1.0, label: "철창", textureKey: "iron-spearman-w-idle", tint: 0xa7c8dd },
+  musketeer: { hp: 36, attack: 21, defense: 4, range: 6.4, speed: 1.0, attackCooldownSec: 2.1, label: "머스킷", textureKey: "musketeer-w-idle", tint: 0xc09aff },
+  knight: { hp: 72, attack: 22, defense: 10, range: 1.8, speed: 1.35, attackCooldownSec: 1.45, label: "기사", textureKey: "knight-w-idle", tint: 0xffe1a1 },
   supply_wagon: { hp: 54, attack: 0, defense: 3, range: 4.4, speed: 0.98, attackCooldownSec: 1.2, healPower: getSupportHealPower("stone"), label: "보급", textureKey: "supply-wagon-w-idle", tint: 0x89da93 },
 };
 

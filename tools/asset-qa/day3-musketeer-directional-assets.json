@@ -1,0 +1,551 @@
+{
+  "source": "art-source/second-cycle/day3/musketeer/musketeer-8dir-sheet-alpha.png",
+  "columns": 4,
+  "rows": 8,
+  "assets": [
+    {
+      "key": "musketeer-n-idle",
+      "filename": "musketeer-n-idle.png",
+      "column": 0,
+      "row": 0,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-n-walk-a",
+      "filename": "musketeer-n-walk-a.png",
+      "column": 1,
+      "row": 0,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-n-walk-b",
+      "filename": "musketeer-n-walk-b.png",
+      "column": 2,
+      "row": 0,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-n-attack",
+      "filename": "musketeer-n-attack.png",
+      "column": 3,
+      "row": 0,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-ne-idle",
+      "filename": "musketeer-ne-idle.png",
+      "column": 0,
+      "row": 1,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-ne-walk-a",
+      "filename": "musketeer-ne-walk-a.png",
+      "column": 1,
+      "row": 1,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-ne-walk-b",
+      "filename": "musketeer-ne-walk-b.png",
+      "column": 2,
+      "row": 1,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-ne-attack",
+      "filename": "musketeer-ne-attack.png",
+      "column": 3,
+      "row": 1,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-e-idle",
+      "filename": "musketeer-e-idle.png",
+      "column": 0,
+      "row": 2,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-e-walk-a",
+      "filename": "musketeer-e-walk-a.png",
+      "column": 1,
+      "row": 2,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-e-walk-b",
+      "filename": "musketeer-e-walk-b.png",
+      "column": 2,
+      "row": 2,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-e-attack",
+      "filename": "musketeer-e-attack.png",
+      "column": 3,
+      "row": 2,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-se-idle",
+      "filename": "musketeer-se-idle.png",
+      "column": 0,
+      "row": 3,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-se-walk-a",
+      "filename": "musketeer-se-walk-a.png",
+      "column": 1,
+      "row": 3,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-se-walk-b",
+      "filename": "musketeer-se-walk-b.png",
+      "column": 2,
+      "row": 3,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-se-attack",
+      "filename": "musketeer-se-attack.png",
+      "column": 3,
+      "row": 3,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-s-idle",
+      "filename": "musketeer-s-idle.png",
+      "column": 0,
+      "row": 4,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-s-walk-a",
+      "filename": "musketeer-s-walk-a.png",
+      "column": 1,
+      "row": 4,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-s-walk-b",
+      "filename": "musketeer-s-walk-b.png",
+      "column": 2,
+      "row": 4,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-s-attack",
+      "filename": "musketeer-s-attack.png",
+      "column": 3,
+      "row": 4,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-sw-idle",
+      "filename": "musketeer-sw-idle.png",
+      "column": 0,
+      "row": 5,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-sw-walk-a",
+      "filename": "musketeer-sw-walk-a.png",
+      "column": 1,
+      "row": 5,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-sw-walk-b",
+      "filename": "musketeer-sw-walk-b.png",
+      "column": 2,
+      "row": 5,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-sw-attack",
+      "filename": "musketeer-sw-attack.png",
+      "column": 3,
+      "row": 5,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-w-idle",
+      "filename": "musketeer-w-idle.png",
+      "column": 0,
+      "row": 6,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-w-walk-a",
+      "filename": "musketeer-w-walk-a.png",
+      "column": 1,
+      "row": 6,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-w-walk-b",
+      "filename": "musketeer-w-walk-b.png",
+      "column": 2,
+      "row": 6,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-w-attack",
+      "filename": "musketeer-w-attack.png",
+      "column": 3,
+      "row": 6,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-nw-idle",
+      "filename": "musketeer-nw-idle.png",
+      "column": 0,
+      "row": 7,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-nw-walk-a",
+      "filename": "musketeer-nw-walk-a.png",
+      "column": 1,
+      "row": 7,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-nw-walk-b",
+      "filename": "musketeer-nw-walk-b.png",
+      "column": 2,
+      "row": 7,
+      "canvas": [
+        384,
+        384
+      ],
+      "anchor": [
+        192,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "musketeer-nw-attack",
+      "filename": "musketeer-nw-attack.png",
+      "column": 3,
+      "row": 7,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    }
+  ]
+}

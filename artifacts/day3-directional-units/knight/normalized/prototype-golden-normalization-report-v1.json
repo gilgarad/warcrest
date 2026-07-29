@@ -1,0 +1,578 @@
+[
+  {
+    "key": "knight-n-idle",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-n-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      180,
+      66,
+      332,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-n-walk-a",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-n-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      171,
+      66,
+      341,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-n-walk-b",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-n-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      157,
+      66,
+      355,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-n-attack",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-n-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      122,
+      66,
+      390,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-ne-idle",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-ne-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      168,
+      66,
+      344,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-ne-walk-a",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-ne-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      124,
+      66,
+      387,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-ne-walk-b",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-ne-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      132,
+      66,
+      379,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-ne-attack",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-ne-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      93,
+      66,
+      419,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-e-idle",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-e-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      150,
+      66,
+      363,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-e-walk-a",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-e-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      148,
+      66,
+      364,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-e-walk-b",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-e-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      123,
+      66,
+      389,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-e-attack",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-e-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      143,
+      66,
+      369,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-se-idle",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-se-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      180,
+      66,
+      332,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-se-walk-a",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-se-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      175,
+      66,
+      337,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-se-walk-b",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-se-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      137,
+      66,
+      375,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-se-attack",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-se-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      154,
+      66,
+      358,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-s-idle",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-s-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      174,
+      66,
+      339,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-s-walk-a",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-s-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      162,
+      66,
+      349,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-s-walk-b",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-s-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      132,
+      66,
+      379,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-s-attack",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-s-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      156,
+      66,
+      357,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-sw-idle",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-sw-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      168,
+      66,
+      343,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-sw-walk-a",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-sw-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      154,
+      66,
+      358,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-sw-walk-b",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-sw-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      134,
+      66,
+      378,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-sw-attack",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-sw-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      146,
+      66,
+      365,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-w-idle",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-w-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      188,
+      66,
+      324,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-w-walk-a",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-w-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      178,
+      66,
+      335,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-w-walk-b",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-w-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      144,
+      66,
+      368,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-w-attack",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-w-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      151,
+      66,
+      361,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-nw-idle",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-nw-idle.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      134,
+      66,
+      379,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-nw-walk-a",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-nw-walk-a.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      132,
+      66,
+      381,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-nw-walk-b",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-nw-walk-b.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      112,
+      66,
+      401,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "knight-nw-attack",
+    "output": "artifacts/day3-directional-units/knight/normalized/knight-nw-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      85,
+      66,
+      427,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  }
+]

@@ -1,0 +1,551 @@
+{
+  "source": "art-source/second-cycle/day3/knight/knight-8dir-sheet-alpha.png",
+  "columns": 4,
+  "rows": 8,
+  "assets": [
+    {
+      "key": "knight-n-idle",
+      "filename": "knight-n-idle.png",
+      "column": 0,
+      "row": 0,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-n-walk-a",
+      "filename": "knight-n-walk-a.png",
+      "column": 1,
+      "row": 0,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-n-walk-b",
+      "filename": "knight-n-walk-b.png",
+      "column": 2,
+      "row": 0,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-n-attack",
+      "filename": "knight-n-attack.png",
+      "column": 3,
+      "row": 0,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-ne-idle",
+      "filename": "knight-ne-idle.png",
+      "column": 0,
+      "row": 1,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-ne-walk-a",
+      "filename": "knight-ne-walk-a.png",
+      "column": 1,
+      "row": 1,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-ne-walk-b",
+      "filename": "knight-ne-walk-b.png",
+      "column": 2,
+      "row": 1,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-ne-attack",
+      "filename": "knight-ne-attack.png",
+      "column": 3,
+      "row": 1,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-e-idle",
+      "filename": "knight-e-idle.png",
+      "column": 0,
+      "row": 2,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-e-walk-a",
+      "filename": "knight-e-walk-a.png",
+      "column": 1,
+      "row": 2,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-e-walk-b",
+      "filename": "knight-e-walk-b.png",
+      "column": 2,
+      "row": 2,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-e-attack",
+      "filename": "knight-e-attack.png",
+      "column": 3,
+      "row": 2,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-se-idle",
+      "filename": "knight-se-idle.png",
+      "column": 0,
+      "row": 3,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-se-walk-a",
+      "filename": "knight-se-walk-a.png",
+      "column": 1,
+      "row": 3,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-se-walk-b",
+      "filename": "knight-se-walk-b.png",
+      "column": 2,
+      "row": 3,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-se-attack",
+      "filename": "knight-se-attack.png",
+      "column": 3,
+      "row": 3,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-s-idle",
+      "filename": "knight-s-idle.png",
+      "column": 0,
+      "row": 4,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-s-walk-a",
+      "filename": "knight-s-walk-a.png",
+      "column": 1,
+      "row": 4,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-s-walk-b",
+      "filename": "knight-s-walk-b.png",
+      "column": 2,
+      "row": 4,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-s-attack",
+      "filename": "knight-s-attack.png",
+      "column": 3,
+      "row": 4,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-sw-idle",
+      "filename": "knight-sw-idle.png",
+      "column": 0,
+      "row": 5,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-sw-walk-a",
+      "filename": "knight-sw-walk-a.png",
+      "column": 1,
+      "row": 5,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-sw-walk-b",
+      "filename": "knight-sw-walk-b.png",
+      "column": 2,
+      "row": 5,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-sw-attack",
+      "filename": "knight-sw-attack.png",
+      "column": 3,
+      "row": 5,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-w-idle",
+      "filename": "knight-w-idle.png",
+      "column": 0,
+      "row": 6,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-w-walk-a",
+      "filename": "knight-w-walk-a.png",
+      "column": 1,
+      "row": 6,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-w-walk-b",
+      "filename": "knight-w-walk-b.png",
+      "column": 2,
+      "row": 6,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-w-attack",
+      "filename": "knight-w-attack.png",
+      "column": 3,
+      "row": 6,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-nw-idle",
+      "filename": "knight-nw-idle.png",
+      "column": 0,
+      "row": 7,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-nw-walk-a",
+      "filename": "knight-nw-walk-a.png",
+      "column": 1,
+      "row": 7,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-nw-walk-b",
+      "filename": "knight-nw-walk-b.png",
+      "column": 2,
+      "row": 7,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    },
+    {
+      "key": "knight-nw-attack",
+      "filename": "knight-nw-attack.png",
+      "column": 3,
+      "row": 7,
+      "canvas": [
+        512,
+        384
+      ],
+      "anchor": [
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "minOpaqueHeight": 230,
+      "maxOpaqueHeight": 288
+    }
+  ]
+}

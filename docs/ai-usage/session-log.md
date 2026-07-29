@@ -2082,3 +2082,16 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - Bronze spearman의 `n`/`s` idle 프레임을 다시 직접 비교했다. `n`은 얼굴/흉부/방패 앞면이 보이는 front-biased weak 3/4, `s`는 등판/후두부/방패 뒷면이 보이는 back-biased weak 3/4로 읽혀, 완전 정면/정후면은 아니지만 승인된 약한 3/4 top-down 계약 안에서는 서로 반대 시점으로 충분히 구분된다고 판단했다.
 - **검증**: `npm run build` 통과, `npm test` 통과 (`29` files / `120` tests).
 - **비고**: 이 단계는 중간 중단 대비 안전 확보가 목적이라, 나머지 3종 유닛/음악/맵 확장은 아직 포함하지 않았다. 다음은 `iron_spearman`, `musketeer`, `knight` 3종의 정규화/QA/배선 단계다.
+
+
+## 2026-07-29 (144) — Day 3 step 1: remaining three eight-direction units completed and wired
+
+- **사용 도구**: Codex (GPT-5), built-in image generation, local Python QA scripts, `npm run build`, `npm test`
+- **사용자 지시 요약**: step 0 커밋 이후 이어서 남은 3종(`iron-spearman`, `musketeer`, `knight`)도 8방향 제작/정규화/배선까지 닫으라고 했다.
+- **AI 작업/산출물**:
+  - `iron-spearman`, `musketeer`, `knight`의 8방향 4포즈 시트를 `art-source/second-cycle/day3/`에 고정하고, 알파 추출/패딩/정규화/QA까지 진행했다.
+  - `musketeer`와 `knight`는 바로 통과했다. `iron-spearman`은 `nw attack` 셀 하나가 비어 있었고, 해당 칸만 서쪽 공격 셀로 대체해 전체 세트를 통과시켰다.
+  - 세 유닛의 normalized 프레임을 `public/assets/production/units/`에 반영하고 적군 팔레트 스왑 variant를 다시 생성했다.
+  - `unitAnimationRegistry.ts`의 남은 3종도 전부 full 8-direction registry로 전환했고, `unitStats.ts` 기본 텍스처 키와 테스트를 갱신했다. 이 단계가 끝나면서 lane roster 10종 전체가 런타임에서 8방향 스키마를 사용하게 되었다.
+- **검증**: `npm run build` 통과, `npm test` 통과 (`29` files / `120` tests).
+- **비고**: Day 3의 유닛 스트림은 완료. 다음 순서는 음악 3개 상태(`bgm.menu`, `bgm.preparation`, `bgm.battle.high`) 편곡과 맵 나머지 구간 확장이다.

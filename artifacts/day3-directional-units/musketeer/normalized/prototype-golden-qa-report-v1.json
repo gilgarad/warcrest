@@ -1,0 +1,710 @@
+{
+  "passed": true,
+  "results": [
+    {
+      "key": "musketeer-n-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        103,
+        66,
+        281,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-n-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        105,
+        66,
+        279,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-n-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        106,
+        66,
+        277,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-n-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        113,
+        66,
+        399,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-ne-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        124,
+        66,
+        259,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-ne-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        117,
+        66,
+        267,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-ne-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        118,
+        66,
+        265,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-ne-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        157,
+        66,
+        355,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-e-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        138,
+        66,
+        245,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-e-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        119,
+        66,
+        265,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-e-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        122,
+        66,
+        262,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-e-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        150,
+        66,
+        362,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-se-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        144,
+        66,
+        240,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-se-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        135,
+        66,
+        249,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-se-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        131,
+        66,
+        253,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-se-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        150,
+        66,
+        363,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-s-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        128,
+        66,
+        256,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-s-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        130,
+        66,
+        254,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-s-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        124,
+        66,
+        260,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-s-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        148,
+        66,
+        364,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-sw-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        144,
+        66,
+        239,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-sw-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        130,
+        66,
+        254,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-sw-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        136,
+        66,
+        249,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-sw-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        146,
+        66,
+        366,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-w-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        138,
+        66,
+        245,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-w-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        134,
+        66,
+        251,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-w-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        129,
+        66,
+        255,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-w-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        149,
+        66,
+        363,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-nw-idle",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        80,
+        66,
+        304,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-nw-walk-a",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        12,
+        82,
+        372,
+        336
+      ],
+      "opaqueHeight": 254,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-nw-walk-b",
+      "canvas": [
+        384,
+        384
+      ],
+      "alphaBbox": [
+        12,
+        105,
+        372,
+        336
+      ],
+      "opaqueHeight": 231,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    },
+    {
+      "key": "musketeer-nw-attack",
+      "canvas": [
+        512,
+        384
+      ],
+      "alphaBbox": [
+        45,
+        66,
+        467,
+        336
+      ],
+      "opaqueHeight": 270,
+      "anchorDelta": 0,
+      "checks": {
+        "canvas": true,
+        "opaqueHeight": true,
+        "groundAnchor": true,
+        "edgeMargin": true,
+        "transparentCorners": true
+      }
+    }
+  ],
+  "failures": []
+}

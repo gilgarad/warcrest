@@ -43,37 +43,6 @@ const frameAspects = (
 const frameHeightRatios = (keys: readonly string[]): Readonly<Record<string, number>> =>
   Object.fromEntries(keys.map((key) => [key, PRODUCTION_VISIBLE_HEIGHT_RATIO]));
 
-function productionAnimation(
-  prefix: string,
-  scaleFactor: number,
-  wideAllFrames = false,
-): UnitAnimationDefinition {
-  const idle = `${prefix}-idle`;
-  const walkA = `${prefix}-walk-a`;
-  const walkB = `${prefix}-walk-b`;
-  const attack = `${prefix}-attack`;
-  const allFrames = [idle, walkA, walkB, attack];
-  const westPoses: UnitDirectionalPoseSet = {
-    idle,
-    walkA,
-    walkB,
-    attack: [attack],
-  };
-  return {
-    directions: { w: westPoses },
-    fallbackDirection: "w",
-    legacyHorizontalMirror: true,
-    frameCanvasAspects: wideAllFrames
-      ? frameAspects([], allFrames)
-      : frameAspects([idle, walkA, walkB], [attack]),
-    groundOriginX: PRODUCTION_GROUND_ORIGIN_X,
-    groundOriginY: PRODUCTION_GROUND_ORIGIN_Y,
-    referenceVisibleHeightRatio: PRODUCTION_VISIBLE_HEIGHT_RATIO,
-    frameVisibleHeightRatios: frameHeightRatios(allFrames),
-    scaleFactor,
-  };
-}
-
 function directionalProductionAnimation(
   prefix: string,
   scaleFactor: number,
@@ -119,9 +88,9 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
   bronze_spearman: directionalProductionAnimation("bronze-spearman", 1),
   archer: directionalProductionAnimation("archer", 0.96),
   iron_swordsman: directionalProductionAnimation("iron-swordsman", 1.04),
-  iron_spearman: productionAnimation("iron-spearman", 1),
-  musketeer: productionAnimation("musketeer", 0.98),
-  knight: productionAnimation("knight", 1.16, true),
+  iron_spearman: directionalProductionAnimation("iron-spearman", 1),
+  musketeer: directionalProductionAnimation("musketeer", 0.98),
+  knight: directionalProductionAnimation("knight", 1.16, true),
 };
 
 export const UNIT_ANIMATION_ASSETS = Object.values(UNIT_ANIMATION_REGISTRY)

@@ -35,14 +35,13 @@ describe("unit animation registry", () => {
         "bronze_spearman",
         "archer",
         "iron_swordsman",
+        "iron_spearman",
+        "musketeer",
+        "knight",
       ].includes(unitId)) {
         expect(definition?.legacyHorizontalMirror).toBe(false);
         expect(getAuthoredUnitDirections(unitId)).toEqual(UNIT_FACING_DIRECTIONS);
         expect(hasCompleteUnitDirectionalSet(unitId)).toBe(true);
-      } else {
-        expect(definition?.legacyHorizontalMirror).toBe(true);
-        expect(getAuthoredUnitDirections(unitId)).toEqual(["w"]);
-        expect(hasCompleteUnitDirectionalSet(unitId)).toBe(false);
       }
     },
   );
@@ -60,18 +59,6 @@ describe("unit animation registry", () => {
     expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === "bronze-spearman-se-attack-enemy")).toBe(true);
   });
 
-  it.each([
-    ["iron_spearman", "iron-spearman"],
-    ["musketeer", "musketeer"],
-    ["knight", "knight"],
-  ] as const)("registers production poses for %s", (unitId, prefix) => {
-    expect(resolveUnitAnimationTexture(unitId, false, 0, 0)).toBe(`${prefix}-idle`);
-    expect(resolveUnitAnimationTexture(unitId, true, 1, 0)).toBe(`${prefix}-walk-a`);
-    expect(resolveUnitAnimationTexture(unitId, true, -1, 0)).toBe(`${prefix}-walk-b`);
-    expect(resolveUnitAnimationTexture(unitId, false, 0, 0.5)).toBe(`${prefix}-attack`);
-    expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === `${prefix}-attack-enemy`)).toBe(true);
-  });
-
   it("records per-frame visible heights for scale normalization", () => {
     expect(getFrameVisibleHeightRatio("bronze_spearman", "bronze-spearman-ne-attack")).toBeCloseTo(270 / 384);
     expect(getFrameVisibleHeightRatio("stone_axeman", "stone-axeman-attack")).toBeCloseTo(270 / 384);
@@ -84,6 +71,9 @@ describe("unit animation registry", () => {
     ["bronze_swordsman", "bronze-swordsman"],
     ["archer", "archer"],
     ["iron_swordsman", "iron-swordsman"],
+    ["iron_spearman", "iron-spearman"],
+    ["musketeer", "musketeer"],
+    ["knight", "knight"],
   ] as const)("registers full eight-direction production frames for %s", (unitId, prefix) => {
     expect(resolveUnitAnimationTexture(unitId, false, 0, 0, "w")).toBe(`${prefix}-w-idle`);
     expect(resolveUnitAnimationTexture(unitId, false, 0, 0, "n")).toBe(`${prefix}-n-idle`);

@@ -1,0 +1,578 @@
+[
+  {
+    "key": "iron-spearman-n-idle",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-n-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      126,
+      66,
+      259,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-n-walk-a",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-n-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      125,
+      66,
+      259,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-n-walk-b",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-n-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      62,
+      67,
+      321,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-n-attack",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-n-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      110,
+      66,
+      403,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-ne-idle",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-ne-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      134,
+      66,
+      249,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-ne-walk-a",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-ne-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      132,
+      66,
+      253,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-ne-walk-b",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-ne-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      64,
+      66,
+      321,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-ne-attack",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-ne-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      102,
+      66,
+      409,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-e-idle",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-e-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      132,
+      66,
+      252,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-e-walk-a",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-e-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      126,
+      66,
+      258,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-e-walk-b",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-e-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      72,
+      66,
+      312,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-e-attack",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-e-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      118,
+      66,
+      395,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-se-idle",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-se-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      142,
+      66,
+      242,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-se-walk-a",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-se-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      136,
+      66,
+      247,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-se-walk-b",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-se-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      88,
+      66,
+      296,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-se-attack",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-se-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      120,
+      66,
+      392,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-s-idle",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-s-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      131,
+      66,
+      253,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-s-walk-a",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-s-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      131,
+      66,
+      253,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-s-walk-b",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-s-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      85,
+      66,
+      299,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-s-attack",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-s-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      121,
+      66,
+      391,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-sw-idle",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-sw-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      126,
+      66,
+      259,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-sw-walk-a",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-sw-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      138,
+      66,
+      247,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-sw-walk-b",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-sw-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      80,
+      66,
+      304,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-sw-attack",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-sw-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      118,
+      66,
+      395,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-w-idle",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-w-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      132,
+      66,
+      252,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-w-walk-a",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-w-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      132,
+      66,
+      253,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-w-walk-b",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-w-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      88,
+      66,
+      297,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-w-attack",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-w-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      121,
+      66,
+      391,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-nw-idle",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-nw-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      120,
+      66,
+      265,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-nw-walk-a",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-nw-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      118,
+      66,
+      265,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-nw-walk-b",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-nw-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      130,
+      66,
+      254,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-spearman-nw-attack",
+    "output": "artifacts/day3-directional-units/iron-spearman/normalized/iron-spearman-nw-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      121,
+      66,
+      391,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  }
+]

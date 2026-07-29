@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "assetCount": 264,
+  "assetCount": 360,
   "results": [
     {
       "key": "archer-attack",
@@ -439,8 +439,136 @@
       "changedPixels": 1676
     },
     {
+      "key": "iron-spearman-e-attack",
+      "changedPixels": 1918
+    },
+    {
+      "key": "iron-spearman-e-idle",
+      "changedPixels": 748
+    },
+    {
+      "key": "iron-spearman-e-walk-a",
+      "changedPixels": 574
+    },
+    {
+      "key": "iron-spearman-e-walk-b",
+      "changedPixels": 867
+    },
+    {
       "key": "iron-spearman-idle",
       "changedPixels": 747
+    },
+    {
+      "key": "iron-spearman-n-attack",
+      "changedPixels": 1527
+    },
+    {
+      "key": "iron-spearman-n-idle",
+      "changedPixels": 608
+    },
+    {
+      "key": "iron-spearman-n-walk-a",
+      "changedPixels": 655
+    },
+    {
+      "key": "iron-spearman-n-walk-b",
+      "changedPixels": 412
+    },
+    {
+      "key": "iron-spearman-ne-attack",
+      "changedPixels": 1907
+    },
+    {
+      "key": "iron-spearman-ne-idle",
+      "changedPixels": 952
+    },
+    {
+      "key": "iron-spearman-ne-walk-a",
+      "changedPixels": 428
+    },
+    {
+      "key": "iron-spearman-ne-walk-b",
+      "changedPixels": 747
+    },
+    {
+      "key": "iron-spearman-nw-attack",
+      "changedPixels": 1793
+    },
+    {
+      "key": "iron-spearman-nw-idle",
+      "changedPixels": 860
+    },
+    {
+      "key": "iron-spearman-nw-walk-a",
+      "changedPixels": 795
+    },
+    {
+      "key": "iron-spearman-nw-walk-b",
+      "changedPixels": 691
+    },
+    {
+      "key": "iron-spearman-s-attack",
+      "changedPixels": 1590
+    },
+    {
+      "key": "iron-spearman-s-idle",
+      "changedPixels": 675
+    },
+    {
+      "key": "iron-spearman-s-walk-a",
+      "changedPixels": 587
+    },
+    {
+      "key": "iron-spearman-s-walk-b",
+      "changedPixels": 596
+    },
+    {
+      "key": "iron-spearman-se-attack",
+      "changedPixels": 1772
+    },
+    {
+      "key": "iron-spearman-se-idle",
+      "changedPixels": 724
+    },
+    {
+      "key": "iron-spearman-se-walk-a",
+      "changedPixels": 575
+    },
+    {
+      "key": "iron-spearman-se-walk-b",
+      "changedPixels": 704
+    },
+    {
+      "key": "iron-spearman-sw-attack",
+      "changedPixels": 1897
+    },
+    {
+      "key": "iron-spearman-sw-idle",
+      "changedPixels": 981
+    },
+    {
+      "key": "iron-spearman-sw-walk-a",
+      "changedPixels": 567
+    },
+    {
+      "key": "iron-spearman-sw-walk-b",
+      "changedPixels": 795
+    },
+    {
+      "key": "iron-spearman-w-attack",
+      "changedPixels": 1793
+    },
+    {
+      "key": "iron-spearman-w-idle",
+      "changedPixels": 705
+    },
+    {
+      "key": "iron-spearman-w-walk-a",
+      "changedPixels": 624
+    },
+    {
+      "key": "iron-spearman-w-walk-b",
+      "changedPixels": 668
     },
     {
       "key": "iron-spearman-walk-a",
@@ -599,8 +727,136 @@
       "changedPixels": 3171
     },
     {
+      "key": "knight-e-attack",
+      "changedPixels": 1811
+    },
+    {
+      "key": "knight-e-idle",
+      "changedPixels": 1807
+    },
+    {
+      "key": "knight-e-walk-a",
+      "changedPixels": 1830
+    },
+    {
+      "key": "knight-e-walk-b",
+      "changedPixels": 2017
+    },
+    {
       "key": "knight-idle",
       "changedPixels": 2741
+    },
+    {
+      "key": "knight-n-attack",
+      "changedPixels": 3044
+    },
+    {
+      "key": "knight-n-idle",
+      "changedPixels": 2527
+    },
+    {
+      "key": "knight-n-walk-a",
+      "changedPixels": 2952
+    },
+    {
+      "key": "knight-n-walk-b",
+      "changedPixels": 3254
+    },
+    {
+      "key": "knight-ne-attack",
+      "changedPixels": 3889
+    },
+    {
+      "key": "knight-ne-idle",
+      "changedPixels": 2102
+    },
+    {
+      "key": "knight-ne-walk-a",
+      "changedPixels": 4177
+    },
+    {
+      "key": "knight-ne-walk-b",
+      "changedPixels": 1968
+    },
+    {
+      "key": "knight-nw-attack",
+      "changedPixels": 4508
+    },
+    {
+      "key": "knight-nw-idle",
+      "changedPixels": 3830
+    },
+    {
+      "key": "knight-nw-walk-a",
+      "changedPixels": 3678
+    },
+    {
+      "key": "knight-nw-walk-b",
+      "changedPixels": 4072
+    },
+    {
+      "key": "knight-s-attack",
+      "changedPixels": 1173
+    },
+    {
+      "key": "knight-s-idle",
+      "changedPixels": 1165
+    },
+    {
+      "key": "knight-s-walk-a",
+      "changedPixels": 1231
+    },
+    {
+      "key": "knight-s-walk-b",
+      "changedPixels": 1282
+    },
+    {
+      "key": "knight-se-attack",
+      "changedPixels": 606
+    },
+    {
+      "key": "knight-se-idle",
+      "changedPixels": 547
+    },
+    {
+      "key": "knight-se-walk-a",
+      "changedPixels": 526
+    },
+    {
+      "key": "knight-se-walk-b",
+      "changedPixels": 529
+    },
+    {
+      "key": "knight-sw-attack",
+      "changedPixels": 1519
+    },
+    {
+      "key": "knight-sw-idle",
+      "changedPixels": 1881
+    },
+    {
+      "key": "knight-sw-walk-a",
+      "changedPixels": 1873
+    },
+    {
+      "key": "knight-sw-walk-b",
+      "changedPixels": 1782
+    },
+    {
+      "key": "knight-w-attack",
+      "changedPixels": 1643
+    },
+    {
+      "key": "knight-w-idle",
+      "changedPixels": 1400
+    },
+    {
+      "key": "knight-w-walk-a",
+      "changedPixels": 1628
+    },
+    {
+      "key": "knight-w-walk-b",
+      "changedPixels": 1440
     },
     {
       "key": "knight-walk-a",
@@ -615,8 +871,136 @@
       "changedPixels": 718
     },
     {
+      "key": "musketeer-e-attack",
+      "changedPixels": 376
+    },
+    {
+      "key": "musketeer-e-idle",
+      "changedPixels": 267
+    },
+    {
+      "key": "musketeer-e-walk-a",
+      "changedPixels": 209
+    },
+    {
+      "key": "musketeer-e-walk-b",
+      "changedPixels": 275
+    },
+    {
       "key": "musketeer-idle",
       "changedPixels": 469
+    },
+    {
+      "key": "musketeer-n-attack",
+      "changedPixels": 593
+    },
+    {
+      "key": "musketeer-n-idle",
+      "changedPixels": 1112
+    },
+    {
+      "key": "musketeer-n-walk-a",
+      "changedPixels": 672
+    },
+    {
+      "key": "musketeer-n-walk-b",
+      "changedPixels": 688
+    },
+    {
+      "key": "musketeer-ne-attack",
+      "changedPixels": 305
+    },
+    {
+      "key": "musketeer-ne-idle",
+      "changedPixels": 394
+    },
+    {
+      "key": "musketeer-ne-walk-a",
+      "changedPixels": 339
+    },
+    {
+      "key": "musketeer-ne-walk-b",
+      "changedPixels": 316
+    },
+    {
+      "key": "musketeer-nw-attack",
+      "changedPixels": 1512
+    },
+    {
+      "key": "musketeer-nw-idle",
+      "changedPixels": 131
+    },
+    {
+      "key": "musketeer-nw-walk-a",
+      "changedPixels": 85
+    },
+    {
+      "key": "musketeer-nw-walk-b",
+      "changedPixels": 124
+    },
+    {
+      "key": "musketeer-s-attack",
+      "changedPixels": 300
+    },
+    {
+      "key": "musketeer-s-idle",
+      "changedPixels": 125
+    },
+    {
+      "key": "musketeer-s-walk-a",
+      "changedPixels": 173
+    },
+    {
+      "key": "musketeer-s-walk-b",
+      "changedPixels": 183
+    },
+    {
+      "key": "musketeer-se-attack",
+      "changedPixels": 362
+    },
+    {
+      "key": "musketeer-se-idle",
+      "changedPixels": 347
+    },
+    {
+      "key": "musketeer-se-walk-a",
+      "changedPixels": 284
+    },
+    {
+      "key": "musketeer-se-walk-b",
+      "changedPixels": 281
+    },
+    {
+      "key": "musketeer-sw-attack",
+      "changedPixels": 341
+    },
+    {
+      "key": "musketeer-sw-idle",
+      "changedPixels": 24
+    },
+    {
+      "key": "musketeer-sw-walk-a",
+      "changedPixels": 70
+    },
+    {
+      "key": "musketeer-sw-walk-b",
+      "changedPixels": 73
+    },
+    {
+      "key": "musketeer-w-attack",
+      "changedPixels": 181
+    },
+    {
+      "key": "musketeer-w-idle",
+      "changedPixels": 339
+    },
+    {
+      "key": "musketeer-w-walk-a",
+      "changedPixels": 292
+    },
+    {
+      "key": "musketeer-w-walk-b",
+      "changedPixels": 306
     },
     {
       "key": "musketeer-walk-a",
