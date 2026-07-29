@@ -2374,3 +2374,25 @@ Use consistent headings so entries are easy to grep.
   - `npm run build` 통과
   - `npm test` 통과 (29 files / 121 tests)
   - `npx playwright test --workers=1` 통과 (49 passed)
+
+## [2026-07-29] test | 2차 사이클 새 맵 후보 실전 리뷰 자료 추가
+
+- 같은 상담 세션의 연속. GitHub Issue 없음, 최소 기록 예외로 이 항목과
+  `docs/ai-usage/session-log.md`를 사용했다.
+- `warcrest-day3-three-fronts-v1` 후보를 기존 프로덕션 맵과 같은 시작
+  조건에서 실제 첫 웨이브 진행으로 비교하는 Playwright 스펙을 추가했다.
+- 산출물:
+  - `artifacts/day3-second-cycle-map-review/baseline-player-front-live.png`
+  - `artifacts/day3-second-cycle-map-review/baseline-center-engaged.png`
+  - `artifacts/day3-second-cycle-map-review/baseline-center-after-wave.png`
+  - `artifacts/day3-second-cycle-map-review/candidate-player-front-live.png`
+  - `artifacts/day3-second-cycle-map-review/candidate-center-engaged.png`
+  - `artifacts/day3-second-cycle-map-review/candidate-center-after-wave.png`
+  - `artifacts/day3-second-cycle-map-review/review-summary.json`
+- 직접 검토 결과, 후보 맵은 소품 밀도가 늘었지만 첫 웨이브 기준 유닛과
+  구조물을 가릴 정도의 혼잡/occlusion 문제는 보이지 않았다. 이번 단계에선
+  맵 데이터 수정 없이 비교 자료만 준비하고 승격 판단은 사용자에게 남겼다.
+- 검증 결과:
+  - `npm run build` 통과
+  - `npm test` 통과 (29 files / 121 tests)
+  - `npx playwright test tools/validation/day3-second-cycle-map-review.spec.ts --workers=1` 통과 (1 passed)

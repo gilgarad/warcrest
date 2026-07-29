@@ -2156,3 +2156,16 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - `npm run build` 통과
   - `npm test` 통과 (29 files / 121 tests)
   - `npx playwright test --workers=1` 통과 (49 passed)
+
+## 2026-07-29 (148) — 새 맵 후보 실제 첫 웨이브 비교 자료 준비
+
+- **사용 도구**: Codex (GPT-5), `npm run build`, `npm test`, `npx playwright test tools/validation/day3-second-cycle-map-review.spec.ts --workers=1`, 이미지 직접 검토
+- **사용자 지시 요약**: 기존 프로덕션 맵은 그대로 둔 채 새 맵 후보 `warcrest-day3-three-fronts-v1`을 실제로 켜서 최소 1개 시대 웨이브를 끝까지 플레이해 보고, 8방향 유닛과 소품 밀도로 인한 혼잡/가림이 없는지 확인한 뒤, 승격 여부는 사용자가 판단할 수 있게 비교 자료만 준비하라고 지시함.
+- **AI 작업 요약**:
+  - 새 Playwright 스펙 `tools/validation/day3-second-cycle-map-review.spec.ts`를 추가해 baseline(`warcrest-full-lane-hybrid-v1`)과 candidate(`warcrest-day3-three-fronts-v1`)를 같은 seed/카메라 조건에서 실제 첫 웨이브로 비교하도록 만들었다.
+  - 각 맵에서 플레이어 측 출발 구간과 중앙 교전 장면, 웨이브 소진 후 장면을 캡처하고 `review-summary.json`에 맵 id, 구조물 상태, 소품 수, engagement 수치를 함께 남겼다.
+  - 캡처 이미지를 직접 검토한 결과, 후보 맵은 기존 대비 소품 밀도와 길 폭 변화가 커졌지만 첫 웨이브 기준 유닛이 소품이나 구조물 뒤에 과하게 가려지거나 읽기 어려워지는 지점은 보이지 않았다. 따라서 이번 범위에서는 맵 데이터 수정 없이 비교 자료만 준비하고 승격 결정은 사용자에게 남겼다.
+- **검증 결과**:
+  - `npm run build` 통과
+  - `npm test` 통과 (29 files / 121 tests)
+  - `npx playwright test tools/validation/day3-second-cycle-map-review.spec.ts --workers=1` 통과 (1 passed)
