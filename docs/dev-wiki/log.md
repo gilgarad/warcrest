@@ -2417,3 +2417,21 @@ Use consistent headings so entries are easy to grep.
   A2의 타워 배치 오류가 핵심이었다고 판단했다.
 - 검증: `npm run build`, `npm test`, `npx playwright test tools/validation/a-bugfix-review.spec.ts --workers=1`
   전부 통과. 산출물은 `artifacts/a-bugfix-review/`에 남겼다.
+
+
+## [2026-07-29] docs | B1 2레인 맵 토폴로지 설계 체크포인트
+
+- 같은 상담 세션의 연속. GitHub Issue 없음, 최소 기록 예외로 이 항목과
+  `docs/ai-usage/session-log.md`를 사용했다.
+- 현재 `BattlefieldMapSpec`이 단일 `lanePath`와 단일 scalar `progress`를 전제로
+  설계되어 있어, 사용자가 요청한 좌(아군)/우(적) 본진 + 남/북 2레인 구조를
+  데이터만으로 표현할 수 없음을 다시 정리했다.
+- `docs/dev-wiki/map-topology-two-lane-brief.md`를 새로 작성해:
+  - `lanes[]` + `laneId/progress` 기반 다중 레인 스키마 초안,
+  - 좌/우 본진과 북/남 레인 좌표 드래프트,
+  - 레인별 캡처 포인트/타워 배치 원칙,
+  - 향후 3인/4인 맵 확장을 막지 않는 구조 검토,
+  - 기존 렌더링 엔진(marching squares, QA, 접지 규칙)은 그대로 재사용된다는 점을
+    설계 기준으로 명시했다.
+- 이번 단계에서는 문서만 추가했고, 실제 맵 데이터/런타임 스키마 구현은 다음
+  체크포인트로 넘겼다.

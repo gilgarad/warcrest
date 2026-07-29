@@ -2195,3 +2195,20 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
     3) 구조물 공격 프로브에서 근접 도끼병이 `attackTargetKind: structure`로
        적 타워를 실제 타깃팅하는 증거를 남겼다.
   - 검증은 `npm run build`, `npm test`, `npx playwright test tools/validation/a-bugfix-review.spec.ts --workers=1`.
+
+
+## 2026-07-29 (150) — B1 2레인 맵 토폴로지 설계안 문서화
+
+- **사용자 지시 요약**:
+  - A 버그 3건을 고친 뒤 build/test 통과를 확인하고, 구현은 하지 말고
+    2레인 맵 설계안 문서(B1)까지만 작성할 것.
+  - 좌(아군)/우(적) 본진 + 남/북 2레인 구조를 전제로, 현 단일 레인 스키마를
+    어떻게 확장할지 먼저 설계로 검토할 것.
+- **AI 작업 요약**:
+  - `docs/dev-wiki/map-topology-two-lane-brief.md`를 작성했다.
+  - 문서에는 현재 `BattlefieldMapSpec`의 단일 `lanePath`/단일 `progress` 한계를
+    정리하고, `lanes[]`·`laneId + progress`·레인별 소켓/지형/소품을 담는 스키마
+    초안을 제안했다.
+  - 좌/우 본진, 북/남 레인 좌표 드래프트, 레인별 타워/거점 배치 원칙,
+    향후 3인/4인 확장 검토, 기존 렌더링 엔진 재사용 범위를 함께 명시했다.
+  - 이번 단계는 설계 체크포인트만 수행했고, 런타임 구현/맵 데이터 교체는 하지 않았다.
