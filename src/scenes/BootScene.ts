@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { assetUrl } from "../config/assetUrl";
 import { GAME_SUBTITLE, GAME_TAGLINE, GAME_TITLE } from "../data/gameMeta";
 import { createParallaxBackground, type ParallaxBackground } from "../gfx/parallax";
 import { getAudioSystem } from "../systems/audio";
@@ -11,8 +12,8 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload(): void {
-    this.load.image("warcrest-splash", "/assets/title/warcrest-splash.png");
-    this.load.image("war-table-hud", "/assets/battle/war-table-hud.png");
+    this.load.image("warcrest-splash", assetUrl("assets/title/warcrest-splash.png"));
+    this.load.image("war-table-hud", assetUrl("assets/battle/war-table-hud.png"));
   }
 
   create(): void {

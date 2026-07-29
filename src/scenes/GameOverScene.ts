@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { assetUrl } from "../config/assetUrl";
 import { createParallaxBackground, type ParallaxBackground } from "../gfx/parallax";
 import { getAudioSystem } from "../systems/audio";
 
@@ -16,8 +17,8 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   preload(): void {
-    if (!this.textures.exists("lane-battlefield-bg")) this.load.image("lane-battlefield-bg", "/assets/battle/lane-battlefield-bg-wide-v2.png");
-    if (!this.textures.exists("war-table-hud")) this.load.image("war-table-hud", "/assets/battle/war-table-hud.png");
+    if (!this.textures.exists("lane-battlefield-bg")) this.load.image("lane-battlefield-bg", assetUrl("assets/battle/lane-battlefield-bg-wide-v2.png"));
+    if (!this.textures.exists("war-table-hud")) this.load.image("war-table-hud", assetUrl("assets/battle/war-table-hud.png"));
   }
 
   create(data: GameOverData): void {

@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { assetUrl } from "../config/assetUrl";
 import {
   GOLDEN_PATH_CONTROL_ROWS,
   GOLDEN_PATH_HALF_WIDTH_ROWS,
@@ -8,7 +9,7 @@ import {
 } from "../data/terrain/goldenReferenceTerrain";
 import { getMarchingPolygons } from "../systems/terrain/marchingSquares";
 
-const ASSET_ROOT = "/assets/golden-reference";
+const ASSET_ROOT = assetUrl("assets/golden-reference");
 const BOARD_X = 288;
 const BOARD_Y = 130;
 

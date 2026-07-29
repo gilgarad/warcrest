@@ -1,3 +1,4 @@
+import { assetUrl } from "../../config/assetUrl";
 import type { BgmAssetDef, SfxAssetDef } from "./types";
 
 const NO_ASSET_YET = "실제 오디오 파일 없음 — 외부 자산 없이 Web Audio 런타임 합성으로 대체 중";
@@ -13,7 +14,7 @@ export const BGM_ASSETS: BgmAssetDef[] = [
   {
     id: "bgm.menu",
     label: "메뉴/타이틀",
-    filePath: "/assets/audio/bgm/menu.mp3",
+    filePath: assetUrl("assets/audio/bgm/menu.mp3"),
     loop: true,
     baseVolume: 0.5,
     missingAsset: true,
@@ -23,7 +24,7 @@ export const BGM_ASSETS: BgmAssetDef[] = [
   {
     id: "bgm.preparation",
     label: "준비/배치 단계",
-    filePath: "/assets/audio/bgm/preparation.mp3",
+    filePath: assetUrl("assets/audio/bgm/preparation.mp3"),
     loop: true,
     baseVolume: 0.45,
     missingAsset: true,
@@ -33,7 +34,7 @@ export const BGM_ASSETS: BgmAssetDef[] = [
   {
     id: "bgm.battle.low",
     label: "전투 — 저강도",
-    filePath: "/assets/audio/bgm/battle-low.mp3",
+    filePath: assetUrl("assets/audio/bgm/battle-low.mp3"),
     loop: true,
     baseVolume: 0.55,
     missingAsset: true,
@@ -43,7 +44,7 @@ export const BGM_ASSETS: BgmAssetDef[] = [
   {
     id: "bgm.battle.high",
     label: "전투 — 고강도",
-    filePath: "/assets/audio/bgm/battle-high.mp3",
+    filePath: assetUrl("assets/audio/bgm/battle-high.mp3"),
     loop: true,
     baseVolume: 0.65,
     missingAsset: true,
@@ -53,7 +54,7 @@ export const BGM_ASSETS: BgmAssetDef[] = [
   {
     id: "bgm.victory",
     label: "승리",
-    filePath: "/assets/audio/bgm/victory.mp3",
+    filePath: assetUrl("assets/audio/bgm/victory.mp3"),
     loop: false,
     baseVolume: 0.6,
     missingAsset: true,
@@ -63,7 +64,7 @@ export const BGM_ASSETS: BgmAssetDef[] = [
   {
     id: "bgm.defeat",
     label: "패배",
-    filePath: "/assets/audio/bgm/defeat.mp3",
+    filePath: assetUrl("assets/audio/bgm/defeat.mp3"),
     loop: false,
     baseVolume: 0.5,
     missingAsset: true,
@@ -126,7 +127,7 @@ function sfx(
     id,
     label,
     category,
-    filePath: `/assets/audio/sfx/${id.replace(/^sfx\./, "").replace(/\./g, "-")}.mp3`,
+    filePath: assetUrl(`assets/audio/sfx/${id.replace(/^sfx\./, "").replace(/\./g, "-")}.mp3`),
     baseVolume: overrides.baseVolume ?? 0.7,
     cooldownMs: overrides.cooldownMs ?? 120,
     maxSimultaneous: overrides.maxSimultaneous ?? 4,

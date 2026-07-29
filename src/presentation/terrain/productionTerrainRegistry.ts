@@ -1,10 +1,11 @@
+import { assetUrl } from "../../config/assetUrl";
 import type { TerrainMaterial, TerrainPatchSpec } from "../../data/battlefieldMaps";
 import { getMarchingMask } from "../../systems/terrain/marchingSquares";
 
 export type ProductionTerrainMaterial = "grass" | "dirt" | "road" | "stone";
 
 const MATERIALS: readonly ProductionTerrainMaterial[] = ["grass", "dirt", "road", "stone"];
-const ASSET_ROOT = "/assets/production/terrain";
+const ASSET_ROOT = assetUrl("assets/production/terrain");
 
 export const PRODUCTION_TERRAIN_ASSETS = MATERIALS.flatMap((material) => [
   {

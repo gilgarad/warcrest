@@ -1,7 +1,9 @@
+import { assetUrl } from "../../config/assetUrl";
+
 export type StructureTeam = "player" | "enemy" | "neutral";
 export type DefenseTowerVisualState = "full" | "damaged" | "critical" | "ruins" | "construction";
 
-const ASSET_ROOT = "/assets/production/structures";
+const ASSET_ROOT = assetUrl("assets/production/structures");
 const BASE_KEYS = [
   "defense-tower-full",
   "defense-tower-damaged",

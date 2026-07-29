@@ -1,3 +1,4 @@
+import { assetUrl } from "../../config/assetUrl";
 import type { LaneUnitId } from "../../systems/lane-units/unitStats";
 
 export type UnitLocomotionPose = "idle" | "walk-a" | "walk-b";
@@ -79,8 +80,8 @@ export const UNIT_ANIMATION_ASSETS = Object.values(UNIT_ANIMATION_REGISTRY)
     : [])
   .filter((key, index, all) => all.indexOf(key) === index)
   .flatMap((key) => [
-    { key, path: `/assets/production/units/${key}.png` },
-    { key: `${key}-enemy`, path: `/assets/production/units/${key}-enemy.png` },
+    { key, path: assetUrl(`assets/production/units/${key}.png`) },
+    { key: `${key}-enemy`, path: assetUrl(`assets/production/units/${key}-enemy.png`) },
   ]);
 
 export function getUnitAnimationDefinition(unitId: LaneUnitId): UnitAnimationDefinition | undefined {

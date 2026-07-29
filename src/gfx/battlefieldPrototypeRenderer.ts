@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { assetUrl } from "../config/assetUrl";
 import type {
   BattlefieldMapSpec,
   StructureSocketSpec,
@@ -34,15 +35,15 @@ const TERRAIN_TINT: Record<TerrainMaterial, number> = {
 export const PROTOTYPE_TERRAIN_ASSETS = [
   {
     key: TERRAIN_TEXTURES.grass,
-    path: "/assets/prototype-terrain/prototype-placeholder-grass-v1.png",
+    path: assetUrl("assets/prototype-terrain/prototype-placeholder-grass-v1.png"),
   },
   {
     key: TERRAIN_TEXTURES.dirt,
-    path: "/assets/prototype-terrain/prototype-placeholder-dirt-v1.png",
+    path: assetUrl("assets/prototype-terrain/prototype-placeholder-dirt-v1.png"),
   },
   {
     key: TERRAIN_TEXTURES.stone,
-    path: "/assets/prototype-terrain/prototype-placeholder-stone-v1.png",
+    path: assetUrl("assets/prototype-terrain/prototype-placeholder-stone-v1.png"),
   },
 ] as const;
 

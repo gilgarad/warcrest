@@ -1,6 +1,7 @@
+import { assetUrl } from "../../config/assetUrl";
 import type { TerrainPropTextureKey } from "../../data/battlefieldMaps";
 
-const ASSET_ROOT = "/assets/production/props";
+const ASSET_ROOT = assetUrl("assets/production/props");
 
 const PRODUCTION_PROP_KEYS: readonly TerrainPropTextureKey[] = [
   "field-oak",

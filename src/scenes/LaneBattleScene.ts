@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { assetUrl } from "../config/assetUrl";
 import { AGES, getAge, type AgeId } from "../data/ages";
 import {
   BASE_WORKER_COST,
@@ -348,22 +349,22 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   preload(): void {
-    this.load.image("lane-battlefield-bg", "/assets/battle/lane-battlefield-object-base-v4.png");
-    this.load.image("lane-battlefield-bg-v2", "/assets/battle/lane-battlefield-object-base-v4-prototype-v2.png");
-    this.load.image("war-table-hud", "/assets/battle/war-table-hud.png");
-    this.load.image("base-player", "/assets/battlefield-objects/base-player.png");
-    this.load.image("base-enemy", "/assets/battlefield-objects/base-enemy.png");
-    this.load.image("tower-full", "/assets/battlefield-objects/tower-full.png");
-    this.load.image("tower-damaged", "/assets/battlefield-objects/tower-damaged.png");
-    this.load.image("tower-critical", "/assets/battlefield-objects/tower-critical.png");
-    this.load.image("tower-ruin-asset", "/assets/battlefield-objects/tower-ruin.png");
-    this.load.image("tower-build", "/assets/battlefield-objects/tower-build.png");
-    this.load.image("fixed-fortress-v1", "/assets/battlefield-objects/fixed-fortress-v1.png");
-    this.load.image("rock-cluster", "/assets/battlefield-objects/rock-cluster.png");
-    this.load.image("tree-cluster", "/assets/battlefield-objects/tree-cluster.png");
-    this.load.image("stone-slinger-unit", "/assets/lane-units/stone-slinger-unit.png");
-    this.load.image("stone-axeman-unit", "/assets/lane-units/stone-axeman-unit.png");
-    this.load.image("stone-supply-unit", "/assets/lane-units/stone-supply-unit.png");
+    this.load.image("lane-battlefield-bg", assetUrl("assets/battle/lane-battlefield-object-base-v4.png"));
+    this.load.image("lane-battlefield-bg-v2", assetUrl("assets/battle/lane-battlefield-object-base-v4-prototype-v2.png"));
+    this.load.image("war-table-hud", assetUrl("assets/battle/war-table-hud.png"));
+    this.load.image("base-player", assetUrl("assets/battlefield-objects/base-player.png"));
+    this.load.image("base-enemy", assetUrl("assets/battlefield-objects/base-enemy.png"));
+    this.load.image("tower-full", assetUrl("assets/battlefield-objects/tower-full.png"));
+    this.load.image("tower-damaged", assetUrl("assets/battlefield-objects/tower-damaged.png"));
+    this.load.image("tower-critical", assetUrl("assets/battlefield-objects/tower-critical.png"));
+    this.load.image("tower-ruin-asset", assetUrl("assets/battlefield-objects/tower-ruin.png"));
+    this.load.image("tower-build", assetUrl("assets/battlefield-objects/tower-build.png"));
+    this.load.image("fixed-fortress-v1", assetUrl("assets/battlefield-objects/fixed-fortress-v1.png"));
+    this.load.image("rock-cluster", assetUrl("assets/battlefield-objects/rock-cluster.png"));
+    this.load.image("tree-cluster", assetUrl("assets/battlefield-objects/tree-cluster.png"));
+    this.load.image("stone-slinger-unit", assetUrl("assets/lane-units/stone-slinger-unit.png"));
+    this.load.image("stone-axeman-unit", assetUrl("assets/lane-units/stone-axeman-unit.png"));
+    this.load.image("stone-supply-unit", assetUrl("assets/lane-units/stone-supply-unit.png"));
     UNIT_ANIMATION_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
     PROTOTYPE_TERRAIN_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
     PRODUCTION_TERRAIN_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
