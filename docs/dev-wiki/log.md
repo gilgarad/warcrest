@@ -2330,3 +2330,16 @@ Use consistent headings so entries are easy to grep.
 - Validation confirms non-zero RMS/peak for the required layers on every state and verifies the in-game transitions `menu -> preparation -> battle-low -> battle-high -> battle-low`.
 - Verification: `npm run build` passed, `npm test` passed (`29` files, `120` tests), and `npx playwright test tools/validation/day3-music-expansion.spec.ts` passed (`2` tests).
 - Result: Day 3 music expansion is now evidenced and safe to keep even if the session drops before the map step starts.
+
+## [2026-07-29] codex | Day 3 step 3 - extend full redesign map as a switchable candidate
+
+- Added a full-map redesign candidate `warcrest-day3-three-fronts-v1` in `src/data/battlefieldMaps.ts`.
+- The new candidate keeps the existing renderer/terrain engine intact and only changes map data:
+  - 9 control nodes instead of the nearly straight 5-node lane
+  - 8 terrain patches with 10->6->10 row width variation across the five authored beats
+  - 20 props distributed across player basin, western passage, central clearing, eastern passage, and enemy basin
+  - the existing structure progress rule preserved at `[0.17, 0.37, 0.64, 0.84]`
+- Added data validation in `src/data/__tests__/battlefieldMaps.test.ts` and screenshot comparison coverage in `tools/validation/day3-map-redesign.spec.ts`.
+- Captured baseline vs candidate screenshots at player-front, center, and enemy-front under `artifacts/day3-map/`, plus `comparison.json`.
+- Decision: **do not promote the old Day 2 partial checkpoint (`warcrest-day2-player-front-v1`) or the new Day 3 full-map candidate to default production yet**. The redesign is now complete as a safe switchable candidate, but the current default map remains `warcrest-full-lane-hybrid-v1` until a human play/readability pass explicitly approves replacing the live baseline.
+- Verification: `npm run build` passed, `npm test` passed (`29` files, `121` tests), and `npx playwright test tools/validation/day3-map-redesign.spec.ts` passed (`1` test).

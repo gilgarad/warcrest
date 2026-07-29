@@ -85,7 +85,8 @@ export interface BattlefieldMapSpec {
 
 export type BattlefieldMapId =
   | "warcrest-full-lane-hybrid-v1"
-  | "warcrest-day2-player-front-v1";
+  | "warcrest-day2-player-front-v1"
+  | "warcrest-day3-three-fronts-v1";
 
 export const LANE_PATH_NODES: LanePathNodeSpec[] = [
   { progress: 0, position: { x: 1240, y: 3130 } },
@@ -297,6 +298,18 @@ export const DAY2_PLAYER_FRONT_LANE_PATH_NODES: LanePathNodeSpec[] = [
   { progress: 1, position: { x: 5995, y: 580 } },
 ];
 
+export const DAY3_THREE_FRONTS_LANE_PATH_NODES: LanePathNodeSpec[] = [
+  { progress: 0.00, position: { x: 1240, y: 3130 } },
+  { progress: 0.10, position: { x: 1710, y: 3065 } },
+  { progress: 0.20, position: { x: 2235, y: 2840 } },
+  { progress: 0.32, position: { x: 2825, y: 2425 } },
+  { progress: 0.46, position: { x: 3525, y: 1935 } },
+  { progress: 0.60, position: { x: 4300, y: 1715 } },
+  { progress: 0.72, position: { x: 4925, y: 1420 } },
+  { progress: 0.86, position: { x: 5525, y: 980 } },
+  { progress: 1.00, position: { x: 5995, y: 580 } },
+];
+
 const DAY2_PLAYER_FRONT_PATCH_ROWS = [10, 10, 8, 6, 8, 8, 10] as const;
 const DAY2_PLAYER_FRONT_BANDS: readonly TerrainBandProfile[] = [
   { stoneHalfRows: 2, dirtHalfRows: 4 },
@@ -346,6 +359,68 @@ const DAY2_PLAYER_FRONT_PROPS: TerrainPropSpec[] = [
   { id: "day2-pass-rock", textureKey: "rock-cluster", position: { x: 3285, y: 1865 }, displayWidth: 196, displayHeight: 196, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 154, height: 60, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
 ];
 
+const DAY3_THREE_FRONTS_PATCH_ROWS = [10, 10, 8, 6, 8, 8, 6, 10] as const;
+const DAY3_THREE_FRONTS_BANDS: readonly TerrainBandProfile[] = [
+  { stoneHalfRows: 2, dirtHalfRows: 4 },
+  { stoneHalfRows: 1, dirtHalfRows: 4 },
+  { stoneHalfRows: 1, dirtHalfRows: 3 },
+  { stoneHalfRows: 2, dirtHalfRows: 2 },
+  { stoneHalfRows: 2, dirtHalfRows: 3 },
+  { stoneHalfRows: 1, dirtHalfRows: 3 },
+  { stoneHalfRows: 2, dirtHalfRows: 2 },
+  { stoneHalfRows: 2, dirtHalfRows: 4 },
+];
+
+const DAY3_THREE_FRONTS_STRUCTURE_SOCKETS = [
+  createStructureSocketForPath(
+    DAY3_THREE_FRONTS_LANE_PATH_NODES,
+    getCapturePointSocketId(0),
+    "capture-point",
+    0.17,
+  ),
+  createStructureSocketForPath(
+    DAY3_THREE_FRONTS_LANE_PATH_NODES,
+    getDefenseTowerSocketId(0),
+    "defense-tower",
+    0.37,
+  ),
+  createStructureSocketForPath(
+    DAY3_THREE_FRONTS_LANE_PATH_NODES,
+    getDefenseTowerSocketId(1),
+    "defense-tower",
+    0.64,
+  ),
+  createStructureSocketForPath(
+    DAY3_THREE_FRONTS_LANE_PATH_NODES,
+    getCapturePointSocketId(1),
+    "capture-point",
+    0.84,
+  ),
+];
+
+const DAY3_THREE_FRONTS_PROPS: TerrainPropSpec[] = [
+  { id: "day3-west-ridge-oak-a", textureKey: "field-oak", position: { x: 1520, y: 3385 }, displayWidth: 248, displayHeight: 248, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 132, height: 60, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "day3-west-ridge-pine-a", textureKey: "field-pine", position: { x: 1775, y: 3450 }, displayWidth: 238, displayHeight: 238, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 122, height: 58, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "day3-west-boundary-boulder", textureKey: "field-boulder", position: { x: 1450, y: 2750 }, displayWidth: 212, displayHeight: 212, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 160, height: 62, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
+  { id: "day3-west-landmark-rock", textureKey: "rock-cluster", position: { x: 2110, y: 3335 }, displayWidth: 208, displayHeight: 208, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 158, height: 60, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
+  { id: "day3-west-log", textureKey: "fallen-log", position: { x: 2460, y: 2355 }, displayWidth: 224, displayHeight: 224, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 126, height: 60, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "day3-west-passage-pine", textureKey: "field-pine", position: { x: 2825, y: 2710 }, displayWidth: 236, displayHeight: 236, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 122, height: 58, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "day3-west-passage-oak", textureKey: "field-oak", position: { x: 3175, y: 1760 }, displayWidth: 252, displayHeight: 252, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 132, height: 60, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "day3-west-passage-rock", textureKey: "rock-cluster", position: { x: 3330, y: 2225 }, displayWidth: 198, displayHeight: 198, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 154, height: 60, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
+  { id: "day3-central-oak-south", textureKey: "field-oak", position: { x: 3535, y: 2485 }, displayWidth: 246, displayHeight: 246, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 130, height: 60, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "day3-central-oak-north", textureKey: "field-oak", position: { x: 3770, y: 1285 }, displayWidth: 248, displayHeight: 248, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 130, height: 60, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "day3-central-rock-southwest", textureKey: "field-boulder", position: { x: 3360, y: 2265 }, displayWidth: 214, displayHeight: 214, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 160, height: 62, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
+  { id: "day3-central-rock-northeast", textureKey: "rock-cluster", position: { x: 4155, y: 1290 }, displayWidth: 208, displayHeight: 208, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 158, height: 60, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
+  { id: "day3-central-log", textureKey: "fallen-log", position: { x: 4305, y: 2210 }, displayWidth: 224, displayHeight: 224, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 126, height: 60, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "day3-east-passage-pine-a", textureKey: "field-pine", position: { x: 4680, y: 2135 }, displayWidth: 236, displayHeight: 236, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 122, height: 58, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "day3-east-passage-pine-b", textureKey: "field-pine", position: { x: 4865, y: 895 }, displayWidth: 236, displayHeight: 236, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 122, height: 58, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "day3-east-passage-boulder", textureKey: "field-boulder", position: { x: 5125, y: 2045 }, displayWidth: 210, displayHeight: 210, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 158, height: 60, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
+  { id: "day3-east-passage-rock", textureKey: "rock-cluster", position: { x: 5360, y: 1510 }, displayWidth: 198, displayHeight: 198, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 154, height: 60, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
+  { id: "day3-east-basin-oak", textureKey: "field-oak", position: { x: 5630, y: 1760 }, displayWidth: 248, displayHeight: 248, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 132, height: 60, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "day3-east-basin-pine", textureKey: "field-pine", position: { x: 5905, y: 1565 }, displayWidth: 236, displayHeight: 236, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 122, height: 58, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "day3-east-basin-log", textureKey: "fallen-log", position: { x: 5750, y: 640 }, displayWidth: 224, displayHeight: 224, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 126, height: 60, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+];
+
 export const CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC: BattlefieldMapSpec = {
   schemaVersion: 1,
   id: "warcrest-central-terrain-prototype-v1",
@@ -389,9 +464,24 @@ export const DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC: BattlefieldMapSpec = {
   terrainProps: DAY2_PLAYER_FRONT_PROPS,
 };
 
+export const DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC: BattlefieldMapSpec = {
+  schemaVersion: 1,
+  id: "warcrest-day3-three-fronts-v1",
+  lanePath: DAY3_THREE_FRONTS_LANE_PATH_NODES,
+  terrainPatches: createLaneTerrainPatchesForPath(
+    DAY3_THREE_FRONTS_LANE_PATH_NODES,
+    DAY3_THREE_FRONTS_PATCH_ROWS,
+    DAY3_THREE_FRONTS_BANDS,
+    "day3-three-fronts-segment",
+  ),
+  structureSockets: DAY3_THREE_FRONTS_STRUCTURE_SOCKETS,
+  terrainProps: DAY3_THREE_FRONTS_PROPS,
+};
+
 export const BATTLEFIELD_MAP_SPECS: readonly BattlefieldMapSpec[] = [
   LANE_BATTLEFIELD_MAP_SPEC,
   DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC,
+  DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC,
 ];
 
 export function getBattlefieldMapSpec(mapId?: string | null): BattlefieldMapSpec {

@@ -2106,3 +2106,17 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - 같은 스펙에서 실제 게임 화면 기준 `menu -> preparation -> battle-low -> battle-high -> battle-low` 상태 전환을 캡처해 `artifacts/day3-music/transition-*.png`와 `in-game-transitions.json`을 남겼다.
 - **검증**: `npm run build` 통과, `npm test` 통과 (`29` files / `120` tests), `npx playwright test tools/validation/day3-music-expansion.spec.ts` 통과 (`2` tests).
 - **비고**: 맵 나머지 구간(step 3)은 아직 시작하지 않았고, 이 커밋 이후 별도 단계로 진행한다.
+
+## 2026-07-29 (147) — Day 3 step 3: full map redesign completed as a switchable candidate
+
+- **사용 도구**: Codex (GPT-5), Phaser map data layer, Playwright, `npm run build`, `npm test`
+- **사용자 지시 요약**: 음악 커밋 이후에만 맵 나머지 구간(중앙 격전지/동쪽 통로/적 쪽 출발 구역)을 마저 설계하고, 완료 후 `warcrest-day2-player-front-v1`을 승격할지 계속 후보로 둘지 결정과 근거를 남기라고 했다.
+- **AI 작업/산출물**:
+  - `src/data/battlefieldMaps.ts`에 새 전체 후보 맵 `warcrest-day3-three-fronts-v1`를 추가했다. 이 후보는 9개 path node, 8개 terrain patch, 10->6->10 폭 변화, 20개 소품, `[0.17, 0.37, 0.64, 0.84]` 구조물 진행도 규칙을 가진다.
+  - `src/data/__tests__/battlefieldMaps.test.ts`에 새 후보 맵 불변식(패치 수, 폭 변화, 구조물 최소 간격, 소품 수) 검증을 추가했다.
+  - `tools/validation/day3-map-redesign.spec.ts`를 추가해 기존 기본 맵과 새 후보 맵을 같은 카메라 위치에서 플레이어측/중앙/적측 세 구간으로 비교 캡처했고, 결과를 `artifacts/day3-map/`와 `comparison.json`에 저장했다.
+- **판단/결론**:
+  - `warcrest-day2-player-front-v1`는 이름 그대로 Day 2의 부분 시안이므로 기본 맵 승격 대상에서 제외했다.
+  - 새 `warcrest-day3-three-fronts-v1`는 구조적으로 완성된 전체 후보이지만, 이번 단계에서는 기본 프로덕션 맵으로 즉시 승격하지 않고 **switchable candidate**로 유지했다. 이유는 직전 기본 맵 `warcrest-full-lane-hybrid-v1`가 이미 회귀를 통과한 라이브 기준선이고, 새 맵은 사람 플레이 체감 확인 한 번을 더 거치는 편이 안전하기 때문이다.
+- **검증**: `npm run build` 통과, `npm test` 통과 (`29` files / `121` tests), `npx playwright test tools/validation/day3-map-redesign.spec.ts` 통과 (`1` test).
+- **비고**: 이로써 Day 3의 맵 설계 작업은 후보 생성까지 완료됐다. 기본 맵 교체 여부만 사용자 승인 판단이 남아 있다.

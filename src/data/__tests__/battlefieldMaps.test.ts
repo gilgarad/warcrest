@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC,
+  DAY3_THREE_FRONTS_LANE_PATH_NODES,
+  DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC,
   DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC,
   DAY2_PLAYER_FRONT_LANE_PATH_NODES,
   DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID,
@@ -85,5 +87,21 @@ describe("battlefield map specs", () => {
     const rows = DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC.terrainPatches.map((patch) => patch.rows);
     expect(Math.max(...rows)).toBe(10);
     expect(Math.min(...rows)).toBe(6);
+  });
+
+  it("exposes the Day 3 full-map candidate with authored width changes and denser landmarks", () => {
+    expect(getBattlefieldMapSpec(DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC.id)).toBe(DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC);
+    expect(DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC.lanePath).toHaveLength(DAY3_THREE_FRONTS_LANE_PATH_NODES.length);
+    expect(DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC.terrainPatches).toHaveLength(DAY3_THREE_FRONTS_LANE_PATH_NODES.length - 1);
+    expect(DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC.structureSockets.map((socket) => socket.progress)).toEqual([0.17, 0.37, 0.64, 0.84]);
+    DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC.structureSockets.forEach((socket, index, all) => {
+      all.slice(index + 1).forEach((other) => {
+        expect(Math.abs(socket.progress - other.progress)).toBeGreaterThanOrEqual(MIN_STRUCTURE_SOCKET_PROGRESS_GAP);
+      });
+    });
+    const rows = DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC.terrainPatches.map((patch) => patch.rows);
+    expect(Math.max(...rows)).toBe(10);
+    expect(Math.min(...rows)).toBe(6);
+    expect(DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC.terrainProps).toHaveLength(20);
   });
 });
