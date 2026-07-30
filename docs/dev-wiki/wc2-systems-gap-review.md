@@ -154,15 +154,15 @@ different, and eventually annoyed, the more times it's clicked) were one
 of its most-remembered small touches. `src/systems/audio/assetManifest.ts`
 already has a clean pattern for adding scoped SFX
 (`sfx("sfx.ui.hireSuccess", ...)` etc.) but no unit-acknowledgment category
-exists at all today.
+existed at all originally.
 
 A minimal version that fits this game's auto-battle identity: a short,
 synthesized "select/acknowledge" blip when the player clicks a capture
 point, tower, or hires a unit — reusing the existing synth-fallback
 pipeline (no real audio files needed, same as everything else in
-`assetManifest.ts` today). This is small, optional, and should only be
-picked up after section 1 (unit art coverage) and the Day 7 UI density
-work are both done and verified — it is charm, not a blocker.
+`assetManifest.ts` today). This landed on 2026-07-30 as `sfx.ui.acknowledge`
+and is wired to capture-point select, tower select, and worker/research
+hire success. Status: **완료**. It remained a charm task, not a blocker.
 
 ## Priority order for the next prompt
 

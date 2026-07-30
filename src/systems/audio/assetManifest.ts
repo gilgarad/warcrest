@@ -78,6 +78,7 @@ export const SFX_ASSETS: SfxAssetDef[] = [
   sfx("sfx.ui.hover", "버튼 hover", "ui", { kind: "pluck", frequency: 880, durationMs: 60 }),
   sfx("sfx.ui.confirm", "버튼 confirm", "ui", { kind: "pluck", frequency: 660, durationMs: 120 }),
   sfx("sfx.ui.cancel", "버튼 cancel", "ui", { kind: "pluck", frequency: 330, durationMs: 120 }),
+  sfx("sfx.ui.acknowledge", "선택/확인 응답", "ui", { kind: "pluck", frequency: 587.3, durationMs: 90 }, { cooldownMs: 80, baseVolume: 0.62, pitchVariation: 0.035, volumeVariation: 0.04 }),
   sfx("sfx.ui.hireSuccess", "구매/고용 성공", "ui", { kind: "chime", frequency: 523.3, durationMs: 220 }),
   sfx("sfx.ui.hireFail", "구매/고용 실패", "ui", { kind: "noiseHit", frequency: 220, durationMs: 140 }),
   sfx("sfx.ui.buildSelect", "건설 선택", "ui", { kind: "pluck", frequency: 494, durationMs: 100 }),
