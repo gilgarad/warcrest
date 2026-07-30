@@ -4785,3 +4785,72 @@ walk-b/attack → 그 다음에야 다른 유닛으로** 넘어가는 순서로 
 - 재현 방식(이미지 참조 vs 텍스트 설명) 중 무엇을 썼고 왜인지
 - **사용자 승인 전까지 다른 유닛/포즈로 확장 금지**
 ```
+
+## 2026-07-30 (40) — [담당 세션: 음악/오디오] 개별 SFX 리얼리티 교정 (attackShout 무음, bluntAttack, bowFire)
+
+- **배경**: (38)번 나이추럴라이제이션 패스가 실제로 적용된 뒤(`backend.ts`
+  483줄 변경), 사용자가 `tools/audio-browser/`로 직접 들어보고 3가지
+  구체 문제를 지적: `attackShout` 완전 무음, `bluntAttack`가 여전히
+  얇음(더 "퍽퍽"해야 함), `bowFire`가 활 소리가 아니라 UI 클릭음
+  ("통통통")처럼 들림. 사용자 요청대로 추가 리서치(펀치/타격음 저역
+  설계, 활 소리의 twang+whoosh 구조) 후
+  `docs/dev-wiki/audio-synthesis-naturalization-guide.md`에 "Round 2"
+  절을 추가하고 근거를 남겼다. 코드 확인 결과 `bowFire`가 UI 클릭과
+  동일한 `pluck` kind를 그대로 재사용하고 있어 문제 원인이 명확히
+  특정됨.
+- **작성한 프롬프트**:
+
+```
+[담당 세션: 음악/오디오] — 계속 `game_project1-audio`, 브랜치
+`track-audio-combat-sfx`. `git log --oneline -10`, `git status`로
+상태 확인(최신 커밋 `1cd8756`이어야 한다 — 방금 가이드 문서에 "Round 2"
+절이 추가됐다).
+
+`docs/dev-wiki/audio-synthesis-naturalization-guide.md`의 **"Round 2
+(2026-07-30): specific per-SFX corrections" 절을 반드시 먼저 읽어라.**
+사용자가 `tools/audio-browser/`로 직접 들어보고 지적한 3가지 구체
+문제와 근거가 정리돼 있다.
+
+## 지금 할 일
+
+### 1. `sfx.combat.attackShout` 무음 버그 수정
+이건 설계 문제가 아니라 버그다. `scheduleFormantVoice()`는
+`unitHit`/`unitDeath`와 같은 `grunt` kind라 정상 작동해야 한다.
+`tools/audio-browser/`에서 단독 클릭 시 게임 루프 없이 쿨다운/
+`maxSimultaneous` 게이팅이 어떻게 동작하는지, `attackShout`의 짧은
+duration(125ms)/frequency(235) 조합에서 예외가 조용히 삼켜지는 곳이
+있는지 확인해라. 재발 방지를 위해 스케줄러가 소리를 못 낼 때 콘솔
+경고를 남기도록 해라.
+
+### 2. `sfx.combat.bluntAttack`를 더 묵직하게
+지금은 단일 body 오실레이터가 전체 구간에 걸쳐 스윕하는 얇은 소리다.
+**어택 트랜지언트(크랙)와 별개로, 20-30ms 뒤에 시작해서 더 낮은
+음역(기존 body보다 한 옥타브 이상 낮게)에서 더 천천히 감쇠하는 저역
+"bloom" 레이어**를 추가해라(가이드 Round 2절 참고). 이 레이어는
+로우패스를 더 어둡게 걸어서 브라이트한 배음이 안 남게 해라.
+
+### 3. `sfx.combat.bowFire`를 활 소리답게
+근본 원인이 코드에서 확인됐다: `bowFire`가 UI 버튼과 똑같은 `pluck`
+kind를 그대로 쓰고 있다. **전용 kind 또는 별도 코드 경로**를 만들어서:
+- 하이-Q bandpass로 만든 "현이 떨리는" twang(현재 pluck의 전체 구간
+  지속 톤이 아니라 빠르게 감쇠하는 공명음)
+- bandpass 필터를 스윕시킨 노이즈로 "화살이 공기를 가르는" whoosh
+  (twang 직후 또는 동시 시작, twang보다 길게 지속)
+두 레이어를 조합해라. UI `pluck` kind는 절대 재사용하지 마라 — 이게
+지금 "통통통" 소리가 나는 직접적인 원인이다.
+
+### 4. 검증
+- `tools/audio-browser/`로 3가지 모두 개선 전/후 직접 재생 비교
+- `npm run build`, `npm test`
+- 관련 오디오 Playwright 스펙만 좁혀서 실행
+
+### 5. 문서/기록
+`docs/dev-wiki/log.md`, `ver1-upgrade-plan.md` 항목 4,
+`audio-synthesis-naturalization-guide.md`에 이번 3건 수정 내역과
+검증 결과를 추가해라.
+
+## 결과물
+- `attackShout` 무음 버그의 원인과 수정 내역
+- `bluntAttack`/`bowFire` 개선 전후 비교 설명
+- 검증 결과
+```
