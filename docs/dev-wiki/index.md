@@ -55,6 +55,10 @@ repository work.
   pre-integration baseline from commit `f57303b`
 - `audio-integration-validation.md`: live scene integration, dynamic music,
   SFX policy, settings UI, browser evidence, and remaining asset work
+- `ver1-upgrade-plan.md`: the post-ver1 (`5ca9a82`/tag `ver1`) deepening
+  pass — terrain seam quality, unit/structure obliqueness vs. the WC2
+  reference, camera zoom/scale ratio, and combat SFX/vocalization variety,
+  each with confirmed root cause and track assignment
 - `session-tracks.md`: the three parallel work streams (그래픽/캐릭터, 맵 및
   게임 전반, 음악/오디오) — scope, owned files per track, current status,
   and the shared-file rule for `LaneBattleScene.ts`. Every handoff prompt
