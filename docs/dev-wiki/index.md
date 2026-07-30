@@ -55,6 +55,11 @@ repository work.
   pre-integration baseline from commit `f57303b`
 - `audio-integration-validation.md`: live scene integration, dynamic music,
   SFX policy, settings UI, browser evidence, and remaining asset work
+- `audio-synthesis-naturalization-guide.md`: sourced research on why pure
+  oscillator SFX reads as robotic and the concrete, named techniques
+  (detune/layering, noise transients, multi-stage envelopes, per-instance
+  randomization, formant-style filtering for vocalizations) to fix it —
+  read before touching `backend.ts`'s synthesis for the "기계음적" feedback
 - `ver1-upgrade-plan.md`: the post-ver1 (`5ca9a82`/tag `ver1`) deepening
   pass — terrain seam quality, unit/structure obliqueness vs. the WC2
   reference, camera zoom/scale ratio, and combat SFX/vocalization variety,

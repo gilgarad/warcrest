@@ -3893,6 +3893,32 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - `npm run build`
   - `npm test`
 
+## 2026-07-30 (166) — world-surface 지형 seam 진단 및 경계 블렌드 보강
+
+- **사용 도구**: Codex (GPT-5), Playwright headless screenshots, `rg`,
+  `sed`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "`?terrain=world-surface` 기본 모드로 레인 전체 ... 스크린샷으로 남기고"
+  - "배경 매트와 타일/데칼 경계의 색상/해상도를 맞추는 방향으로 다듬어라"
+- **AI 산출물 요약**:
+  - `docs/dev-wiki/terrain-rendering-plan.md`와
+    `docs/dev-wiki/ver1-upgrade-plan.md` item 1을 먼저 읽고, 현재
+    `BattlefieldWorldRenderer`가 world-surface 모드에서 grass 전체 base 위에
+    dirt/road cell만 바로 얹는 구조임을 재확인했다.
+  - Playwright로 `warcrest-two-lane-v1`의 `world-surface` 상태를
+    player/middle/enemy x north/south 6지점 캡처했다. seam은 중앙보다
+    플레이어/적 쪽 끝 segment에서 더 심했고, 특히 `player-north`와
+    `enemy-south`에서 grass 평면과 dirt shoulder가 각진 폴리곤처럼 잘려
+    보였다.
+  - `src/gfx/battlefieldWorldRenderer.ts`에 기존 하이브리드 구조를 유지한 채
+    patch 단위 dirt boundary blend와 road shoulder dust blend 레이어를 추가해,
+    타일 strip 외곽 경계가 grass와 더 부드럽게 이어지도록 보강했다.
+  - 수정 전후 캡처는 `artifacts/terrain-seam-pass/before/`,
+    `artifacts/terrain-seam-pass/after/`에 저장했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+  - `npx playwright test tools/validation/world-surface.spec.ts --workers=1`
 ## 2026-07-30 (166) — 오디오 트랙: 무기군별 전투 SFX와 공격 기합 추가
 
 - **사용 도구**: Codex (GPT-5), `git log`, `git status`, Audio Lab,
