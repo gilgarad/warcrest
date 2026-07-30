@@ -1,0 +1,3759 @@
+{
+  "url": "http://127.0.0.1:4174/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&seed=two-lane-playreview&audioDebug=1&map=warcrest-two-lane-v1",
+  "samples": [
+    {
+      "t": 3.48,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 29.55172,
+        "enemy": 26.516979999999993
+      },
+      "engagement": {
+        "uniqueAttackers": 0,
+        "battleUnits": 9,
+        "currentlyAnimating": 0
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 4,
+          "enemyBattle": 2,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 2,
+          "enemyBattle": 1,
+          "playerSupport": 2,
+          "enemySupport": 1,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 6.07,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 26.96014,
+        "enemy": 23.925399999999993
+      },
+      "engagement": {
+        "uniqueAttackers": 0,
+        "battleUnits": 9,
+        "currentlyAnimating": 0
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 4,
+          "enemyBattle": 2,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 2,
+          "enemyBattle": 1,
+          "playerSupport": 2,
+          "enemySupport": 1,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 8.6,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 24.438579999999998,
+        "enemy": 21.40383999999999
+      },
+      "engagement": {
+        "uniqueAttackers": 0,
+        "battleUnits": 9,
+        "currentlyAnimating": 0
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 4,
+          "enemyBattle": 2,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 2,
+          "enemyBattle": 1,
+          "playerSupport": 2,
+          "enemySupport": 1,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 11.15,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 21.887029999999996,
+        "enemy": 28.88841
+      },
+      "engagement": {
+        "uniqueAttackers": 0,
+        "battleUnits": 12,
+        "currentlyAnimating": 0
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 4,
+          "enemyBattle": 4,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 2,
+          "enemyBattle": 2,
+          "playerSupport": 2,
+          "enemySupport": 2,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 15.06,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 17.97383,
+        "enemy": 24.975210000000004
+      },
+      "engagement": {
+        "uniqueAttackers": 0,
+        "battleUnits": 12,
+        "currentlyAnimating": 0
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 4,
+          "enemyBattle": 4,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 2,
+          "enemyBattle": 2,
+          "playerSupport": 2,
+          "enemySupport": 2,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 17.67,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 15.36563,
+        "enemy": 22.367010000000004
+      },
+      "engagement": {
+        "uniqueAttackers": 6,
+        "battleUnits": 12,
+        "currentlyAnimating": 0
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 4,
+          "enemyBattle": 4,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 2,
+          "enemyBattle": 2,
+          "playerSupport": 2,
+          "enemySupport": 2,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 20.25,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 12.78737,
+        "enemy": 19.788750000000004
+      },
+      "engagement": {
+        "uniqueAttackers": 6,
+        "battleUnits": 10,
+        "currentlyAnimating": 0
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 3,
+          "enemyBattle": 3,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 2,
+          "enemyBattle": 2,
+          "playerSupport": 2,
+          "enemySupport": 2,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 22.94,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 10.090819999999995,
+        "enemy": 17.092199999999995
+      },
+      "engagement": {
+        "uniqueAttackers": 6,
+        "battleUnits": 9,
+        "currentlyAnimating": 0
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 3,
+          "enemyBattle": 3,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 2,
+          "enemyBattle": 1,
+          "playerSupport": 2,
+          "enemySupport": 2,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 25.52,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 7.5192399999999955,
+        "enemy": 14.520619999999997
+      },
+      "engagement": {
+        "uniqueAttackers": 8,
+        "battleUnits": 7,
+        "currentlyAnimating": 1
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 3,
+          "enemyBattle": 2,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 1,
+          "enemyBattle": 1,
+          "playerSupport": 2,
+          "enemySupport": 2,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 29.72,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 3.3110799999999934,
+        "enemy": 10.312459999999994
+      },
+      "engagement": {
+        "uniqueAttackers": 12,
+        "battleUnits": 5,
+        "currentlyAnimating": 1
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 3,
+          "enemyBattle": 1,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 0,
+          "enemyBattle": 1,
+          "playerSupport": 2,
+          "enemySupport": 2,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 34.11,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 28.930049999999998,
+        "enemy": 5.922639999999992
+      },
+      "engagement": {
+        "uniqueAttackers": 12,
+        "battleUnits": 6,
+        "currentlyAnimating": 0
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 4,
+          "enemyBattle": 0,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 1,
+          "enemyBattle": 1,
+          "playerSupport": 3,
+          "enemySupport": 2,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 36.71,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 26.331839999999996,
+        "enemy": 3.3244299999999916
+      },
+      "engagement": {
+        "uniqueAttackers": 12,
+        "battleUnits": 4,
+        "currentlyAnimating": 1
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 2,
+          "enemyBattle": 0,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 123,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 1,
+          "enemyBattle": 1,
+          "playerSupport": 3,
+          "enemySupport": 2,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 39.34,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 23.70357999999999,
+        "enemy": 0.6961699999999921
+      },
+      "engagement": {
+        "uniqueAttackers": 12,
+        "battleUnits": 4,
+        "currentlyAnimating": 0
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 2,
+          "enemyBattle": 0,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 123,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 1,
+          "enemyBattle": 1,
+          "playerSupport": 2,
+          "enemySupport": 2,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 41.87,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 21.175369999999987,
+        "enemy": 28.260089999999998
+      },
+      "engagement": {
+        "uniqueAttackers": 12,
+        "battleUnits": 7,
+        "currentlyAnimating": 0
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 2,
+          "enemyBattle": 2,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 123,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 1,
+          "enemyBattle": 2,
+          "playerSupport": 2,
+          "enemySupport": 3,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 44.44,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 18.60380999999998,
+        "enemy": 25.688529999999993
+      },
+      "engagement": {
+        "uniqueAttackers": 12,
+        "battleUnits": 7,
+        "currentlyAnimating": 1
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 2,
+          "enemyBattle": 2,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 123,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 1,
+          "enemyBattle": 2,
+          "playerSupport": 2,
+          "enemySupport": 3,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 47.06,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 15.980589999999971,
+        "enemy": 23.065309999999982
+      },
+      "engagement": {
+        "uniqueAttackers": 12,
+        "battleUnits": 7,
+        "currentlyAnimating": 0
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 2,
+          "enemyBattle": 2,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 123,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 1,
+          "enemyBattle": 2,
+          "playerSupport": 1,
+          "enemySupport": 3,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 49.54,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 13.499029999999973,
+        "enemy": 20.583749999999988
+      },
+      "engagement": {
+        "uniqueAttackers": 13,
+        "battleUnits": 7,
+        "currentlyAnimating": 1
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 2,
+          "enemyBattle": 2,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 123,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 1,
+          "enemyBattle": 2,
+          "playerSupport": 1,
+          "enemySupport": 3,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 53.92,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 9.11918999999997,
+        "enemy": 16.203909999999976
+      },
+      "engagement": {
+        "uniqueAttackers": 13,
+        "battleUnits": 6,
+        "currentlyAnimating": 1
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 2,
+          "enemyBattle": 2,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 123,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 1,
+          "enemyBattle": 1,
+          "playerSupport": 1,
+          "enemySupport": 2,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 58.34,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 4.7077099999999685,
+        "enemy": 11.792429999999975
+      },
+      "engagement": {
+        "uniqueAttackers": 17,
+        "battleUnits": 6,
+        "currentlyAnimating": 3
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 2,
+          "enemyBattle": 2,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 123,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 1,
+          "enemyBattle": 1,
+          "playerSupport": 1,
+          "enemySupport": 2,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 60.9,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 2.1394599999999686,
+        "enemy": 9.22417999999997
+      },
+      "engagement": {
+        "uniqueAttackers": 18,
+        "battleUnits": 4,
+        "currentlyAnimating": 1
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 1,
+          "enemyBattle": 1,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 123,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 1,
+          "enemyBattle": 1,
+          "playerSupport": 1,
+          "enemySupport": 1,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 63.51,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 29.56333,
+        "enemy": 6.617609999999968
+      },
+      "engagement": {
+        "uniqueAttackers": 18,
+        "battleUnits": 6,
+        "currentlyAnimating": 2
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 3,
+          "enemyBattle": 1,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 123,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 2,
+          "enemyBattle": 0,
+          "playerSupport": 2,
+          "enemySupport": 1,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 66.06,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 27.015100000000007,
+        "enemy": 4.069379999999975
+      },
+      "engagement": {
+        "uniqueAttackers": 18,
+        "battleUnits": 5,
+        "currentlyAnimating": 0
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 2,
+          "enemyBattle": 1,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 123,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 2,
+          "enemyBattle": 0,
+          "playerSupport": 2,
+          "enemySupport": 1,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 68.6,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 24.475209999999997,
+        "enemy": 1.5294899999999667
+      },
+      "engagement": {
+        "uniqueAttackers": 18,
+        "battleUnits": 5,
+        "currentlyAnimating": 1
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 2,
+          "enemyBattle": 1,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 123,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 2,
+          "enemyBattle": 0,
+          "playerSupport": 2,
+          "enemySupport": 1,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "t": 71.22,
+      "playerAge": "bronze",
+      "enemyAge": "stone",
+      "nextWaveInSec": {
+        "player": 21.858639999999998,
+        "enemy": 28.920029999999993
+      },
+      "engagement": {
+        "uniqueAttackers": 18,
+        "battleUnits": 7,
+        "currentlyAnimating": 0
+      },
+      "laneStats": {
+        "north": {
+          "playerBattle": 2,
+          "enemyBattle": 3,
+          "playerSupport": 0,
+          "enemySupport": 0,
+          "controlPoints": [
+            {
+              "id": 0,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 0,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 1,
+              "owner": "enemy",
+              "built": true,
+              "hp": 123,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        },
+        "south": {
+          "playerBattle": 1,
+          "enemyBattle": 1,
+          "playerSupport": 2,
+          "enemySupport": 1,
+          "controlPoints": [
+            {
+              "id": 2,
+              "owner": "player",
+              "control": 1,
+              "buildingId": null,
+              "buildingLevel": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "control": -1,
+              "buildingId": "mint",
+              "buildingLevel": 1
+            }
+          ],
+          "defenseTowers": [
+            {
+              "id": 2,
+              "owner": "player",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            },
+            {
+              "id": 3,
+              "owner": "enemy",
+              "built": true,
+              "hp": 130,
+              "maxHp": 130,
+              "buildRemainingSec": 0
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "final": {
+    "north": {
+      "playerBattle": 2,
+      "enemyBattle": 2,
+      "playerSupport": 0,
+      "enemySupport": 0,
+      "controlPoints": [
+        {
+          "id": 0,
+          "owner": "player",
+          "control": 1,
+          "buildingId": null,
+          "buildingLevel": 0
+        },
+        {
+          "id": 1,
+          "owner": "enemy",
+          "control": -1,
+          "buildingId": "mint",
+          "buildingLevel": 1
+        }
+      ],
+      "defenseTowers": [
+        {
+          "id": 0,
+          "owner": "player",
+          "built": true,
+          "hp": 130,
+          "maxHp": 130,
+          "buildRemainingSec": 0
+        },
+        {
+          "id": 1,
+          "owner": "enemy",
+          "built": true,
+          "hp": 123,
+          "maxHp": 130,
+          "buildRemainingSec": 0
+        }
+      ]
+    },
+    "south": {
+      "playerBattle": 1,
+      "enemyBattle": 1,
+      "playerSupport": 2,
+      "enemySupport": 1,
+      "controlPoints": [
+        {
+          "id": 2,
+          "owner": "player",
+          "control": 1,
+          "buildingId": null,
+          "buildingLevel": 0
+        },
+        {
+          "id": 3,
+          "owner": "enemy",
+          "control": -1,
+          "buildingId": "mint",
+          "buildingLevel": 1
+        }
+      ],
+      "defenseTowers": [
+        {
+          "id": 2,
+          "owner": "player",
+          "built": true,
+          "hp": 130,
+          "maxHp": 130,
+          "buildRemainingSec": 0
+        },
+        {
+          "id": 3,
+          "owner": "enemy",
+          "built": true,
+          "hp": 130,
+          "maxHp": 130,
+          "buildRemainingSec": 0
+        }
+      ]
+    }
+  },
+  "finalSnapshot": {
+    "phase": "lane-siege",
+    "elapsedSec": 73.85020999999988,
+    "player": {
+      "ageId": "bronze",
+      "resources": {
+        "gold": 10018,
+        "wood": 10006,
+        "food": 10065.59364999998,
+        "metal": 10006,
+        "gunpowder": 9999,
+        "fuel": 9999
+      },
+      "workers": {
+        "gold": 1,
+        "wood": 1,
+        "food": 1,
+        "metal": 1,
+        "research": 0,
+        "idle": 0
+      },
+      "baseHp": 400,
+      "nextWaveInSec": 19.223759999999995
+    },
+    "enemy": {
+      "ageId": "stone",
+      "resources": {
+        "gold": 114,
+        "wood": 27,
+        "food": 90.8502099999999,
+        "metal": 9,
+        "gunpowder": 0,
+        "fuel": 0
+      },
+      "workers": {
+        "gold": 1,
+        "wood": 1,
+        "food": 1,
+        "metal": 1,
+        "research": 0,
+        "idle": 0
+      },
+      "baseHp": 400,
+      "nextWaveInSec": 26.28514999999999
+    },
+    "units": [
+      {
+        "id": 20,
+        "team": "player",
+        "unitId": "supply_wagon",
+        "role": "support",
+        "laneId": "south",
+        "progress": 0.49924191599999973,
+        "laneRow": 0.00014972358219383225,
+        "hp": 54,
+        "maxHp": 54,
+        "facingX": 1,
+        "facingDirection": "e",
+        "flipX": false,
+        "tint": 16777215,
+        "motion": {
+          "x": 0,
+          "y": 0
+        },
+        "pose": "supply-wagon-e-idle",
+        "renderTexture": "supply-wagon-e-idle",
+        "attackAnimTime": 0,
+        "attackFacingLockSec": 0,
+        "combatFacingHoldSec": 0,
+        "attackTargetKind": "unit",
+        "manaCurrent": 18,
+        "manaMax": 18,
+        "manaRegenPerSec": 1.25,
+        "healManaCost": 6,
+        "healPower": 4,
+        "presentation": {
+          "x": 3718.478260869565,
+          "y": 2644.457711345234,
+          "rotationRad": 0
+        },
+        "overlay": {
+          "mode": "compact",
+          "hpVisible": true,
+          "manaVisible": true,
+          "labelVisible": true,
+          "labelText": "보급 Lv.1"
+        },
+        "attackTiming": {
+          "durationSec": 0.66,
+          "eventProgress": 0.52,
+          "targetKind": "unit",
+          "eventDelayMs": 343.2
+        }
+      },
+      {
+        "id": 25,
+        "team": "player",
+        "unitId": "stone_slinger",
+        "role": "battle",
+        "laneId": "north",
+        "progress": 0.2893107599999999,
+        "laneRow": 0,
+        "hp": 26,
+        "maxHp": 26,
+        "facingX": 1,
+        "facingDirection": "e",
+        "flipX": false,
+        "tint": 16777215,
+        "motion": {
+          "x": 19.56521739130403,
+          "y": -2.1739130434780236
+        },
+        "pose": "stone-slinger-e-walk-b",
+        "renderTexture": "stone-slinger-e-walk-b",
+        "attackAnimTime": 0,
+        "attackFacingLockSec": 0,
+        "combatFacingHoldSec": 0,
+        "attackTargetKind": "unit",
+        "manaCurrent": 0,
+        "manaMax": 0,
+        "manaRegenPerSec": 0,
+        "healManaCost": 0,
+        "healPower": 0,
+        "presentation": {
+          "x": 2568.478260869565,
+          "y": 1311.1727617827876,
+          "rotationRad": 0
+        },
+        "overlay": {
+          "mode": "compact",
+          "hpVisible": true,
+          "manaVisible": false,
+          "labelVisible": false,
+          "labelText": "투석 Lv.1"
+        },
+        "attackTiming": {
+          "durationSec": 0.58,
+          "eventProgress": 0.42,
+          "targetKind": "unit",
+          "eventDelayMs": 243.6
+        }
+      },
+      {
+        "id": 26,
+        "team": "player",
+        "unitId": "bronze_swordsman",
+        "role": "battle",
+        "laneId": "south",
+        "progress": 0.3002303199999999,
+        "laneRow": 0.00008013261038917707,
+        "hp": 42,
+        "maxHp": 42,
+        "facingX": 1,
+        "facingDirection": "e",
+        "flipX": false,
+        "tint": 16777215,
+        "motion": {
+          "x": 17.391304347826008,
+          "y": 2.1739130434784784
+        },
+        "pose": "bronze-swordsman-e-walk-a",
+        "renderTexture": "bronze-swordsman-e-walk-a",
+        "attackAnimTime": 0,
+        "attackFacingLockSec": 0,
+        "combatFacingHoldSec": 0,
+        "attackTargetKind": "unit",
+        "manaCurrent": 0,
+        "manaMax": 0,
+        "manaRegenPerSec": 0,
+        "healManaCost": 0,
+        "healPower": 0,
+        "presentation": {
+          "x": 2622.826086956522,
+          "y": 2608.3207503991575,
+          "rotationRad": 0
+        },
+        "overlay": {
+          "mode": "compact",
+          "hpVisible": true,
+          "manaVisible": false,
+          "labelVisible": false,
+          "labelText": "청동검 Lv.1"
+        },
+        "attackTiming": {
+          "durationSec": 0.46,
+          "eventProgress": 0.48,
+          "targetKind": "unit",
+          "eventDelayMs": 220.79999999999998
+        }
+      },
+      {
+        "id": 27,
+        "team": "player",
+        "unitId": "bronze_spearman",
+        "role": "battle",
+        "laneId": "north",
+        "progress": 0.27839119999999995,
+        "laneRow": 1.0000303256406602,
+        "hp": 38,
+        "maxHp": 38,
+        "facingX": 1,
+        "facingDirection": "e",
+        "flipX": false,
+        "tint": 16777215,
+        "motion": {
+          "x": 17.391304347826008,
+          "y": -2.173913043478251
+        },
+        "pose": "bronze-spearman-e-walk-a",
+        "renderTexture": "bronze-spearman-e-walk-a",
+        "attackAnimTime": 0,
+        "attackFacingLockSec": 0,
+        "combatFacingHoldSec": 0,
+        "attackTargetKind": "unit",
+        "manaCurrent": 0,
+        "manaMax": 0,
+        "manaRegenPerSec": 0,
+        "healManaCost": 0,
+        "healPower": 0,
+        "presentation": {
+          "x": 2516.304347826087,
+          "y": 1383.5697348255394,
+          "rotationRad": 0
+        },
+        "overlay": {
+          "mode": "compact",
+          "hpVisible": true,
+          "manaVisible": false,
+          "labelVisible": false,
+          "labelText": "청동창 Lv.1"
+        },
+        "attackTiming": {
+          "durationSec": 0.46,
+          "eventProgress": 0.48,
+          "targetKind": "unit",
+          "eventDelayMs": 220.79999999999998
+        }
+      },
+      {
+        "id": 28,
+        "team": "player",
+        "unitId": "supply_wagon",
+        "role": "support",
+        "laneId": "south",
+        "progress": 0.2386706959999999,
+        "laneRow": 0,
+        "hp": 54,
+        "maxHp": 54,
+        "facingX": 1,
+        "facingDirection": "e",
+        "flipX": false,
+        "tint": 16777215,
+        "motion": {
+          "x": 17.391304347826008,
+          "y": 2.1739130434780236
+        },
+        "pose": "supply-wagon-e-walk-a",
+        "renderTexture": "supply-wagon-e-walk-a",
+        "attackAnimTime": 0,
+        "attackFacingLockSec": 0,
+        "combatFacingHoldSec": 0,
+        "attackTargetKind": "unit",
+        "manaCurrent": 18,
+        "manaMax": 18,
+        "manaRegenPerSec": 1.25,
+        "healManaCost": 6,
+        "healPower": 4,
+        "presentation": {
+          "x": 2277.173913043478,
+          "y": 2554.964475148087,
+          "rotationRad": 0
+        },
+        "overlay": {
+          "mode": "compact",
+          "hpVisible": true,
+          "manaVisible": true,
+          "labelVisible": true,
+          "labelText": "보급 Lv.1"
+        },
+        "attackTiming": {
+          "durationSec": 0.66,
+          "eventProgress": 0.52,
+          "targetKind": "unit",
+          "eventDelayMs": 343.2
+        }
+      },
+      {
+        "id": 29,
+        "team": "enemy",
+        "unitId": "stone_slinger",
+        "role": "battle",
+        "laneId": "north",
+        "progress": 0.85880308,
+        "laneRow": 0,
+        "hp": 26,
+        "maxHp": 26,
+        "facingX": -1,
+        "facingDirection": "w",
+        "flipX": false,
+        "tint": 16777215,
+        "motion": {
+          "x": -8.695652173913004,
+          "y": 0
+        },
+        "pose": "stone-slinger-w-walk-a",
+        "renderTexture": "stone-slinger-w-walk-a-enemy",
+        "attackAnimTime": 0,
+        "attackFacingLockSec": 0,
+        "combatFacingHoldSec": 0,
+        "attackTargetKind": "unit",
+        "manaCurrent": 0,
+        "manaMax": 0,
+        "manaRegenPerSec": 0,
+        "healManaCost": 0,
+        "healPower": 0,
+        "presentation": {
+          "x": 5451.086956521739,
+          "y": 1433.5535309970164,
+          "rotationRad": 0
+        },
+        "overlay": {
+          "mode": "compact",
+          "hpVisible": true,
+          "manaVisible": false,
+          "labelVisible": false,
+          "labelText": "투석 Lv.1"
+        },
+        "attackTiming": {
+          "durationSec": 0.58,
+          "eventProgress": 0.42,
+          "targetKind": "unit",
+          "eventDelayMs": 243.6
+        }
+      },
+      {
+        "id": 30,
+        "team": "enemy",
+        "unitId": "stone_axeman",
+        "role": "battle",
+        "laneId": "south",
+        "progress": 0.8549365599999995,
+        "laneRow": 0.00013740283598033632,
+        "hp": 34,
+        "maxHp": 34,
+        "facingX": -1,
+        "facingDirection": "w",
+        "flipX": false,
+        "tint": 16777215,
+        "motion": {
+          "x": -10.869565217391028,
+          "y": 2.1739130434780236
+        },
+        "pose": "stone-axeman-w-walk-b",
+        "renderTexture": "stone-axeman-w-walk-b-enemy",
+        "attackAnimTime": 0,
+        "attackFacingLockSec": 0,
+        "combatFacingHoldSec": 0,
+        "attackTargetKind": "unit",
+        "manaCurrent": 0,
+        "manaMax": 0,
+        "manaRegenPerSec": 0,
+        "healManaCost": 0,
+        "healPower": 0,
+        "presentation": {
+          "x": 5440.217391304348,
+          "y": 2460.472501445519,
+          "rotationRad": 0
+        },
+        "overlay": {
+          "mode": "compact",
+          "hpVisible": true,
+          "manaVisible": false,
+          "labelVisible": false,
+          "labelText": "도끼 Lv.1"
+        },
+        "attackTiming": {
+          "durationSec": 0.46,
+          "eventProgress": 0.48,
+          "targetKind": "unit",
+          "eventDelayMs": 220.79999999999998
+        }
+      },
+      {
+        "id": 31,
+        "team": "enemy",
+        "unitId": "stone_axeman",
+        "role": "battle",
+        "laneId": "north",
+        "progress": 0.8549365599999995,
+        "laneRow": 1.0000056860576059,
+        "hp": 34,
+        "maxHp": 34,
+        "facingX": -1,
+        "facingDirection": "w",
+        "flipX": false,
+        "tint": 16777215,
+        "motion": {
+          "x": -10.869565217391937,
+          "y": 0
+        },
+        "pose": "stone-axeman-w-walk-a",
+        "renderTexture": "stone-axeman-w-walk-a-enemy",
+        "attackAnimTime": 0,
+        "attackFacingLockSec": 0,
+        "combatFacingHoldSec": 0,
+        "attackTargetKind": "unit",
+        "manaCurrent": 0,
+        "manaMax": 0,
+        "manaRegenPerSec": 0,
+        "healManaCost": 0,
+        "healPower": 0,
+        "presentation": {
+          "x": 5429.347826086956,
+          "y": 1497.9119590829073,
+          "rotationRad": 0
+        },
+        "overlay": {
+          "mode": "compact",
+          "hpVisible": true,
+          "manaVisible": false,
+          "labelVisible": false,
+          "labelText": "도끼 Lv.1"
+        },
+        "attackTiming": {
+          "durationSec": 0.46,
+          "eventProgress": 0.48,
+          "targetKind": "unit",
+          "eventDelayMs": 220.79999999999998
+        }
+      },
+      {
+        "id": 32,
+        "team": "enemy",
+        "unitId": "supply_wagon",
+        "role": "support",
+        "laneId": "south",
+        "progress": 0.9175679600000001,
+        "laneRow": 0,
+        "hp": 54,
+        "maxHp": 54,
+        "facingX": -1,
+        "facingDirection": "w",
+        "flipX": false,
+        "tint": 16777215,
+        "motion": {
+          "x": -8.695652173913004,
+          "y": 0
+        },
+        "pose": "supply-wagon-w-walk-a",
+        "renderTexture": "supply-wagon-w-walk-a-enemy",
+        "attackAnimTime": 0,
+        "attackFacingLockSec": 0,
+        "combatFacingHoldSec": 0,
+        "attackTargetKind": "unit",
+        "manaCurrent": 18,
+        "manaMax": 18,
+        "manaRegenPerSec": 1.25,
+        "healManaCost": 6,
+        "healPower": 4,
+        "presentation": {
+          "x": 5622.826086956522,
+          "y": 2431.7154603339313,
+          "rotationRad": 0
+        },
+        "overlay": {
+          "mode": "compact",
+          "hpVisible": true,
+          "manaVisible": true,
+          "labelVisible": true,
+          "labelText": "보급 Lv.1"
+        },
+        "attackTiming": {
+          "durationSec": 0.66,
+          "eventProgress": 0.52,
+          "targetKind": "unit",
+          "eventDelayMs": 343.2
+        }
+      }
+    ],
+    "battlefield": {
+      "capturePoints": [
+        {
+          "x": 12,
+          "y": 10
+        },
+        {
+          "x": 20,
+          "y": 10
+        },
+        {
+          "x": 28,
+          "y": 10
+        }
+      ],
+      "controlPoints": [
+        {
+          "id": 0,
+          "laneId": "north",
+          "pointType": "buildable",
+          "allowedBuildingTypes": [
+            "supply_depot",
+            "mint"
+          ],
+          "owner": "player",
+          "control": 1,
+          "progress": 0.18,
+          "worldX": 1994.5652173913045,
+          "worldY": 1403.3695652173915,
+          "labelWorldX": 1994.5652173913045,
+          "labelWorldY": 1155.5434782608697,
+          "markerTexture": "capture-marker",
+          "buildingId": null,
+          "buildingLevel": 0,
+          "availableActions": [
+            "build-supply-depot",
+            "build-mint"
+          ]
+        },
+        {
+          "id": 1,
+          "laneId": "north",
+          "pointType": "buildable",
+          "allowedBuildingTypes": [
+            "supply_depot",
+            "mint"
+          ],
+          "owner": "enemy",
+          "control": -1,
+          "progress": 0.82,
+          "worldX": 5301.086956521739,
+          "worldY": 1409.891304347826,
+          "labelWorldX": 5301.086956521739,
+          "labelWorldY": 1162.0652173913043,
+          "markerTexture": "capture-marker-enemy",
+          "buildingId": "mint",
+          "buildingLevel": 1,
+          "availableActions": []
+        },
+        {
+          "id": 2,
+          "laneId": "south",
+          "pointType": "buildable",
+          "allowedBuildingTypes": [
+            "supply_depot",
+            "mint"
+          ],
+          "owner": "player",
+          "control": 1,
+          "progress": 0.18,
+          "worldX": 1994.5652173913045,
+          "worldY": 2507.717391304348,
+          "labelWorldX": 1994.5652173913045,
+          "labelWorldY": 2259.8913043478265,
+          "markerTexture": "capture-marker",
+          "buildingId": null,
+          "buildingLevel": 0,
+          "availableActions": [
+            "build-supply-depot",
+            "build-mint"
+          ]
+        },
+        {
+          "id": 3,
+          "laneId": "south",
+          "pointType": "buildable",
+          "allowedBuildingTypes": [
+            "supply_depot",
+            "mint"
+          ],
+          "owner": "enemy",
+          "control": -1,
+          "progress": 0.82,
+          "worldX": 5301.086956521739,
+          "worldY": 2479.4565217391305,
+          "labelWorldX": 5301.086956521739,
+          "labelWorldY": 2231.630434782609,
+          "markerTexture": "capture-marker-enemy",
+          "buildingId": "mint",
+          "buildingLevel": 1,
+          "availableActions": []
+        }
+      ],
+      "defenseTowers": [
+        {
+          "id": 0,
+          "laneId": "north",
+          "owner": "player",
+          "linkedCapturePointId": 0,
+          "progress": 0.38,
+          "built": true,
+          "hp": 130,
+          "maxHp": 130,
+          "buildRemainingSec": 0
+        },
+        {
+          "id": 1,
+          "laneId": "north",
+          "owner": "enemy",
+          "linkedCapturePointId": 1,
+          "progress": 0.62,
+          "built": true,
+          "hp": 123,
+          "maxHp": 130,
+          "buildRemainingSec": 0
+        },
+        {
+          "id": 2,
+          "laneId": "south",
+          "owner": "player",
+          "linkedCapturePointId": 2,
+          "progress": 0.38,
+          "built": true,
+          "hp": 130,
+          "maxHp": 130,
+          "buildRemainingSec": 0
+        },
+        {
+          "id": 3,
+          "laneId": "south",
+          "owner": "enemy",
+          "linkedCapturePointId": 3,
+          "progress": 0.62,
+          "built": true,
+          "hp": 130,
+          "maxHp": 130,
+          "buildRemainingSec": 0
+        }
+      ],
+      "laneStart": {
+        "x": 1180,
+        "y": 1600
+      },
+      "laneEnd": {
+        "x": 5840,
+        "y": 1500
+      },
+      "lanes": [
+        {
+          "id": "north",
+          "role": "north",
+          "start": {
+            "x": 1180,
+            "y": 1600
+          },
+          "end": {
+            "x": 5840,
+            "y": 1500
+          }
+        },
+        {
+          "id": "south",
+          "role": "south",
+          "start": {
+            "x": 1180,
+            "y": 2320
+          },
+          "end": {
+            "x": 5840,
+            "y": 2400
+          }
+        }
+      ]
+    },
+    "ui": {
+      "ageLabel": "시대 청동기",
+      "selectedCapturePointId": 1,
+      "selectedDefenseTowerId": null,
+      "visibleCaptureActions": [],
+      "hudVisible": true,
+      "composition": {
+        "topHeight": 153.11004784688996,
+        "bottomHeight": 210.52631578947367,
+        "openWorldHeight": 536.3636363636364,
+        "openWorldRatio": 0.595959595959596
+      },
+      "unitOverlayDensityEnabled": true,
+      "unitOverlayModes": {
+        "20": "compact",
+        "25": "compact",
+        "26": "compact",
+        "27": "compact",
+        "28": "compact",
+        "29": "compact",
+        "30": "compact",
+        "31": "compact",
+        "32": "compact"
+      }
+    },
+    "activeProjectiles": [],
+    "engagement": {
+      "uniqueAttackers": 18,
+      "battleUnits": 6,
+      "currentlyAnimating": 0
+    },
+    "towerAttackPatterns": {
+      "stone": {
+        "projectileKey": "projectile-stone",
+        "projectileCount": 2,
+        "perProjectileDamage": 7,
+        "spreadWorldPx": 18,
+        "rangeProgress": 0.072,
+        "cooldownSec": 1.3
+      },
+      "bronze": {
+        "projectileKey": "projectile-stone",
+        "projectileCount": 2,
+        "perProjectileDamage": 7,
+        "spreadWorldPx": 18,
+        "rangeProgress": 0.072,
+        "cooldownSec": 1.3
+      }
+    },
+    "verification": {
+      "seed": "two-lane-playreview",
+      "terrainMode": "world-surface",
+      "prototypePreset": "balanced",
+      "scalePreset": "recommended",
+      "visualValidationScenario": false,
+      "camera": {
+        "scrollX": 4025,
+        "scrollY": 2092.5,
+        "zoom": 0.46,
+        "centerX": 4825,
+        "centerY": 2542.5
+      },
+      "rules": {
+        "worldWidth": 7000,
+        "worldHeight": 3900,
+        "cameraZoom": 0.46,
+        "waveIntervalSec": 30,
+        "unitProgressSpeed": 0.02,
+        "rangeToProgress": 0.013,
+        "friendlyGap": 0.011,
+        "engageGap": 0.022,
+        "captureRadiusProgress": 0.06,
+        "captureRatePerSec": 0.36,
+        "playerBaseHp": 400,
+        "enemyBaseHp": 400,
+        "laneRowSpacing": 62
+      },
+      "terrain": {
+        "mapSpecId": "warcrest-two-lane-v1",
+        "patchCount": 12,
+        "cellCount": 642,
+        "structureSocketCount": 8,
+        "propGrounding": [
+          {
+            "id": "two-lane-north-west-pines",
+            "textureKey": "field-pine",
+            "groundOriginY": 0.875,
+            "shadow": {
+              "offsetX": 7,
+              "offsetY": 3,
+              "widthScale": 0.84,
+              "heightScale": 0.52,
+              "rotationRad": -0.1,
+              "alpha": 0.34
+            }
+          },
+          {
+            "id": "two-lane-north-west-rock",
+            "textureKey": "rock-cluster",
+            "groundOriginY": 0.875,
+            "shadow": {
+              "offsetX": 4,
+              "offsetY": 2,
+              "widthScale": 0.92,
+              "heightScale": 0.5,
+              "rotationRad": -0.08,
+              "alpha": 0.3
+            }
+          },
+          {
+            "id": "two-lane-center-divider-oak",
+            "textureKey": "field-oak",
+            "groundOriginY": 0.875,
+            "shadow": {
+              "offsetX": 7,
+              "offsetY": 3,
+              "widthScale": 0.84,
+              "heightScale": 0.52,
+              "rotationRad": -0.1,
+              "alpha": 0.34
+            }
+          },
+          {
+            "id": "two-lane-center-divider-boulder",
+            "textureKey": "field-boulder",
+            "groundOriginY": 0.875,
+            "shadow": {
+              "offsetX": 4,
+              "offsetY": 2,
+              "widthScale": 0.92,
+              "heightScale": 0.5,
+              "rotationRad": -0.08,
+              "alpha": 0.3
+            }
+          },
+          {
+            "id": "two-lane-south-west-log",
+            "textureKey": "fallen-log",
+            "groundOriginY": 0.875,
+            "shadow": {
+              "offsetX": 7,
+              "offsetY": 3,
+              "widthScale": 0.84,
+              "heightScale": 0.52,
+              "rotationRad": -0.1,
+              "alpha": 0.34
+            }
+          },
+          {
+            "id": "two-lane-south-west-oaks",
+            "textureKey": "field-oak",
+            "groundOriginY": 0.875,
+            "shadow": {
+              "offsetX": 7,
+              "offsetY": 3,
+              "widthScale": 0.84,
+              "heightScale": 0.52,
+              "rotationRad": -0.1,
+              "alpha": 0.34
+            }
+          },
+          {
+            "id": "two-lane-north-east-boulder",
+            "textureKey": "field-boulder",
+            "groundOriginY": 0.875,
+            "shadow": {
+              "offsetX": 4,
+              "offsetY": 2,
+              "widthScale": 0.92,
+              "heightScale": 0.5,
+              "rotationRad": -0.08,
+              "alpha": 0.3
+            }
+          },
+          {
+            "id": "two-lane-south-east-pines",
+            "textureKey": "field-pine",
+            "groundOriginY": 0.875,
+            "shadow": {
+              "offsetX": 7,
+              "offsetY": 3,
+              "widthScale": 0.84,
+              "heightScale": 0.52,
+              "rotationRad": -0.1,
+              "alpha": 0.34
+            }
+          }
+        ]
+      },
+      "presentation": {
+        "scalePreset": "recommended",
+        "canvasCssScale": 1,
+        "devicePixelRatio": 1,
+        "configuredVisibleCssHeights": {
+          "normalUnit": 100,
+          "supportUnit": 116,
+          "largeUnit": 122,
+          "captureTower": 144,
+          "fixedFortress": 162
+        },
+        "configuredFontCssPx": {
+          "unit": 14,
+          "selectedUnit": 15,
+          "auxiliary": 13,
+          "tower": 16,
+          "fixedFortress": 17
+        },
+        "sampledUnits": [
+          {
+            "id": 20,
+            "unitId": "supply_wagon",
+            "pose": "supply-wagon-e-idle",
+            "worldWidth": 478.1964573268921,
+            "worldHeight": 358.6473429951691,
+            "canvasScreenWidth": 219.97037037037038,
+            "canvasScreenHeight": 164.9777777777778,
+            "cssFrameWidth": 219.97037037037038,
+            "cssFrameHeight": 164.9777777777778,
+            "cssVisibleHeight": 116,
+            "originX": 0.5,
+            "originY": 0.875,
+            "hpWorldWidth": 113.04347826086956,
+            "hpWorldHeight": 13.043478260869565,
+            "hpCssWidth": 52,
+            "hpCssHeight": 6,
+            "manaCurrent": 18,
+            "manaMax": 18,
+            "manaRegenPerSec": 1.25,
+            "healManaCost": 6,
+            "labelCssFontSize": 13.8,
+            "labelResolution": 2,
+            "labelScale": 1,
+            "labelVisible": true,
+            "facingX": 1,
+            "flipX": false,
+            "motion": {
+              "x": 0,
+              "y": 0
+            }
+          },
+          {
+            "id": 25,
+            "unitId": "stone_slinger",
+            "pose": "stone-slinger-e-walk-b",
+            "worldWidth": 296.81159420289856,
+            "worldHeight": 296.81159420289856,
+            "canvasScreenWidth": 136.53333333333333,
+            "canvasScreenHeight": 136.53333333333333,
+            "cssFrameWidth": 136.53333333333333,
+            "cssFrameHeight": 136.53333333333333,
+            "cssVisibleHeight": 96.00000000000001,
+            "originX": 0.5,
+            "originY": 0.875,
+            "hpWorldWidth": 113.04347826086956,
+            "hpWorldHeight": 13.043478260869565,
+            "hpCssWidth": 52,
+            "hpCssHeight": 6,
+            "manaCurrent": 0,
+            "manaMax": 0,
+            "manaRegenPerSec": 0,
+            "healManaCost": 0,
+            "labelCssFontSize": 13.8,
+            "labelResolution": 2,
+            "labelScale": 1,
+            "labelVisible": false,
+            "facingX": 1,
+            "flipX": false,
+            "motion": {
+              "x": 19.56521739130403,
+              "y": -2.1739130434780236
+            }
+          },
+          {
+            "id": 26,
+            "unitId": "bronze_swordsman",
+            "pose": "bronze-swordsman-e-walk-a",
+            "worldWidth": 309.1787439613526,
+            "worldHeight": 309.1787439613526,
+            "canvasScreenWidth": 142.2222222222222,
+            "canvasScreenHeight": 142.2222222222222,
+            "cssFrameWidth": 142.2222222222222,
+            "cssFrameHeight": 142.2222222222222,
+            "cssVisibleHeight": 100,
+            "originX": 0.5,
+            "originY": 0.875,
+            "hpWorldWidth": 113.04347826086956,
+            "hpWorldHeight": 13.043478260869565,
+            "hpCssWidth": 52,
+            "hpCssHeight": 6,
+            "manaCurrent": 0,
+            "manaMax": 0,
+            "manaRegenPerSec": 0,
+            "healManaCost": 0,
+            "labelCssFontSize": 13.8,
+            "labelResolution": 2,
+            "labelScale": 1,
+            "labelVisible": false,
+            "facingX": 1,
+            "flipX": false,
+            "motion": {
+              "x": 17.391304347826008,
+              "y": 2.1739130434784784
+            }
+          },
+          {
+            "id": 27,
+            "unitId": "bronze_spearman",
+            "pose": "bronze-spearman-e-walk-a",
+            "worldWidth": 309.1787439613526,
+            "worldHeight": 309.1787439613526,
+            "canvasScreenWidth": 142.2222222222222,
+            "canvasScreenHeight": 142.2222222222222,
+            "cssFrameWidth": 142.2222222222222,
+            "cssFrameHeight": 142.2222222222222,
+            "cssVisibleHeight": 100,
+            "originX": 0.5,
+            "originY": 0.875,
+            "hpWorldWidth": 113.04347826086956,
+            "hpWorldHeight": 13.043478260869565,
+            "hpCssWidth": 52,
+            "hpCssHeight": 6,
+            "manaCurrent": 0,
+            "manaMax": 0,
+            "manaRegenPerSec": 0,
+            "healManaCost": 0,
+            "labelCssFontSize": 13.8,
+            "labelResolution": 2,
+            "labelScale": 1,
+            "labelVisible": false,
+            "facingX": 1,
+            "flipX": false,
+            "motion": {
+              "x": 17.391304347826008,
+              "y": -2.173913043478251
+            }
+          },
+          {
+            "id": 28,
+            "unitId": "supply_wagon",
+            "pose": "supply-wagon-e-walk-a",
+            "worldWidth": 478.1964573268921,
+            "worldHeight": 358.6473429951691,
+            "canvasScreenWidth": 219.97037037037038,
+            "canvasScreenHeight": 164.9777777777778,
+            "cssFrameWidth": 219.97037037037038,
+            "cssFrameHeight": 164.9777777777778,
+            "cssVisibleHeight": 116,
+            "originX": 0.5,
+            "originY": 0.875,
+            "hpWorldWidth": 113.04347826086956,
+            "hpWorldHeight": 13.043478260869565,
+            "hpCssWidth": 52,
+            "hpCssHeight": 6,
+            "manaCurrent": 18,
+            "manaMax": 18,
+            "manaRegenPerSec": 1.25,
+            "healManaCost": 6,
+            "labelCssFontSize": 13.8,
+            "labelResolution": 2,
+            "labelScale": 1,
+            "labelVisible": true,
+            "facingX": 1,
+            "flipX": false,
+            "motion": {
+              "x": 17.391304347826008,
+              "y": 2.1739130434780236
+            }
+          },
+          {
+            "id": 29,
+            "unitId": "stone_slinger",
+            "pose": "stone-slinger-w-walk-a",
+            "worldWidth": 296.81159420289856,
+            "worldHeight": 296.81159420289856,
+            "canvasScreenWidth": 136.53333333333333,
+            "canvasScreenHeight": 136.53333333333333,
+            "cssFrameWidth": 136.53333333333333,
+            "cssFrameHeight": 136.53333333333333,
+            "cssVisibleHeight": 96.00000000000001,
+            "originX": 0.5,
+            "originY": 0.875,
+            "hpWorldWidth": 113.04347826086956,
+            "hpWorldHeight": 13.043478260869565,
+            "hpCssWidth": 52,
+            "hpCssHeight": 6,
+            "manaCurrent": 0,
+            "manaMax": 0,
+            "manaRegenPerSec": 0,
+            "healManaCost": 0,
+            "labelCssFontSize": 13.8,
+            "labelResolution": 2,
+            "labelScale": 1,
+            "labelVisible": false,
+            "facingX": -1,
+            "flipX": false,
+            "motion": {
+              "x": -8.695652173913004,
+              "y": 0
+            }
+          },
+          {
+            "id": 30,
+            "unitId": "stone_axeman",
+            "pose": "stone-axeman-w-walk-b",
+            "worldWidth": 321.54589371980677,
+            "worldHeight": 321.54589371980677,
+            "canvasScreenWidth": 147.91111111111113,
+            "canvasScreenHeight": 147.91111111111113,
+            "cssFrameWidth": 147.91111111111113,
+            "cssFrameHeight": 147.91111111111113,
+            "cssVisibleHeight": 104,
+            "originX": 0.5,
+            "originY": 0.875,
+            "hpWorldWidth": 113.04347826086956,
+            "hpWorldHeight": 13.043478260869565,
+            "hpCssWidth": 52,
+            "hpCssHeight": 6,
+            "manaCurrent": 0,
+            "manaMax": 0,
+            "manaRegenPerSec": 0,
+            "healManaCost": 0,
+            "labelCssFontSize": 13.8,
+            "labelResolution": 2,
+            "labelScale": 1,
+            "labelVisible": false,
+            "facingX": -1,
+            "flipX": false,
+            "motion": {
+              "x": -10.869565217391028,
+              "y": 2.1739130434780236
+            }
+          },
+          {
+            "id": 31,
+            "unitId": "stone_axeman",
+            "pose": "stone-axeman-w-walk-a",
+            "worldWidth": 321.54589371980677,
+            "worldHeight": 321.54589371980677,
+            "canvasScreenWidth": 147.91111111111113,
+            "canvasScreenHeight": 147.91111111111113,
+            "cssFrameWidth": 147.91111111111113,
+            "cssFrameHeight": 147.91111111111113,
+            "cssVisibleHeight": 104,
+            "originX": 0.5,
+            "originY": 0.875,
+            "hpWorldWidth": 113.04347826086956,
+            "hpWorldHeight": 13.043478260869565,
+            "hpCssWidth": 52,
+            "hpCssHeight": 6,
+            "manaCurrent": 0,
+            "manaMax": 0,
+            "manaRegenPerSec": 0,
+            "healManaCost": 0,
+            "labelCssFontSize": 13.8,
+            "labelResolution": 2,
+            "labelScale": 1,
+            "labelVisible": false,
+            "facingX": -1,
+            "flipX": false,
+            "motion": {
+              "x": -10.869565217391937,
+              "y": 0
+            }
+          }
+        ],
+        "captureTowers": [
+          {
+            "id": 0,
+            "pointType": "defense-tower",
+            "textureKey": "defense-tower-full",
+            "worldX": 3118.478260869565,
+            "worldY": 1292.5,
+            "cssFrameHeight": 204.8,
+            "cssVisibleHeight": 144,
+            "originY": 0.875
+          },
+          {
+            "id": 1,
+            "pointType": "defense-tower",
+            "textureKey": "defense-tower-full-enemy",
+            "worldX": 4342.391304347826,
+            "worldY": 1312.0652173913045,
+            "cssFrameHeight": 204.8,
+            "cssVisibleHeight": 144,
+            "originY": 0.875
+          },
+          {
+            "id": 2,
+            "pointType": "defense-tower",
+            "textureKey": "defense-tower-full",
+            "worldX": 3103.2608695652175,
+            "worldY": 2635.978260869565,
+            "cssFrameHeight": 204.8,
+            "cssVisibleHeight": 144,
+            "originY": 0.875
+          },
+          {
+            "id": 3,
+            "pointType": "defense-tower",
+            "textureKey": "defense-tower-full-enemy",
+            "worldX": 4335.869565217391,
+            "worldY": 2596.8478260869565,
+            "cssFrameHeight": 204.8,
+            "cssVisibleHeight": 144,
+            "originY": 0.875
+          }
+        ],
+        "centralTower": {
+          "pointType": "defense-tower",
+          "worldWidth": 445.2173913043478,
+          "worldHeight": 445.2173913043478,
+          "cssFrameWidth": 204.8,
+          "cssFrameHeight": 204.8,
+          "cssVisibleHeight": 144,
+          "originY": 0.875,
+          "hpWorldWidth": 234.78260869565216,
+          "hpWorldHeight": 19.565217391304348,
+          "hpCssWidth": 108,
+          "hpCssHeight": 9,
+          "labelCssFontSize": 16.1,
+          "labelResolution": 2,
+          "labelScale": 1,
+          "availableActions": []
+        }
+      },
+      "unitStats": {
+        "stone_slinger": {
+          "hp": 26,
+          "attack": 7,
+          "defense": 2,
+          "range": 4.5,
+          "speed": 1.05,
+          "attackCooldownSec": 1.3,
+          "healPower": 0
+        },
+        "stone_axeman": {
+          "hp": 34,
+          "attack": 9,
+          "defense": 3,
+          "range": 1.5,
+          "speed": 1.1,
+          "attackCooldownSec": 1,
+          "healPower": 0
+        },
+        "bronze_swordsman": {
+          "hp": 42,
+          "attack": 12,
+          "defense": 5,
+          "range": 1.5,
+          "speed": 1.1,
+          "attackCooldownSec": 0.95,
+          "healPower": 0
+        },
+        "bronze_spearman": {
+          "hp": 38,
+          "attack": 11,
+          "defense": 5,
+          "range": 2.2,
+          "speed": 1,
+          "attackCooldownSec": 1.05,
+          "healPower": 0
+        },
+        "archer": {
+          "hp": 30,
+          "attack": 13,
+          "defense": 3,
+          "range": 5.2,
+          "speed": 1.15,
+          "attackCooldownSec": 2,
+          "healPower": 0
+        },
+        "iron_swordsman": {
+          "hp": 54,
+          "attack": 16,
+          "defense": 8,
+          "range": 1.6,
+          "speed": 1.12,
+          "attackCooldownSec": 0.9,
+          "healPower": 0
+        },
+        "iron_spearman": {
+          "hp": 50,
+          "attack": 15,
+          "defense": 7,
+          "range": 2.4,
+          "speed": 1.06,
+          "attackCooldownSec": 1,
+          "healPower": 0
+        },
+        "musketeer": {
+          "hp": 36,
+          "attack": 21,
+          "defense": 4,
+          "range": 6.4,
+          "speed": 1,
+          "attackCooldownSec": 2.1,
+          "healPower": 0
+        },
+        "knight": {
+          "hp": 72,
+          "attack": 22,
+          "defense": 10,
+          "range": 1.8,
+          "speed": 1.35,
+          "attackCooldownSec": 1.45,
+          "healPower": 0
+        },
+        "supply_wagon": {
+          "hp": 54,
+          "attack": 0,
+          "defense": 3,
+          "range": 4.4,
+          "speed": 0.98,
+          "attackCooldownSec": 1.2,
+          "healPower": 4
+        }
+      }
+    }
+  },
+  "audioState": {
+    "initialized": true,
+    "unlocked": true,
+    "contextState": "running",
+    "currentBgmId": "bgm.battle.high",
+    "bgmState": "battle-high",
+    "activeBgmVoices": 1,
+    "activeSfxVoices": 0,
+    "settings": {
+      "version": 2,
+      "masterVolume": 0.8,
+      "bgmVolume": 0.8,
+      "sfxVolume": 0.9,
+      "mute": false,
+      "muteWhenUnfocused": true,
+      "combatSfxMode": "reduced",
+      "crossfadeDurationMs": 1200
+    },
+    "recentEvents": [
+      {
+        "id": "sfx.combat.meleeAttack",
+        "result": "sampled",
+        "atMs": 81862
+      },
+      {
+        "id": "sfx.combat.meleeHit",
+        "result": "sampled",
+        "atMs": 82164
+      },
+      {
+        "id": "sfx.combat.meleeAttack",
+        "result": "sampled",
+        "atMs": 82942
+      },
+      {
+        "id": "sfx.combat.meleeHit",
+        "result": "sampled",
+        "atMs": 83244
+      },
+      {
+        "id": "sfx.combat.unitDeath",
+        "result": "sampled",
+        "atMs": 83249
+      },
+      {
+        "id": "sfx.combat.towerAttack",
+        "result": "played",
+        "atMs": 84172
+      },
+      {
+        "id": "sfx.combat.projectileHit",
+        "result": "played",
+        "atMs": 84799
+      },
+      {
+        "id": "sfx.combat.projectileHit",
+        "result": "duplicate",
+        "atMs": 84799
+      },
+      {
+        "id": "sfx.combat.unitDeath",
+        "result": "played",
+        "atMs": 84799
+      },
+      {
+        "id": "sfx.combat.towerAttack",
+        "result": "sampled",
+        "atMs": 85751
+      },
+      {
+        "id": "sfx.combat.projectileHit",
+        "result": "sampled",
+        "atMs": 86343
+      },
+      {
+        "id": "sfx.combat.unitDeath",
+        "result": "sampled",
+        "atMs": 86343
+      }
+    ],
+    "skippedEventCount": 185,
+    "unlockAttemptCount": 1,
+    "missingAssetFallback": true,
+    "focusMuted": false,
+    "lastError": null
+  }
+}

@@ -1,16 +1,17 @@
 {
   "hpBefore": 130,
   "hpAfter": 123,
+  "configuredReleaseDelayMs": 243.6,
   "projectileAtRelease": [
     {
       "textureKey": "projectile-stone",
-      "x": 4723.526100557534,
-      "y": 1290.9472697360645
+      "x": 4079.666837405578,
+      "y": 1602.3243924906164
     },
     {
       "textureKey": "projectile-stone",
-      "x": 4759.269295001979,
-      "y": 1293.8688742046254
+      "x": 4113.986281850022,
+      "y": 1604.808682971221
     }
   ]
 }

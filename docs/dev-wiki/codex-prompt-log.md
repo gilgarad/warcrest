@@ -738,3 +738,3140 @@ dirt: 0.2, stone: 0.32`)를 또 조정하는 수준의 대응은 **이번엔 받
 필요한 부분을 정리해라. `docs/dev-wiki/log.md`에 하네스 규칙대로 기록하고,
 순서대로 하나씩 끝내고 다음으로 넘어가라.
 ```
+
+## 2026-07-27 (4) — 유닛 잘림/모션/청동창병/타워 2연사/리팩토링 프롬프트
+
+- **사용자 상황/요청 원문 요약**:
+  - 목적은 `[프롬프트 생성]`.
+  - 사용자가 실제 작업 세션에도 동일 스크린샷을 첨부할 예정이므로, 이
+    프롬프트도 스크린샷 참고를 전제로 작성.
+  - 핵심 요구:
+    1. "첨부된 스크린샷에서처럼 미니언 이미지 타일이 잘려서 엉뚱한 위치에 나오는 경우가 많음. 특히 걸을 때 그런 듯함"
+    2. "돌도끼 병력이 휘두르는 장면이 조금 어설픔... 실제로 휘두르는 장면으로 해야함"
+    3. "청동창병도 디자인하고 모션들도 디자인해서 적용... 모든 캐릭터들의 애니메이션 기본 골격 구조는 같도록"
+    4. "타워의 공격은 원래 x2라고 해서 공격이 두 개 나가야 하는데 지금 한 개만 나가고 있음"
+    5. "조금 전 네가 점검한 파트대로... 소스코드 상세 파악/구조화 가이드라인과 함께 리팩토링도 진행"
+- **확인한 현재 코드 상태**:
+  - 핵심 병목 파일은 `src/scenes/LaneBattleScene.ts`(3332줄). 유닛 포즈
+    로딩, 유닛 스탯, 웨이브 스폰, 이동/전투, 발사체, 타워 공격,
+    프레젠테이션, 검증 스냅샷까지 한 파일에 몰려 있어 이번 이슈 1~4가
+    전부 이 파일 축에 걸린다.
+  - 유닛 포즈/애니메이션:
+    - 실제 프레임 로딩은 석기 유닛 3종만 존재:
+      `stone-slinger-*`, `stone-axeman-*`, `stone-supply-*`.
+    - `bronze_spearman`은 `UNIT_STATS`에는 있으나 `textureKey:
+      "token-spear"` placeholder만 있고, `getAnimatedTexture()`는
+      `stone_slinger`, `stone_axeman`, `supply_wagon`만 처리한다.
+      즉 청동창병은 현재 공용 애니메이션 시스템에 편입되어 있지 않다.
+    - 공격 연출은 `syncUnitPresentation()` 안에서 attack texture 전환 +
+      `attackOffsetX/attackLift` 기반 전신 lunge/recoil 수준이라,
+      도끼병이 실제로 휘두르는 느낌이 약하다.
+  - 잘림/엉뚱한 위치 문제:
+    - `syncUnitPresentation()`은 매 프레임 `setTexture()` 후
+      `frame.realWidth / frame.realHeight`, `UNIT_POSE_OPAQUE_METRICS`,
+      `setOrigin()`, `setDisplaySize()`를 다시 계산한다.
+    - 이동 중에는 walk-a / walk-b 프레임을 번갈아 쓰고, 각 프레임별
+      opaque metrics가 다르다. 따라서 잘림/점프/위치 흔들림은 프레임별
+      실제 PNG bounds, origin, visibleHeightRatio 불일치 문제일 가능성이
+      높다.
+  - 타워 공격:
+    - `getTowerAttackSpec()`은 시대별 projectile/damage/cooldown 하나만
+      반환하고, `tickWatchtower()`는 `launchProjectile()`을 1회만 호출한다.
+    - 따라서 현재 구현은 구조적으로 "1발 단타"가 맞다. 코드상 별도 x2
+      처리도 없다.
+  - 리팩토링 필요도:
+    - 이번 이슈들은 `UNIT_STATS/getAnimatedTexture/spawnLaneUnit/
+      syncUnitPresentation/getTowerAttackSpec/tickWatchtower/
+      launchProjectile` 축에 걸쳐 있고, 전부 거대 씬 내부에 있다.
+    - 기능 수정만 하면 다음에도 같은 파일 병목이 반복되므로, 이번에는
+      유닛 애니메이션 registry/프레젠테이션 계산/타워 발사 패턴 정도를
+      별도 모듈로 분리하는 최소 리팩토링이 같이 들어가는 게 맞다.
+- **작성한 프롬프트**:
+
+```text
+terrain-prototype-central 브랜치의 최신 구현과 첨부한 스크린샷을 기준으로
+다음 5개 작업을 진행해라. 첨부 스크린샷은 실제 현상 판단 근거로 같이 본다.
+이번에는 분석만 쓰고 멈추지 말고, 관련 코드와 에셋 상태를 먼저 짧게 조사한
+뒤 실제 구현, 검증 산출물, 문서 기록까지 끝내라.
+
+# 공통 원칙
+
+- 작업 전 `git status`로 현재 브랜치 상태를 확인해라.
+- 겹치는 변경이 보이면 먼저 알려라.
+- 확실하지 않은 부분은 추측하지 말고 물어봐라.
+- 각 항목 수정 후 최소 `npm run build`, `npm test`, 관련 Playwright
+  검증을 돌려라.
+- 하네스 규약대로 `docs/dev-wiki/log.md`와
+  `docs/ai-usage/session-log.md`를 갱신해라.
+- 이 작업은 기능 수정과 함께 구조 개선도 포함한다. 단, 무의미한 대규모
+  재작성은 하지 말고 이번 이슈들의 변경 비용을 앞으로 낮추는 방향의
+  리팩토링만 해라.
+
+---
+
+## 1. 미니언 이미지가 잘리거나 엉뚱한 위치로 튀는 문제 수정
+
+첨부 스크린샷처럼 유닛 스프라이트가 특히 걷기 중에 잘리거나 하얗게 찢어진
+실루엣처럼 보이거나 위치가 어긋나는 경우가 있다. 이건 단순 시각 취향 문제가
+아니라 자산 bounds / origin / display size / frame 교체 로직 중 하나가
+깨진 문제로 본다.
+
+우선 다음을 확인해라.
+
+- `src/scenes/LaneBattleScene.ts`의
+  `UNIT_POSE_OPAQUE_METRICS`, `getUnitOpaqueMetrics()`,
+  `getUnitPoseTexture()`, `syncUnitPresentation()`.
+- 실제 프레임 로딩 구간(preload)과 각 포즈 PNG의 해상도/투명 여백/bounds.
+- walk-a / walk-b / attack / idle 프레임 간 캔버스 크기와 발 위치(ground
+  anchor)가 일관한지.
+
+요구사항:
+
+- 원인을 직접 확정해라.
+  - 자산 export 문제인지
+  - 프레임별 bounds 불일치인지
+  - `setOrigin()`/`visibleHeightRatio` 계산 문제인지
+  - `setTexture()` 직후 `displaySize`/`frameAspect` 재계산 방식 문제인지
+    구분해라.
+- 수정 후에는 모든 포즈가 같은 "발 기준 anchor"를 공유하도록 만들어라.
+- 걷기 애니메이션 중 프레임이 바뀌어도 화면 위치나 크기가 튀지 않게 해라.
+- 만약 PNG 자체에 잘못 잘린 프레임이 있으면 코드를 꼼수로 덮지 말고 실제
+  자산을 바로잡아라.
+- 수정 전/후로 stone axeman, stone slinger, supply wagon 각각에 대해
+  idle / walk-a / walk-b / attack 비교 캡처를 남겨라.
+
+## 2. 돌도끼 병력 공격 모션을 "실제 휘두르는 장면"으로 교체
+
+지금 돌도끼병은 사실상 "도끼를 들어 올린 정지 포즈 + 전신 lunge"에 가까워
+보인다. 이건 공격 프레임이 실제 swing으로 설계되지 않았거나, 프레젠테이션
+로직이 공격 모션을 너무 단순하게 처리하고 있는 상태다.
+
+우선 다음을 확인해라.
+
+- `stone-axeman-attack` 실제 이미지가 swing 프레임인지.
+- 아니라면 새 공격 프레임(또는 최소 2프레임 공격 시퀀스)을 설계/적용할 수
+  있는지.
+- `syncUnitPresentation()`의 melee attack 연출이 현재
+  `attackOffsetX/attackLift` 정도에 머물러 있는 점.
+
+요구사항:
+
+- "내려찍기/휘두르기"로 인식되는 공격 포즈로 바꿔라.
+- 가능하면 단일 attack 정지 프레임이 아니라 attack wind-up /
+  contact / recover 중 최소 2단계가 느껴지게 만들어라.
+- 현재 구조가 1장 attack 텍스처만 가정한다면, 이 작업을 계기로
+  attack 애니메이션도 동일 골격에서 확장 가능한 방식으로 고쳐라.
+- 수정 후 stone axeman의 이동/정지/공격이 자연스럽게 이어지는 시퀀스
+  캡처 또는 검증용 짧은 animation snapshot을 남겨라.
+
+## 3. 청동창병(bronze_spearman) 실제 디자인 + 포즈 + 애니메이션 시스템 편입
+
+`UNIT_STATS`에는 `bronze_spearman`이 있지만 현재는 `textureKey:
+"token-spear"` placeholder만 있고, `getAnimatedTexture()`에도 등록돼 있지
+않다. 즉 청동창병은 현재 "실제 유닛 아트/모션 시스템 바깥"에 있다.
+
+요구사항:
+
+- 청동창병의 실제 디자인 자산을 만들고 적용해라.
+- 최소 `idle`, `walk-a`, `walk-b`, `attack` 포즈를 제공해라.
+- 걷기/공격 애니메이션이 stone 계열과 동일한 기준(anchor/origin/visible
+  height policy)으로 동작하게 해라.
+- 이때 각 유닛별 switch-case를 계속 늘리는 방식으로만 끝내지 말고,
+  **모든 캐릭터가 같은 애니메이션 골격 구조를 공유하는 방향**으로 정리해라.
+
+구조 요구:
+
+- `LaneBattleScene` 안에 박혀 있는 포즈 키 생성/metrics/sprite setup을
+  별도 유닛 프레젠테이션 모듈 또는 registry로 분리해라.
+- 예: `unitAnimationRegistry` 같은 데이터 구조에
+  `unitId -> { idle, walkA, walkB, attack, metrics }` 형태를 두고,
+  씬은 그 registry만 참조하도록 만들어라.
+- 이후 bronze swordsman, archer, iron units도 같은 방식으로 확장 가능해야
+  한다.
+
+검증:
+
+- stone axeman / stone slinger / supply wagon / bronze spearman 네 유닛이
+  동일 인터페이스로 애니메이션을 타는지 확인해라.
+- 청동기 웨이브를 실제로 스폰해서 bronze spearman이 placeholder token이
+  아니라 새 유닛 아트로 나오고, 걷기/공격이 정상 동작하는 캡처를 남겨라.
+
+## 4. 타워 공격을 "동일 공격력의 2발 동시 발사" 구조로 수정
+
+사용자 요구는 "타워 공격 x2"다. 현재 코드를 보면
+`getTowerAttackSpec()`은 projectile/damage/cooldown 하나만 반환하고,
+`tickWatchtower()`도 `launchProjectile()`을 1회만 호출한다. 즉 지금은
+구조적으로 1발이다.
+
+먼저 확인할 것:
+
+- 현재 한 발의 damage가 원래 설계상 2발 합산치인지, 아니면 그냥 1발치인지.
+- stone 시대 기준 투석 유닛(`stone_slinger`) 공격력과 타워 공격력의 비교.
+
+사용자 요구는 다음과 같이 해석한다:
+
+- 타워는 "투석병과 같은 위력의 탄" 2개를 동시에 발사한다.
+- 단, 총합 DPS를 기존과 동일하게 유지할지, 실제로 2배 화력으로 올릴지는
+  네가 코드와 밸런스를 읽고 판단해서 명시해라.
+
+최소 요구사항:
+
+- `TowerAttackSpec`을 단발 전제에서 벗어나게 바꿔라
+  (예: projectileCount, perProjectileDamage, spread/offset, delayMs 등).
+- stone 시대 타워는 같은 타깃 또는 근접한 타깃을 향해 돌 2개를 동시에
+  쏘게 해라.
+- 사용자가 말한 "x2"가 시각 이펙트만이 아니라 실제 투사체 2개라는 게
+  화면과 디버그 snapshot에서 확인되게 해라.
+- 공격력 처리 방식을 문서/결과 보고에 분명히 적어라:
+  "기존 한 발 6 -> 두 발 각각 6으로 상향"인지,
+  "기존 한 발 6 -> 두 발 각각 3으로 분할해 총합 유지"인지.
+
+검증:
+
+- 타워 공격 순간 active projectile 수가 2개 보이는 캡처 또는
+  verification snapshot을 남겨라.
+- stone_slinger와 타워의 projectile/damage가 어떻게 맞춰졌는지 표로 남겨라.
+
+## 5. 이번 작업과 함께 최소한의 구조 리팩토링도 진행
+
+직전 코드 점검 기준으로 이 저장소의 가장 큰 병목은
+`src/scenes/LaneBattleScene.ts` 한 파일에 포즈 자산 로딩, 유닛 스탯,
+스폰, 전투, 발사체, 타워, 프레젠테이션 로직이 모두 몰려 있다는 점이다.
+이번 작업은 이 병목을 줄이는 방향의 리팩토링을 동반해야 한다.
+
+단, 전면 재작성은 금지한다. 이번 이슈 1~4와 직접 연결된 부분만
+분리해라.
+
+권장 리팩토링 범위:
+
+- 유닛 포즈/metrics/texture key 결정 로직 분리
+  - 예: `src/presentation/units/` 또는 `src/systems/lane-units/`
+- 타워/유닛 투사체 스펙과 발사 로직 분리
+  - 예: projectile spec / launch helpers / tower attack resolver
+- 씬은 orchestration만 하고, 유닛 애니메이션 registry/프레젠테이션 계산
+  / 타워 공격 spec 계산은 별도 모듈에서 하도록 정리
+
+리팩토링 가이드:
+
+- 먼저 `LaneBattleScene` 내부에서 이번 작업과 직접 엮인 함수들을 묶어
+  작은 단위로 추출해라:
+  - `getAnimatedTexture`
+  - `getUnitOpaqueMetrics`
+  - `getV2UnitWorldHeight`
+  - `syncUnitPresentation`
+  - `getTowerAttackSpec`
+  - `launchProjectile`
+  - 관련 type/const
+- 추출 후 public API는 단순하게 유지해라. 예를 들어 씬은
+  `getUnitAnimationDef(unitId, pose)` 또는 `createTowerAttackPattern(ageId)`
+  같은 수준으로만 호출하게 해라.
+- 이 리팩토링 때문에 기존 동작이 깨지지 않도록 검증을 남겨라.
+
+## 결과물
+
+각 항목마다 아래를 정리해라.
+
+- 네가 직접 조사해서 확정한 원인
+- 무엇을 바꿨는지
+- 사람이 눈으로 확인 가능한 검증 산출물
+- 아직 불확실해서 추가 확인이 필요한 부분
+
+그리고 최종 응답에서는 특히 아래를 빠뜨리지 마라.
+
+- 유닛 잘림의 실제 원인이 자산인지 코드인지
+- bronze spearman이 어떤 공용 애니메이션 골격에 편입됐는지
+- 타워 x2가 화력 2배인지 총합 유지인지
+- `LaneBattleScene`에서 무엇을 어떤 파일로 분리했는지
+```
+
+## 2026-07-28 (1) — 거점/요새 배치·타워 타격 모션·지형 그림자·병력 밀집·오디오·전투 모션 프롬프트
+
+- **사용자 상황/요청 원문 요약**:
+  - 목적은 `[프롬프트]`.
+  - 사용자는 동일 스크린샷을 실제 작업 세션에도 그대로 첨부할 예정.
+  - 핵심 피드백:
+    1. 요새와 일반 거점이 여전히 사실상 겹쳐 보이며, 일반 거점과 요새 거점은 가까이 있으면 안 됨. 스크린샷의 "중앙 고정 요새" 자체도 사용자가 주문하지 않은 요소라고 지적.
+    2. 요새/타워/본진을 때릴 때 액션 모션 없이 가만히 있는 채 체력만 줄어듦.
+    3. 타일/그림자가 어색해서 돌 오브젝트가 떠 보임.
+    4. 병력이 이전보다 낫긴 하지만 여전히 뒤에서 상당수가 그냥 서 있음.
+    5. 음악이 여전히 허접하며 제대로 적용되지 않은 것 같음.
+    6. 전투 모션 전반이 부자연스러움.
+  - 사용자 보충 요구: 추상적이면 중간 단계를 나눠 확인받는 흐름으로 진행해야 할 것 같다고 명시.
+- **확인한 현재 코드 상태**:
+  - 거점 배치 데이터는 `src/data/capturePointDefinitions.ts`에 고정돼 있다.
+    현재 `id 0 = buildable progress 0.375`, `id 1 = fixed-fortress progress 0.588`,
+    `id 2 = buildable progress 0.767`이다. 즉 중앙 고정 요새는 우발적 버그가 아니라
+    명시적 설계다.
+  - `src/data/battlefieldMaps.ts`의 레인 좌표도 같은 progress들에 대응하는 소켓을
+    갖고 있어, 사용자가 말한 "겹침"은 단순 UI 착시가 아니라 배치 간격 설계
+    자체 문제일 가능성이 높다.
+  - `refreshCapturePointVisuals()`는 고정 요새 라벨을 실제로
+    `중앙 고정 요새 · Lv.1`로 찍고, 텍스처도 `fixed-fortress-v1`을 사용한다.
+    즉 사용자가 주문하지 않은 구조물이 생긴 것이 맞는지, 아니면 이전 세션이
+    자의적으로 넣은 것인지 소스/문서 기준으로 재검토가 필요하다.
+  - 유닛이 타워/요새를 때릴 때는 `tickCombat()`에서 `beginAttackPresentation()`
+    호출은 있지만, 근접 공격은 투사체 없이 바로 `applyDamageToTower()`를 호출한다.
+    따라서 실제 tower hit 순간에 타워 대상용 별도 contact 모션/impact timing이
+    약할 가능성이 높다.
+  - 그림자/떠 보임 문제는 `refreshCapturePointVisuals()`의
+    `groundPresentationWorld?.shadow.setPosition(pos.x + 22, pos.y + 13)`처럼
+    고정 오프셋 shadow와, `laneObstacles`/terrain world props 배치가 실제
+    실루엣과 안 맞는 데서 생길 가능성이 크다.
+  - 병력 밀집은 `spawnWaveUnits()`의 기본 row 세트 `[-3, 0, 3]`,
+    `findCombatSlot()`/`isCombatSlotFree()`/`tryShiftLane()`가 만드는 lane occupancy
+    규칙, 그리고 전체 playable lane 폭 제한이 함께 얽혀 있는 문제일 가능성이 크다.
+  - 오디오는 여전히 `src/systems/audio/assetManifest.ts`의 synthetic fallback 중심이며,
+    실제 파일 경로는 선언돼 있어도 `missingAsset` placeholder 구조가 유지되고 있다.
+    사용자가 느끼는 "허접함"은 단순 믹싱보다 합성 방식 자체 한계일 수 있다.
+- **작성한 프롬프트**:
+
+```text
+terrain-prototype-central 브랜치의 최신 구현과 첨부한 스크린샷을 기준으로
+다음 6개 문제를 수정해라. 스크린샷은 실제 플레이 상태의 현상 증거로 같이 본다.
+
+이번 작업은 추상적인 항목이 섞여 있으므로, 무조건 한 번에 다 밀어붙이지 말고
+초기 조사 후 **중간 체크포인트**를 만들어 사용자 확인이 필요한 선택지를
+분리해라. 단, 그렇다고 조사만 하고 멈추지는 말고, 확인이 없어도 진행 가능한
+명백한 버그/구조 문제는 먼저 구현과 검증까지 끝내라.
+
+# 공통 원칙
+
+- 작업 전 `git status`로 현재 브랜치 상태를 확인해라.
+- 지금 진행 중인 다른 작업과 겹치는 파일이 보이면 먼저 알려라.
+- 확실하지 않은 부분은 추측하지 말고 물어봐라.
+- 각 항목 수정 후 최소 `npm run build`, `npm test`, 관련 Playwright
+  검증을 돌려라.
+- 하네스 규약대로 `docs/dev-wiki/log.md`와
+  `docs/ai-usage/session-log.md`를 갱신해라.
+- 항목 1, 3, 4, 5, 6은 주관 평가 요소가 있으므로, **1차 구현안 + 비교
+  스크린샷/영상성 증거 + 짧은 선택지 요약** 형태로 사용자 확인 포인트를
+  만들어라.
+
+---
+
+## 1. 요새와 일반 거점이 사실상 겹쳐 있음 — 배치 구조 자체를 재설계
+
+사용자 판단은 명확하다: 지금 배치는 "안 겹친다"가 아니라 "겹쳐 있다"이다.
+특히 일반 거점과 요새 거점은 서로 가까이 있으면 안 되고, 스크린샷의
+"중앙 고정 요새" 자체도 사용자가 주문하지 않은 요소라고 보고 있다.
+
+현재 코드를 먼저 확인해라.
+
+- `src/data/capturePointDefinitions.ts`
+- `src/data/battlefieldMaps.ts`
+- `LaneBattleScene.ts`의 capture point create/refresh 경로
+
+현재 확인된 사실:
+
+- buildable 거점은 progress 0.375 / 0.767
+- fixed-fortress는 progress 0.588
+- 즉 중앙 고정 요새는 명시적 설계다. 버그가 아니라 코드에 들어간 feature다.
+
+요구사항:
+
+- 먼저 이 "중앙 고정 요새"가 현재 게임 디자인에 정말 필요한지 재판단해라.
+  사용자가 주문하지 않은 기능이라면 과감히 제거 후보로 올려라.
+- 단순히 라벨/실루엣만 바꾸는 식으로 넘기지 말고, **거점 구조 자체**를
+  재설계해라.
+- 최소 두 가지 안을 비교해라.
+  - 안 A: 중앙 고정 요새 제거, buildable 거점만 남김
+  - 안 B: 고정 요새를 유지하되 buildable 거점과 훨씬 멀리 재배치
+- 각 안의 장단점(가독성, 전략성, 현재 맵 구조와 충돌, 사용자 요구 충족도)을
+  짧게 정리하고, 기본 구현안 하나를 선택해 실제로 반영해라.
+- 사용자가 "일반 거점이 a 지점에 있으면 요새 거점은 그로부터 상당히 떨어져
+  있어야 한다"고 했으니, 유지안이라면 거리 차이가 시각적으로도 명백해야 한다.
+- 배치 변경 후 socket/foundation/terrain patch/selection hit zone이 같이
+  어긋나지 않는지 확인해라.
+
+중간 체크포인트:
+
+- 거점 구조안 A/B를 캡처와 함께 1회 보고하고, 기본 선택안을 명시해라.
+- 단, 중앙 고정 요새 제거가 구조상 명백히 더 맞다고 판단되면 우선 그 안으로
+  구현을 진행하고, 응답에서 왜 그렇게 판단했는지 설명해라.
+
+검증:
+
+- 동일 카메라 위치에서 before/after 캡처
+- 각 거점 간 screen distance 또는 world progress distance 비교 표
+- 클릭 테스트로 각 거점이 명확히 구분되는지 확인
+
+## 2. 요새/타워/본진 타격 시 액션 모션이 없음 — 구조물 공격 전용 모션 보강
+
+사용자 지적대로, 구조물을 공격할 때 유닛이 실제로 때리는 것처럼 보이지 않고
+가만히 있는데 체력만 줄어들면 잘못된 것이다.
+
+현재 코드를 확인해라.
+
+- `LaneBattleScene.ts`의 `tickCombat()`
+- `beginAttackPresentation()`
+- `applyDamageToTower()`
+- 유닛 포즈/프레젠테이션 로직
+
+요구사항:
+
+- 유닛이 타워/요새/본진을 때릴 때도 **명확한 구조물 공격 모션**이 보이게 해라.
+- 근접 유닛은 contact timing이 느껴져야 한다.
+  - wind-up
+  - strike
+  - recover
+  최소한 이 세 단계 중 2단계 이상은 느껴지게 해라.
+- 원거리 유닛은 투사체 발사 타이밍과 구조물 피격 타이밍이 시각적으로
+  어긋나지 않게 맞춰라.
+- 지금처럼 unit-vs-unit과 unit-vs-structure가 같은 전신 lunge 하나로
+  끝나는 구조라면, 구조물 공격용 presentation branch를 분리해라.
+
+검증:
+
+- stone axeman / ranged unit이 구조물을 공격하는 시퀀스 캡처
+- structure hit 시점과 hp 감소 시점이 맞는지 frame sequence 또는 debug snapshot
+
+## 3. 지형 그림자와 오브젝트 접지가 어색함 — 떠 보이는 문제 수정
+
+사용자 판단은 "타일도 여전히 많이 어색하고, 그림자가 엉뚱해서 돌 같은
+오브젝트들이 떠 보인다"이다. 이건 단순 미감이 아니라 접지(shadow/anchor)
+문제다.
+
+우선 다음을 확인해라.
+
+- `LaneBattleScene.ts`의 world-surface/foundation/shadow 위치 계산
+- `battlefieldWorldRenderer.ts`
+- `battlefieldPrototypeRenderer.ts`
+- obstacle/prop의 실제 이미지 bounds와 ground origin
+
+요구사항:
+
+- 돌/나무/타워 foundation/shadow가 실제 실루엣 하단과 맞지 않는 부분을
+  재조정해라.
+- 고정 오프셋 숫자만 임의로 바꾸지 말고, 가능한 한 오브젝트별 ground anchor
+  또는 opaque bounds 기준으로 shadow/foundation을 맞춰라.
+- 지면 위에 "붙어 있는" 느낌이 나도록 최소한 다음을 재검토해라:
+  - shadow 위치
+  - shadow 크기/회전
+  - foundation 위치
+  - object origin
+  - depth ordering
+
+중간 체크포인트:
+
+- rock prop 1종, tree prop 1종, tower/fixed-fortress 각 1종에 대해
+  before/after 비교 캡처를 먼저 보여줄 수 있게 정리해라.
+
+검증:
+
+- 동일 카메라 위치 before/after 캡처
+- 오브젝트별 shadow/foundation anchor 비교 자료
+
+## 4. 병력이 여전히 뒤에서 멈춰 서 있는 경우가 많음 — lane occupancy 재조정
+
+이전보다 좋아졌더라도, 사용자가 보기엔 여전히 뒤 병력이 많이 서 있다.
+원인은 단순 AI stupidity라기보다 이동 가능한 lane 폭, slot 배정 규칙,
+유닛 간 간격 규칙의 조합일 가능성이 높다.
+
+우선 다음을 확인해라.
+
+- `spawnWaveUnits()`
+- `findCombatSlot()`
+- `isCombatSlotFree()`
+- `tryShiftLane()`
+- `keepUnitInPlayableLane()`
+- 현재 lane row 후보와 유닛 간 최소 간격 규칙
+
+요구사항:
+
+- "그냥 대기" 상태가 생기는 주된 원인을 직접 확정해라.
+  - 실제 전투 슬롯이 부족한지
+  - lane 폭이 좁은지
+  - row spacing이 과한지
+  - follow spacing/friendly gap이 과한지
+  구분해라.
+- 해결 방식은 둘 중 하나 또는 혼합으로 가라:
+  - 이동 가능한 lane 폭/전투 가능 타일 확장
+  - 미니언이 서 있을 수 있는 좌표 간격/row spacing 축소
+- 단, 무작정 좁히다가 sprite overlap이나 클릭 혼선이 커지면 안 된다.
+- "뒤 병력이 전혀 기여 못 하는 시간"을 줄이는 방향으로 조정해라.
+
+중간 체크포인트:
+
+- 조정안 2개 정도를 비교해라.
+  - 더 넓은 lane
+  - 더 촘촘한 row spacing
+  또는 혼합안
+- 사용자 확인이 없어도, 가장 합리적인 안 하나는 실제로 적용해라.
+
+검증:
+
+- 동일 웨이브 조건에서 active engage unit 수 비교
+- 병목 전/후 스크린샷 또는 간단한 수치 표
+
+## 5. 음악이 여전히 허접함 — 실제 품질 개선 또는 외부 자산 적용 여부 재판단
+
+사용자 판단은 명확하다: 현재 음악은 여전히 허접하고 제대로 적용된 것 같지 않다.
+지금 저장소는 synthetic fallback 중심이므로, "이미 좋아졌다"는 내부 판단으로
+넘기지 마라.
+
+우선 다음을 확인해라.
+
+- `src/systems/audio/assetManifest.ts`
+- `src/systems/audio/backend.ts`
+- 실제 BGM/SFX 자산 파일 존재 여부
+- 현재 manifest가 여전히 `missingAsset` fallback 중심인지
+
+요구사항:
+
+- 먼저 이 세션에서 실제 오디오 파일 생성/도입/편집이 가능한지 확인해라.
+- 가능하면:
+  - 실제 배경음 자산을 도입하거나 생성하고
+  - 출처/라이선스를 manifest와 문서에 기록해라.
+- 불가능하면:
+  - 현재 합성 구조를 단순 톤 루프 수준에서 벗어나게 실제로 개선해라.
+  - 최소한 intro / sustain / escalation이 느껴지게 하고,
+    battle-low -> battle-high가 확실히 구분되게 만들어라.
+- "허접함"은 단순 음량 문제가 아니라 작곡/오케스트레이션/질감 문제일 수
+  있으니, `vol`만 바꾸는 식으로 끝내지 마라.
+
+중간 체크포인트:
+
+- 15~30초 샘플 2안 정도를 만들 수 있으면 비교 자료를 남겨라.
+- 실제 파일 도입이 불가능했다면 왜 불가능했는지와 fallback 개선 범위를
+  분명히 적어라.
+
+검증:
+
+- Audio Lab 또는 저장소 내 검증 도구로 before/after 비교
+- 실제 상태별(menu/preparation/battle-low/battle-high) 샘플 산출물
+
+## 6. 전투 모션 전반이 부자연스러움 — 유닛별 공격/이동 프레젠테이션 재조정
+
+사용자는 구조물 공격뿐 아니라 전체 전투 모션이 부자연스럽다고 보고 있다.
+즉 항목 2만 고쳐서는 부족하다.
+
+우선 다음을 확인해라.
+
+- `syncUnitPresentation()`
+- `getUnitPoseTexture()`
+- 공격/이동/idle 전환 조건
+- melee/ranged/support 각각의 attackOffsetX/attackLift/recoil 처리
+
+요구사항:
+
+- unit-vs-unit, unit-vs-structure 모두 포함해 전투 모션이 더 자연스럽게
+  느껴지도록 조정해라.
+- 가능하면 유닛 역할별 차이를 분명히 해라.
+  - melee: 전진/베기/충돌감
+  - ranged: 발사 recoil / 투사체 타이밍
+  - support: 과한 전투 모션 대신 지원 동작
+- 단순히 이동 bob amplitude만 키우는 식으로 끝내지 마라.
+- 이번 항목은 항목 2와 묶어 presentation 구조를 약간 정리해도 된다.
+
+중간 체크포인트:
+
+- 최소 3개 유닛(근접/원거리/지원)의 before/after 시퀀스를 준비해라.
+- 한 가지 연출안으로 고정하지 말고, 필요하면 amplitude/timing 선택지를
+  짧게 비교해라.
+
+검증:
+
+- unit-vs-unit과 unit-vs-structure 각각 시퀀스 캡처
+- 공격 타이밍과 damage 적용 타이밍 정합성 확인
+
+## 진행 방식
+
+이번 작업은 추상적 항목이 많으므로 아래 순서로 진행해라.
+
+1. 배치/그림자/병력 밀집/오디오/모션의 현재 원인을 짧게 확정
+2. 사용자 확인이 의미 있는 항목(1,3,4,5,6)에 대해 선택지나 비교안이 있으면
+   그걸 정리
+3. 확인 없이도 명백한 버그/구조 문제는 우선 수정
+4. 최종적으로 각 항목별 원인, 변경점, 검증 산출물, 남은 선택지를 정리
+
+## 결과물
+
+최종 응답에는 각 항목마다 아래를 포함해라.
+
+- 네가 직접 조사해서 확정한 원인
+- 무엇을 바꿨는지
+- 사람이 눈으로 확인 가능한 검증 산출물
+- 아직 사용자 선택이 필요한 부분
+
+그리고 특히 아래를 빠뜨리지 마라.
+
+- 중앙 고정 요새를 유지했는지 제거했는지, 그 이유
+- 일반 거점과 요새 거점의 거리/배치가 어떻게 달라졌는지
+- 구조물 공격 모션을 unit-vs-unit과 어떻게 다르게 처리했는지
+- lane occupancy 문제를 어떤 규칙 조정으로 완화했는지
+- 오디오가 실제 파일 기반인지, 여전히 합성 fallback인지
+```
+
+## 2026-07-28 (2) — 투영 재구축 착수 프롬프트 (top-down 확정 반영 + 멈춘 리팩토링 정리 선행 지시)
+
+- **사용자 지시 요약**: `retro-rts-visual-methodology.md`를 포함해 소스를
+  실제로 수정하는 세션이 무엇을 봐야 하는지 알려주고, 그 가이드를
+  따르도록 만드는 프롬프트를 요청. 이전 상담(안 A 확정, 고사선 원인
+  규명)이 그대로 반영돼야 하고, 특히 **앞서 지시했던 거점 구조
+  리팩토링이 중단된 것 같으니 그것부터 끝낸 뒤에 새 작업을 하라고
+  프롬프트에 명시**해달라고 요청.
+- **확인한 현재 코드 상태** (2026-07-28, 최신 커밋 `3438ca1`, 워크트리
+  기준):
+  - `git status`에서 여전히 미커밋 변경 확인: `src/data/battlefieldMaps.ts`,
+    `src/data/capturePointDefinitions.ts`, `src/gfx/battlefieldWorldRenderer.ts`,
+    `src/scenes/LaneBattleScene.ts`, `src/presentation/units/combatPresentation.ts`
+    (+테스트), `src/systems/lane-combat/laneOccupancy.ts`(+테스트),
+    `tools/validation/*.spec.ts` 일부, `src/data/__tests__/battlefieldMaps.test.ts`,
+    신규 `artifacts/capture-point-distinction/`,
+    `artifacts/six-issue-followup/` 산출물. 이전 상담 시작 시점엔
+    `battlefieldMaps.test.ts` 2건이 실패 중이었는데, 지금은 `npm test`
+    (Vitest 16 files, 69 tests) 전부 통과, `npm run build`도 통과함 —
+    즉 다른(아마 백그라운드) 세션이 그 사이 이 리팩토링을 계속 진행한
+    것으로 보이나, 여전히 **커밋도, backlog/log 기록도 없는 상태**.
+  - 이번 요청 대상 문서(`retro-rts-visual-methodology.md`)는 이전 두
+    상담 턴에서 이미 4.5.1절(안 A 확정), 4.5.2절(고사선 원인 규명),
+    Phase 0(확정 반영) 상태로 갱신돼 있음.
+- **작성한 프롬프트** (Codex/소스 수정 세션에 그대로 붙여넣을 수 있는
+  형태):
+
+```
+이 저장소의 로컬 harness 규약대로 작업해.
+AGENTS.md -> docs/index.md -> docs/dev-wiki/contract.md 순서로 먼저
+읽고 시작해. 운영 하네스만 사용하고, 런타임 하네스나 추가 자동화는
+설정하지 마.
+
+그 다음 아래 문서를 순서대로 읽어라.
+
+1. project_development.md — 현재 상태 요약 허브.
+2. docs/dev-wiki/retro-rts-visual-methodology.md — 이번 작업의 메인
+   기준서. 특히 4.5 / 4.5.1 / 4.5.2절(투영 방식은 이미 "안 A: 완전
+   top-down 전환"으로 확정됐고, 왜 지금까지 대각선 원근으로
+   개발됐었는지 원인도 규명돼 있다), 7.4절(유닛 facing 방향 수, 아직
+   미확정), 9장 Phase Plan, 10장 User Checkpoints, 11장 Validation
+   Checklist를 반드시 읽어라.
+3. docs/dev-wiki/art-direction-animation.md — 최상단의 "Superseded
+   note"를 확인해라. "Battlefield Composition Standard"(고사선 구성
+   표준)는 더 이상 유효하지 않다. 다만 그 아래 유닛 모션 요구사항
+   (walk/attack pose, 근접/원거리/지원 차이, "whole-sprite bob만으로는
+   부족하다")은 투영 방식과 무관하게 여전히 유효하다.
+4. docs/dev-wiki/terrain-rendering-plan.md — 지형 하이브리드 아키텍처
+   (E 기반 B) 권장안. 이건 "안 A(카메라를 top-down으로)"와 모순이
+   아니라 서로 다른 축이다 — 이 문서는 지형 데이터 구조/렌더 레이어를
+   다루고, 안 A는 카메라 각도를 다룬다. 둘을 함께 반영해라.
+5. docs/dev-wiki/game-concept.md의 "⚠️ 방향 정정" / "톤 정정" 섹션 —
+   과거 세 차례 사용자 피드백으로 비주얼/UI 방향이 뒤집힌 이력이다.
+   같은 실수(감으로 방향을 정하고 진행)를 반복하지 마라.
+
+## 0. 시작 전 필수: 멈춰있는 리팩토링부터 정리해라 (새 작업보다 우선)
+
+지금 워크트리에는 이전 세션이 진행하다 정리 없이 멈춘 것으로 보이는
+미커밋 변경이 있다. 아래는 마지막 확인 시점 기준이니, 반드시 네가
+직접 `git status`/`git diff --stat`로 최신 상태를 다시 확인해라 —
+다른 세션이 백그라운드로 계속 작업 중이었을 수 있다.
+
+- `src/data/battlefieldMaps.ts`, `src/data/capturePointDefinitions.ts`
+- `src/gfx/battlefieldWorldRenderer.ts`, `src/scenes/LaneBattleScene.ts`
+- `src/presentation/units/combatPresentation.ts` (+ 테스트)
+- `src/systems/lane-combat/laneOccupancy.ts` (+ 테스트)
+- `tools/validation/*.spec.ts` 일부, `src/data/__tests__/battlefieldMaps.test.ts`
+- `artifacts/capture-point-distinction/`, `artifacts/six-issue-followup/` 등
+  신규 산출물
+
+**이 작업부터 먼저 끝내라. 새 top-down 재구축을 이 위에 얹지 마라.**
+
+1. `git status`, `git diff --stat`로 실제 변경 범위를 파악해라.
+2. `npm run build`, `npm test`를 실행해 현재 통과/실패 상태를 확인해라.
+3. 실패가 있으면 고쳐서 통과시켜라.
+4. 이 변경이 하나의 일관된 작업 단위(거점 구조 리팩토링)로 보이면
+   커밋해라 — `docs/dev-wiki/contract.md`의 The One Rule에 따라
+   GitHub Issue + backlog.md 항목, 또는 최소 `docs/dev-wiki/log.md`
+   항목을 반드시 남겨라. 지금까지 이 변경에 대한 기록이 전혀 없다.
+5. 워크트리가 깨끗해지고 build/test가 통과한 뒤에만 아래 1번으로
+   넘어가라.
+
+## 1. Top-down 재구축 (안 A 확정, 재논의 불필요)
+
+투영 방식은 이미 사용자가 확정했다 — retro-rts-visual-methodology.md
+4.5.1절 "안 A". 카메라를 거의 완전 수직으로 내려서 top-down 정사각
+그리드로 전환해라. 안 B/안 C는 검토하지 마라, 이미 폐기된 안이다.
+
+- 9장 Phase Plan의 Phase 1부터 순서대로 진행해라(Phase 0은 이미
+  완료됨 — 재논의하지 마라. facing 방향 수만 미확정).
+- Phase 1(Visual Audit)부터: 같은 카메라 위치에서 4층(바닥/오브젝트/
+  유닛/전투 시퀀스) before 캡처를 먼저 남겨라.
+- 5장(Terrain Rebuild), 특히 5.2.1절의 전이 기법 — 이 프로젝트 규모엔
+  marching squares(16-tile)로 시작하고 필요한 부분만 dual-grid로
+  보강하는 걸 추천해뒀다. 그대로 따르되, 막히면 47-tile blob도 검토
+  가능.
+- 6장(Grounding), 7장(Animation)까지 이어서 진행해라. 7.4절 facing
+  방향 수는 아직 사용자가 최종 확정하지 않았다 — 문서 추천값(좌/우
+  2방향 + 공격 시 미세 회전)으로 우선 진행하되, 구현해보고 체감이
+  부족하면 사용자에게 4방향 확장 여부를 물어라. 결정 없이 8방향
+  풀세트로 확장하지 마라(스코프 밖, Non-Goal).
+- 8장(Refactor Targets)의 모듈 분리 후보 위치를 참고해서 구조를
+  정리해라.
+
+## 진행 방식
+
+1. 워크트리 정리(위 0번)부터 완료.
+2. Phase 1 감사(캡처+표)로 현재 문제를 고정.
+3. Phase 2~5를 순서대로 진행하되, 10장 체크포인트 항목(길 폭/재질
+   대비, 그림자 진하기/방향, 근접 모션 exaggeration 정도, 음악 톤)은
+   사용자 확인 없이 마음대로 확정하지 마라 — 선택지를 준비해서 물어라.
+4. 11장 Validation Checklist를 그대로 실행해라(build, test, 지형/
+   grounding before-after, 애니메이션 시퀀스, structure attack 시퀀스,
+   UI 포함/미포함 비교).
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- 0번(정리 작업)에서 무엇을 발견했고 어떻게 정리했는지, 커밋했는지
+- Phase 1 감사 결과(캡처/표)
+- 어느 Phase까지 실제로 진행했는지, 왜 거기서 멈췄는지
+- facing 방향 수를 문서 추천값 그대로 썼는지, 다르게 했다면 왜
+- 사용자 확인이 필요한 나머지 체크포인트 목록
+
+## 하네스 규칙 리마인더
+
+- The Second Rule(`docs/dev-wiki/contract.md`): 의미 있는 턴마다
+  `docs/ai-usage/session-log.md`에 기록해라(대회 제출 4번 자료,
+  생략 불가). 방향 결정/사용자 피드백 턴은 원문 인용까지 남겨라.
+- The One Rule: 코드를 바꿀 때마다 backlog 기록(Issue+backlog.md,
+  최소 log.md)을 남겨라. 이번 작업은 단위가 크므로 최소 두 단계(0번
+  정리 커밋, 1번 재구축 커밋들)로 나눠 각각 기록해라.
+```
+
+## 2026-07-28 (3) — 구조적 리팩토링 선행 지시로 프롬프트 재작성 (dead code + god-scene + 중복 렌더러)
+
+- **사용자 지시 요약**: 직전 상담 턴에서 사용자가 "리팩토링이 커밋만
+  됐다고 끝난 게 아니라 실제 소스 구조(폴더/파일/모듈 분리)가 제대로
+  됐는지"를 확인해달라고 요청했고, 그 결과 데드코드(~2177줄,
+  `DungeonScene.ts` 계열), `LaneBattleScene.ts` god-scene(3532줄),
+  지형 렌더러 4종 동시 존재라는 구체적 부채를 발견해
+  `docs/dev-wiki/backlog.md` Active Queue에 "Structural refactor debt"로
+  기록했다(이 로그의 위 항목 참고). 이번 턴은 그 결과를 반영해 소스
+  수정 세션용 프롬프트를 "다시 만들어달라"는 요청.
+- **확인한 현재 코드 상태** (2026-07-28, 최신 커밋 `56a6376`, 워크트리
+  기준): 프롬프트 (2)를 건넨 뒤 이미 다른(백그라운드로 보이는) 세션이
+  일부 착수한 흔적을 확인했다 — `git status`에 `src/scenes/LaneBattleScene.ts`
+  변경(+54줄, `window.__gameDebug`에 `setVisualAuditLayer`/
+  `prepareVisualAuditCombat`/`stepVisualAuditCombat` 훅 추가)과 신규
+  `artifacts/top-down-phase1-audit/`(before-ground/props/units/combat
+  8종 스크린샷 + JSON 스냅샷), `tools/validation/top-down-phase1-audit.spec.ts`가
+  있었다 — 즉 Phase 1(Visual Audit and Freeze)은 이미 시작/완료된 것으로
+  보인다. 반면 `src/scenes/DungeonScene.ts`는 여전히 삭제되지 않고
+  존재했다 — 구조 정리는 아직 아무도 손대지 않았다.
+- **작성한 프롬프트** (Codex/소스 수정 세션에 그대로 붙여넣을 수 있는
+  형태, 이전 (2)번 프롬프트를 대체한다):
+
+```
+이 저장소의 로컬 harness 규약대로 작업해.
+AGENTS.md -> docs/index.md -> docs/dev-wiki/contract.md 순서로 먼저
+읽고 시작해. 운영 하네스만 사용하고, 런타임 하네스나 추가 자동화는
+설정하지 마.
+
+그 다음 아래 문서를 순서대로 읽어라.
+
+1. project_development.md — 현재 상태 요약 허브.
+2. docs/dev-wiki/backlog.md의 Active Queue 중 "Structural refactor
+   debt" 항목 — 이번 작업의 0번(구조 정리) 근거.
+3. docs/dev-wiki/retro-rts-visual-methodology.md — 비주얼 재구축 기준서.
+   4.5/4.5.1/4.5.2절(투영 방식은 "안 A: 완전 top-down 전환"으로 이미
+   확정, 원인 규명 포함), 7.4절(facing 방향 수, 아직 미확정), 9장
+   Phase Plan, 10장 Checkpoints, 11장 Validation Checklist.
+4. docs/dev-wiki/art-direction-animation.md — 최상단 Superseded note만
+   확인(고사선 구성 표준은 폐기, 유닛 모션 요구사항은 유효).
+5. docs/dev-wiki/terrain-rendering-plan.md — 지형 하이브리드 아키텍처
+   권장안(안 A와 모순 아님, 카메라 각도와 지형 데이터 구조는 별개 축).
+6. docs/dev-wiki/game-concept.md의 "⚠️ 방향 정정" / "톤 정정" 섹션 —
+   과거 방향 오판 이력, 같은 실수 반복 금지.
+
+## 0. 먼저 확인: 진행 상태가 문서와 다를 수 있다
+
+이 프롬프트가 만들어진 시점 이후 다른 세션이 이미 일부 작업을
+시작했을 수 있다(Phase 1 시각 감사 캡처가 `artifacts/top-down-phase1-audit/`에
+이미 존재할 수 있음, `LaneBattleScene.ts`에 감사용 디버그 훅이 이미
+추가돼 있을 수 있음). **아래 순서를 그대로 실행하지 말고, 먼저
+`git status`/`git log --oneline -10`/`ls artifacts/`로 실제 진행
+상태를 확인하고, 이미 끝난 단계는 검증만 하고 건너뛰어라.**
+
+## 1. 구조적 리팩토링부터 (비주얼 재구축보다 우선, 아직 아무도 손대지 않음)
+
+`backlog.md`의 "Structural refactor debt" 항목에 근거가 정리돼 있다.
+비주얼 재구축(2번)을 이 위에 얹지 마라 — 3500줄짜리 파일 안에 새 지형
+렌더링 코드를 또 추가하면 리뷰도, 롤백도 불가능해진다. 순서:
+
+### 1.1 데드코드 삭제 (가장 안전하고 쌩거)
+
+- `src/scenes/DungeonScene.ts`가 `src/main.ts`의 씬 목록(`BootScene`,
+  `LaneBattleScene`, `GameOverScene`)에 없다는 걸 다시 확인해라.
+- 확인되면 `DungeonScene.ts`와, grep으로 그것만 참조하는지 재확인한
+  뒤 `src/systems/dungeonGenerator.ts`, `src/systems/squad.ts`,
+  `src/systems/combat.ts`, `src/data/unitTypes.ts`, `src/data/commands.ts`,
+  `src/data/encounterTypes.ts`, `src/data/skills.ts`, `src/gfx/chibi.ts`,
+  `src/gfx/iso.ts`를 삭제해라(약 2177줄).
+- `npm run build`, `npm test`로 삭제 후에도 깨지는 게 없는지 확인해라.
+- 이 단계만 별도로 커밋하고 backlog/log 기록을 남겨라 — 리스크가
+  거의 없는 작업이니 다음 단계와 섞지 마라.
+
+### 1.2 `LaneBattleScene.ts` god-scene 분해 (3532줄 -> 도메인별 모듈)
+
+- 8장(Refactor Targets)의 후보 위치를 참고해 최소 아래 도메인을
+  분리해라: 웨이브/경제(자원, 시대, 웨이브 스폰), 거점/건설(capture
+  point 상태·액션), UI/HUD, 오디오 wiring. 렌더링/애니메이션 관련
+  일부는 이미 `src/presentation/units/`, `src/systems/lane-combat/`,
+  `src/gfx/battlefieldWorldRenderer.ts`로 분리돼 있으니 그 패턴을
+  따라라.
+- 한 번에 다 옮기지 않아도 된다 — 이번 top-down 재구축에서 어차피
+  건드릴 지형/렌더링 관련 코드부터 먼저 분리하고, 나머지는 다음
+  단계로 넘겨도 된다. 다만 "왜 여기까지만 했는지"를 결과물에 남겨라.
+- 각 도메인 분리마다 build/test 통과를 확인하고 커밋해라.
+
+### 1.3 지형 렌더러 정리는 새 렌더러가 검증된 뒤에
+
+- `BattlefieldPrototypeRenderer`(`terrainPrototype`/`terrainPrototypeV2`)와
+  `BattlefieldWorldRenderer`(`terrainWorld`) 4개 모드는 지금 당장
+  지우지 마라 — 새 top-down 렌더러가 아직 없다. 2번 작업으로 새
+  렌더러를 만들고 검증한 뒤, 마지막 단계에서 legacy/prototype/
+  prototype-v2/world-surface를 새 모드로 대체하고 옛 코드를 삭제해라.
+
+## 2. Top-down 비주얼 재구축 (안 A 확정, 재논의 불필요)
+
+1.1~1.2가 끝난 뒤 진행해라(1.3은 이 작업 끝에 마무리).
+
+- 9장 Phase Plan 순서를 따르되, Phase 1(Visual Audit)이 이미 돼있다면
+  캡처가 지금 문제를 정확히 대표하는지만 확인하고 재사용해라.
+- 5장(Terrain Rebuild): 5.2.1절 추천대로 marching squares(16-tile)로
+  시작하고 필요한 부분만 dual-grid로 보강해라.
+- 6장(Grounding), 7장(Animation): 7.4절 facing 방향 수는 아직 최종
+  확정 아님 — 문서 추천값(좌/우 2방향 + 공격 시 미세 회전)으로 우선
+  진행하고, 구현 후 체감이 부족하면 4방향 확장 여부를 사용자에게
+  물어라. 8방향 풀세트로 임의 확장하지 마라(Non-Goal).
+- 검증되면 1.3(레거시 렌더 모드 삭제)으로 마무리해라.
+
+## 진행 방식
+
+1. 0번(현재 상태 재확인)
+2. 1.1 데드코드 삭제 -> 커밋
+3. 1.2 god-scene 분해(최소 지형 관련 부분) -> 커밋
+4. Phase 1 감사 재사용/보완
+5. Phase 2~5(지형/그라운딩/애니메이션) 진행, 10장 체크포인트 항목은
+   임의 확정하지 말고 선택지로 물어라
+6. 1.3 레거시 렌더러 삭제 -> 커밋
+7. 11장 Validation Checklist 전체 실행
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- 0번에서 발견한 실제 진행 상태(이미 끝난 단계 포함)
+- 1.1/1.2에서 무엇을 지웠고/옮겼는지, 커밋 목록
+- 1.2를 어디까지 했고 왜 거기서 멈췄는지(다 못 옮겼다면 남은 범위)
+- Phase 1~5 진행 결과와 산출물
+- facing 방향 수를 추천값대로 했는지, 다르면 왜
+- 사용자 확인이 필요한 나머지 체크포인트
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 의미 있는 턴마다 `docs/ai-usage/session-log.md`에
+  기록해라. 방향 결정/피드백 턴은 원문 인용 포함.
+- The One Rule: 커밋 단위(1.1/1.2/Phase별/1.3)마다 backlog 또는
+  최소 log.md 기록을 남겨라. 이번처럼 여러 세션이 겹쳐 작업할 때는
+  특히 기록이 없으면 누가 뭘 끝냈는지 아무도 알 수 없다.
+```
+
+## 2026-07-28 (4) — 진행 중인 세션에 보내는 중간 정정 지시 (리팩토링 우선, 비주얼 재구축 일시 보류)
+
+- **사용자 지시 요약**: 프롬프트 (3)은 이미 진행 중인 개발 세션에
+  들어가 실행되고 있는 상태다(별개 신규 세션이 아님). 사용자는 두
+  가지를 명시해달라고 요청: (1) 그 세션이 이미 끝낸 부분은 점검만
+  하고 재작업하지 말 것, (2) 아직 덜 개발된 비주얼/기능 파트는 구조
+  리팩토링이 끝난 뒤에 이어서 개발할 것 — 즉 지금은 리팩토링에만
+  집중하고 비주얼 재구축은 잠시 멈추라는 우선순위 재조정.
+- **확인한 현재 코드 상태** (2026-07-28): `git status`에 Phase 1 시각
+  감사 산출물(`artifacts/top-down-phase1-audit/*`, 신규
+  `docs/dev-wiki/top-down-phase1-audit.md`)이 스테이징(`git add`)까지
+  된 상태로 확인됨 — 커밋 직전 단계로 보인다. 그 문서 내용을 읽어보니
+  "Step 0 result"에서 이미 "의심했던 중단 리팩토링은 커밋 `56a6376`으로
+  이미 끝나 있었고, 남은 미커밋 변경은 문서 편집뿐이었다"고 자체
+  확인하고 넘어갔음을 확인했다 — 즉 이 세션의 자체 점검은 이번 상담
+  세션이 이후에 찾아낸 데드코드(`DungeonScene.ts` 계열 2177줄)나
+  god-scene(3532줄), 중복 렌더러 문제까지는 보지 못한 채 바로 비주얼
+  Phase 1로 넘어간 상태였다.
+- **작성한 프롬프트** (진행 중인 개발 세션 대화에 그대로 이어 붙일 수
+  있는 정정 지시, 새 세션 온보딩이 아니라 방향 전환 지시임을 첫 줄에
+  명시):
+
+```
+지금까지 한 작업은 다시 하지 마라. 아래는 방향 전환 지시다 — 새로
+시작하는 게 아니라 지금 진행 중인 작업의 우선순위를 바꾸는 것이다.
+
+## 0. 이미 끝난 것 점검만 하고 재작업 금지
+
+- `git status`, `git log --oneline -10`으로 지금까지 뭘 했는지
+  확인해라.
+- `docs/dev-wiki/top-down-phase1-audit.md`와 `artifacts/top-down-phase1-audit/`가
+  이미 있다면 그 내용이 유효한지만 확인하고, 다시 캡처하거나 다시
+  분석하지 마라. 스테이징만 돼 있고 커밋 안 됐다면, 그 자체로 하나의
+  완결된 작업 단위이니 지금 커밋하고 `docs/dev-wiki/log.md`에 기록해라
+  (Phase 1 Visual Audit 완료로).
+- 그 문서의 "Step 0 result"는 `56a6376` 커밋 여부만 확인한 것이다.
+  이건 유효하지만 충분하지 않다 — `docs/dev-wiki/backlog.md`의
+  "Structural refactor debt" 항목을 아직 안 읽었다면 지금 읽어라.
+  거기 적힌 데드코드(`src/scenes/DungeonScene.ts` 등 약 2177줄)와
+  `LaneBattleScene.ts` god-scene(3532줄) 문제는 `56a6376`과 무관하게
+  여전히 그대로 남아있다.
+- 비주얼 재구축(Phase 2 이후)에 이미 들어간 게 있다면, 커밋 가능한
+  지점까지만 정리하고 지금은 더 진행하지 마라. 버리지는 마라 — 아래
+  리팩토링이 끝난 뒤 그대로 이어서 쓸 것이다.
+
+## 1. 지금부터는 구조 리팩토링에만 집중해라 (비주얼 재구축은 일시 보류)
+
+Phase 1 감사까지는 그대로 유지하되, **Phase 2(Terrain Rebuild) 이후
+비주얼 작업은 지금 진행하지 마라.** 대신 `backlog.md`의 "Structural
+refactor debt" 항목에 적힌 순서대로 진행해라.
+
+### 1.1 데드코드 삭제
+
+- `src/scenes/DungeonScene.ts`가 `src/main.ts`의 씬 목록(`BootScene`,
+  `LaneBattleScene`, `GameOverScene`)에 없다는 걸 재확인해라.
+- 확인되면 `DungeonScene.ts`와, grep으로 그것만 참조하는지 재확인한
+  뒤 `src/systems/dungeonGenerator.ts`, `src/systems/squad.ts`,
+  `src/systems/combat.ts`, `src/data/unitTypes.ts`, `src/data/commands.ts`,
+  `src/data/encounterTypes.ts`, `src/data/skills.ts`, `src/gfx/chibi.ts`,
+  `src/gfx/iso.ts`를 삭제해라(약 2177줄).
+- `npm run build`, `npm test`로 삭제 후에도 깨지는 게 없는지 확인하고,
+  이 단계만 별도로 커밋 + backlog/log 기록을 남겨라.
+
+### 1.2 `LaneBattleScene.ts` god-scene 분해
+
+- `retro-rts-visual-methodology.md` 8장(Refactor Targets)의 후보
+  위치를 참고해 최소 아래 도메인을 분리해라: 웨이브/경제, 거점/건설,
+  UI/HUD, 오디오 wiring.
+- 한 번에 다 옮기지 않아도 된다 — 이번 top-down 재구축에서 어차피
+  건드릴 지형/렌더링 관련 코드부터 먼저 분리해도 된다. 다만 어디까지
+  했고 왜 거기서 멈췄는지 결과물에 남겨라.
+- 각 도메인 분리마다 build/test 통과를 확인하고 커밋해라.
+
+### 1.3은 아직 하지 마라
+
+- `BattlefieldPrototypeRenderer`/`BattlefieldWorldRenderer` 4개 렌더
+  모드 정리는 새 top-down 렌더러가 완성되고 검증된 뒤(2번 작업 이후)
+  로 미룬다. 지금 지우지 마라.
+
+## 2. 비주얼 재구축과 나머지 미개발 기능은 리팩토링이 끝난 뒤에만
+
+top-down 비주얼 재구축(Phase 2 이후, `retro-rts-visual-methodology.md`
+기준)과, 그 외 아직 미완성인 기능들은 1.1과 1.2가 각각 커밋되고
+build/test 통과가 확인된 뒤에만 이어서 진행해라. 리팩토링이 끝나기
+전에 새 기능이나 새 렌더링 코드를 먼저 추가하지 마라.
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- 0번에서 확인한 기존 진행 상태(무엇을 재작업 없이 그대로 인정했는지)
+- 1.1/1.2에서 실제로 무엇을 지웠고/옮겼는지, 커밋 목록
+- 1.2를 어디까지 했고 왜 거기서 멈췄는지
+- 리팩토링이 끝난 뒤 재개할 비주얼/기능 작업 목록과 우선순위 제안
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 이번 방향 전환도 포함해 의미 있는 턴마다
+  `docs/ai-usage/session-log.md`에 기록해라. 이번처럼 사용자가 우선순위
+  자체를 바꾼 턴은 원문 인용을 남겨라.
+- The One Rule: 1.1/1.2 각 단계 커밋마다 backlog 또는 최소 log.md
+  기록을 남겨라.
+```
+
+## 2026-07-28 (5) — 실플레이 버그 3건 진단 + WC2 비주얼 전면 재구축(리서치·전략 포함) 프롬프트
+
+- **사용자 지시 원문(핵심)**:
+  1. "청동검 미니언의 캐릭터가 없고 그냥 하얀색 덩어리로 나옴. 이거
+     제대로 수정해야해"
+  2. "청동창이 찌르는 순간의 모션에서 캐릭터 크기가 갑자기 커졌다가
+     원래 자세로 돌아올 때 작아짐. 이것도 수정해야해."
+  3. "여전히 건설 거점과 타워가 거의 가까운 위치에 있어. 건설 거점은
+     타워와 전혀 다른 의미라니까... 건설 거점과 본진이 10 정도
+     거리에 있으면 타워는 건설 거점 이후 10 정도 더 먼 곳, 즉
+     본진에서 20정도 되는 거리에 있어야 해."
+  4. "위 내용 개선 후에, 워크래프트2 배경 시스템처럼 개선해야 하는데
+     자료 조사 및 진행을 해줘... 워크래프트2를 재개발해보자! 이런
+     느낌으로 뭔가 소스코드 풀린 것과 디자인 등이 있으면 그런 것들을
+     보고 변경하여 적용할 수 있는 방안도 생각해야해."
+- **확인한 현재 코드 상태** (2026-07-28, 소스 직접 조사, 코드는 수정
+  안 함):
+  - 항목 1(하얀 덩어리): `public/assets/lane-poses/frames/bronze-spearman-*.png`
+    5종을 Python/PIL로 직접 열어 확인한 결과, alpha 채널이 정상이고
+    (모서리 alpha=0, 캐릭터 실루엣의 alpha bbox가 프레임마다 정상
+    존재) preload 경로(`UNIT_ANIMATION_ASSETS`, `unitAnimationRegistry.ts`
+    의 `bronze_spearman` 항목)도 정상 매핑돼 있어, "에셋 자체가
+    비어있거나 안 실린다"는 가설은 기각했다. 대신
+    `LaneBattleScene.ts`에서 팀 색 표현에 아주 옅은 색(`0xe9f6ff`
+    player / `0xffd0d0` enemy) 곱연산 tint(`setTint`)를 모든 유닛에
+    균일 적용하는 걸 확인했는데(2098~2547줄 부근), 청동창병 원화가
+    유독 밝은 살구/황금 팔레트라 이 옅은 tint와 겹치면 실제 게임
+    스케일에서 디테일이 다른 유닛보다 훨씬 더 희게 뭉개질 가능성이
+    높다고 판단했다(가설, 확정 아님). 부가로 청동창병만 공격 단계가
+    2단계(windup/contact)이고 다른 유닛(석기 도끼병)은 3단계
+    (windup/contact/recover)라, 어딘가 3단계를 가정한 코드가 있다면
+    청동창병에서만 상태가 어긋날 수 있다는 것도 부차 가설로 남겼다.
+  - 항목 2(공격 시 크기 급변): 같은 PNG들의 alpha bbox 높이를 실측한
+    결과 idle `524px`, walk-a `509px`, walk-b `445px`, attack-windup
+    `423px`, attack-contact `625px`(모두 `1152x1024` 캔버스 기준)로
+    같은 유닛 안에서도 프레임마다 실제 캐릭터 높이가 최대 약 48%까지
+    차이가 남을 확인했다. 그런데 표시 코드는 유닛당 캔버스 크기와
+    `scaleFactor` 하나만으로 모든 프레임을 동일 크기로 표시하므로,
+    원화 단계에서 프레임별 캐릭터 스케일이 안 맞으면 그대로 화면
+    크기 요동으로 나타난다 — 확정 원인으로 판단.
+  - 항목 3(거점/타워 근접): `src/data/battlefieldMaps.ts`의
+    `createCaptureSocket()`이 캡처 포인트와 타워를 애초에 분리된
+    개념으로 만들지 않고, `kind: "capture-tower"`라는 단일 소켓을
+    캡처 포인트와 같은 `progress`(0.375 / 0.767)에 만든다는 걸
+    확인했다 — 즉 "가깝다"가 아니라 데이터 모델상 같은 위치다.
+    사용자가 요구한 "거점-본진 거리 대비 타워는 거점보다 그만큼 더
+    먼 별도 위치" 규칙 자체가 데이터 구조에 아직 존재하지 않는다 —
+    확정 원인으로 판단.
+  - 항목 4: WebSearch로 확인한 결과, Warcraft II(1995)는 여전히
+    Blizzard가 저작권을 보유 중이며 "abandonware"라는 통칭이 이용권을
+    주지 않는다(명시적 공개 선언이 없는 한 재사용 불가). 다만
+    Stratagus/Wargus(GPL 오픈소스 RTS 엔진 + WC2 임포터, 사용자가
+    소유한 정품에서 직접 에셋을 추출해야 실행 가능한 구조)는 타일
+    번호 체계·데이터 구조를 참고하는 용도로는 합법적으로 열람 가능함을
+    확인했다. 또한 OpenGameArt의 "Grass and dirt tileset (Warcraft
+    II style)"는 CC0(퍼블릭 도메인) 라이선스로 8x8 타일에 상하좌우
+    병합+코너+내부 코너+장식 변형까지 포함돼 있어, 상업/대회용으로도
+    바로 쓰거나 구조를 그대로 참고해 자체 제작할 수 있는 안전한
+    레퍼런스임을 확인했다.
+- **작성한 프롬프트** (진행 중인 개발 세션에 이어 붙일 수 있는 형태,
+  버그 3건 수정을 구조 리팩토링과 WC2 비주얼 재구축 사이에 끼워
+  넣도록 우선순위를 명시했다):
+
+```
+아래는 진행 중인 작업에 추가되는 지시다. 순서를 지켜라: 지금 하던
+구조 리팩토링(1.1 데드코드 삭제, 1.2 god-scene 분해)을 끝내는 중이면
+그 커밋까지는 마무리해라. 그 다음 아래 A(버그 3건)를 먼저 고치고,
+그 다음에만 B(워크래프트2 비주얼 전면 재구축)로 넘어가라. B를 A보다
+먼저 하지 마라 — 실제 플레이에서 바로 보이는 문제를 놔두고 큰 재구축부터
+벌이면 검증이 불가능해진다.
+
+## A. 버그 3건 수정 (구조 리팩토링 다음, 비주얼 재구축 이전)
+
+### A1. 청동창병(bronze_spearman)이 하얀 덩어리로 보임
+
+조사 결과 에셋 자체(`public/assets/lane-poses/frames/bronze-spearman-*.png`)는
+alpha 채널이 정상이고 preload 경로도 맞다 — "에셋이 없다/안 실린다"는
+아니다. 아래 두 가지를 **가설로만** 제시한다, 확정 원인이 아니니 네가
+직접 검증해라.
+
+- 가설 1: `LaneBattleScene.ts`에서 팀 색 표현에 아주 옅은 곱연산
+  tint(`setTint(0xe9f6ff)` player / `setTint(0xffd0d0)` enemy)를 모든
+  유닛에 균일 적용하는데, 청동창병 원화의 밝은 살구/황금 팔레트가
+  이 옅은 tint와 겹치면서 실제 인게임 축소 크기에서 디테일이 다른
+  유닛보다 심하게 하얗게 뭉개질 가능성. 실제 인게임 크기로 렌더링한
+  스크린샷과 tint 제거 스크린샷을 비교해 검증해라.
+- 가설 2: 청동창병만 공격 단계가 2단계(`windup`/`contact`)고 다른
+  유닛(석기 도끼병 등)은 3단계(`windup`/`contact`/`recover`)다. 어딘가
+  3단계를 가정한 코드(인덱스 접근, 상태 전환 조건 등)가 있다면
+  청동창병에서만 어긋날 수 있다 — `resolveUnitAnimationTexture`,
+  `syncUnitPresentation`, 공격 상태 전환 코드를 확인해라.
+- 위 두 가설이 다 아니면, `setTintFill` 류의 "완전 채움" tint가 어딘가
+  남아 있는지, 혹은 텍스처 키 충돌/로드 타이밍 문제인지 처음부터
+  다시 확인해라.
+- 수정 후 실제 인게임 화면(줌 배율 그대로)에서 청동창병이 다른
+  유닛과 동등한 디테일로 보이는지 스크린샷으로 확인해라.
+
+### A2. 청동창 공격 모션에서 캐릭터 크기가 갑자기 커졌다 작아짐
+
+확정 원인: `bronze-spearman-*.png` 각 프레임의 alpha bounding-box
+높이를 직접 측정한 결과(같은 `1152x1024` 캔버스 기준) idle `524px`,
+walk-a `509px`, walk-b `445px`, attack-windup `423px`,
+attack-contact `625px`로 프레임마다 캐릭터의 실제 크기가 원화
+단계에서부터 최대 약 48% 차이 난다. 그런데 표시 코드는 유닛당 고정
+캔버스 크기 + 단일 `scaleFactor`(`unitAnimationRegistry.ts`)로 모든
+프레임을 동일하게 표시하므로, 원화 스케일이 안 맞으면 그대로 화면
+크기 요동으로 나타난다.
+
+두 가지 해결 방향 중 하나를 선택해 진행해라(선택 이유를 남겨라):
+
+- 방향 1(원화 재작업): 다른 유닛(석기 도끼병 등)에 이미 적용한 것과
+  같은 방식으로, 청동창병 프레임 5종의 캐릭터 크기를 캔버스 안에서
+  일관되게 재정규화해라(2026-07-27 로그의 "유닛 포즈 정규화" 작업과
+  동일한 절차 — ground anchor `(450, 900)` 기준으로 재추출/재조정).
+- 방향 2(코드 보정): 프레임별 실제 alpha bbox 높이를 사전 계산해
+  `referenceVisibleHeightRatio`를 프레임 단위로 갖도록
+  `UnitAnimationDefinition`을 확장하고, 표시 시점에 프레임별 보정
+  스케일을 적용해라.
+- 어느 쪽이든, 수정 후 idle -> windup -> contact -> idle 전환
+  시퀀스를 스크린샷으로 남겨 캐릭터 실루엣 높이가 시각적으로 일정하게
+  유지되는지 확인해라.
+- 다른 유닛(석기 도끼병 등)도 같은 문제가 있는지 동일한 방식으로
+  bbox를 측정해 확인하고, 있으면 같이 고쳐라.
+
+### A3. 건설 거점과 타워가 사실상 같은 위치임 (컨셉 오류, 데이터 구조 문제)
+
+확정 원인: `src/data/battlefieldMaps.ts`의 `createCaptureSocket()`이
+캡처 포인트와 타워를 처음부터 분리하지 않고 `kind: "capture-tower"`라는
+단일 소켓을 캡처 포인트와 **같은 `progress`**(현재 `0.375`, `0.767`)에
+만든다. "거의 가깝다"가 아니라 데이터 구조상 아예 같은 위치다.
+
+사용자가 요구하는 규칙: 건설 거점(경제/징병 거점)과 타워(방어 구조물)는
+서로 다른 개념이고 서로 다른 위치에 있어야 한다. 구체적으로, 본진에서
+건설 거점까지 거리가 `X`라면, 타워는 그 거점을 지나 본진에서 `2X`
+거리(즉 거점을 지나 추가로 `X`만큼 더 먼 곳)에 있어야 한다.
+
+- `battlefieldMaps.ts`의 레인 데이터 모델을 캡처 포인트 노드와 타워
+  노드로 분리해라. 지금 `LANE_PATH_NODES`(progress `0, 0.375, 0.588,
+  0.767, 1`)와 `createCaptureSocket()`을 참고해, 캡처 포인트
+  `progress`는 유지하되 타워는 새로운 별도 `progress` 값(본진 기준
+  캡처 포인트 거리의 2배가 되는 지점)에 별도 소켓으로 추가해라.
+  두 진영(양쪽 본진) 모두 대칭으로 적용해라.
+- 이번 변경으로 `capturePointDefinitions.ts`의 액션(건설/해체 등)도
+  캡처 포인트 전용으로 남기고, 타워는 별도 구조물로 취급해라(공격/
+  방어 로직, HP, 파괴/재건은 유지하되 "캡처 포인트를 지었더니 타워가
+  됐다"는 지금 구조를 없애라).
+- 변경 후 캡처 포인트와 타워가 화면에서 명확히 다른 두 지점으로
+  보이는지, 거리 비율이 실제로 1:2(본진-거점 : 본진-타워)인지 좌표로
+  검증하고 스크린샷을 남겨라.
+
+## B. 워크래프트2 비주얼 전면 재구축 (A 완료 후에만 진행)
+
+`retro-rts-visual-methodology.md`(4.5.1절, 안 A 확정)의 Phase 2
+이후를 이 항목으로 대체/구체화한다. "그래픽부터 내부 디자인까지 전부
+다시 디자인"하는 범위이므로, 코드를 먼저 짜지 말고 아래 조사부터
+정리해서 사용자에게 먼저 보고해라.
+
+### B0. 법적 제약을 먼저 확정해라 (가장 중요, 건너뛰지 마라)
+
+- Warcraft II(1995)는 지금도 Blizzard가 저작권을 보유하고 있다.
+  "abandonware"라는 통칭은 이용권을 주지 않는다 — 명시적인 공개
+  선언(퍼블릭 도메인/CC 등)이 없는 한 원작 타일/스프라이트/사운드를
+  추출해 이 프로젝트(대회 제출작)에 쓰면 안 된다.
+- `Stratagus`/`Wargus`(GPL 오픈소스 RTS 엔진 + WC2 임포터)는 엔진
+  코드 자체는 열람 가능하지만, 실행하려면 사용자가 소유한 정품
+  게임에서 직접 에셋을 추출해야 하는 구조다 — 이건 "엔진의 타일
+  번호 체계·데이터 구조를 참고하는 용도"로만 활용해라. 실제 에셋을
+  이 저장소에 넣거나 배포하지 마라.
+- 반대로 OpenGameArt의 "Grass and dirt tileset (Warcraft II style)"
+  (https://opengameart.org/content/grass-and-dirt-tileset-warcraft-ii-style)
+  는 CC0(퍼블릭 도메인)로, 8x8 타일에 상하좌우 병합+코너+내부 코너+
+  장식 변형까지 포함돼 있다 — 이건 그대로 가져다 쓰거나(스케일만
+  키워서), 최소한 "타일 세트가 몇 개 필요한지/전이 규칙이 어떻게
+  생겼는지"의 실물 레퍼런스로 직접 참고해라.
+- 결론: "워크래프트2를 재개발"은 "WC2의 실제 파일을 가져온다"가
+  아니라 "WC2가 검증한 기법(정사각 top-down 그리드, 타일 전이 규칙,
+  일관된 접지/광원)을 원본 재해석 자산으로 다시 구현한다"는 의미로
+  진행해라. 이 결론에 동의하지 않는다면 진행 전에 사용자에게
+  먼저 확인해라.
+
+### B1. 조사 항목
+
+- `retro-rts-visual-methodology.md` 5.2.1절의 marching squares(16-tile)
+  vs blob(47-tile) vs dual-grid 비교를 다시 읽고, 위 CC0 타일셋의
+  실제 파일 구성을 열어 몇 개 타일로 병합 규칙을 구현했는지 실측해라.
+- Stratagus의 타일셋 문서(`doc/graphics/tileset.html`, GPL 저장소
+  공개 문서)를 참고해 타일 크기(32x32)와 지형 레이어 개념(설계
+  참고용, 코드/에셋 이식 아님)을 확인해라.
+- 유닛 스프라이트도 같은 원칙 적용: 정면/3분의 1 시점 뒤섞임 없이
+  전부 순수 top-down 또는 약한 3/4 각도로 통일할지 결정해라(현재
+  유닛들은 거의 측면 프로필이라 top-down 바닥과 안 맞을 수 있다 —
+  이것도 확인 대상).
+
+### B2. 실행 (조사 정리 후, 사용자 확인 받고 진행)
+
+- `retro-rts-visual-methodology.md` Phase 2(Terrain Grammar) ~
+  Phase 6(UI Composition)을 그대로 따르되, B0/B1에서 확정한 타일
+  기법과 라이선스 방침을 5장/6장/8장에 반영해 문서를 업데이트해라.
+- 화면/그래픽/내부 데이터 구조(지형 그리드, 소켓, 접지 프리셋) 전부를
+  "새로 설계하고 적용"하는 범위이니, 10장 체크포인트 항목(길 폭/재질,
+  그림자, 근접 모션 exaggeration, 음악 톤)은 절대 임의로 확정하지
+  말고 선택지로 물어라.
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- A1/A2/A3 각각: 확정 원인(또는 검증한 가설), 무엇을 바꿨는지, 수정
+  전후 스크린샷/좌표 증거
+- B0: 법적 방침에 대한 결론과 근거, 사용자 확인이 필요하면 그 지점
+- B1: 조사 결과 요약과 채택한 타일/유닛 시점 방침
+- B2: 어디까지 실행했고 어디서 사용자 확인을 기다리는지
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 의미 있는 턴마다 `docs/ai-usage/session-log.md`에
+  기록해라. 이번 사용자 피드백(버그 3건 + WC2 방향)은 원문 인용을
+  남겨라.
+- The One Rule: A1/A2/A3/B0/B1/B2 각 단계 커밋마다 backlog 또는 최소
+  log.md 기록을 남겨라.
+```
+
+## 2026-07-28 (6) — 10일 청사진 Day 0 마무리 + 골든 레퍼런스 착수 프롬프트
+
+- **사용자 지시 요약**: 개발을 맡던 Codex 세션이 A1~A3 수정과 B0/B1
+  조사를 마치고 B2 착수 전 확인을 기다리는 상태로 응답을 보내왔다.
+  사용자가 그 응답 전문을 붙여넣고, "계획대로 다시 제대로 구현하기
+  위한 첫 프롬프트"를 요청했다. 이 세션(상담)이 방금 작성한
+  `wc2-rebuild-plan.md`/`retro-rts-production-precedent.md`를 그
+  Codex 세션은 모르니 그것도 설명해달라고 명시했다.
+- **확인한 현재 코드 상태** (2026-07-28, 최신 커밋 `ff6b438`): Codex가
+  보고한 커밋들을 `git log`/`pre-visual-bug-fixes-validation.md`/
+  `wc2-visual-rebuild-research.md`를 직접 읽어 교차 검증했다 — 보고
+  내용과 실제 문서/커밋이 일치했다. B1 조사가 특히 탄탄했다(CC0
+  타일셋을 직접 픽셀 단위로 재보 검증, Stratagus 타일 문서 근거,
+  Blizzard 저작권 고지 원문 인용). A3의 "타워 0.750 vs 상대 거점 0.767
+  근접 문제"는 실제로 미해결 상태임을 확인했다.
+  이 사용자에게 두 가지 확인이 필요한 지점(측면 프로필 유닛 전면
+  재제작 여부, 타워-거점 근접 해법)을 AskUserQuestion으로 직접
+  물어 확정했다: **약한 3/4 top-down으로 유닛/건물 전면 재제작 승인**,
+  **정확한 1:2 비율 대신 최소 이격 규칙으로 완화**.
+- **작성한 프롬프트** (Codex 세션에 그대로 이어 붙일 수 있는 형태,
+  그 세션이 모르는 두 신규 문서를 먼저 설명하고 시작):
+
+```
+너의 B0/B1 보고를 확인했고, A1~A3 커밋(f4b4356/4b558d1/6d8f876)과
+B0/B1 커밋(6aee3bc/ff6b438)도 직접 열어 교차 검증했다. 전부 정확하고
+근거가 탄탄하다 — 다시 조사할 필요 없다.
+
+## 네가 모르는 두 문서부터 읽어라
+
+너의 체크포인트 이후, 별도(상담) 세션이 이 프로젝트의 10일 개발
+전체를 조율하기 위한 문서 두 개를 새로 썼다. 지금부터는 이 문서들이
+"B2"라는 이름 대신 쓰는 상위 계획이니, 먼저 읽어라.
+
+1. `docs/knowledge/retro-rts-production-precedent.md` — 워크래프트2/
+   스타크래프트/에이지오브엠파이어/듄2가 실제로 어떻게 일관된 스프라이트를
+   대량 생산했는지의 조사 자료. 핵심: "마스터 레퍼런스 하나 고정 ->
+   고정된 렌더 계약(카메라/팔레트/캔버스) -> 프레임마다 수동/기계적
+   정리 패스"라는 3단계가 모든 스튜디오에 공통이었다. 너의 A1/A2
+   수정(영구 틴트 제거, 프레임별 bbox 보정)이 이미 이 패턴의 3단계와
+   정확히 같은 일을 한 것이다 — 우연이 아니라 원래 그래야 하는 것이다.
+2. `docs/dev-wiki/wc2-rebuild-plan.md` — 10일 실행 계획. 너의 "B2"는
+   이 문서의 Day 1(툴링+지형 기반)과 Day 2(골든 레퍼런스, 사용자 승인
+   전 대량생산 금지)에 해당한다. **지금 할 일은 Day 2까지다. Day 3-4의
+   전체 볼륨 생산으로 바로 넘어가지 마라.**
+
+## 사용자가 확정한 두 가지 (재논의 금지)
+
+- **유닛/건물 시점**: 네 제안대로 약한 3/4 top-down으로 확정. 현재
+  측면 프로필 원화(석기 3종 + 청동창병 전부)는 생산 자산으로 재사용하지
+  않고 전면 재제작한다. A1/A2에서 고친 코드(팀 tint 제거, 프레임별
+  bbox 보정 로직)는 그대로 유지 — 그림만 새로 만들면 된다.
+- **타워-거점 근접 문제**: 정확한 1:2 비율 대신 "최소 이격 규칙"으로
+  완화한다 — 타워는 항상 자신과 연결된 캡처 포인트보다 본진에서 더 멀어야
+  하고(방향성 유지), 그와 별개로 **어떤 두 구조물 소켓 사이에도 최소
+  진행도(progress) 차이 0.15 이상**을 유지해야 한다. 정확히 2배가
+  되도록 좌표를 짜내려 하지 마라 — 지금처럼 0.750/0.767이 0.017밖에
+  안 나는 상황을 막는 게 목적이다. 필요하면 `battlefieldMaps.ts`의
+  타워 progress 값을 이 규칙에 맞게 다시 계산해라(예: 측면 구조물
+  레인을 쓰든, 진행도 자체를 재배치하든 — 어느 쪽이든 네 판단으로
+  진행하고 근거만 남겨라).
+
+## 지금 할 일: Day 0 마무리 -> Day 1/2 (Day 3-4 볼륨 생산은 아직 하지 마라)
+
+### 0. 타워-거점 근접 수정 (위 규칙 적용, 작은 데이터 변경)
+
+- `battlefieldMaps.ts`의 타워 progress를 위 최소 이격 규칙에 맞게
+  다시 계산하거나 재배치해라.
+- 기존 A3 테스트/Playwright에 이 규칙을 검증하는 assertion을 추가해라
+  (예: 모든 구조물 소켓 쌍의 progress 차이 >= 0.15).
+- build/test 통과 확인 후 별도 커밋 + log 기록.
+
+### 1. Style Guide 확정 (Day 0 나머지, 문서 작업)
+
+`retro-rts-visual-methodology.md`에 (또는 새 `docs/dev-wiki/style-guide.md`로
+분리해도 됨) 아래를 못박아라 — 너의 B0/B1 조사 결과를 그대로 근거로 써라:
+
+- 지형: 16-state marching squares + 투명 오버레이(네가 이미 확정한 대로)
+- 유닛/건물 캔버스 규격: 지금의 낭비가 심한 `1152x1024` 대신, 실제
+  표시 크기 대비 적당한 캔버스 클래스를 새로 정해라(예: 컨텐츠가
+  600px대 세로였으니 `384x384`~`512x512`급 정도가 합리적일 것 —
+  네가 실측해서 정해라).
+- 광원 방향 고정(예: 좌상단), 전 에셋 공통 적용
+- 팀 컬러 표현: A1에서 이미 전체 틴트를 없앴다 — 이제 그 대신 방패
+  문장/어깨띠 등 **지정된 부위만 팔레트/색 스왑**하는 방식으로
+  명문화해라(WC2의 팔레트 인덱스 스왑과 동등한 효과).
+- 유닛/건물 시점: 약한 3/4 top-down으로 명문화(위에서 확정).
+- facing 수: 기존 결정(좌우 2방향 + 공격 시 미세 회전) 유지.
+
+### 2. Day 2 골든 레퍼런스 (여기서 멈춰라, 대량 생산 금지)
+
+Day 3-4(전체 볼륨 생산)로 넘어가지 말고, 딱 아래만 만들어라:
+
+- 지형 타일 하나의 재질 패밀리를 작은 테스트 구역에 실제로 깔아본 것
+- 접지 규칙이 적용된 오브젝트(나무 또는 바위) 1개
+- 유닛 1종(청동창병 추천 — 이번에 문제가 됐던 유닛이라 검증 가치가
+  큼)의 새 3/4 top-down 스타일 풀 포즈셋(idle/walk-a/walk-b/attack)
+- 구조물 1개(타워 또는 캡처 포인트)
+- 위 전부를 새 캔버스/팔레트/광원 규격으로 통일해서 만들고, 기존
+  대비 스크린샷 비교(같은 카메라 위치, old-oblique vs new-topdown)를
+  남겨라.
+
+**이 골든 레퍼런스는 사용자 승인 전까지 나머지 유닛/타일/오브젝트로
+확장하지 마라.** 승인은 사람이 직접 보고 판단하는 단계다.
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- 타워-거점 이격 수정 내용과 커밋
+- Style Guide 문서 반영 내용(캔버스 규격 실측값 포함)
+- 골든 레퍼런스 스크린샷/비교 산출물 목록
+- "이걸로 간다"는 승인을 기다리고 있다는 것을 명시
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 이번 사용자 확정(3/4 top-down, 이격 규칙)은 원문
+  인용 없이 요약만 남겨도 된다(상담 세션이 대신 확정한 결정이므로) —
+  단, 반드시 기록은 남겨라.
+- The One Rule: 0/1/2 각 단계 커밋마다 backlog 또는 최소 log.md 기록을
+  남겨라.
+```
+
+## 2026-07-28 (7) — 골든 레퍼런스 리뷰 결과: 경로 모양·워크사이클 수정 후 승인 지시
+
+- **사용자 지시 요약**: Codex가 Day 1/2 골든 레퍼런스(구조물 이격 수정,
+  style-guide.md 확정, 16-state 지형+자산 QA+청동창병 4포즈/바위/타워
+  골든 레퍼런스)를 완료하고 승인 대기 응답을 보내왔다. 사용자가 "다음에
+  뭐 해야 하냐"고 물어, 이 세션이 실제 비교 이미지를 직접 열어 검토한
+  뒤 두 가지 지점(계단식 흙길 모양, 밋밋한 walk-a/b 포즈 차이)을 짚어
+  AskUserQuestion으로 처리 방향을 물었고, "경로/걸음사이클만 한 번 더
+  수정 후 승인"으로 확정됐다.
+- **확인한 현재 코드 상태** (2026-07-28, 최신 커밋 `f8f0d30`): 커밋
+  81f72cb(구조물 최소 이격, 캡처 0.375/0.767·타워 0.600/0.200·최소
+  간격 0.167)/81a6603(`style-guide.md` 확정)/f8f0d30(골든 레퍼런스
+  구현)와 `golden-reference-validation.md`를 확인했다. 이 세션이
+  `artifacts/golden-reference/old-vs-new-side-by-side.png`와
+  `new-topdown-golden.png`을 직접 열어봤고, 문서가 스스로 남긴 리뷰
+  포인트(계단식 경로 윤곽, walk-a/b 실루엣 차이 미미)가 실제 이미지와
+  일치함을 확인했다. 그 외에는 조명/팀컬러/캔버스 일관성 모두 양호했다.
+- **작성한 프롬프트** (Codex 세션에 이어붙일 수 있는 형태):
+
+```
+골든 레퍼런스를 검토했다. 사용자가 실제 비교 이미지를 직접 보고 두
+가지를 지적했다 — 이 두 가지만 고치면 그 자리에서 승인하겠다는
+입장이다. 나머지(캔버스 규격, QA 스크립트, 16-state 지형 마스크,
+팀컬러 부위 스왑, 3/4 top-down 카메라 각도)는 전부 승인됐다 —
+재작업하지 마라.
+
+## 수정 항목 1: 흙길이 계단식/지그재그로 보임
+
+`new-topdown-golden.png`에서 대각선 흙길이 자연스러운 오솔길이 아니라
+격자에 맞춰 억지로 꺾은 계단처럼 보인다. 16-state 전이 마스크 자체는
+정상 작동하는 것으로 보인다(범례 16개 상태 다 정상) — 문제는 그 밑에
+깔린 논리 경로가 순수 대각선 계단형(그리드 셀 단위로 한 칸씩 꺾는
+방식)이라는 데 있는 것으로 보인다. 아래 중 하나로 완화해라(선택 근거를
+남겨라):
+
+- 경로 폭을 넓혀서 계단 단차를 시각적으로 덜 도드라지게 하거나,
+- 경로 코너에 완만한 커브/베지어 보간을 적용해 계단형 그리드 경로를
+  둥글게 다듬거나,
+- 둘 다 적용.
+
+`marchingSquares.ts`의 16-state 마스크 자체는 건드릴 필요 없을 가능성이
+높다 — 입력이 되는 논리 경로 데이터를 부드럽게 다듬는 쪽을 먼저
+시도해라.
+
+## 수정 항목 2: walk-a / walk-b 포즈 차이가 거의 안 보임
+
+지금 두 걷기 포즈가 실루엣상 구분이 거의 안 될 정도로 미묘하다.
+`docs/knowledge/retro-rts-production-precedent.md`가 인용한 원칙("팔/
+다리 교차가 뚜렷하게 읽혀야 한다")과
+`docs/dev-wiki/art-direction-animation.md`의 "Walk A/Walk B: alternating
+arm swing and leg crossing" 요구를 다시 참고해서, 앞다리/뒷다리와 팔
+스윙이 명확히 반대로 교차하도록 두 포즈를 다시 생성해라. 캔버스 규격/
+ground anchor/팔레트는 그대로 유지하고 포즈 실루엣만 과장해라.
+
+## 완료 후
+
+- 두 수정 사항만 반영한 업데이트된 비교 스크린샷(`old-vs-new-side-by-side.png`
+  갱신 또는 새 버전)을 다시 만들어라. 다른 유닛/타일/오브젝트로 확장하지
+  마라 — 아직 Day 3-4가 아니다.
+- 자산 QA 스크립트를 다시 돌려 6/6 통과를 재확인해라.
+- 결과물을 보고하고, 사용자가 "이걸로 간다"고 하면 그 즉시 Day 3-4
+  대량 생산으로 넘어가도 된다(이번엔 별도 확인 없이 바로 진행 가능 —
+  사용자가 이미 "수정 후 승인" 조건부 승인 의사를 밝혔다).
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 이번 턴도 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 수정 커밋 + `golden-reference-validation.md` 갱신 +
+  backlog/log 기록.
+```
+
+## 2026-07-28 (8) — 청동창병 공격 포즈 방향 반전 버그 확정 + 확인 요청 프롬프트
+
+- **사용자 지시 요약**: "생산된 것들 좀 확인해줘. 유닛 그림의 방향에
+  따라 들고 있는 창이 전혀 엉뚱한 방향이거나, 곤봉같이 생긴 창대에
+  T자로 창대고 또 솟아난 형태라거나 하는 그림도 있는 거 같은데
+  검토한 뒤 바로잡고 다음 내용 진행하도록 해야해."
+- **확인한 현재 코드 상태** (2026-07-28, 최신 커밋 `31a6362`): Day
+  3-4 대량 생산은 아직 시작되지 않았고, 골든 레퍼런스(청동창병
+  idle/walk-a/walk-b/attack, 바위, 타워)만 존재함을 `git log`/
+  파일 타임스탬프로 확인했다. 각 PNG를 Python/PIL로 직접 열고 필요한
+  부분을 크롭/확대해 육안 검토했다.
+  - **확정 버그**: `prototype-golden-contact-sheet-v1.png`(원본 생성
+    시트) 자체에서 idle/walk-a/walk-b 3장은 전부 캐릭터가 왼쪽을
+    보고, attack 1장만 원본 생성 단계부터 캐릭터가 오른쪽을 보고
+    있음을 확인했다. 창 쥔 손/방패 든 손의 배치(오른손 창, 왼팔 방패)
+    자체는 4장 모두 동일하지만, 몸 전체 facing이 attack만 반대라 실제
+    게임에서 이동→공격 전환 시 캐릭터가 180도 순간 회전하는 것처럼
+    보일 것으로 판단했다. Codex의 후처리(크로마키 제거+분할)는 이
+    방향 불일치를 검증하지 않고 그대로 통과시켰다.
+  - **재현 안 됨**: "곤봉같이 생긴 창대에 T자로 솟아난 형태"는 idle/
+    walk-a/walk-b/attack 4장 모두 확대해 봤지만 창촉/샤프트가 정상
+    형태였다 — 확정 버그로 보고하지 않고 재확인 요청으로만 전달한다.
+- **작성한 프롬프트** (Codex 세션에 이어붙일 수 있는 형태):
+
+```
+골든 레퍼런스 산출물을 직접 열어 검토했다. 확정 버그 1건과 재확인
+요청 1건이 있다. 아직 Day 3-4(대량 생산)로 넘어가지 마라 — 이 두
+가지부터 정리해라.
+
+## 확정 버그: attack 포즈만 캐릭터 방향이 반대
+
+`prototype-golden-contact-sheet-v1.png`(원본 생성 시트)를 열어 직접
+확인했다. idle/walk-a/walk-b 3장은 캐릭터가 전부 왼쪽을 보고 있는데,
+attack 1장만 원본 생성 단계에서부터 캐릭터 몸 전체가 오른쪽을 보고
+있다. 창을 쥔 손(오른손)과 방패 든 팔(왼팔)의 배치 자체는 4장 모두
+동일하니 손 배치를 다시 바꾸지는 마라 — 문제는 몸 전체의 좌우 facing이
+attack만 반대라는 것이다.
+
+수정 방법(둘 중 하나, 근거를 남겨라):
+
+- attack 프레임만 좌우 반전(mirror)해서 idle/walk와 같은 방향을 보게
+  만들거나,
+- attack 포즈를 idle/walk와 같은 facing으로 다시 생성해라.
+
+단순 좌우 반전이 더 빠르지만, 반전하면 조명 방향(좌상단 광원 계약)이
+캐릭터 몸 위에서는 반대로 뒤집혀 style-guide.md의 광원 규칙과 어긋날
+수 있다 — 반전 후 광원이 여전히 일관돼 보이는지 확인하고, 어색하면
+재생성 쪽으로 가라.
+
+## 재확인 요청: "곤봉처럼 T자로 솟아난 창대" 모양
+
+사용자가 이 증상도 언급했는데, 이 세션이 idle/walk-a/walk-b/attack
+4장을 전부 확대해서 봤을 때는 재현되지 않았다 — 확정 버그가 아니라
+사용자가 실제로 화면에서 본 순간을 재확인해달라는 요청이다.
+
+- 브라우저에서 `/?golden=1`을 직접 열어 4개 포즈를 전환하며 (idle ->
+  walk-a -> walk-b -> attack -> idle) 순간적으로 이상한 형태가
+  보이는 프레임이 있는지 확인해라 — 특히 포즈 전환 사이 보간/블렌드
+  구간을 주의 깊게 봐라.
+- 정적 이미지 4장에서는 못 찾았으니, 애니메이션 전환 중에만 나타나는
+  문제일 가능성을 우선 의심해라.
+- 재현되면 원인과 수정 내용을, 재현이 안 되면 "재현 안 됨, 확인한
+  방법"을 결과물에 명시해라.
+
+## 완료 후
+
+- 위 두 가지만 처리하고, 업데이트된 비교 스크린샷/QA 결과를 다시
+  보고해라.
+- 여전히 Day 3-4(전체 유닛/타일 대량 생산)로 확장하지 마라 — 이번
+  수정이 끝나면 그 다음이 Day 3-4다.
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 이번 턴도 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 수정 커밋 + `golden-reference-validation.md` 갱신 +
+  backlog/log 기록.
+```
+
+## 2026-07-28 (9) — 골든 레퍼런스 최종 승인 + Day 3-4 대량 생산 착수 프롬프트
+
+- **사용자 지시 요약**: "방금 준 프롬프트로는 작업이 끝났어. 작업
+  확인하고 잘 되었는지 검토하고 소스코드도 제대로 개발된 건지 검토해줘.
+  그런 뒤 다음 작업할 프롬프트 알려줘."
+- **확인한 현재 코드 상태** (2026-07-28, 최신 커밋 `c7189b5`): 직접
+  `npm run build`/`npm test`를 실행해 통과(24 files/87 tests)를
+  독립적으로 재확인했다. `prototype-golden-bronze-spearman-attack-v2.png`,
+  `pose-transition-sequence.png`를 열어 attack이 이제 idle/walk와
+  같은 방향(왼쪽)을 보고 광원도 일관됨을 확인했다.
+  `golden-reference-validation.md`의 "Attack facing correction"/
+  "Transition-shape recheck" 절에서, 단순 반전 대신 재생성을 택한
+  근거(반전 시 광원 방향·팀컬러 영역이 뒤집혀 계약 위반)와 "T자 곤봉"
+  증상이 walk-b 다듬는 과정의 미채택 중간 시안(창 2개 겹침, 게임에
+  로드된 적 없음)이었다는 설명을 확인해 타당하다고 판단했다.
+  `GoldenReferenceScene.ts`의 신규 코드(83줄)를 리뷰해 타입이 잘
+  잡혀 있고 검증 전용 씬에 격리돼 있음을 확인했다. `LaneBattleScene.ts`는
+  3532->3092줄로 일부 축소됐으나 여전히 큼 — 차단 사유는 아니라고
+  판단하고 다음 프롬프트에 Day 5 통합 시 마저 정리하라는 메모만 남겼다.
+  `style-guide.md`(캔버스 클래스, 광원/그림자, 팀컬러 규칙)도 구체적으로
+  잘 확정돼 있음을 확인했다.
+- **작성한 프롬프트** (Codex 세션에 이어붙일 수 있는 형태, Day 3-4
+  착수):
+
+```
+골든 레퍼런스를 최종 승인한다 — "이걸로 간다." attack facing 수정과
+T자 증상 조사 모두 확인했고 타당하다. 지금부터 Day 3-4(전체 볼륨
+생산)를 시작해라. `docs/dev-wiki/wc2-rebuild-plan.md`의 Day 3-4
+설명과 `docs/dev-wiki/style-guide.md`의 캔버스 클래스/광원/팀컬러
+규칙을 그대로 따른다 — 다시 논의하지 마라.
+
+## 이번 볼륨 생산 범위
+
+Codex가 여러 세션(최대 3개)으로 나눠 진행 가능하다면 아래처럼
+파일/자산 소유권을 겹치지 않게 나눠라. 혼자 순차로 진행해도 된다 —
+순서만 지키면 된다.
+
+### 스트림 A: 나머지 유닛 3종 전면 재제작
+
+- 대상: `stone_slinger`, `stone_axeman`, `supply_wagon` (기존 청동창병과
+  같은 4포즈: idle/walk-a/walk-b/attack, 필요시 도끼병처럼 3단계
+  공격도 유지 가능하되 캔버스 클래스 규칙은 동일 적용)
+- 청동창병 골든 레퍼런스와 완전히 같은 파이프라인을 써라: 원본 생성 ->
+  크로마키 제거 -> `tools/asset-qa/normalize_golden_reference.py`류
+  정규화 -> `validate_golden_reference.py`류 QA 6/6 통과.
+- **이번에 고친 교훈을 반드시 적용해라**: 한 시트에서 여러 포즈를 뽑을
+  때 전 포즈의 캐릭터 몸 facing이 서로 일치하는지 육안으로 먼저
+  확인해라(청동창병 attack이 반대 방향이었던 것과 같은 실수 방지).
+  워크 포즈 간 실루엣도 팔/다리 교차가 뚜렷한지 확인하고 나서 QA를
+  통과시켜라.
+- 캔버스 클래스: 보병 기본 포즈는 `unit-standard`(384x384), 창/투사체
+  뻗는 포즈나 보급대처럼 옆으로 긴 포즈는 `unit-wide`(512x384).
+
+### 스트림 B: 지형 타일 전체 + 소품
+
+- `retro-rts-visual-methodology.md`/`style-guide.md`의 16-state
+  marching squares 규칙으로 잔디/흙/도로/석재 전 재질 조합을 실제
+  맵 전체에 적용해라.
+- 소품(나무, 바위 등) 나머지도 `prop-standard`(256x256) 클래스로
+  제작하고 같은 QA를 통과시켜라.
+- 청동창병 골든 레퍼런스에서 이미 확정된 접지/그림자 규칙(4장)을
+  그대로 적용해라.
+
+### 스트림 C: 구조물 전체
+
+- 본진, 타워 손상 단계(건재/손상/치명손상/폐허/건설중), 캡처 포인트
+  마커를 `structure-medium`(512x512) 클래스로 제작해라.
+- 타워-거점 최소 이격 규칙(진행도 차이 0.15 이상, 방향성 유지)은 이미
+  적용돼 있으니 배치 좌표는 건드리지 마라 — 그림만 새로 만든다.
+
+## 공통 규칙
+
+- 모든 신규 프레임은 자산 QA 스크립트 6/6(혹은 해당 배치 개수만큼)
+  통과 없이는 "완료"로 보고하지 마라.
+- 아직 `LaneBattleScene.ts`/production 레지스트리(`unitAnimationRegistry.ts`
+  등)에 실제로 갈아 끼우지 마라 — 이번 단계는 자산 "생산"까지다.
+  Day 5(통합)에서 실제 교체가 이뤄진다. (단, 이미 상당 부분 슬림해진
+  `LaneBattleScene.ts`는 Day 5로 넘어가기 전 자연스럽게 만지게 되는
+  부분이 있으면 그 김에 마저 도메인별로 분리해도 좋다 — 강제는 아니다.)
+- 각 스트림 완료마다 별도 커밋 + backlog/log 기록.
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- 스트림별 생산된 자산 목록과 QA 결과
+- 새로 발견된 문제(방향 불일치, 실루엣 미흡 등)가 있었는지와 어떻게
+  잡았는지
+- Day 5(통합) 착수 전 사용자 확인이 필요한 지점이 있는지
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 매 턴 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 스트림별 커밋마다 backlog 또는 최소 log.md 기록을
+  남겨라.
+```
+
+## 2026-07-28 (10) — Day 3-4 검증 완료 + Day 5 통합 착수 프롬프트
+
+- **사용자 지시 요약**: "또 새 프롬프트로 진행 끝났어. 확인하고 다음
+  프롬프트를 짜줘야해."
+- **확인한 현재 코드 상태** (2026-07-28, 최신 커밋 `811a2ee`): 3개
+  스트림 커밋(`eaefffa`/`fd6a846`/`811a2ee`)을 모두 확인했다.
+  `units-contact-sheet.png`/`terrain-material-families.png`/
+  `props-contact-sheet.png`/`structures-contact-sheet.png`를 직접
+  열어 검토하고, `npm run asset:qa:units/props/structures/terrain`를
+  전부 직접 재실행해 보고된 수치(12/12, 5/5, 7/7, 68/68)와 정확히
+  일치함을 확인했다. `npm run build`/`npm test`(24/87)도 재확인했다.
+  `git diff`로 `LaneBattleScene.ts`/`unitAnimationRegistry.ts`/
+  `battlefieldMaps.ts`/`capturePointDefinitions.ts`가 전혀 수정되지
+  않았음을 확인해 "자산 생산까지만" 지시 준수를 검증했다.
+  유닛 3종의 facing 일관성(이전 청동창병 버그의 재발 방지, 문서에
+  자체 발견/재생성 기록 있음)도 육안으로 확인했다. 유일한 우려는
+  `defense-tower-construction.png`의 도르래+밧줄 장치가 교수대/우물처럼
+  보일 수 있다는 점 — 확정 아님, 다음 프롬프트에 확인 요청으로만 포함.
+- **작성한 프롬프트** (Day 5 통합, 하위 시스템별 단계적 커밋 지시):
+
+```
+Day 3-4 산출물을 전부 검증했다 — 유닛 3종 facing 일관성, 지형/소품/
+구조물 QA 전부 통과 확인했다. 승인한다. 지금부터 Day 5(통합)를
+시작해라. 이번 단계부터는 실제 플레이 가능한 씬을 건드리므로, 이전
+단계보다 훨씬 조심스럽게 진행해라 — 한 번에 다 갈아엎지 말고 아래
+순서로 하위 시스템별로 나눠 커밋해라.
+
+## 진행 순서 (각 단계마다 build+test 통과 확인 후 커밋)
+
+### 1. 지형 먼저
+
+- `battlefieldMaps.ts`/`battlefieldWorldRenderer.ts`(또는 그 후속
+  분리 모듈)가 `public/assets/production/terrain/*`의 4개 재질
+  베이스 + 16-state 오버레이를 실제로 로드해서 그리게 바꿔라.
+- 기존 레인 지형 데이터(거점/타워 소켓 좌표, walkable 여부 등)는
+  건드리지 마라 — 그리는 방식만 바꾼다.
+- 확인: 지형이 이전 골든 레퍼런스와 같은 수준으로 이음매 없이 타일링
+  되는지 1x/2x 배율에서 확인해라.
+
+### 2. 소품
+
+- 나무/바위/통나무를 지형 위에 실제로 배치해라(기존 맵의 나무/바위
+  배치 좌표는 재사용하되 그림만 새 자산으로 교체).
+- 접지 규칙(그림자 방향/농도)이 지형과 일관되는지 확인해라.
+
+### 3. 유닛
+
+- `unitAnimationRegistry.ts`의 4개 유닛(`stone_slinger`, `stone_axeman`,
+  `supply_wagon`, `bronze_spearman`) 항목을 새 production 자산 경로로
+  교체해라. 캔버스 클래스가 바뀌었으니(`384x384`/`512x384`) ground
+  anchor·scaleFactor 계산도 새 규격에 맞게 다시 확인해라 — 예전
+  `1152x1024` 가정이 남아있으면 안 된다.
+- 팀 컬러는 이제 부위 스왑 방식이다(A1에서 이미 전체 틴트 제거됨) —
+  이 부분이 실제로 작동하는지 아군/적군 색이 구분되는지 확인해라.
+- 청동창병도 이번에 만든 골든 레퍼런스 자산(attack-v2 포함)으로
+  같이 교체해라 — 지금 production 레지스트리에 남아있는 구 버전
+  이미지가 있다면 그것도 정리해라.
+
+### 4. 구조물
+
+- 본진/타워 5단계/캡처 마커를 새 자산으로 교체해라. 타워-거점 최소
+  이격 규칙(진행도 0.15 이상)은 이미 적용돼 있으니 배치는 그대로
+  둔다.
+- **확인 요청**: `defense-tower-construction.png`을 실제 게임 배경
+  위에 놓고 봤을 때, 도르래+밧줄 장치가 교수대나 우물처럼 보이지
+  않는지 확인해라. 애매하면 계속 진행하되 결과물에 이 부분을 언급해라.
+
+## 공통 규칙
+
+- 각 단계 끝날 때마다 `npm run build`/`npm test`/관련 Playwright를
+  돌려서 회귀가 없는지 확인하고 별도 커밋 + backlog/log 기록.
+- 게임플레이 로직(전투 판정, 웨이브 스폰, 자원/경제, 캡처 규칙)은
+  건드리지 마라 — 이번 단계는 시각 레이어 교체만이다.
+- `LaneBattleScene.ts`가 아직 3092줄로 크다 — 이번 통합 작업 중
+  자연스럽게 손대는 부분(지형/유닛/구조물 렌더링 관련 코드)이 있으면
+  그 김에 해당 부분만 도메인 모듈로 마저 분리해도 좋다. 강제는 아니다.
+- 4단계 모두 끝난 뒤, 같은 카메라 위치에서 Phase 1 스타일 전체 감사
+  캡처(바닥/오브젝트/유닛/전투 4계층)를 다시 남겨서 골든 레퍼런스
+  대비 실제 게임 화면이 동등한 품질로 보이는지 비교해라.
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- 1~4단계 각각 무엇을 바꿨고 커밋이 뭔지
+- 회귀 테스트 결과
+- 골든 레퍼런스 vs 실제 게임 화면 비교 스크린샷
+- 타워 건설 중 이미지 확인 결과
+- 사용자가 직접 플레이해서 확인해야 할 지점(스크린샷만으로는 부족한
+  부분 — 예: 애니메이션 체감, 조작감)
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 매 턴 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 단계별 커밋마다 backlog 또는 최소 log.md 기록을
+  남겨라.
+```
+
+## 2026-07-28 (11) — Day 5 통합 검증 완료 + Day 6 전투 타이밍/모션 폴리싱 착수 프롬프트
+
+- **사용자 지시 요약**: "진행했고 종료되었어. 다시 한 번 네 역할은
+  방금 끝난 내용들을 잘 검토하고 잘 되었는지 못 되었는지 보완점은
+  있는지 등을 종합하여 다음 할 일에 대한 프롬프트와 함께 프롬프트를
+  생성해야해."
+- **확인한 현재 코드 상태** (2026-07-28, 최신 커밋 `01efce3`): 4단계
+  통합 커밋(`1caff01`/`9cfb793`/`5b019d0`/`ef3b9ce`) + 최종 감사
+  커밋(`01efce3`)을 확인했다. `npm run build`/`npm test`(27 files/94
+  tests)를 직접 재실행해 통과를 재확인했다. `golden-vs-integrated.png`,
+  풀스크린 HUD 포함 스크린샷(`bronze-spearman-team-palette.png`)을
+  직접 열어 검토했다 — 처음엔 화면 중앙의 유닛 밀집 형태와 초록색
+  물체가 의심스러워 확대했으나, 각각 정상적인 근접 전투 중인 두 유닛과
+  쓰러진 통나무 소품이었음을 확인했다. 팀 컬러가 부위별 팔레트 스왑
+  방식으로 유닛/구조물 전체에 일반화됐음을 `team-palette-report.json`
+  (16/16, 7/7)으로 확인했다. `day5-integration-validation.md`에서
+  타워 건설중 이미지의 십자형 실루엣 잔존 가능성을 자체적으로 정직하게
+  기록하고 차단 사유가 아니라고 판단한 점을 검토해 동의했다.
+  `LaneBattleScene.ts`는 3092->3202줄로 소폭 증가(급하지 않음, 계속
+  메모).
+- **작성한 프롬프트** (Day 6, 전투 타이밍/모션 폴리싱 착수):
+
+```
+Day 5 통합을 검증했다 — 골든 레퍼런스와 실제 게임 화면이 동등한
+품질로 확인됐고, 팀 컬러 부위 스왑이 전 자산에 잘 일반화됐다. 승인한다.
+지금부터 Day 6(전투 타이밍/모션 폴리싱)을 시작해라.
+`retro-rts-visual-methodology.md` Phase 5(Combat Timing Pass)와
+7.2절(근접/원거리/지원 타이밍 규칙)을 기준으로 삼아라.
+
+## 작업 범위
+
+- 4개 유닛(투석병/도끼병/보급대/청동창병) 각각의 melee/ranged/support
+  역할별 공격 모션이 구분되는지 확인하고, 안 되어 있으면 7.2절 규칙대로
+  조정해라: 근접은 windup 짧고 contact에서 실루엣 변화 크게, 원거리는
+  발사 직전 release pose가 보이고 recoil 약하지만 분명하게, 지원은
+  절제된 움직임.
+- 데미지 적용 시점과 타격/발사 모션 시점이 정확히 일치하는지 확인해라
+  (기존에 이미 unit-vs-structure 타이밍 분리 작업이 있었으니 회귀
+  여부만 재확인, 새로 만들 필요는 없을 수 있다).
+- unit-vs-unit과 unit-vs-structure 공격이 여전히 다르게 연출되는지
+  회귀 확인해라.
+- **타워 건설중 이미지 재검토**: `day5-integration-validation.md`에서
+  스스로 남긴 "십자형 실루엣으로 보일 수 있음" 메모를 실제 플레이
+  화면(전투 중 아닌 평시 상태)에서 다시 봐라. 문제로 판단되면 도르래
+  형태를 살짝 조정하고, 문제 없다고 판단되면 왜 없다고 결론냈는지
+  한 줄로 남겨라.
+
+## 하지 않아도 되는 것
+
+- 자산을 새로 만들 필요는 없다 — 이미 있는 production 자산의 타이밍/
+  모션 파라미터 조정이 중심이다.
+- `LaneBattleScene.ts` 추가 분해는 강제하지 않는다. 다만 이번 작업
+  중 전투 타이밍 관련 코드를 만지게 되면, 이미 분리된
+  `src/systems/lane-combat/`, `src/presentation/units/` 패턴을 따라
+  같이 정리해도 좋다.
+
+## 검증
+
+- 최소 3개 유닛(근접/원거리/지원)의 before/after 시퀀스 캡처
+- unit-vs-unit, unit-vs-structure 각각 타격 타이밍 캡처
+- `npm run build`/`npm test`/관련 Playwright 통과
+- 타워 건설중 이미지 재검토 결과
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- 역할별(근접/원거리/지원) 무엇을 바꿨는지, before/after 근거
+- 데미지-모션 타이밍 정합성 확인 결과
+- 타워 건설중 이미지 재검토 결론
+- Day 7(UI 구성) 착수 전 남은 이슈가 있는지 — 특히
+  `day5-integration-validation.md`가 이미 지적한 "혼잡한 전투 시
+  HP바/라벨 밀도" 문제를 Day 6에서 건드릴지 Day 7로 넘길지 명시해라.
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 매 턴 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 변경 커밋마다 backlog 또는 최소 log.md 기록을 남겨라.
+```
+
+## 2026-07-28 (12) — Day 6 검증 완료 + Day 7 UI 구성 착수 프롬프트
+
+- **사용자 지시 요약**: "마지막 프롬프트 진행되었음. 개발된 내역
+  확인하고 다음 프롬프트를 준 뒤에 내가 보고 알겠다고 하면 [워크래프트2
+  시스템 유사성 조사/점검 + 미진행 파트 문서 보강] 요청을 진행하면
+  돼." — 이번 턴은 Day 6 검토와 Day 7 프롬프트까지만, 후자는 사용자
+  확인 후 별도로 진행.
+- **확인한 현재 코드 상태** (2026-07-28, 최신 커밋 `c69d439`):
+  `src/systems/lane-combat/attackTiming.ts`(신규)를 읽어 근접
+  0.46초/48%, 원거리 0.58초/42%, 지원 0.66초/52% 역할별 프로필로
+  분리됐음을 확인했다. `LaneBattleScene.ts`/`combatPresentation.ts`
+  변경분이 이 프로필을 실제로 사용하도록 배선됨을 확인했다. 로그에서
+  "지원 유닛 HP가 windup 시작 시점이 아니라 실제 이벤트 시점에
+  바뀌도록" 고쳤다는 추가 개선도 확인했다(요청 이상의 개선).
+  `tower-construction-peacetime-review.png`를 직접 열어 도르래+비계가
+  명확히 "돌탑에 붙은 건설 크레인"으로 읽힘을 확인해 자산 미수정
+  판단에 동의했다. `npm run build`/`npm test`(28 files/98 tests)를
+  직접 재실행해 통과를 재확인했다. 검증 문서는 새로 만들지 않고
+  `day5-integration-validation.md`에 4줄만 추가돼 변경 규모 대비
+  간략하다고 판단해, 다음 프롬프트에 문서 보강을 함께 요청했다.
+- **작성한 프롬프트** (Day 7, UI 구성 착수):
+
+```
+Day 6 전투 타이밍/모션 폴리싱을 검증했다 — 역할별 타이밍 분리, 지원
+유닛 힐 타이밍 수정(요청 이상의 개선), 타워 건설중 이미지 재검토
+모두 확인했고 승인한다. 지금부터 Day 7(UI 구성)을 시작해라.
+`retro-rts-visual-methodology.md` Phase 6을 기준으로 삼아라.
+
+## 작업 범위
+
+- `day5-integration-validation.md`가 이미 지적한 "혼잡한 전투 시
+  HP바/라벨 밀도" 문제를 해결해라. 유닛이 여러 명 겹칠 때 이름표/HP바가
+  서로 가리거나 화면을 뒤덮지 않도록 밀도를 낮추는 방향으로 조정해라
+  (예: 일정 밀집도 이상에서는 개별 라벨 대신 요약 표시, 혹은 HP바
+  크기/투명도 조정 등 — 방법은 네 판단에 맡긴다. 다만 정보 자체를
+  없애지는 마라, 표시 방식만 조정해라).
+- 월드(지형/유닛/구조물)가 HUD 밀도 때문에 가려지는 부분이 없는지
+  확인하고, 상단 자원바/좌측 패널/하단 액션 버튼의 배치가 새 top-down
+  화면과 잘 어울리는지 점검해라.
+- UI를 껐을 때/켰을 때 같은 카메라 위치에서 비교 캡처를 남겨라
+  (Phase 6 산출물 요구사항).
+
+## 문서 보강 요청
+
+- Day 6 변경 규모(3개 파일, ~240줄) 대비 검증 문서가 `day5-integration-validation.md`에
+  4줄만 추가된 게 간략하다고 판단했다. 이번엔 `docs/dev-wiki/day7-ui-composition-validation.md`
+  (신규)를 만들어서, Day 6에서 다루지 못했던 세부 사항(역할별 타이밍
+  값의 선택 근거, before/after 캡처 설명)도 소급해서 한 문단 정도
+  보강해라. Day 7 본론(UI 밀도 작업 내용)도 물론 포함해라.
+
+## 검증
+
+- HP바/라벨 밀도 조정 전/후 캡처(혼잡한 전투 상황 포함)
+- UI on/off 비교 캡처(Phase 6 요구사항)
+- `npm run build`/`npm test`/관련 Playwright 통과
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- 밀도 문제를 어떻게 해결했는지, 정보 손실 없이 됐는지
+- UI on/off 비교 결과
+- `day7-ui-composition-validation.md` 링크
+- 이걸로 `wc2-rebuild-plan.md`의 Day 1~7이 전부 끝난 것으로 보는지,
+  아니면 남은 항목이 있는지 스스로 점검해서 명시해라(Day 8 회귀+버퍼로
+  넘어가기 전 마지막 점검이다).
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 매 턴 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 변경 커밋마다 backlog 또는 최소 log.md 기록을 남겨라.
+```
+
+## 2026-07-28 (13) — Day 7 검증 완료(문제 없음) + Day 7.5 유닛 아트 격차 해소 착수 프롬프트
+
+- **사용자 지시 요약**: "마지막 프롬프트 명령문 개발 세션에서 수행
+  마쳤어. 내용 확인하고 검토한 뒤 문제 없으면 다음 내용을 바로
+  프롬프트로 적어주고, 문제가 있으면 해당 내용 개선할 것까지 함께
+  적어줘. 그리고 네가 조금 전 조사한 내용을 바탕으로 보강해야 할 것도
+  수행하도록 프롬프트에 알려줘."
+- **확인한 현재 코드 상태** (2026-07-28, 최신 커밋 `25a09f7`): 커밋을
+  확인하고 `npm run build`/`npm test`(29 files/102 tests)를 직접
+  재실행해 통과를 재확인했다. `density-before-vs-after.png`(24개 개별
+  라벨 -> "아군 x12·HP 100%"/"적군 x12·HP 100%" 요약 2개로 정리),
+  `ui-on-vs-off.png`(월드 노출 비율 50.4%->59.6%)를 직접 열어 확인했다.
+  `unitOverlayDensity.ts`(순수 클러스터링 모듈)를 리뷰해 품질 양호를
+  확인했다. `day7-ui-composition-validation.md` 말미에서 그 세션이
+  이미 `wc2-systems-gap-review.md`를 읽고 "Day 1-7 완료, Day 7.5는
+  Day 8 전에 처리 필요"라고 스스로 정확히 판단해 남긴 것을 확인했다 —
+  문제 없음으로 판정, 바로 다음 프롬프트로 진행.
+- **작성한 프롬프트** (Day 7.5, `wc2-systems-gap-review.md` 섹션 1
+  명시적 인용):
+
+```
+Day 7(UI 구성)을 검증했다 — 밀도 문제 해결, HUD 컴팩트화, UI on/off
+비교 전부 확인했고 문제없다. 승인한다. `day7-ui-composition-validation.md`
+말미에 네가 스스로 남긴 판단대로, 지금부터는 Day 8(회귀+버퍼)이 아니라
+**Day 7.5**부터 시작해라 — `docs/dev-wiki/wc2-systems-gap-review.md`
+섹션 1을 반드시 먼저 읽어라. 이번 프롬프트는 그 문서의 안 A(추천안)를
+그대로 실행하는 것이다.
+
+## 배경 (gap review 섹션 1 요약, 원문을 반드시 직접 읽을 것)
+
+`AGE_WAVE_ROSTERS`(9종 전투 유닛, 5개 시대)와
+`unitAnimationRegistry.ts`/`unitStats.ts`를 대조한 결과, 청동기 이후
+시대에서 스폰되는 유닛 5종이 프로덕션 아트 없이 `LaneBattleScene.ts`가
+런타임 생성하는 단색 `token-*` 배지 placeholder를 쓰고 있다:
+
+- `bronze_swordsman` (청동기, `token-axe`)
+- `archer` (철기 초/중/후, `token-ranged`)
+- `iron_swordsman` (철기 초/중, `token-axe`)
+- `iron_spearman` (철기 중, `token-spear`)
+- `musketeer` (철기 후, `token-ranged`)
+- `knight` (철기 후, `token-elite`)
+
+이건 청동기 이후로 진행하는 모든 플레이가 마주치는 문제이고, 지금까지
+고친 어떤 버그보다 눈에 잘 띈다 — 예쁜 top-down 캐릭터 옆에 밋밋한
+색깔 원 배지가 섞여 나온다.
+
+## 작업 범위 (gap review 안 A 그대로 실행)
+
+Day 3-4(스트림 A, 나머지 유닛 3종 제작)에서 이미 검증된 파이프라인을
+그대로 반복해라 — 새로 설계할 것 없다.
+
+- 위 5종(주의: `bronze_swordsman`도 포함, 총 5종) 각각 4포즈(idle/
+  walk-a/walk-b/attack)를 골든 레퍼런스와 같은 방식으로 제작:
+  원본 생성 -> 크로마키 제거 -> `normalize_golden_reference.py`류
+  정규화 -> QA 스크립트 통과.
+- **Day 3-4/Day 6에서 이미 두 번 잡았던 실수를 세 번째로 반복하지
+  마라**: 한 시트에서 여러 포즈를 뽑을 때 전 포즈의 캐릭터 몸 facing이
+  서로 일치하는지 육안으로 먼저 확인해라(청동창병 attack 반전 버그와
+  같은 실수 방지). walk-a/b도 실제로 다리가 교차하는 걸음걸이인지
+  확인하고 나서 QA를 통과시켜라(석기 3종 walk 재작업 때와 같은
+  기준).
+- 캔버스 클래스는 `style-guide.md` 그대로: 보병 기본 포즈
+  `unit-standard`(384x384), 창/투사체 뻗는 포즈나 궁수/머스킷병의
+  원거리 자세처럼 옆으로 긴 포즈는 `unit-wide`(512x384).
+- 팀 컬러는 부위별 팔레트 스왑 방식(A1 이후 확립된 규칙)을 그대로
+  적용해라 — 전체 틴트 금지.
+- `unitAnimationRegistry.ts`/`unitStats.ts`의 `textureKey`를 실제
+  프로덕션 자산 경로로 교체해서 `token-*` 참조를 완전히 제거해라.
+  다 교체되면 `LaneBattleScene.ts`의 `token-*` 런타임 생성 코드(약
+  432번째 줄 부근)도 더 이상 쓰이지 않을 텐데, 죽은 코드로 남기지
+  말고 삭제해라.
+
+## 하지 말아야 할 것 (gap review 섹션 2/3 인용)
+
+- `wc2-systems-gap-review.md` 섹션 2(연구/기술 트리)는 이번에 손대지
+  마라 — 남은 일정상 시도하지 말라고 이미 결론났다.
+- 섹션 3(다중 유닛 선택, 안개 전쟁)도 시도하지 마라 — 이 게임 장르와
+  근본적으로 안 맞는다고 이미 결론났다. 누가 제안해도 다시 검토하지
+  말고 그 섹션을 인용해서 넘어가라.
+- 섹션 4(유닛 확인 사운드)는 이번 작업과 무관하니 지금 하지 마라 —
+  Day 8 이후 여유 있을 때만의 선택 사항이다.
+
+## 검증
+
+- 5종 각 4포즈 QA 통과(총 20개 프레임 목표)
+- facing 일관성/walk 걸음걸이 육안 확인 결과
+- `token-*` 참조 완전 제거 확인(grep으로 재확인)
+- `npm run build`/`npm test`/관련 Playwright 통과
+- 5개 시대(석기~철기 후) 각각 실제 웨이브를 한 번씩 띄워서 이제 전부
+  프로덕션 아트로 나오는지 스크린샷으로 확인(이게 Day 8 회귀 전
+  마지막 게이트다)
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- 5종 유닛 제작 결과와 QA 통과 여부
+- `token-*` 제거 확인
+- 5개 시대 전부 프로덕션 아트로 나오는 것을 확인한 스크린샷
+- 이제 Day 8(전체 회귀+버퍼)로 넘어갈 준비가 됐는지, 아니면 남은
+  이슈가 있는지
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 매 턴 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 변경 커밋마다 backlog 또는 최소 log.md 기록을 남겨라.
+```
+
+## 2026-07-28 (14) — 유닛 개수 오기재 정정 (5종/20프레임 -> 6종/24프레임)
+
+- **사용자 지시 요약**: 개발 세션이 프롬프트 (13)을 실행하지 않고,
+  "코드 기준 대상은 5종이 아니라 6종(bronze_swordsman/archer/
+  iron_swordsman/iron_spearman/musketeer/knight)입니다. token-*을
+  완전히 제거하려면 6종x4포즈=24프레임이 필요한데, 프롬프트의
+  '5종/20프레임'과 '완전 제거'를 동시에 만족할 수 없습니다. 6종·
+  24프레임 전부 제작해도 되는지 확인해주세요"라고 되물었고, 사용자가
+  "7.5를 발견했다고 말하는데, 그것도 지금 프롬프트에서 실행하도록
+  한 게 맞나?"라고 재확인 후 이 응답을 전달했다.
+- **확인한 원인**: `docs/dev-wiki/wc2-systems-gap-review.md` 섹션 1의
+  표 자체는 처음부터 6종을 정확히 나열하고 있었는데, 섹션 제목과
+  본문 요약("5 of 9", "5 units x 4 poses")이 잘못 세어 5로 적혀
+  있었고, 이게 `backlog.md`와 프롬프트 (13)에 그대로 전파된 오기재임을
+  확인했다. Codex가 원본 코드(`unitRosters.ts` 등)를 직접 세어 정확한
+  숫자(6)를 잡아낸 것이다.
+- **처리**: `wc2-systems-gap-review.md`(제목/본문 정정 + 정정 안내
+  문구 추가), `backlog.md`(6종/24프레임으로 수정)를 고쳤다. Codex
+  세션에는 "6종·24프레임 전부 제작 승인, 문서 오기재였다"는 확인
+  회신을 보냈다(별도 프롬프트 아님, 짧은 확인 메시지).
+
+## 2026-07-28 (15) — Day 7.5 검증 완료 + Day 8 전체 회귀/버퍼 착수 프롬프트
+
+- **사용자 지시 요약**: "진행됨. 또 확인하고 수정해야할 것은 보완
+  수정하고, 다음 거 진행도 하도록 프롬프트 짜줘."
+- **확인한 현재 코드 상태** (2026-07-28, 최신 커밋 `4bb42fb`): 커밋
+  2개(`6af1f43` 자산 제작, `4bb42fb` 통합)를 확인했다. `npm run
+  build`/`npm test`(29 files/114 tests)를 직접 재실행해 통과를
+  재확인했고, `rg -n "token-" src`가 완전히 빈 결과임을 직접
+  재확인했다. `units-contact-sheet.png`를 열어 6종 모두 4포즈 전부
+  같은 방향을 유지하고(청동창병 attack 반전 버그 재발 없음), walk-a/b
+  다리 교차가 뚜렷함을 확인했다. 기사(knight)가 말을 탄 모습으로
+  제작된 것도 확인했다 — 시대 상승에 따른 시각적 격상 연출이 잘
+  살아있다.
+  다만 `wave-bronze.png`/`wave-iron_late.png` 두 증거 스크린샷에서
+  HUD 시대 라벨이 실제 로스터보다 한 단계 뒤처져 보이는 걸 발견했다
+  (예: `wave-iron_late.png` 파일명인데 HUD는 "중기 철기" 표시,
+  기사/머스킷병처럼 iron_late 전용 유닛이 보임). 캡처 타이밍 아티팩트로
+  추정되며 확정 버그로 보고하지 않고 Day 8 회귀 때 가볍게 재확인하라고
+  다음 프롬프트에 남겼다.
+  `docs/dev-wiki/backlog.md`의 긴급 항목을 Recently Closed로 이동해
+  해결 기록을 남겼다.
+- **작성한 프롬프트** (Day 8, 전체 회귀+버퍼):
+
+```
+Day 7.5(유닛 아트 격차 해소)를 검증했다 — 6종 24프레임 전부 QA
+통과, facing/걸음걸이 일관성 확인, token-* 완전 제거 확인했고
+문제없다. 승인한다. 지금부터 `wc2-rebuild-plan.md`의 **Day 8(전체
+회귀 + 버퍼)**를 시작해라. 이건 새 기능 작업이 아니라 지금까지
+쌓은 것 전체를 검증하고 버퍼로 쓰는 날이다.
+
+## 확인할 것 (버그 발견 시 이번 프롬프트 안에서 고쳐라)
+
+1. **전체 자동화 테스트**: `npm run build`, `npm test`(Vitest 전체),
+   Playwright 전체 스위트를 처음부터 끝까지 실행해라. 지금까지
+   단계별로는 통과했지만, 전체를 한 번에 돌리는 건 이번이 처음이다.
+2. **5개 시대 전체 수동 플레이스루**: 석기 -> 청동기 -> 철기 초 ->
+   철기 중 -> 철기 후까지 실제로 시대를 올리면서, 매 시대 웨이브가
+   올바른 로스터로 스폰되는지, 유닛 아트가 깨지지 않는지 확인해라.
+3. **HUD 시대 라벨 재확인**: Day 7.5 증거 스크린샷(`wave-bronze.png`,
+   `wave-iron_late.png`)에서 HUD 시대 라벨이 실제 로스터보다 한 단계
+   뒤처져 보였다(예: `iron_late` 웨이브인데 라벨은 "중기 철기"). 이게
+   단순 캡처 타이밍 문제(웨이브 스폰 시점과 라벨 갱신 시점이 살짝
+   어긋난 것)인지, 아니면 실제 시대 표시 로직 버그인지 확인해라.
+   버그면 고치고, 타이밍 문제면 왜 그런지 한 줄로 남겨라.
+4. **거점/타워/구조물 상호작용**: 건설/해체/재건, 타워 5단계 전환,
+   캡처 포인트 소유권 변경이 새 아트에서도 여전히 정상 작동하는지
+   확인해라.
+5. **오디오**: 시대 전환 BGM, 전투 강도별 BGM 전환, 주요 SFX가 여전히
+   정상 트리거되는지 확인해라(Day 5-7.5에서 시각 레이어만 건드렸어야
+   하니 회귀는 없어야 하지만, 확인은 해라).
+
+## 이번엔 하지 말 것
+
+- `docs/dev-wiki/wc2-systems-gap-review.md` 섹션 2(연구 트리 스트레치
+  목표)와 섹션 4(유닛 확인 사운드)는 이번 Day 8에서 하지 마라 — 회귀
+  테스트가 완전히 깨끗하게 끝나고 나서, Day 9 버퍼에 여유가 있을
+  때만의 선택 사항이다. 섹션 3(다중 선택/안개 전쟁)은 여전히 영구
+  기각 상태다.
+- 새로운 시각/기능 폴리싱을 새로 시작하지 마라. 오늘의 목적은 검증과
+  버퍼다.
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- 전체 자동화 테스트 결과
+- 5개 시대 수동 플레이스루에서 발견한 문제와 수정 내역(있다면)
+- HUD 시대 라벨 재확인 결과
+- 구조물/오디오 회귀 확인 결과
+- Day 9(대회 자료 준비) 착수 전 남은 이슈가 있는지, 있다면 무엇인지
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 매 턴 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 수정 커밋마다 backlog 또는 최소 log.md 기록을 남겨라.
+```
+
+## 2026-07-28 (16) — Day 8 검증 완료 + GitHub Pages 배포 공백 발견 + Day 9 착수 프롬프트
+
+- **사용자 지시 요약**: "마지막 프롬프트에 대한 것도 끝나고 다음과
+  같은 답변이 왔어... 네가 원래 명령 프롬프트 쓴 대로 잘 진행된 건지
+  검수를 하고 다음 프롬프트를 만들어줘. 늘 그랬듯 잘못된 점이 있으면
+  수정하는 프롬프트와 원래 다음 순번 수행하는 프롬프트를 함께 한
+  프롬프트로 만들어주면 돼."
+- **확인한 현재 코드 상태** (2026-07-28/29, 최신 커밋 `313fcf2`):
+  `npm run build`/`npm test`(29/114)를 직접 재실행해 통과를 재확인하고,
+  `day8-regression-validation.md`를 읽어 HUD 라벨 지연이 QA 도우미가
+  `refreshUi()`를 안 불렀던 검증 도구 버그였음(실제 시대 상승 경로는
+  정상)을 확인했다. `age-iron_late.png`를 직접 열어 HUD 라벨이
+  로스터와 정확히 일치함을 확인했다. `structure-interactions.png`로
+  타워 파괴/캡처 레벨 하락 등 구조물 회귀도 확인했다. 초기 실패
+  3건(구 텍스처 키, 구 facing 가정, 구 소켓 개수)의 diff를 봤고
+  타당한 설명으로 판단했다. 전체 Playwright(`npx playwright test
+  --workers=1`)를 독립적으로 백그라운드 재실행해 43/43 재확인을
+  진행 중이었다(장시간 소요, 응답 시점까지 미완료 — 문제 발견 시
+  별도 보고 예정).
+  **새로 발견한 문제(Day 8 범위 밖, 대회 제출과 직결)**: `vite.config.ts`가
+  아예 없고(기본 root-relative 빌드), `.github/workflows/`도 비어
+  있으며, `gh-pages` 브랜치도 없어 GitHub Pages 배포가 전혀 설정돼
+  있지 않음을 확인했다 — 대회 제출물 1번(플레이 가능한 웹 빌드
+  링크)이 아직 존재하지 않는 상태다. `git remote -v`로 원격 설정도
+  확인했는데(PAT는 로컬 `.git/config`에만 있고 추적 파일에는 없음,
+  기존 정책대로 정상), Pages 설정 자체는 완전히 누락돼 있었다.
+- **작성한 프롬프트** (Day 8 자체는 문제 없어 수정 지시 없음; 새로
+  발견한 배포 공백을 최우선으로 끼워 넣고 이어서 Day 9 진행):
+
+```
+Day 8(전체 회귀+버퍼)를 검증했다 — HUD 라벨 근본 원인(검증 도구
+버그)과 수정, 구조물/오디오 회귀, 초기 실패 3건의 설명 모두 확인했고
+타당하다. Day 8 자체는 수정할 게 없다, 승인한다.
+
+## 먼저: GitHub Pages 배포 공백 발견 (Day 9보다 우선)
+
+Day 8까지는 로컬 빌드/테스트만 검증했는데, 정작 대회 제출물 1번
+("심사자가 링크 클릭만으로 브라우저에서 바로 플레이할 수 있는 웹
+빌드")에 필요한 배포 자체가 전혀 설정돼 있지 않다는 걸 발견했다:
+
+- `vite.config.ts`가 없다 — 즉 빌드가 root-relative(`/`) 경로를
+  가정한다. GitHub Pages 프로젝트 사이트(`https://<user>.github.io/
+  game_project1/`)는 서브패스이므로, 지금 상태로 배포하면 에셋
+  경로가 다 깨진다.
+- `.github/workflows/`가 비어 있다 — 자동 배포 파이프라인이 없다.
+- `gh-pages` 브랜치도 없다 — 수동 배포도 안 돼 있다.
+
+이걸 Day 9(대회 자료 준비)보다 먼저 처리해라 — 플레이 영상/스크린샷을
+찍어도 실제로 심사자가 접속할 링크가 없으면 의미가 없다.
+
+### 처리할 것
+
+1. `vite.config.ts`를 추가하고 `base: '/game_project1/'`(레포 이름
+   기준)를 설정해라. 레포 이름이 다르면 실제 `origin` 기준으로
+   맞춰라.
+2. GitHub Actions로 `master`(또는 현재 기본 브랜치) push 시 자동으로
+   `npm run build` 후 `dist/`를 `gh-pages` 브랜치 또는 Pages 배포
+   타깃으로 퍼블리시하는 워크플로를 추가해라(`actions/deploy-pages`
+   같은 표준 액션 사용 권장).
+3. 로컬에서 `npm run build && npm run preview`로 서브패스 기준
+   빌드가 정상 로드되는지 먼저 확인한 뒤 워크플로를 커밋해라.
+4. 실제로 GitHub Pages가 활성화되고 페이지가 뜨는지까지 확인해라
+   (저장소 Settings > Pages 활성화가 필요할 수 있다 — 네가 직접
+   못 하는 부분이면 무엇을 사용자가 수동으로 눌러야 하는지 결과물에
+   명시해라).
+5. 최종 플레이 가능한 URL을 결과물에 적어라.
+
+## 그 다음: Day 9(대회 자료 준비)
+
+`wc2-rebuild-plan.md` Day 9와 `docs/knowledge/contest-requirements.md`
+(제출물 5종 원문)를 참고해라. 배포 링크가 살아있는 상태에서 진행해라.
+
+- **제출물 2(플레이 영상, 30~60초)**: 실제 플레이 화면을 Playwright
+  또는 화면 녹화로 캡처해라. AI 합성/편집 없이 실제 플레이 그대로여야
+  한다는 대회 규정을 지켜라. 시대 전환 한두 번과 전투 장면이 보이게
+  구성해라.
+- **제출물 3(게임 소개 문서 초안 재료)**: 게임 제목/한 줄 소개/목표·
+  조작·종료 조건/실행 방법/플레이 링크/영상 링크를 정리한 초안을
+  `docs/`에 남겨라(최종 PDF 변환은 사용자가 한다).
+- **제출물 4(AI 활용 기술 문서 재료)**: 이건 이미
+  `docs/ai-usage/session-log.md`에 매 턴 기록돼 있다 — 새로 만들지
+  말고, 그 로그를 제출용으로 요약하는 게 필요하면 요약본만 만들어라.
+- **제출물 5(팀원 롤 기술서)**: 개인 참가라 생략 대상이다 — 손대지
+  마라.
+- Day 8이 깨끗하게 끝났고 이 배포 작업도 끝나면, 그때만
+  `wc2-systems-gap-review.md` 섹션 2(연구 트리 스트레치)/섹션 4(유닛
+  확인 사운드)를 선택적으로 진행해도 된다 — 대회 자료 준비가 항상
+  우선이다.
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- 실제 플레이 가능한 GitHub Pages URL
+- 배포 파이프라인 설정 내역과 사용자가 수동으로 해야 할 게 있는지
+- 플레이 영상/스크린샷 산출물
+- 게임 소개 문서 초안 위치
+- 남은 이슈가 있는지
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 매 턴 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 변경 커밋마다 backlog 또는 최소 log.md 기록을 남겨라.
+```
+
+## 2026-07-29 (17) — 클래식 RTS 충실도 2차 사이클 "새 Day 1" 착수 프롬프트 (8방향 + 원곡 음악)
+
+- **사용자 지시 요약**: 방향을 확정하며 두 가지를 명확히 했다: (1)
+  "지금 게임은 방금 1사이클 만든 게임 기반으로 다시 새롭게 만드는
+  거야. 완전히 다 삭제하고 만들 필요는 없고... 전면 재조립 하고 좀
+  더 잘 만드는 게 중요해" — 삭제/처음부터 재구축이 아니라 기존 자산·
+  시스템 위에서의 재조립임을 개발 세션도 알아듣게 문서에 상세히
+  쓸 것. (2) "음악은 라이센스 내야하는 건 말고... 레퍼런스의 게임들
+  음악을 참고하여 비슷한 풍으로 다른 음악을 만들어줬으면 해" — 실제
+  트랙 소싱/라이선싱이 아니라 스타일만 참고한 원곡 작곡.
+- **처리**: `docs/dev-wiki/classic-rts-fidelity-reset.md`에 "Decision
+  (confirmed)" 절을 추가해 3가지를 명문화했다 — 재조립(삭제 아님),
+  facing 안 A(8방향) 채택, 음악은 스타일 참고 원곡 작곡(구체적
+  do/don't 가이드라인 포함 — 특정 곡의 멜로디를 베끼거나 살짝 바꾸는
+  건 금지, 악기 편성/템포/레이어링 구조만 참고). 문서 말미의 "Open
+  question"을 "Confirmed direction"으로 교체했다.
+- **작성한 프롬프트** (새 사이클 "Day 1" — 방향 고정 + 데이터 구조
+  확장 + 음악 스타일 브리프, 아직 대량 자산 생산은 아님):
+
+```
+이 프로젝트는 지금부터 2차 사이클에 들어간다. 먼저
+`docs/dev-wiki/classic-rts-fidelity-reset.md`를 전체 읽어라 — 특히
+"4. Decision (confirmed 2026-07-29)" 절.
+
+## 가장 중요한 전제: 삭제가 아니라 재조립이다
+
+"Day 1부터 다시 시작"이라는 표현 때문에 오해하지 마라 — **아무것도
+지우지 않는다.** 지금까지 만든 지형/소품/구조물/경제/거점/타워 규칙/
+UI/10종 유닛 로스터(idle/walk/attack 콘텐츠)는 전부 그대로 유지되고
+재사용되는 기반이다. 이번 사이클이 다시 만드는 건 딱 두 가지뿐이다:
+유닛 facing 수(현재 좌/우 2방향 -> 8방향)와 음악(현재 순수 합성음
+-> 더 두꺼운 원곡 편곡). 나머지 전부(지형 렌더링, 타워/거점 시스템,
+경제, UI, 테스트)는 절대 다시 만들지 마라 — 이미 검증된 결과물이다.
+
+## 1. Facing 데이터 구조 확장 (8방향, 안 A 확정)
+
+현재 `unitAnimationRegistry.ts`/`unitStats.ts`는 "왼쪽 원화 1장 +
+좌우 미러링"만 가정한다. 이걸 8방향(N/NE/E/SE/S/SW/W/NW) 구조로
+확장해라:
+
+- 데이터 타입부터 다시 설계해라 — 지금처럼 `idle/walkA/walkB/attack`
+  텍스처 키 4개짜리 평면 구조가 아니라, 8개 방향 각각에 대해 같은
+  4개 포즈 세트를 담을 수 있는 구조여야 한다(방향별로 실제 원화를
+  다 만들진 않더라도, 최소 4방향(N/E/S/W) 원화 + 대각선은 미러링
+  조합으로 8방향을 표현하는 절충안도 검토해라 — 원화량과 결과물
+  자연스러움을 비교해서 네가 판단해라).
+- 캔버스 클래스(`unit-standard` 384x384, `unit-wide` 512x384)와 ground
+  anchor 규칙은 그대로 유지해라 — 바뀌는 건 방향 축이지 캔버스 계약이
+  아니다.
+- 기존에 만든 "왼쪽을 보는" 원화 10종 세트는 재조립의 **출발점(소스)**
+  이다 — 그 캐릭터 디자인/비례/팔레트/팀컬러 부위를 그대로 유지한 채
+  나머지 방향들을 추가로 만든다는 뜻이다. 완전히 새로운 캐릭터
+  디자인으로 바꾸지 마라.
+- `style-guide.md`에 이번 확장을 반영하는 절을 추가해라(방향 수,
+  방향별 데이터 스키마, 대각선 처리 방식 결정과 근거).
+
+## 2. 음악 스타일 브리프 작성 (아직 실제 작곡은 하지 마라)
+
+`docs/dev-wiki/music-style-brief.md`(신규)를 만들어서 아래를 정리해라
+— 이번 프롬프트에서는 브리프 문서만 쓰고, 실제 트랙 제작은 다음
+체크포인트(Day 2)로 미뤄라:
+
+- `classic-rts-fidelity-reset.md` 2.2절의 리서치(레이어드 편곡:
+  타악기 오스티나토 + 베이스/화성 레이어 + 리드 모티프)를 이 프로젝트의
+  4개 BGM 상태(`bgm.menu`/`bgm.preparation`/`bgm.battle.low`/
+  `bgm.battle.high`, `assetManifest.ts` 기준)에 각각 어떻게 적용할지
+  구체화해라 — 상태별 템포/악기 레이어 조합/다이나믹 목표.
+- **반드시 지켜야 할 원칙(재확인)**: 특정 곡(워크래프트2/스타크래프트
+  등)의 멜로디를 그대로 쓰거나, 음을 몇 개 바꾼 변형을 만들거나,
+  "알아볼 수 있게 비슷한" 테마를 쓰지 마라. 참고할 건 그 시대 RTS
+  음악의 **구조적 특징**(편성/템포/레이어링 방식)이지 특정 곡의
+  멜로디가 아니다. 완전히 새로운 화성·멜로디 소재로 작곡해라.
+- 구현 경로는 외부 음원 소싱이 아니라 `bgmManager.ts`/
+  `audioDirector.ts`의 기존 절차적 합성기를 심화하는 쪽이다(다중
+  동시 보이스 레이어링) — 이 경로를 브리프에도 명시해라.
+
+## 하지 말 것
+
+- 아직 실제 방향별 원화나 실제 음악 트랙을 만들지 마라 — 이번은
+  데이터 구조/문서 확정 단계다. Day 2(다음 프롬프트)에서 유닛 1종의
+  8방향 전체 세트 + 음악 상태 1개의 실제 편곡을 만들어 사용자 승인을
+  받는 체크포인트를 거친다.
+- 기존 지형/구조물/경제/UI 코드는 이번 사이클과 무관하니 건드리지
+  마라.
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- 8방향 데이터 구조 설계안(전체 8방향 원화 vs 4방향+미러 절충안 중
+  선택과 근거)과 `style-guide.md` 반영 내용
+- `music-style-brief.md` 전문
+- Day 2 체크포인트에서 무엇을 만들 예정인지 미리보기
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 매 턴 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 변경 커밋마다 backlog 또는 최소 log.md 기록을 남겨라.
+```
+
+## 2026-07-29 (18) — 정정: "지형/구조물 코드 건드리지 마라"는 과했다 — 맵 레이아웃은 이번 사이클 범위
+
+- **사용자 지시 원문(핵심)**: "아니 잘못되었어. 지형 등 렌더링 기법은
+  그대로이되 지금 맵은 개선해야해. 워크래프트/스타크래프트에서도
+  엔진 자체는 그대로이되 맵도 다양하게 있고 신규로도 만들 수 있잖아.
+  지금 맵 자체는 좀 뭔가 배치나 그런 것도 잘못되어서 그런 것도
+  개선해야 해."
+- **무엇이 잘못됐었는지**: 프롬프트 (17)의 "하지 말 것" 절에서 "기존
+  지형/구조물/경제/UI 코드는 이번 사이클과 무관하니 건드리지 마라"라고
+  한 게 과했다. "렌더링 엔진(코드)"과 "맵 데이터(배치)"를 구분하지
+  못한 지시였다 — `battlefieldMaps.ts`의 `LANE_PATH_NODES`/
+  `terrainPatches`/`structureSockets`/`terrainProps`는 렌더링 엔진이
+  아니라 그 위에 얹힌 "맵 콘텐츠"이고, 사용자가 지적한 대로 이건
+  워크래프트/스타크래프트가 같은 엔진 위에서 계속 새 맵을 만드는 것과
+  같은 층위다. `docs/dev-wiki/classic-rts-fidelity-reset.md`의 "4.
+  Decision"에 이미 이 구분이 없었던 게 원인이었다.
+- **문서 정정**: `classic-rts-fidelity-reset.md`의 "Decision" 절에
+  4번째 포인트를 추가했다 — 맵 레이아웃(레인 형태/지형 재질 분포/
+  구조물·소품 배치)은 재조립 범위에 포함되며, 렌더링 엔진(marching
+  squares, 자산 QA 파이프라인, 최소 이격 규칙)은 안 바뀐다는 걸
+  명확히 구분했다. `day5-integration-validation.md`가 이미 "레인이
+  단조로운 직선"이라고 지적했었는데 아무도 처리하지 않았던 것도
+  근거로 추가했다. 1번 포인트("재조립이지 삭제 아님")도 "엔진/파이프라인
+  재사용"과 "맵은 새로 설계 가능"을 구분하도록 다시 썼다.
+- **프롬프트 정정**: 이전 프롬프트(17)의 "1. Facing"/"2. 음악" 두
+  과제는 그대로 유효하다 — 아래는 "3. 맵 레이아웃"을 추가하고 "하지
+  말 것" 절을 정정한 것이다. 이미 프롬프트 (17)을 개발 세션에
+  전달했다면, 이 정정분만 이어붙여도 되고, 처음부터 다시 보내도 된다:
+
+```
+프롬프트 (17)에 정정이 있다 — "기존 지형/구조물 코드는 건드리지
+마라"는 부분이 과했다. 정확히는: **렌더링 엔진(코드)은 그대로,
+맵(배치 데이터)은 새로 설계한다.** 워크래프트/스타크래프트가 같은
+엔진 위에서 계속 새 맵을 만드는 것과 같은 층위다.
+
+- **바뀌지 않는 것(엔진)**: `battlefieldWorldRenderer.ts`, marching
+  squares 전이 로직, 자산 QA 파이프라인, 타워-거점 최소 이격 규칙
+  (진행도 0.15) 같은 "규칙"과 "그리는 방법" 자체.
+- **이번에 새로 설계하는 것(맵)**: `battlefieldMaps.ts`의
+  `LANE_PATH_NODES`(레인 형태), `terrainPatches`(지형 재질 분포),
+  `structureSockets`(거점/타워 배치), `terrainProps`(나무/바위 등
+  배치) — 이 데이터 자체를 새로 설계해라.
+
+## 3. 맵 레이아웃 재설계 (프롬프트 17에 추가되는 세 번째 과제)
+
+이번 프롬프트에서는 프롬프트 (17)의 1번(8방향 데이터 구조)과 2번
+(음악 스타일 브리프)에 더해 아래도 문서화해라 — 실제 맵 데이터 교체는
+Day 2 체크포인트(유닛 1종 8방향 + 음악 1개 편곡 + 맵 일부 시안을
+함께 승인받는 자리)로 미루고, 이번엔 설계안 문서까지만:
+
+- `day5-integration-validation.md`가 이미 지적한 "레인이 단조로운
+  직선"이라는 문제부터 구체화해라. 지금 `LANE_PATH_NODES`가 실제로
+  얼마나 단조로운지(꺾이는 지점 수, 폭 변화 유무) 감사해라.
+- 실제 워크래프트2/스타크래프트 초창기 멜리 맵들이 어떤 요소로
+  흥미로운 지형을 만드는지 조사해라(초크포인트, 확장 거점 간 거리
+  차등, 지형 장식물 밀도, 비대칭 요소 등 — 특정 맵을 그대로 베끼라는
+  게 아니라 그 설계 원리를 참고하라는 뜻이다).
+- 현재 맵의 실제 문제를 최소 3가지 구체적으로 짚어라(예: 소품 6개뿐이라
+  휑함, 거점/타워 배치가 기계적으로만 느껴짐, 레인이 완전 직선에
+  가까움 등 — 네가 직접 `battlefieldMaps.ts`를 감사해서 정확한 근거를
+  대라).
+- 새 맵 설계안을 문서로 제안해라 — 레인 형태(완만한 굴곡/초크포인트
+  유무), 지형 재질 분포 원칙, 소품 밀도/배치 원칙, 거점·타워 배치
+  원칙. `docs/dev-wiki/`에 `map-redesign-brief.md`(신규)로 정리해라.
+- 렌더링 엔진(marching squares, QA 파이프라인, 최소 이격 규칙)은 이
+  설계안에서 그대로 재사용된다는 걸 문서에 명시해라 — 엔진을 다시
+  만들 필요가 없다는 뜻이다.
+
+## 결과물 (프롬프트 17의 결과물 목록에 추가)
+
+- `map-redesign-brief.md` 전문(현재 맵의 구체적 문제 3가지 이상 +
+  새 설계 원칙)
+- Day 2 체크포인트가 이제 세 가지(8방향 유닛 1종, 음악 1개 상태,
+  맵 일부 시안)를 함께 승인받는 자리라는 것을 확인
+```
+
+## 2026-07-29 (19) — Day 1 검증 완료 + Day 2 삼중 체크포인트(유닛/음악/맵) 착수 프롬프트
+
+- **사용자 지시 원문(핵심)**: "해당 세션 끝났다고 떴는데 내용 확인해보고
+  다음으로 할 내용 프롬프트로 알려줘."
+- **확인한 현재 코드 상태** (2026-07-29, 최신 커밋 `2d25950`):
+  `npm run build`/`npm test`(29 files/116 tests)를 직접 재실행해 통과를
+  재확인했다. `style-guide.md`에서 8방향 애니메이션 계약(전체 8방향
+  독립 원화 채택, 4방향+미러 절충안은 명시적으로 기각 — 반전은
+  대각선 체적/손잡이/조명/팀컬러 부위를 재현할 수 없다는 근거)을
+  확인했다. `music-style-brief.md`를 정독해 4개 BGM 상태별 템포/타악기/
+  베이스·화성/리드 레이어 표와 "특정 곡 멜로디·코드 진행·살짝 바꾼
+  테마 사용 금지" 원칙이 명확히 박혀있음을 확인했다. `map-redesign-brief.md`도
+  정독해 현재 맵의 구체적 문제 5가지(레인 최대 꺾임각 8.3도, 재질
+  줄무늬 불변, 소품 6개뿐, 기계적 구조물 배치, 전술적 비트 부재)를
+  실측 근거로 확인했고, 참고 자료가 실제 Blizzard 공식 회고
+  ([Lost Temple 맵 스포트라이트](https://news.blizzard.com/en-us/article/20930558/map-spotlight-the-lost-temple))
+  등에서 "설계 원리"만 뽑아 "어떤 맵도 그대로 베끼지 않았다"고 명시한
+  것도 확인했다 — 법적으로 안전하게 처리됐다. `unitAnimationRegistry.ts`
+  코드도 리뷰해 설계 문서와 일치함을 확인했다.
+- **작성한 프롬프트** (Day 2, 삼중 체크포인트 — 유닛 1종 8방향 32프레임
+  + `bgm.battle.low` 실제 편곡 + 맵 부분 시안, 승인 전 확장 금지):
+
+```
+Day 1(8방향 데이터 구조, 음악 스타일 브리프, 맵 재설계 브리프)을
+검증했다 — 셋 다 근거가 탄탄하고 법적으로도 안전하게 처리됐다.
+승인한다. 지금부터 Day 2(삼중 체크포인트)를 시작해라. 이번에도
+"승인 전 대량 확장 금지" 규칙은 그대로다 — 유닛 1종/음악 1상태/맵
+일부 구간만 만들고 멈춰라.
+
+## 1. 유닛 1종 8방향 전체 세트 (32프레임)
+
+- `style-guide.md` 1.1절의 8방향 계약대로 청동창병(bronze_spearman)
+  1종에 대해 8방향 x 4포즈 = 32프레임을 실제로 제작해라(청동창병을
+  추천하는 이유: 지난 사이클에서 방향 반전 버그가 났던 유닛이라
+  검증 가치가 가장 크다).
+- 서쪽(west) 원화는 이미 있는 프로덕션 자산을 그대로 재사용해라 —
+  다시 만들지 마라. 나머지 7방향만 새로 제작한다.
+- 8방향 모두 캐릭터 디자인/비례/팔레트/무기 위치/팀컬러 부위가
+  동일해야 한다 — 방향만 바뀌는 것이지 다른 캐릭터처럼 보이면 안
+  된다.
+- 기존 캔버스 클래스/ground anchor/QA 파이프라인을 그대로 적용해라.
+- 8방향 전환 시퀀스(제자리에서 8방향 다 돌아보는 것 같은) 캡처를
+  남겨서 방향 전환이 자연스러운지 확인해라.
+
+## 2. `bgm.battle.low` 실제 편곡 (음악 스타일 브리프 7절 그대로)
+
+- `music-style-brief.md` 4절의 `bgm.battle.low` 행(104 BPM, 톰+드라이
+  스네어 오스티나토, 저음 펄스+현악 서스테인, 프레이즈 경계 혼 모티프)
+  그대로 실제 다층 편곡을 구현해라.
+- **재확인**: 어떤 기존 곡의 멜로디/코드 진행/리듬 패턴도 가져오지
+  마라 — 전부 새로 작곡한 소재여야 한다.
+- 브리프 6절의 검증 방식(OfflineAudioContext 레이어별 RMS/피크 측정)
+  그대로 실행하고, 게임 내 preparation -> battle-low 실제 전환도
+  캡처해라.
+
+## 3. 맵 부분 시안 (플레이어 쪽 출발 구역 + 첫 통로, 0.00-0.34)
+
+- `map-redesign-brief.md` 5절 그대로: 곡선 경로 3~4구간, 10줄->6줄
+  폭 전환, 잔디/흙/짧은 석재 재질 이벤트, 소품 6~8개(경계 군집 1 +
+  랜드마크 1), 플레이어 쪽 거점·연결 타워 위치를 최소 이격 규칙으로
+  재검증.
+- 이건 전환 가능한 맵 데이터 후보로만 만들어라(예: 쿼리 파라미터나
+  별도 씬으로 기존 맵과 나란히 비교할 수 있게) — 아직
+  `battlefieldMaps.ts`의 실제 프로덕션 맵을 통째로 교체하지 마라.
+- 기존 지형 렌더러/최소 이격 규칙/유닛·경제·전투 시스템은 절대
+  건드리지 마라 — 이번엔 맵 데이터만 새로 만든다.
+
+## 공통 규칙
+
+- 세 가지 다 각각 QA/검증을 통과한 뒤에도, **사용자 승인 전까지는
+  나머지 9종 유닛/나머지 3개 음악 상태/맵 전체 확장으로 넘어가지
+  마라.** 이번 삼중 체크포인트는 이번 사이클에서 가장 중요한 관문이다.
+- 세 가지를 한 번에 비교할 수 있는 스크린샷/오디오 산출물을 준비해라
+  — 기존(2방향/합성음/기존 맵) vs 신규(8방향/편곡/새 맵 구간) 비교가
+  한눈에 보여야 한다.
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- 청동창병 8방향 32프레임 QA 결과 + 방향 전환 시퀀스 캡처
+- `bgm.battle.low` 편곡 산출물(오프라인 렌더/측정치) + 인게임 전환
+  캡처
+- 맵 부분 시안 스크린샷(기존 대비)
+- 사용자가 뭘 보고 승인/반려 판단을 내려야 하는지 명확한 요약
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 매 턴 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 변경 커밋마다 backlog 또는 최소 log.md 기록을 남겨라.
+```
+
+## 2026-07-29 (20) — Day 2 검증: 빌드 깨짐 발견 + 수정 지시 + Day 3(전면 확장) 착수를 한 프롬프트로
+
+- **사용자 지시 원문(핵심)**: "개발에 해당 프롬프트로 종료 했어.
+  확인하고 다음 프롬프트(수정해야 할 거는 수정 프롬프트 포함해서)
+  만들어줘."
+- **확인한 현재 코드 상태** (2026-07-29, 최신 커밋 `6c2655f`): `npm
+  run test`(Vitest)는 29 files/117 tests로 통과했지만, **`npm run
+  build`가 `tsc --noEmit` 단계에서 실패**함을 확인했다 —
+  `tools/validation/day2-triple-checkpoint.spec.ts`가 자체 선언한
+  로컬 `ArrangementMeasurement` 인터페이스(`layers`를 배열로 선언)가
+  실제 `src/systems/audio/backend.ts`의 `OfflineArrangementMeasurement`
+  (`mix` 필드 존재, `layers`는 Record)와 어긋나 있었다. 실제
+  런타임(`__audioDebugControl.measureArrangement`)은 정상 동작하고
+  `battle-low-arrangement.json` 실측치도 5개 레이어(percussion/bass/
+  harmony/lowColor/lead) 전부 RMS > 0으로 실제로 다층 합성되고
+  있음을 확인했다 — 즉 **기능은 정상, 테스트 파일의 타입 선언만
+  실제 구현과 어긋난 순수 타입 버그**로 판단했다. Vitest가 타입
+  체크를 하지 않아 이 문제가 `npm test`로는 안 잡히고 `npm run
+  build`(tsc 포함)로만 걸린다는 것도 확인했다.
+  8방향 이미지(N/E/S 등)를 직접 열어 대부분 방향에서 뚜렷한 시점
+  차이를 확인했으나, N과 S 이미지가 둘 다 등 쪽이 두드러져 보여
+  완전히 반대 정면/후면 대비인지 확신이 안 서 재확인 요청으로
+  남겼다. 맵 후보 비교 이미지(`map-old-vs-candidate-side-by-side.png`)는
+  레인이 실제로 완만하게 꺾이고 거점 주변 소품 군집이 생겨 브리프
+  목표와 일치함을 확인했다 — 이건 문제 없음.
+- **작성한 프롬프트** (0단계: 빌드 수정 + facing 재확인, 이어서 Day 3
+  전면 확장 — 하나의 프롬프트로 통합):
+
+```
+Day 2 삼중 체크포인트 산출물을 검토했다. 시각/오디오/맵 콘텐츠
+자체는 좋다 — 8방향이 실제로 구분되고, 5개 오디오 레이어가 전부
+실제로 소리를 내고, 맵 후보도 브리프 목표(완만한 레인 굴곡, 거점
+주변 소품 군집)와 일치한다. 다만 **빌드가 깨져 있어서 이것부터
+고쳐야 승인할 수 있다.**
+
+## 0. 먼저 고칠 것: `npm run build`가 실패한다
+
+`tools/validation/day2-triple-checkpoint.spec.ts`가 자체 선언한
+로컬 `ArrangementMeasurement` 인터페이스가 실제
+`src/systems/audio/backend.ts`의 `OfflineArrangementMeasurement`와
+어긋난다 — `mix` 필드가 없고 `layers`를 배열로 잘못 선언했다.
+런타임 자체는 정상이라(측정값이 실제로 5개 레이어 전부 RMS > 0으로
+나옴) 순수 타입 선언 버그다.
+
+- 테스트 파일에 로컬 인터페이스를 다시 선언하지 말고
+  `src/systems/audio/backend.ts`의 `OfflineArrangementMeasurement`
+  타입을 직접 import해서 써라.
+- 수정 후 `npm run build`가 통과하는지 반드시 확인해라 — `npm test`
+  (Vitest)만으로는 이 문제가 안 잡힌다는 걸 이번에 알았으니, 앞으로
+  모든 완료 보고 전에 `npm run build`와 `npm test`를 **둘 다** 돌려서
+  확인해라.
+
+## 0-1. 재확인 요청: N/S 방향이 실제로 반대 시점인지
+
+`bronze-spearman-8dir/n.png`와 `s.png`를 봤는데, 둘 다 등 쪽이
+두드러져 보여서 완전히 반대되는 정면/후면 대비인지 확신이 안
+선다. 실제로 8방향이 서로 다른 각도로 잘 구분되는지 다시 한번
+눈으로 확인하고, 애매한 방향이 있으면 결과물에 어떤 방향이고
+왜 그런지 설명을 남겨라(재현하는 원화 자체를 다시 만들 필요는
+없을 수도 있다 — 눈으로 봤을 때 실제로 문제인지부터 판단해라).
+
+## 1. Day 3: 전면 확장 (0/0-1이 끝난 뒤에만 진행)
+
+승인 조건(위 두 가지)이 충족되면, 이제 나머지를 전부 확장해라:
+
+- 나머지 9종 유닛 전부 8방향 x 4포즈(각 32프레임)로 확장해라 —
+  청동창병에 쓴 것과 같은 파이프라인, 같은 QA 기준.
+- `music-style-brief.md`의 나머지 3개 상태(`bgm.menu`,
+  `bgm.preparation`, `bgm.battle.high`)도 같은 레이어드 편곡 방식으로
+  작곡해라. `battle-low`와 마찬가지로 특정 곡 멜로디/코드 진행 복제
+  금지 원칙을 그대로 지켜라.
+- `map-redesign-brief.md`의 나머지 구간(중앙 격전지, 동쪽 통로,
+  적 쪽 출발 구역)도 마저 설계해서 맵 후보를 완성해라. 완성되면
+  `warcrest-day2-player-front-v1`을 실제 기본 프로덕션 맵으로
+  승격할지, 계속 후보로 둘지 결정해서 근거를 남겨라(승격한다면
+  회귀 테스트 전체를 다시 돌려야 한다).
+- 이번에도 각 스트림 완료마다 별도 커밋 + backlog/log 기록, 그리고
+  **매번 `npm run build`+`npm test` 둘 다** 확인해라.
+
+## 결과물
+
+- 0번 빌드 수정 확인(`npm run build` 통과 로그)
+- 0-1번 N/S 등 방향 재확인 결과
+- 나머지 9종 유닛 8방향 QA 결과
+- 나머지 3개 음악 상태 편곡 산출물
+- 맵 나머지 구간 설계 + 승격 여부 결정과 근거
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 매 턴 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 변경 커밋마다 backlog 또는 최소 log.md 기록을 남겨라.
+```
+
+## 2026-07-29 (21) — Day 3 중단 확인 + 안전 확보(커밋)와 재개를 나눈 프롬프트
+
+- **사용자 지시 원문(핵심)**: "했는데 다 끝난 건지 아니면 중단된 건지
+  모르겠어. 확인하고 수정/보완해야 할 부분과 함께 다음 프롬프트
+  만들어줘."
+- **확인한 현재 코드 상태** (2026-07-29, 최신 커밋은 여전히 `6c2655f`
+  (Day 2), 그 이후 커밋 없음): `git status`로 대량의 미커밋 변경을
+  확인했다 — 대부분은 회귀 스위트 재실행으로 갱신된 기존 아티팩트
+  스크린샷이었고, 실제 새 산출물은 `art-source/second-cycle/day3/`
+  (9종 유닛 원본 폴더 전부 존재), `artifacts/day3-directional-units/`
+  (6종만 normalized 완료: stone-slinger/bronze-swordsman/archer/
+  supply-wagon/stone-axeman/iron-swordsman), QA 스펙 파일 6개(같은
+  6종)였다. **중단됐다고 판단한 근거**: (1) `public/assets/production/units/`를
+  확인한 결과 청동창병을 제외한 나머지 전부 여전히 방향 없는 구형
+  단일 서쪽 자산뿐이었다 — 6종이 normalize까지는 됐지만
+  `unitAnimationRegistry.ts`에 배선되지 않았다. (2) 나머지 3종
+  (iron-spearman/musketeer/knight)은 원본 폴더만 있고 정규화도
+  안 됐다. (3) 음악 나머지 3개 상태, 맵 나머지 구간 관련 산출물이
+  전혀 없었다. (4) 이 작업에 대한 완료 로그가 개발 세션 쪽에 전혀
+  없었다(직전 141번 항목 이후로 새 항목 없음) — 스스로 마무리 보고를
+  남기기 전에 끊긴 것으로 판단했다.
+  **task 0(빌드 수정)은 실제로 완료**돼 있었다 — `day2-triple-checkpoint.spec.ts`의
+  타입 import 수정을 `git diff`로 확인했고, `npm run build`/`npm
+  test`(29/117)를 직접 재실행해 통과를 재확인했다. task 0-1(N/S
+  방향 재확인)은 근거를 못 찾아 여전히 미해결로 남겼다.
+- **작성한 프롬프트** (안전 확보 먼저: 이미 끝난 6종부터 배선+커밋,
+  그 다음에만 나머지 재개 — 한 번에 다 시키다 끊긴 전례를 반영해
+  단계를 잘게 쪼갬):
+
+```
+지난 지시(빌드 수정 + Day 3 전면 확장)를 확인했다. 빌드 수정(0번)은
+잘 됐다 — `npm run build`/`npm test` 직접 재확인했다. 그런데 Day 3는
+중간에 끊긴 것으로 보인다: 워크트리에 미커밋 상태로 6종 유닛
+(stone-slinger/bronze-swordsman/archer/supply-wagon/stone-axeman/
+iron-swordsman)의 8방향 원화가 정규화까지만 되고
+`unitAnimationRegistry.ts`에는 배선되지 않았고, 나머지 3종
+(iron-spearman/musketeer/knight)은 원본만 있고 정규화도 안 됐으며,
+음악/맵 나머지 작업은 아예 시작 흔적이 없다.
+
+**한 번에 다 시켰다가 중간에 끊기면 이미 끝난 부분까지 안전하지
+않다.** 이번엔 아래 순서로, 각 단계마다 반드시 커밋하고 넘어가라 —
+한 프롬프트 안에서도 단계별 커밋을 생략하지 마라.
+
+## 0. 먼저: 이미 정규화된 6종부터 안전하게 배선 + 커밋
+
+- `artifacts/day3-directional-units/`에 이미 normalized된 6종
+  (stone-slinger, bronze-swordsman, archer, supply-wagon, stone-axeman,
+  iron-swordsman)을 `unitAnimationRegistry.ts`에 배선하고
+  `public/assets/production/units/`에 실제로 반영해라.
+- `npm run build`+`npm test` 둘 다 통과 확인 후 **이 6종만으로 먼저
+  커밋해라.** 나머지를 만들기 전에 이미 끝난 작업부터 안전하게
+  확보하는 게 목적이다.
+
+## 0-1. 재확인(여전히 미해결): N/S 방향
+
+이전 프롬프트에서 요청한 "N/S가 실제로 반대 시점인지" 확인이 이번에도
+안 된 것 같다 — 이번엔 빠뜨리지 말고 확인해서 결과물에 명시해라.
+
+## 1. 나머지 3종 유닛 (iron-spearman, musketeer, knight) 8방향 제작
+
+- `art-source/second-cycle/day3/`에 이미 원본 폴더가 있다 — 이어서
+  정규화/QA/배선까지 진행해라.
+- 완료 후 별도 커밋.
+
+## 2. 음악 나머지 3개 상태 (`bgm.menu`/`bgm.preparation`/`bgm.battle.high`)
+
+- `music-style-brief.md` 4절 그대로, `bgm.battle.low`와 같은 방식으로
+  각각 별도로 편곡하고 완료마다 커밋해라. 특정 곡 멜로디/코드 진행
+  복제 금지 원칙은 여전히 유효하다.
+
+## 3. 맵 나머지 구간 (중앙 격전지 / 동쪽 통로 / 적 쪽 출발 구역)
+
+- `map-redesign-brief.md`의 나머지 구간을 마저 설계하고, 완료 후
+  `warcrest-day2-player-front-v1`을 프로덕션 맵으로 승격할지 계속
+  후보로 둘지 결정과 근거를 남겨라. 승격 시 전체 회귀를 다시 돌려라.
+
+## 공통 규칙
+
+- **0/1/2/3 각 단계가 끝날 때마다 커밋 + `docs/ai-usage/session-log.md`
+  기록을 그 즉시 남겨라** — 전부 끝난 뒤 한 번에 몰아서 기록하지
+  마라. 중간에 끊기더라도 어디까지 안전하게 끝났는지 항상 알 수
+  있어야 한다.
+- 이번에도 완료 보고 전 `npm run build`+`npm test` 둘 다 실행해라.
+
+## 결과물
+
+최종 응답에 포함해라(중간에 끊기더라도 그때까지 한 것 기준으로):
+
+- 0번 6종 배선+커밋 완료 여부
+- 0-1번 N/S 재확인 결과
+- 1/2/3번 중 어디까지 실제로 끝났는지, 커밋 목록
+- 다음에 이어서 할 게 있다면 정확히 어디서부터인지
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 매 턴 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 각 단계 커밋마다 backlog 또는 최소 log.md 기록을
+  남겨라.
+```
+
+## 2026-07-29 (22) — 유닛 완료 확인 + 음악 작업 중 상태 확인 + 안전 커밋 후 재개 프롬프트
+
+- **사용자 지시 원문(핵심)**: "지금 또 중단된 건지 제대로 끝난 건지
+  모르겠어. 먹통이다가 vscode가 창이 리로드 된 거라서. 확인하고
+  상황에 맞게 프롬프트 짜줘."
+- **확인한 현재 코드 상태** (2026-07-29, 최신 커밋 `818c193`, 그 위에
+  `src/systems/audio/backend.ts` 미커밋 변경):
+  - 새 커밋 2개(`d301888` 6종 배선, `818c193` 나머지 3종)를 확인했다.
+    `public/assets/production/units/`에서 10종 전부 8방향 자산이
+    실제로 존재함을 확인했고(`token-*` grep 결과 0건), `npm run
+    build`/`npm test`(29 files/120 tests)를 직접 재실행해 통과를
+    재확인했다. `log.md`에서 N/S 재확인이 이번엔 실제로 이뤄졌음을
+    확인했다("n은 정면 편향, s는 후면 편향인 약한 3/4 시점이라 반대
+    방향으로 충분히 구분됨") — 지난 두 차례 놓쳤던 항목이 이번엔
+    처리됐다. NW 방향 4곳(stone-slinger/stone-axeman/archer/
+    iron-spearman 각 1포즈)은 인접 방향 프레임을 임시로 대체해
+    QA만 통과시켰다는 것도 투명하게 로그에 남겨져 있어 확인했다 —
+    사소한 부채로 판단, 지금 막을 사유는 아니라고 결론.
+  - `src/systems/audio/backend.ts`의 미커밋 diff(250줄 추가)를 확인한
+    결과, `bgm.menu`/`bgm.preparation`/`bgm.battle.high`용
+    `ArrangementProfile` 케이스가 전부 실제 코드로 구현돼 있었다 —
+    음악 확장(2번 작업)이 상당 부분 끝난 상태였다. 다만 이 변경은
+    아직 커밋되지 않았고, `bgm.battle.low`때처럼 오프라인 측정
+    증거(JSON)나 인게임 전환 캡처가 나머지 3개 상태에 대해서는 아직
+    하나도 생성되지 않았다 — 검증 전 단계에서 멈춘 것으로 판단했다.
+    다행히 이 상태에서도 `npm run build`/`npm test`가 정상 통과해
+    작업이 망가진 채로 끊긴 건 아니었다.
+  - 맵(3번 작업) 관련 산출물은 여전히 전혀 없었다.
+- **작성한 프롬프트** (유닛 완료 확인 + 음악 검증·커밋 우선 + 맵 재개):
+
+```
+확인했다 — 유닛 8방향 확장(0/1번)은 완전히 끝났고 커밋도 잘 됐다
+(`d301888`, `818c193`). N/S 재확인도 이번엔 제대로 됐다. NW 방향
+4곳의 임시 대체 프레임은 사소한 부채로 남겨두되 지금 막을 필요는
+없다.
+
+음악 확장(2번)은 코드가 상당 부분 돼 있다 — `backend.ts`에 4개
+BGM 상태 전부의 편곡 프로파일이 구현돼 있는 걸 확인했다. 그런데
+아직 커밋되지 않았고, `bgm.battle.low` 때처럼 나머지 3개 상태의
+검증 증거(오프라인 측정 JSON, 인게임 전환 캡처)가 하나도 없다.
+지금 상태에서도 build/test는 정상 통과하니 코드 자체는 안전하다 —
+**검증만 마치고 커밋해라.**
+
+## 2. 음악 검증 완료 + 커밋 (이어서, 새로 만들 필요 없음)
+
+- 이미 구현된 `bgm.menu`/`bgm.preparation`/`bgm.battle.high`
+  프로파일 각각에 대해 `bgm.battle.low`와 같은 방식으로
+  OfflineAudioContext 레이어별 RMS/peak를 측정하고
+  `artifacts/day3-music/`(또는 유사 경로)에 JSON으로 남겨라.
+- 각 상태의 인게임 전환(예: menu->preparation, preparation->
+  battle-low, battle-low<->battle-high)도 캡처해라.
+- `npm run build`+`npm test` 통과 확인 후, **음악 작업 전체를
+  하나의 커밋으로 확보해라.** 지금 미커밋 상태로 남아있으면
+  다음에 또 창이 죽었을 때 잃어버릴 수 있다 — 검증이 끝나는 즉시
+  커밋부터 해라.
+
+## 3. 맵 나머지 구간 (음악 커밋 이후에만 시작)
+
+- `map-redesign-brief.md`의 나머지 구간(중앙 격전지/동쪽 통로/적 쪽
+  출발 구역)을 마저 설계해라.
+- 완료 후 `warcrest-day2-player-front-v1`을 프로덕션 맵으로 승격할지
+  계속 후보로 둘지 결정과 근거를 남기고, 이것도 끝나는 즉시 별도
+  커밋해라.
+
+## 공통 규칙 (계속 강조)
+
+- 각 단계 검증까지 끝나면 그 즉시 커밋 + 로그를 남겨라. 다음 상태
+  확인 때 "중단인지 완료인지 모르겠다"는 질문이 또 나오지 않도록,
+  진행 상황을 `docs/ai-usage/session-log.md`에 실시간으로 남겨라.
+- `npm run build`+`npm test` 둘 다 매 단계 확인해라.
+
+## 결과물
+
+- 음악 3개 상태 검증 증거 + 커밋 해시
+- 맵 나머지 구간 설계 + 승격 여부 결정 + 커밋 해시
+- 전체적으로 2차 사이클(유닛/음악/맵)이 이걸로 종료되는지, 남는 게
+  있는지 최종 요약
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 매 턴 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 각 단계 커밋마다 backlog 또는 최소 log.md 기록을
+  남겨라.
+```
+
+## 2026-07-29 (23) — 2차 사이클(유닛/음악/맵) 전부 완료·커밋 확인 + 최종 통합 회귀(Day 4) 착수 프롬프트
+
+- **사용자 지시 원문(핵심)**: "또 확인하고 다음 프롬프트 만들어줘."
+- **확인한 현재 코드 상태** (2026-07-29, 최신 커밋 `4b9952f`): 새 커밋
+  2개(`0f3136e` 음악 검증, `4b9952f` 맵 전체 재설계)를 확인했다.
+  `npm run build`/`npm test`(29/121)를 직접 재실행해 통과를
+  재확인했다. `git show`로 두 커밋의 로그 diff를 직접 읽어 확인한
+  결과:
+  - 음악: 4개 BGM 상태 전부 오프라인 측정 증거(`artifacts/day3-music/`)와
+    실제 인게임 전환(`menu -> preparation -> battle-low -> battle-high
+    -> battle-low`) 캡처까지 완료·검증됨.
+  - 맵: "Three Fronts" 전체 재설계(9개 제어 노드, 폭 10->6->10 변화,
+    소품 20개, 구조물 진행도 유지)를 `warcrest-day3-three-fronts-v1`
+    후보로 완성했고, **"기존 기본 맵을 지금 승격하지 않는다 — 사람이
+    직접 플레이/가독성 검토로 승인하기 전까지는 후보로만 둔다"는
+    결정을 스스로 명시적으로 남겼다** — 취향 판단이 필요한 지점을
+    올바르게 사용자에게 넘긴 좋은 판단으로 확인했다.
+  - `artifacts/day3-map/candidate-*.png`를 직접 열어 확인한 결과
+    브리프 목표(폭/재질 변화, 소품 군집, 완만한 굴곡)와 실제로
+    일치했다 — 이전보다 훨씬 밀도 있고 자연스러운 화면이었다.
+  - 부수적으로 `tools/validation/day3-audio-expansion.spec.ts`라는
+    미커밋 고아 파일(초기 시도, `day3-music-expansion.spec.ts`로
+    대체된 것으로 보임)을 발견해 정리 대상으로 남겼다.
+  - 결론: 유닛/음악/맵 세 스트림 모두 완료·커밋됨. 남은 건 (1) 고아
+    파일 정리, (2) 이번 2차 사이클 전체에 대한 통합 회귀(원래 Day 8과
+    같은 성격), (3) 새 맵 후보의 최종 승격 여부를 사람이 실제로
+    플레이해서 판단하는 것.
+- **작성한 프롬프트** (Day 4: 2차 사이클 통합 회귀 + 맵 승격 플레이
+  리뷰 준비):
+
+```
+2차 사이클(유닛 8방향/음악 4상태/맵 재설계) 전부 검증했다 — 셋 다
+완료·커밋됐고 산출물도 좋다. 승인한다. 이제 원래 계획의 Day 8과
+같은 성격의 통합 회귀 단계다.
+
+## 0. 정리
+
+- `tools/validation/day3-audio-expansion.spec.ts`는
+  `day3-music-expansion.spec.ts`로 대체된 미커밋 고아 파일로 보인다.
+  실제로 안 쓰이는 게 맞으면 삭제해라(맞는지 먼저 확인해라 — 혹시
+  참조하는 곳이 있으면 남겨라).
+
+## 1. 2차 사이클 통합 검증 문서
+
+- `docs/dev-wiki/day3-second-cycle-validation.md`(신규)에 유닛/음악/맵
+  세 스트림을 하나로 요약해라 — 지금까지 각 커밋 로그에 흩어져 있는
+  내용을 한 곳에서 볼 수 있게. 새로 검증할 필요는 없고 기존 증거를
+  모아 정리하는 문서다.
+
+## 2. 전체 회귀 (기존 맵 기준, 지금 당장 새 맵으로 바꾸지 마라)
+
+- 기존 프로덕션 맵(`warcrest-full-lane-hybrid-v1`)을 그대로 둔 채로,
+  8방향 유닛 10종 + 4상태 음악이 실제 5개 시대 전체 플레이스루에서도
+  안 깨지는지 전체 Playwright + Vitest + build를 다시 돌려라(원래
+  Day 8과 동일한 성격의 점검).
+- 특히 Day 7에서 만든 밀집 전투 오버레이 요약 로직이 8방향 유닛에서도
+  여전히 잘 작동하는지 확인해라 — 그 작업은 2방향 시절에 만들어졌다.
+
+## 3. 새 맵 후보 플레이 리뷰 준비 (승격 여부는 사용자가 결정)
+
+- `warcrest-day3-three-fronts-v1`을 실제로 켜서(`?map=` 쿼리 등)
+  최소 1개 시대의 웨이브를 끝까지 플레이해보고, 8방향 유닛과 새로운
+  소품 밀도가 실제 전투 중에 서로 가리거나 혼잡해지는 곳이 없는지
+  확인해라. 문제가 있으면 이 프롬프트 범위에서 고쳐라(맵 데이터만
+  조정, 렌더링 엔진은 여전히 건드리지 마라).
+- 승격 여부 자체는 네가 결정하지 마라 — 새 맵과 기존 맵을 나란히
+  비교할 수 있는 캡처/영상 자료만 준비해서 사용자가 보고 결정할 수
+  있게 해라.
+
+## 결과물
+
+- 0번 고아 파일 정리 결과
+- 1번 통합 검증 문서 링크
+- 2번 전체 회귀 결과(빌드/테스트/Playwright 수치)
+- 3번 새 맵 플레이 리뷰에서 발견한 문제와 수정 여부, 최종 비교 자료
+- 사용자가 봐야 할 것: 새 맵을 기본으로 승격할지 최종 결정
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 매 턴 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 각 단계 커밋마다 backlog 또는 최소 log.md 기록을
+  남겨라.
+```
+
+## 2026-07-29 (24) — 버그 3건(캐릭터 분리/타워 배치/근접 타겟팅) 교정 + 2레인 맵 재설계 착수 프롬프트
+
+- **사용자 지시 원문(핵심)**:
+  1. "캐릭터들의 몸과 다리가 별개로 잘려서 보이는 등 문제가 있다...
+     왜 그런지를 확인하고 고치도록 프롬프트로 만들어야 해"
+  2. "아군 타워와 적의 타워 위치가 뒤바뀐 거 같다... 잘못 배치된
+     상태인 거 같음"
+  3. "근접 캐릭터들이 타워와 가까운데도 무시하고 다음 장소까지 가서
+     싸우는 경우를 자주 목격했음. 버그가 분명하니 이것들도
+     교정해야해."
+  4. "좌하단에서 우상단으로 이동하는 듯한 동선... 이제 그렇게 하지
+     말자. 좌측 아군 우측 적군이며 약간 각진 듯한 원형으로 북쪽과
+     남쪽 두 개의 길이 각각의 본진에서 본진으로 이어지며 길
+     중간중간에 타워나 거점이 있도록... 추후 3인용은 트라이앵글,
+     4인용은 2인용 길 중간에 다른 2 player 본진이 배치되도록"
+- **확인한 내용**:
+  - `artifacts/day3-second-cycle-map-review/candidate-center-engaged.png`를
+    직접 크롭 확대해 도끼병 캐릭터들의 다리가 사라지고 화면 우상단에
+    몸통 없는 다리만 걷는 것, 흩어진 신발/발 파편을 확인했다 —
+    확실히 재현되는 시각적 증상으로 확정했으나 코드 레벨 원인은
+    특정하지 못해 "확정 버그"가 아니라 "확실한 증상+조사 요청"으로
+    전달한다.
+  - `src/data/battlefieldMaps.ts` 274번 줄
+    `DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID = [0.6, 0.2]`와
+    `src/data/defenseTowerDefinitions.ts`를 대조해, 타워 0(owner:
+    player)이 progress 0.6(적 쪽), 타워 1(owner: enemy)이 progress
+    0.2(아군 본진 쪽)로 완전히 뒤바뀐 것을 확정했다.
+  - `tickCombat`의 타겟팅 로직(`findNearestEnemyTower`, 타워 vs
+    유닛 거리 비교) 자체는 구조상 타워를 우선하도록 짜여 있어,
+    사용자가 본 증상이 2번 버그로 인한 착시인지 별개의 거리 계산
+    버그인지 확정하지 못해 "2번 수정 후 재확인" 순서로 전달한다.
+  - 현재 맵 스키마(`BattlefieldMapSpec.lanePath`)가 단일 레인만
+    지원해, 사용자가 요청한 "본진 2개 + 남/북 2레인 각진 원형" 구조는
+    맵 데이터만으로 안 되고 스키마 자체의 다중 레인 확장이 필요함을
+    확인해, 이번엔 전체 구현 대신 설계안 + 체크포인트 단계로
+    쪼갰다.
+- **작성한 프롬프트**:
+
+```
+아래는 두 부분이다 — A(버그 3건, 지금 바로 교정)와 B(맵을 2레인
+구조로 전면 재설계, 설계안부터). A를 끝내고 build/test 통과를
+확인한 뒤에만 B로 넘어가라.
+
+## A. 버그 교정
+
+### A1. 캐릭터 몸통/다리 분리 (확실한 증상, 원인은 조사 필요)
+
+`artifacts/day3-second-cycle-map-review/candidate-center-engaged.png`를
+직접 열어봐라 — 도끼병류 캐릭터의 다리가 사라지고, 화면 다른 곳에
+몸통 없는 다리만 걷는 게 보이고, 작은 신발/발 파편이 흩어져 있다.
+8방향 확장(Day 3) 직후 발견됐다.
+
+의심 지점을 조사해라(확정 아님, 네가 직접 검증):
+- 8방향 정규화 과정에서 특정 방향/포즈의 ground anchor 크롭이
+  다리를 캔버스 밖으로 잘라냈을 가능성 — 방향별 opaque bbox를
+  다시 측정해봐라.
+- 밀집 전투 상황에서 같은 유닛의 이전 프레임 스프라이트가 완전히
+  정리되지 않고 겹쳐 보이는 렌더링/깊이정렬 버그 가능성.
+- 확인이 필요하면 문제되는 방향/유닛의 정규화된 PNG를 직접 열어
+  실제로 다리가 잘려있는지, 아니면 표시 단계에서만 잘리는지부터
+  구분해라.
+
+원인을 찾으면 고치고, before/after 스크린샷을 남겨라. 원인을 못
+찾겠으면 무엇을 확인했고 무엇이 남았는지 정확히 적어라 — 추측으로
+때우지 마라.
+
+### A2. 아군/적 타워 위치 뒤바뀜 (확정 버그)
+
+`src/data/battlefieldMaps.ts`의 `DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID
+= [0.6, 0.2]`와 `src/data/defenseTowerDefinitions.ts`의 타워 정의를
+대조한 결과, 타워 0(`owner: "player"`)이 progress `0.6`(적 쪽에
+가까움), 타워 1(`owner: "enemy"`)이 progress `0.2`(아군 본진 쪽)로
+뒤바뀌어 있다.
+
+- 자기 팀 타워가 자기 본진 쪽에 오도록 고쳐라(progress 값을
+  바꾸든, owner 배정을 바꾸든 — 어느 쪽이든 결과가 같으면 된다).
+- 기존 "타워는 자신과 연결된 캡처 포인트보다 본진에서 더 멀어야
+  한다"는 규칙과 "최소 이격 0.15" 규칙은 유지하되, **자기 팀 쪽
+  절반을 벗어나 상대 쪽 절반까지 넘어가지 않도록** 범위를 제한해라
+  (이번 버그가 그 경계 없이 규칙만 지키다 생긴 것이다).
+- 수정 후 좌표/화면 캡처로 "아군 타워가 아군 본진에 가깝다"를
+  증명해라.
+
+### A3. 근접 유닛이 가까운 타워를 무시하는 문제 (A2 수정 후 재확인)
+
+A2를 고친 뒤 다시 관찰해라 — 화면상 이상하게 보였던 게 타워 위치
+뒤바뀜 때문인 착시였을 수 있다. 그래도 재현되면 `tickCombat`의
+`findNearestEnemyTower`/거리 비교 로직을 직접 디버그해서 실제
+원인을 찾아 고쳐라. A2만으로 해결됐다면 그 사실과 확인 방법을
+결과물에 남겨라.
+
+## B. 맵을 2레인(남/북) 구조로 전면 재설계 (A 완료 후, 설계안부터)
+
+지금 방향(좌하단->우상단 대각선 단일 레인)을 버리고 아래로 바꾼다:
+
+- 본진 2개를 **좌(아군)/우(적)**로 배치(대각선 코너 아님).
+- 두 본진을 잇는 레인을 **북쪽 길, 남쪽 길 두 개**로 만들어라 —
+  전체적으로 약간 각진 원형/타원 형태(두 길이 위아래로 벌어졌다가
+  양 끝 본진에서 만나는 모양).
+- 각 레인 중간중간에 타워/거점을 배치해라(A2에서 고친 "자기 진영
+  쪽에 자기 타워" 원칙 유지).
+- 이건 맵 데이터만으로 안 된다 — 지금 `BattlefieldMapSpec.lanePath`가
+  레인 1개만 지원한다. **스키마를 다중 레인으로 확장하는 설계
+  변경**이 먼저 필요하다는 걸 알아야 한다.
+
+### B1. 먼저 설계안 문서 (구현 전, 체크포인트)
+
+`docs/dev-wiki/map-topology-two-lane-brief.md`(신규)에 아래를
+정리해라 — 아직 코드를 손대지 마라:
+
+- 스키마 변경안: `BattlefieldMapSpec`이 레인을 몇 개까지 지원하게
+  바꿀지(지금은 2, 나중 확장 고려), 레인별로 구조물 소켓/지형 패치를
+  어떻게 묶을지.
+- 좌/우 본진 배치와 남/북 레인의 구체적 좌표 초안(진행도 대신 레인
+  ID + 레인 내 progress로 구조 변경 필요할 수 있음).
+- 각 레인의 타워/거점 배치 원칙(A2에서 확정한 "자기 진영 쪽" 원칙
+  포함).
+- **3인용(트라이앵글)/4인용(2인용 레인 중간에 다른 진영 본진 삽입)
+  확장을 지금 구현하지는 않되, 지금 스키마 설계가 그 확장을 막지
+  않는지만 검토해서 문서에 남겨라** — 지금 구현 범위는 2인용뿐이다.
+- 기존 렌더링 엔진(marching squares, 자산 QA, 접지 규칙)이 레인
+  개수와 무관하게 재사용 가능한지 확인하고 문서에 명시해라.
+
+### B2. 골든 체크포인트 (설계안 승인 후에만, 이번 프롬프트 범위 아님)
+
+B1 설계안까지만 이번에 하고, 실제 2레인 맵 구현은 다음 프롬프트로
+넘겨라 — 스키마를 바꾸는 큰 변경이라 설계안부터 확인받는 게
+맞다.
+
+## 결과물
+
+- A1: 원인 조사 결과(확정 또는 미확정), 수정 여부, 캡처
+- A2: 수정 내용, 좌표/화면 증거
+- A3: A2로 해결됐는지 여부, 안 됐다면 실제 원인과 수정
+- B1: `map-topology-two-lane-brief.md` 전문
+- build/test 통과 확인(A 단계 이후 최소 1회)
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 매 턴 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 각 단계 커밋마다 backlog 또는 최소 log.md 기록을
+  남겨라.
+```
+
+## 2026-07-30 (25) — A 검증 완료 + 세 번째 빌드 브레이크 근본 대책 + B2(2레인 스키마/맵 구현) 착수 프롬프트
+
+- **사용자 지시 원문(핵심)**: "좀 전에 준 프롬프트로 명령 수행이
+  완료되었고 다음과 같은 답장이 왔어. 분석 후 다음 명령 프롬프트를
+  만들어줘." (A/B1 완료 보고 전문 첨부)
+- **확인한 현재 코드 상태** (2026-07-30, 최신 커밋 `4f0af19`):
+  `npm run build` 재실행 결과 **또 실패**했다 — `tools/validation/
+  a-bugfix-review.spec.ts`가 자체 선언한 `DebugSnapshot` 타입에
+  `attackAnimTime`/`unitId` 필드가 빠져 있었다. `LaneBattleScene.ts`의
+  `createVerificationSnapshot()`(3092~3109번 줄)엔 두 필드 다 실제로
+  존재함을 확인해, 이번에도 순수 타입 선언 누락임을 확정했다 — **동일
+  유형의 빌드 브레이크가 세 번째**임을 인지했다. `a1-after-*.png`/
+  `a2-player-tower-own-side.png`를 직접 열어 A1(원인: 정규화 단계
+  connected-component 셀 오염, 수정 확인)과 A2(타워가 자기 진영
+  쪽에 배치됨, 진행도 0.17/0.37/0.63/0.83 확인)가 실제로 고쳐졌음을
+  확인했다. A3는 재현 안 됨 + 구조물 공격 정상 증거로 타당하다고
+  판단했다. `map-topology-two-lane-brief.md`를 정독해
+  `lanes[]`+`laneRef{laneId,progress}` 스키마, 레인별 좌표 초안,
+  레인별 독립 이격 규칙, 3~4레인까지 무재설계 확장 가능성을 확인해
+  승인했다.
+- **작성한 프롬프트** (빌드 수정 + 재발 방지 구조 개선 + B2 2레인
+  스키마/맵 실제 구현):
+
+```
+A(버그 3건)는 실제로 잘 고쳐졌다 — 원인 진단과 수정, 증거 스크린샷
+모두 확인했다. B1(2레인 설계안)도 탄탄해서 승인한다. 다만 **빌드가
+또 깨져 있다 — 같은 유형의 문제가 이번이 세 번째다.** 이번엔 재발
+방지 구조까지 만들고 나서 B2로 넘어가라.
+
+## 0. 빌드 수정 + 재발 방지 (이번엔 근본적으로)
+
+`tools/validation/a-bugfix-review.spec.ts`의 로컬 `DebugSnapshot`
+타입이 실제 `createVerificationSnapshot()`의 반환 형태와 어긋난다
+(`attackAnimTime`/`unitId` 누락). 지금까지 이 유형의 빌드 브레이크가
+세 번째다 — 매번 "테스트 파일이 디버그 스냅샷 타입을 손으로 다시
+선언했다가 실제 구현과 어긋나는" 같은 패턴이다.
+
+- 이번 파일의 타입 누락은 당연히 고쳐라.
+- **그리고 이번엔 재발 자체를 막아라**: `LaneBattleScene.ts`의
+  `createVerificationSnapshot()` 반환 타입을 명시적으로 export되는
+  인터페이스로 뽑아내고(`export interface GameDebugSnapshot { ... }`
+  같은 식으로), 모든 Playwright 스펙 파일이 그 타입을 직접
+  import해서 쓰도록 기존 스펙 파일들도 함께 정리해라. 앞으로는
+  아무도 디버그 스냅샷 타입을 손으로 다시 선언할 수 없게 만드는
+  것이 목표다.
+- 수정 후 `npm run build`+`npm test` 둘 다 통과 확인하고 이 정리만
+  별도로 커밋해라.
+
+## 1. B2: 2레인 스키마 + 첫 2레인 맵 실제 구현
+
+`map-topology-two-lane-brief.md`를 그대로 실행해라:
+
+- `BattlefieldMapSpec`을 브리프 3.1절의 `lanes[]`/`laneRef` 구조로
+  확장해라. 기존 단일 레인 맵(`warcrest-full-lane-hybrid-v1`)이
+  새 스키마에서도 그대로 동작하도록 마이그레이션해라(레인 1개짜리
+  `lanes: [...]`로 감싸는 형태) — 이 부분은 반드시 회귀 없이
+  통과해야 한다.
+- 브리프 4절의 좌표 초안대로 좌(아군)/우(적) 본진 + 북/남 2레인
+  맵을 새 후보로 만들어라(예: `warcrest-two-lane-v1`).
+- 레인마다 독립적으로 5.2/5.3절의 배치 규칙(자기 진영 쪽 타워,
+  레인 내 최소 이격 0.15)을 적용해라.
+- 이번에도 **기존 기본 프로덕션 맵을 지금 바꾸지 마라** — 새
+  스키마로 마이그레이션된 기존 맵을 계속 기본값으로 두고, 2레인
+  맵은 이전 후보들처럼 `?map=` 등으로 전환 가능한 후보로만 추가해라.
+- 렌더링 엔진(marching squares, 자산 QA, 접지 규칙)은 레인 수와
+  무관하게 그대로 재사용해라 — 손대지 마라.
+
+## 결과물
+
+- 0번: 재발 방지 구조 변경 내용 + 빌드/테스트 통과 확인
+- 1번: 스키마 마이그레이션이 기존 맵에서 회귀 없음을 증명하는 근거,
+  새 2레인 맵 후보 스크린샷(북/남 레인, 본진 배치, 거점/타워 위치)
+- 다음에 사람이 확인해야 할 것(2레인 맵 플레이 리뷰, 승격 여부는
+  여전히 사용자 결정)
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 매 턴 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 각 단계 커밋마다 backlog 또는 최소 log.md 기록을
+  남겨라.
+```
+
+## 2026-07-30 (26) — 정정: 방향 흔들림(A4) 추가 + 맵 미적용 확인
+
+- **사용자 지시 원문(핵심)**: 스크린샷과 함께 "1. 아직 새 맵으로 안
+  바뀐 거지? 게임 플레이해보니 이전 맵이던데? 2. 스크린샷처럼 병력
+  방향이 좌우로 매우 흔들리며 앞을 바라보았다 뒤를 바라보았다 하는데
+  이건 지금 빌드 새로 고치고 해도 같은 버그가 있을 거 같은데
+  확인하고 함께 고치도록 프롬프트 수정해줘."
+- **확인**: (1) B1(설계 문서)까지만 끝났고 B2(실제 2레인 구현)는
+  프롬프트 (25)에 담겼지만 아직 실행 전이라, 맵이 안 바뀐 게
+  맞음을 확인했다. 스크린샷의 타워 배치는 A2 수정이 정상 반영된
+  상태임도 확인했다(아군 타워=아군 쪽, 적 타워=적 쪽).
+  (2) `LaneBattleScene.ts`의 `resolveUnitFacingDirection` 호출부를
+  코드로 확인한 결과, `FACING_DEAD_ZONE_WORLD_PX = 0.35`(월드
+  픽셀)라는 매우 작은 문턱값이 있고, 방향은 매 프레임 "시각적
+  위치의 프레임간 이동량"으로 재계산됨을 확인했다. 전투 중인 유닛은
+  교전 슬롯 내에서 미세하게 흔들리는데, 이 미세한 흔들림이 0.35px
+  문턱을 계속 넘어 매 프레임 방향이 재계산되고, 8방향 체계에서는
+  이게 대각선 경계를 오가는 형태로 뚜렷하게 드러날 수 있다는
+  근거 있는 가설을 세웠다(확정 아님, 직접 디버그 필요).
+- **처리**: 프롬프트 (25)에 A4를 추가해 재발행한다. 아래 프롬프트가
+  (25)를 대체한다 — 아직 (25)를 실행 안 했다면 이걸 대신 써라.
+
+```
+(프롬프트 25 전체에 추가) A(버그 3건)와 B1(2레인 설계안)에 이어,
+사용자가 실제 플레이 중 새 증상을 발견했다 — A4로 추가해서 0번
+(빌드 수정)과 함께 지금 고쳐라. B2(2레인 구현)는 A4까지 끝난 뒤에
+진행해라.
+
+## A4. 전투 중 유닛 방향이 좌우/앞뒤로 빠르게 흔들림 (신규, 가설
+있음)
+
+사용자가 실제 플레이에서 발견: 교전 중인 유닛의 캐릭터 방향이
+계속 반대로 뒤집히듯 흔들린다.
+
+가설(상담 세션이 코드로 확인, 확정 아님): `LaneBattleScene.ts`의
+`FACING_DEAD_ZONE_WORLD_PX = 0.35`가 너무 작다. `syncUnitPresentation()`가
+매 프레임 `unit.motionX/motionY`를 "이전 프레임 시각 위치 대비 이번
+프레임 시각 위치 이동량"으로 계산하고, 이게 dead zone을 넘으면
+`resolveUnitFacingDirection()`으로 방향을 다시 계산한다. 전투 중
+유닛은 교전 슬롯 안에서 크게 움직이지 않지만, 그 미세한 흔들림조차
+0.35px보다 커서 매 프레임 방향이 다시 계산되고 있을 가능성이 높다.
+
+확인 및 수정 방향(네가 직접 디버그로 확정해라):
+- 교전 중(`attackFacingLockSec > 0`이거나 `nearest`/`enemyTower`가
+  존재해 공격 중인 상태) 유닛의 프레임별 `motionX`/`motionY`와
+  `facingDirection` 변화를 로그로 찍어서, 실제로 매 프레임 뒤집히는지
+  확인해라.
+- 확인되면 해결 방향 후보(양쪽 다 검토):
+  1. `FACING_DEAD_ZONE_WORLD_PX`를 훨씬 크게(예: 교전 중 미세 흔들림
+     폭보다 확실히 큰 값) 올려라.
+  2. 그것만으로 부족하면, 교전 중(공격 애니메이션 진행 중이거나
+     타겟이 고정된 상태)에는 방향을 매 프레임 재계산하지 않고 처음
+     교전을 시작한 시점의 방향(또는 타겟 방향)으로 고정해라 — 지금의
+     `attackFacingLockSec`와 유사한 개념을 방향 자체에도 적용.
+- 수정 후 같은 교전 상황을 몇 초간 녹화/연속 캡처해서 방향이 더 이상
+  프레임마다 뒤집히지 않는지 눈으로 확인해라.
+
+## 나머지는 프롬프트 (25)와 동일
+
+0(빌드 수정+재발 방지 구조), 1(B2: 2레인 스키마+맵 구현, 기존 기본
+맵 유지)은 프롬프트 (25) 내용 그대로 진행해라. 순서: A4 -> 0 ->
+build/test 통과 확인 -> 1(B2).
+
+## 결과물 (기존 항목에 추가)
+
+- A4: 방향 흔들림 실제 원인 확인 결과, 수정 내용, 교전 중 방향
+  안정 캡처(연속 프레임 또는 짧은 영상)
+```
+
+## 2026-07-30 (27) — A4/B2 검증 완료 + 새 세션용 온보딩·인계 프롬프트
+
+- **사용자 지시 원문(핵심)**: A4/0/B2 완료 보고(`d45f69e`, `5136d04`)
+  전문을 전달하며 "새 세션에서 시작하려고 하는데... 하네스 규칙과
+  해당 프로젝트 폴더만 보고 작업해야 하니 상황 파악하고 진행하라는
+  등 상세하게 프롬프트의 앞쪽에 먼저 남겨주고 그런 뒤에 다음 할
+  내용을 진행하도록 프롬프트 짜줘야 할 거 같다."
+- **확인한 현재 코드 상태** (2026-07-30, 최신 커밋 `5136d04`):
+  `npm run build`/`npm test`(29/121)를 직접 재실행해 통과를
+  재확인했다(이번엔 실제로 안 깨졌다). `artifacts/a4-facing-stability/facing-timeline.json`을
+  열어 교전 중 샘플 전체 구간에서 `steadyWindowUniqueDirections:
+  ["ne"]`(방향 고정)를 확인했다. `d45f69e` diff로
+  `FACING_DEAD_ZONE_WORLD_PX`를 0.35->1.5로 올리고 신규
+  `combatFacingHoldSec`/`holdUnitCombatFacing()`으로 교전 중 방향을
+  고정하는 이중 수정을 확인했다 — 상담 세션이 제안한 두 방향 다
+  적용됨. `laneBattleDebugSnapshot.ts`(신규, export 타입)로 기존
+  스펙 파일들이 전환된 것도 확인해 재발 방지 구조가 실제로 반영됐음을
+  검증했다. `two-lane-summary.json`/스크린샷으로 좌(아군)/우(적)
+  본진, 북/남 레인별 독립 캡처(0.18/0.82)·타워(0.38/0.62, 자기
+  진영 쪽) 배치를 확인했다. 기본 맵은 안 바뀌었고 새 후보만 추가된
+  것도 확인했다.
+- **작성한 프롬프트** (새 세션 온보딩 + 상황 요약 + 다음 액션):
+
+```
+이 저장소의 로컬 harness 규약대로 작업해.
+AGENTS.md -> docs/index.md -> docs/dev-wiki/contract.md 순서로 먼저
+읽고 시작해. 운영 하네스만 사용하고, 런타임 하네스나 추가 자동화는
+설정하지 마. 이 세션은 `/data/projects/game_project1` 폴더만 보고
+작업한다 — 다른 프로젝트 폴더는 이번 작업과 무관하니 보지 마라.
+
+그 다음 아래 문서를 순서대로 읽어서 지금까지 상황을 파악해라:
+
+1. `project_development.md` — 현재 상태 요약 허브.
+2. `docs/dev-wiki/classic-rts-fidelity-reset.md` — 이번 2차 사이클
+   전체의 배경(왜 8방향/음악/맵을 다시 만들고 있는지)과 "Decision"
+   절(재조립 전제, 8방향, 원곡 음악, 맵 레이아웃도 재설계 대상).
+3. `docs/dev-wiki/style-guide.md`, `docs/dev-wiki/music-style-brief.md`,
+   `docs/dev-wiki/map-topology-two-lane-brief.md` — 각각 유닛/음악/맵
+   설계 기준.
+4. `docs/dev-wiki/day3-second-cycle-validation.md` — 유닛 8방향·음악
+   4상태·(이전) 단일 레인 맵 재설계 스트림의 통합 기록.
+5. `docs/dev-wiki/backlog.md`, `docs/dev-wiki/log.md`의 최근 항목들
+   (2026-07-29~30) — 이후 진행된 버그 수정(캐릭터 분리, 타워 위치,
+   근접 타겟팅, 전투 중 방향 흔들림)과 2레인 맵 스키마 확장까지의
+   실제 커밋 이력.
+
+## 지금까지 상황 요약 (문서 읽기 전에도 참고할 것)
+
+- 2차 사이클(유닛 10종 8방향, 음악 4상태 레이어드 편곡, 맵 재설계)이
+  전부 구현·검증 완료 상태다.
+- 버그 4건(캐릭터 몸통/다리 분리, 아군/적 타워 위치 뒤바뀜, 근접
+  유닛 타워 무시, 교전 중 방향 흔들림)이 모두 원인 확인 후 수정
+  완료됐다.
+- 맵은 사용자가 "대각선 단일 레인을 버리고 좌(아군)/우(적) 본진 +
+  북/남 2레인" 구조를 요청해, `BattlefieldMapSpec`을
+  `lanes[]`/`laneRef{laneId,progress}` 구조로 확장하고 새 후보
+  `warcrest-two-lane-v1`을 만들었다(커밋 `5136d04`). 기존 기본
+  맵(`warcrest-full-lane-hybrid-v1`)은 아직 그대로다.
+- **참고**: 이 2레인 요청 이전에 이미 "Three Fronts"라는 단일 레인
+  재설계 후보(`warcrest-day3-three-fronts-v1`)가 만들어져 있었는데,
+  사용자의 2레인 요청은 그 단일 레인 접근 자체를 대체하는 것으로
+  보인다 — 이 후보를 계속 남겨둘지, 정리(삭제 또는 문서에 "구식"
+  표시)할지는 확인이 필요하다.
+- 최신 상태에서 `npm run build`/`npm test`(29 files/121 tests)는
+  통과한다.
+
+## 지금 할 일
+
+### 1. 상황 재확인
+
+- `git log --oneline -10`, `git status`로 지금 실제 저장소 상태가
+  위 요약과 일치하는지 먼저 확인해라(다른 세션이 그 사이 더
+  진행했을 수 있다).
+
+### 2. 후보 맵 정리 여부 확인 요청 (사용자에게 물어라, 임의로 정하지 마라)
+
+- "Three Fronts"(`warcrest-day3-three-fronts-v1`) 후보를 계속 유지할지,
+  2레인 요청으로 대체된 것으로 보고 정리(삭제 또는 archive 표시)할지
+  사용자에게 확인해라.
+
+### 3. 2레인 맵(`warcrest-two-lane-v1`) 최종 플레이 리뷰 준비
+
+- 최소 1개 시대 전체 웨이브를 북/남 양쪽 레인에서 실제로 플레이해
+  거점 점령, 타워 파괴/재건, 웨이브 스폰이 레인별로 독립적으로
+  잘 작동하는지 확인해라(이미 부분적으로 검증됐지만, 실제 완주
+  플레이스루로 한 번 더 확인).
+- 이 맵을 기본 프로덕션 맵으로 승격할지는 여전히 사용자 결정이다 —
+  네가 결정하지 말고, 판단에 필요한 비교 자료(기존 vs 2레인, 여러
+  시점)를 준비해서 제시해라.
+
+### 4. 전체 회귀
+
+- `npm run build`, `npm test`, 전체 Playwright(`npx playwright test
+  --workers=1`)를 한 번 더 통째로 돌려서 지금까지 쌓인 모든 변경이
+  서로 충돌 없이 잘 작동하는지 확인해라.
+
+## 하네스 규칙 리마인더
+
+- The Second Rule(`docs/dev-wiki/contract.md`): 의미 있는 턴마다
+  `docs/ai-usage/session-log.md`에 기록해라 — 대회 제출 4번 자료,
+  생략 불가.
+- The One Rule: 변경할 때마다 backlog 또는 최소 `docs/dev-wiki/log.md`
+  기록을 남겨라.
+- 완료 보고 전 `npm run build`와 `npm test`를 **반드시 둘 다** 실행해라
+  — 지금까지 이걸 건너뛰어서 빌드가 깨진 채 "통과"로 보고된 사례가
+  여러 번 있었다.
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- 1번: 재확인한 실제 저장소 상태
+- 2번: Three Fronts 후보 정리에 대한 사용자 확인 요청(또는 이미
+  답을 받았다면 처리 결과)
+- 3번: 2레인 맵 플레이스루 결과와 비교 자료
+- 4번: 전체 회귀 결과
+- 사용자가 최종적으로 결정해야 할 것 목록
+```

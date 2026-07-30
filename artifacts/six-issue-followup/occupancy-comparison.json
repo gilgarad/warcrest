@@ -23,576 +23,1152 @@
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.4908999999999998,
       "laneRow": -5,
       "hp": 34,
       "maxHp": 34,
       "facingX": 1,
+      "facingDirection": "ne",
       "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.4633333333333333,
+      "pose": "stone-axeman-ne-attack",
+      "renderTexture": "stone-axeman-ne-attack",
+      "attackAnimTime": 0.4433633333333334,
+      "attackFacingLockSec": 0.4433633333333334,
+      "combatFacingHoldSec": 0.4433633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3486.2635150457054,
+        "y": 1713.1916499635538,
+        "rotationRad": 0.005101948037033566
+      },
+      "overlay": {
+        "mode": "summary",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": true,
+        "labelText": "아군 ×12 · HP 100%"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 10,
       "team": "enemy",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.5091000000000002,
       "laneRow": 5,
       "hp": 34,
       "maxHp": 34,
       "facingX": -1,
-      "flipX": true,
+      "facingDirection": "sw",
+      "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.4633333333333333,
+      "pose": "stone-axeman-sw-attack",
+      "renderTexture": "stone-axeman-sw-attack-enemy",
+      "attackAnimTime": 0.4433633333333334,
+      "attackFacingLockSec": 0.4433633333333334,
+      "combatFacingHoldSec": 0.4433633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3865.051038944905,
+        "y": 2212.4994116377134,
+        "rotationRad": -0.005101948037033566
+      },
+      "overlay": {
+        "mode": "summary",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": true,
+        "labelText": "적군 ×12 · HP 100%"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 11,
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.4908999999999998,
       "laneRow": -4,
       "hp": 34,
       "maxHp": 34,
       "facingX": 1,
+      "facingDirection": "ne",
       "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.4633333333333333,
+      "pose": "stone-axeman-ne-attack",
+      "renderTexture": "stone-axeman-ne-attack",
+      "attackAnimTime": 0.4433633333333334,
+      "attackFacingLockSec": 0.4433633333333334,
+      "combatFacingHoldSec": 0.4433633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3514.524384610923,
+        "y": 1767.4704457439036,
+        "rotationRad": 0.005101948037033566
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 12,
       "team": "enemy",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.5091000000000002,
       "laneRow": 4,
       "hp": 34,
       "maxHp": 34,
       "facingX": -1,
-      "flipX": true,
+      "facingDirection": "sw",
+      "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.4633333333333333,
+      "pose": "stone-axeman-sw-attack",
+      "renderTexture": "stone-axeman-sw-attack-enemy",
+      "attackAnimTime": 0.4433633333333334,
+      "attackFacingLockSec": 0.4433633333333334,
+      "combatFacingHoldSec": 0.4433633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3836.7901693796875,
+        "y": 2158.256781232982,
+        "rotationRad": -0.005101948037033566
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 13,
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.4908999999999998,
       "laneRow": -3,
       "hp": 34,
       "maxHp": 34,
       "facingX": 1,
+      "facingDirection": "ne",
       "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.4633333333333333,
+      "pose": "stone-axeman-ne-attack",
+      "renderTexture": "stone-axeman-ne-attack",
+      "attackAnimTime": 0.4433633333333334,
+      "attackFacingLockSec": 0.4433633333333334,
+      "combatFacingHoldSec": 0.4433633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3544.959167219619,
+        "y": 1821.5027445592175,
+        "rotationRad": 0.005101948037033566
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 14,
       "team": "enemy",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.5091000000000002,
       "laneRow": 3,
       "hp": 34,
       "maxHp": 34,
       "facingX": -1,
-      "flipX": true,
+      "facingDirection": "sw",
+      "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.4633333333333333,
+      "pose": "stone-axeman-sw-attack",
+      "renderTexture": "stone-axeman-sw-attack-enemy",
+      "attackAnimTime": 0.4433633333333334,
+      "attackFacingLockSec": 0.4433633333333334,
+      "combatFacingHoldSec": 0.4433633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3806.355386770992,
+        "y": 2103.873485746574,
+        "rotationRad": -0.005101948037033566
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 15,
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.4908999999999998,
       "laneRow": -2,
       "hp": 34,
       "maxHp": 34,
       "facingX": 1,
+      "facingDirection": "ne",
       "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.4633333333333333,
+      "pose": "stone-axeman-ne-attack",
+      "renderTexture": "stone-axeman-ne-attack",
+      "attackAnimTime": 0.4433633333333334,
+      "attackFacingLockSec": 0.4433633333333334,
+      "combatFacingHoldSec": 0.4433633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3573.2200367848363,
+        "y": 1875.9994473417205,
+        "rotationRad": 0.005101948037033566
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 16,
       "team": "enemy",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.5091000000000002,
       "laneRow": 2,
       "hp": 34,
       "maxHp": 34,
       "facingX": -1,
-      "flipX": true,
+      "facingDirection": "sw",
+      "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.4633333333333333,
+      "pose": "stone-axeman-sw-attack",
+      "renderTexture": "stone-axeman-sw-attack-enemy",
+      "attackAnimTime": 0.4433633333333334,
+      "attackFacingLockSec": 0.4433633333333334,
+      "combatFacingHoldSec": 0.4433633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3778.0945172057745,
+        "y": 2050.035245395852,
+        "rotationRad": -0.005101948037033566
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 17,
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.4908999999999998,
       "laneRow": -1,
       "hp": 34,
       "maxHp": 34,
       "facingX": 1,
+      "facingDirection": "ne",
       "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.4633333333333333,
+      "pose": "stone-axeman-ne-attack",
+      "renderTexture": "stone-axeman-ne-attack",
+      "attackAnimTime": 0.4433633333333334,
+      "attackFacingLockSec": 0.4433633333333334,
+      "combatFacingHoldSec": 0.4433633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3603.654819393532,
+        "y": 1930.5629649701407,
+        "rotationRad": 0.005101948037033566
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 18,
       "team": "enemy",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.5091000000000002,
       "laneRow": 1,
       "hp": 34,
       "maxHp": 34,
       "facingX": -1,
-      "flipX": true,
+      "facingDirection": "sw",
+      "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.4633333333333333,
+      "pose": "stone-axeman-sw-attack",
+      "renderTexture": "stone-axeman-sw-attack-enemy",
+      "attackAnimTime": 0.4433633333333334,
+      "attackFacingLockSec": 0.4433633333333334,
+      "combatFacingHoldSec": 0.4433633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3747.659734597079,
+        "y": 1995.3613976181193,
+        "rotationRad": -0.005101948037033566
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 19,
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.4908999999999998,
       "laneRow": 0,
       "hp": 34,
       "maxHp": 34,
       "facingX": 1,
+      "facingDirection": "ne",
       "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.4633333333333333,
+      "pose": "stone-axeman-ne-attack",
+      "renderTexture": "stone-axeman-ne-attack",
+      "attackAnimTime": 0.4433633333333334,
+      "attackFacingLockSec": 0.4433633333333334,
+      "combatFacingHoldSec": 0.4433633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3631.9156889587493,
+        "y": 1986.7073776517334,
+        "rotationRad": 0.005101948037033566
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 20,
       "team": "enemy",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.5102000000000002,
       "laneRow": 0,
       "hp": 34,
       "maxHp": 34,
       "facingX": -1,
-      "flipX": true,
+      "facingDirection": "sw",
+      "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.41333333333333333,
+      "pose": "stone-axeman-sw-attack",
+      "renderTexture": "stone-axeman-sw-attack-enemy",
+      "attackAnimTime": 0.3933633333333334,
+      "attackFacingLockSec": 0.3933633333333334,
+      "combatFacingHoldSec": 0.3933633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3726.410216847586,
+        "y": 1936.2826578687773,
+        "rotationRad": -0.01977978139000669
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 21,
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.4897999999999998,
       "laneRow": 1,
       "hp": 34,
       "maxHp": 34,
       "facingX": 1,
+      "facingDirection": "ne",
       "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.41333333333333333,
+      "pose": "stone-axeman-ne-attack",
+      "renderTexture": "stone-axeman-ne-attack",
+      "attackAnimTime": 0.3933633333333334,
+      "attackFacingLockSec": 0.3933633333333334,
+      "combatFacingHoldSec": 0.3933633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3653.1652067082423,
+        "y": 2042.3553470087427,
+        "rotationRad": 0.01977978139000669
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 22,
       "team": "enemy",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.5102000000000002,
       "laneRow": -1,
       "hp": 34,
       "maxHp": 34,
       "facingX": -1,
-      "flipX": true,
+      "facingDirection": "sw",
+      "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.41333333333333333,
+      "pose": "stone-axeman-sw-attack",
+      "renderTexture": "stone-axeman-sw-attack-enemy",
+      "attackAnimTime": 0.3933633333333334,
+      "attackFacingLockSec": 0.3933633333333334,
+      "combatFacingHoldSec": 0.3933633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3698.149347282368,
+        "y": 1881.3512351059105,
+        "rotationRad": -0.01977978139000669
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 23,
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.4897999999999998,
       "laneRow": 2,
       "hp": 34,
       "maxHp": 34,
       "facingX": 1,
+      "facingDirection": "ne",
       "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.41333333333333333,
+      "pose": "stone-axeman-ne-attack",
+      "renderTexture": "stone-axeman-ne-attack",
+      "attackAnimTime": 0.3933633333333334,
+      "attackFacingLockSec": 0.3933633333333334,
+      "combatFacingHoldSec": 0.3933633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3681.42607627346,
+        "y": 2096.9854217030775,
+        "rotationRad": 0.01977978139000669
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 24,
       "team": "enemy",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.5102000000000002,
       "laneRow": -2,
       "hp": 34,
       "maxHp": 34,
       "facingX": -1,
-      "flipX": true,
+      "facingDirection": "sw",
+      "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.41333333333333333,
+      "pose": "stone-axeman-sw-attack",
+      "renderTexture": "stone-axeman-sw-attack-enemy",
+      "attackAnimTime": 0.3933633333333334,
+      "attackFacingLockSec": 0.3933633333333334,
+      "combatFacingHoldSec": 0.3933633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3669.888477717151,
+        "y": 1827.0264119264752,
+        "rotationRad": -0.01977978139000669
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 25,
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.4897999999999998,
       "laneRow": 3,
       "hp": 34,
       "maxHp": 34,
       "facingX": 1,
+      "facingDirection": "ne",
       "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.41333333333333333,
+      "pose": "stone-axeman-ne-attack",
+      "renderTexture": "stone-axeman-ne-attack",
+      "attackAnimTime": 0.3933633333333334,
+      "attackFacingLockSec": 0.3933633333333334,
+      "combatFacingHoldSec": 0.3933633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3711.8608588821553,
+        "y": 2150.984609357807,
+        "rotationRad": 0.01977978139000669
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 26,
       "team": "enemy",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.5102000000000002,
       "laneRow": -3,
       "hp": 34,
       "maxHp": 34,
       "facingX": -1,
-      "flipX": true,
+      "facingDirection": "sw",
+      "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.41333333333333333,
+      "pose": "stone-axeman-sw-attack",
+      "renderTexture": "stone-axeman-sw-attack-enemy",
+      "attackAnimTime": 0.3933633333333334,
+      "attackFacingLockSec": 0.3933633333333334,
+      "combatFacingHoldSec": 0.3933633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3639.453695108455,
+        "y": 1773.341000520968,
+        "rotationRad": -0.01977978139000669
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 27,
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.4897999999999998,
       "laneRow": 4,
       "hp": 34,
       "maxHp": 34,
       "facingX": 1,
+      "facingDirection": "ne",
       "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.41333333333333333,
+      "pose": "stone-axeman-ne-attack",
+      "renderTexture": "stone-axeman-ne-attack",
+      "attackAnimTime": 0.3933633333333334,
+      "attackFacingLockSec": 0.3933633333333334,
+      "combatFacingHoldSec": 0.3933633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3740.121728447373,
+        "y": 2207.6745130396152,
+        "rotationRad": 0.01977978139000669
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 28,
       "team": "enemy",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.5102000000000002,
       "laneRow": -4,
       "hp": 34,
       "maxHp": 34,
       "facingX": -1,
-      "flipX": true,
+      "facingDirection": "sw",
+      "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.41333333333333333,
+      "pose": "stone-axeman-sw-attack",
+      "renderTexture": "stone-axeman-sw-attack-enemy",
+      "attackAnimTime": 0.3933633333333334,
+      "attackFacingLockSec": 0.3933633333333334,
+      "combatFacingHoldSec": 0.3933633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3611.192825543238,
+        "y": 1716.4036373334648,
+        "rotationRad": -0.01977978139000669
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 29,
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.4897999999999998,
       "laneRow": 5,
       "hp": 34,
       "maxHp": 34,
       "facingX": 1,
+      "facingDirection": "ne",
       "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.41333333333333333,
+      "pose": "stone-axeman-ne-attack",
+      "renderTexture": "stone-axeman-ne-attack",
+      "attackAnimTime": 0.3933633333333334,
+      "attackFacingLockSec": 0.3933633333333334,
+      "combatFacingHoldSec": 0.3933633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3770.5565110560688,
+        "y": 2262.4314962800713,
+        "rotationRad": 0.01977978139000669
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 30,
       "team": "enemy",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.5102000000000002,
       "laneRow": -5,
       "hp": 34,
       "maxHp": 34,
       "facingX": -1,
-      "flipX": true,
+      "facingDirection": "sw",
+      "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-attack-windup",
-      "attackAnimTime": 0.41333333333333333,
+      "pose": "stone-axeman-sw-attack",
+      "renderTexture": "stone-axeman-sw-attack-enemy",
+      "attackAnimTime": 0.3933633333333334,
+      "attackFacingLockSec": 0.3933633333333334,
+      "combatFacingHoldSec": 0.3933633333333334,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3580.758042934542,
+        "y": 1661.7845134924708,
+        "rotationRad": -0.01977978139000669
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 31,
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.4916999999999997,
       "laneRow": -5,
       "hp": 34,
       "maxHp": 34,
       "facingX": 1,
+      "facingDirection": "ne",
       "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-idle",
+      "pose": "stone-axeman-ne-idle",
+      "renderTexture": "stone-axeman-ne-idle",
       "attackAnimTime": 0,
+      "attackFacingLockSec": 0,
+      "combatFacingHoldSec": 0.2,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3490.8746682996534,
+        "y": 1711.2046266203834,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     },
     {
       "id": 32,
       "team": "enemy",
       "unitId": "stone_axeman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.5083000000000003,
       "laneRow": 5,
       "hp": 34,
       "maxHp": 34,
       "facingX": -1,
-      "flipX": true,
+      "facingDirection": "sw",
+      "flipX": false,
+      "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "stone-axeman-idle",
+      "pose": "stone-axeman-sw-idle",
+      "renderTexture": "stone-axeman-sw-idle-enemy",
       "attackAnimTime": 0,
+      "attackFacingLockSec": 0,
+      "combatFacingHoldSec": 0.2,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3860.4398856909575,
+        "y": 2215.5871875856883,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     }
   ]
 }

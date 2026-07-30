@@ -7,9 +7,9 @@
       384
     ],
     "alphaBbox": [
-      124,
+      132,
       66,
-      260,
+      253,
       336
     ],
     "groundAnchor": [
@@ -25,9 +25,9 @@
       384
     ],
     "alphaBbox": [
-      114,
+      124,
       66,
-      269,
+      260,
       336
     ],
     "groundAnchor": [
@@ -43,9 +43,9 @@
       384
     ],
     "alphaBbox": [
-      12,
-      70,
-      372,
+      102,
+      66,
+      283,
       336
     ],
     "groundAnchor": [
@@ -61,9 +61,9 @@
       384
     ],
     "alphaBbox": [
-      85,
+      84,
       66,
-      427,
+      428,
       336
     ],
     "groundAnchor": [
@@ -79,9 +79,9 @@
       384
     ],
     "alphaBbox": [
-      140,
+      130,
       66,
-      245,
+      253,
       336
     ],
     "groundAnchor": [
@@ -97,9 +97,9 @@
       384
     ],
     "alphaBbox": [
-      122,
+      106,
       66,
-      261,
+      279,
       336
     ],
     "groundAnchor": [
@@ -115,9 +115,9 @@
       384
     ],
     "alphaBbox": [
-      57,
+      94,
       66,
-      327,
+      289,
       336
     ],
     "groundAnchor": [
@@ -133,9 +133,9 @@
       384
     ],
     "alphaBbox": [
-      144,
+      78,
       66,
-      369,
+      433,
       336
     ],
     "groundAnchor": [
@@ -169,9 +169,9 @@
       384
     ],
     "alphaBbox": [
-      130,
+      116,
       66,
-      253,
+      267,
       336
     ],
     "groundAnchor": [
@@ -187,9 +187,9 @@
       384
     ],
     "alphaBbox": [
-      60,
+      104,
       66,
-      323,
+      281,
       336
     ],
     "groundAnchor": [
@@ -205,9 +205,9 @@
       384
     ],
     "alphaBbox": [
-      149,
+      90,
       66,
-      363,
+      422,
       336
     ],
     "groundAnchor": [
@@ -218,222 +218,6 @@
   {
     "key": "stone-slinger-se-idle",
     "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-se-idle.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      158,
-      66,
-      226,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "stone-slinger-se-walk-a",
-    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-se-walk-a.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      132,
-      66,
-      252,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "stone-slinger-se-walk-b",
-    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-se-walk-b.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      57,
-      66,
-      327,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "stone-slinger-se-attack",
-    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-se-attack.png",
-    "canvas": [
-      512,
-      384
-    ],
-    "alphaBbox": [
-      160,
-      66,
-      353,
-      336
-    ],
-    "groundAnchor": [
-      256,
-      336
-    ]
-  },
-  {
-    "key": "stone-slinger-s-idle",
-    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-s-idle.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      145,
-      66,
-      239,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "stone-slinger-s-walk-a",
-    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-s-walk-a.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      82,
-      66,
-      303,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "stone-slinger-s-walk-b",
-    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-s-walk-b.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      57,
-      66,
-      327,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "stone-slinger-s-attack",
-    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-s-attack.png",
-    "canvas": [
-      512,
-      384
-    ],
-    "alphaBbox": [
-      150,
-      66,
-      362,
-      336
-    ],
-    "groundAnchor": [
-      256,
-      336
-    ]
-  },
-  {
-    "key": "stone-slinger-sw-idle",
-    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-sw-idle.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      147,
-      66,
-      237,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "stone-slinger-sw-walk-a",
-    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-sw-walk-a.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      142,
-      66,
-      242,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "stone-slinger-sw-walk-b",
-    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-sw-walk-b.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      58,
-      66,
-      327,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "stone-slinger-sw-attack",
-    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-sw-attack.png",
-    "canvas": [
-      512,
-      384
-    ],
-    "alphaBbox": [
-      164,
-      66,
-      349,
-      336
-    ],
-    "groundAnchor": [
-      256,
-      336
-    ]
-  },
-  {
-    "key": "stone-slinger-w-idle",
-    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-w-idle.png",
     "canvas": [
       384,
       384
@@ -450,6 +234,222 @@
     ]
   },
   {
+    "key": "stone-slinger-se-walk-a",
+    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-se-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      118,
+      66,
+      267,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-slinger-se-walk-b",
+    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-se-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      105,
+      66,
+      279,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-slinger-se-attack",
+    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-se-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      106,
+      66,
+      406,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "stone-slinger-s-idle",
+    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-s-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      130,
+      66,
+      253,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-slinger-s-walk-a",
+    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-s-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      132,
+      66,
+      252,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-slinger-s-walk-b",
+    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-s-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      130,
+      66,
+      253,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-slinger-s-attack",
+    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-s-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      85,
+      66,
+      427,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "stone-slinger-sw-idle",
+    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-sw-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      153,
+      66,
+      231,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-slinger-sw-walk-a",
+    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-sw-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      120,
+      66,
+      265,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-slinger-sw-walk-b",
+    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-sw-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      108,
+      66,
+      275,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-slinger-sw-attack",
+    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-sw-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      104,
+      66,
+      407,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "stone-slinger-w-idle",
+    "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-w-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      140,
+      66,
+      243,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
     "key": "stone-slinger-w-walk-a",
     "output": "artifacts/day3-directional-units/stone-slinger/normalized/stone-slinger-w-walk-a.png",
     "canvas": [
@@ -457,9 +457,9 @@
       384
     ],
     "alphaBbox": [
-      80,
+      126,
       66,
-      305,
+      257,
       336
     ],
     "groundAnchor": [
@@ -475,9 +475,9 @@
       384
     ],
     "alphaBbox": [
-      57,
+      120,
       66,
-      327,
+      265,
       336
     ],
     "groundAnchor": [
@@ -493,9 +493,9 @@
       384
     ],
     "alphaBbox": [
-      160,
+      106,
       66,
-      353,
+      405,
       336
     ],
     "groundAnchor": [

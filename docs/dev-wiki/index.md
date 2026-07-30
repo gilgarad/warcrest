@@ -15,6 +15,25 @@ repository work.
   proposed pivot from dungeon squad action to a lane-based siege/economy game
 - `art-direction-animation.md`: visual direction for walk/attack animation and
   clustered lane-combat staging
+- `retro-rts-visual-methodology.md`: target quality bar, terrain/object
+  grounding rules, shared combat-animation skeleton, staged overhaul plan, and
+  validated external references for pushing the lane battlefield toward a
+  Warcraft II-like RTS presentation
+- `wc2-rebuild-plan.md`: the 10-day, multi-agent (Claude Code + Codex)
+  execution plan for the top-down rebuild — golden-reference checkpoints,
+  per-day agent file ownership, and the coordination rules meant to prevent
+  overlapping parallel work
+- `wc2-systems-gap-review.md`: post-Day-7 audit of the whole project (not
+  just visuals) against Warcraft II's actual systems — flags the critical
+  6-of-9-unit token-placeholder gap (closed in Day 7.5) to close before
+  Day 8, scopes out the concept doc's 40-item tech tree for this jam, and
+  rules out fog of war/multi-unit-selection as genre mismatches
+- `classic-rts-fidelity-reset.md`: post-Day-8 diagnosis of why the rebuild
+  still reads as a modest improvement rather than the transformation the
+  user wanted — pins it on 2-facing (vs. 8/16-direction) unit movement and
+  fully-synthesized (vs. composed/layered) music, researches Warcraft I/II/
+  early StarCraft's actual specs for both, and recommends a scoped second
+  cycle (not a full restart) targeting just those two gaps
 - `terrain-rendering-plan.md`: diagnosis and incremental migration plan for
   logical terrain, tile/decal rendering, object footprints, and occlusion
 - `terrain-prototype-validation.md`: reproducible central capture-point

@@ -7,9 +7,9 @@
       384
     ],
     "alphaBbox": [
-      88,
+      95,
       66,
-      297,
+      289,
       336
     ],
     "groundAnchor": [
@@ -25,9 +25,9 @@
       384
     ],
     "alphaBbox": [
-      86,
+      92,
       66,
-      299,
+      293,
       336
     ],
     "groundAnchor": [
@@ -43,9 +43,9 @@
       384
     ],
     "alphaBbox": [
-      88,
+      92,
       66,
-      297,
+      293,
       336
     ],
     "groundAnchor": [
@@ -61,9 +61,9 @@
       384
     ],
     "alphaBbox": [
-      124,
+      130,
       66,
-      387,
+      382,
       336
     ],
     "groundAnchor": [
@@ -79,9 +79,9 @@
       384
     ],
     "alphaBbox": [
-      108,
+      95,
       66,
-      277,
+      289,
       336
     ],
     "groundAnchor": [
@@ -97,9 +97,9 @@
       384
     ],
     "alphaBbox": [
-      112,
+      96,
       66,
-      272,
+      287,
       336
     ],
     "groundAnchor": [
@@ -115,9 +115,9 @@
       384
     ],
     "alphaBbox": [
-      108,
+      92,
       66,
-      277,
+      292,
       336
     ],
     "groundAnchor": [
@@ -133,9 +133,9 @@
       384
     ],
     "alphaBbox": [
-      168,
+      144,
       66,
-      345,
+      369,
       336
     ],
     "groundAnchor": [
@@ -151,9 +151,9 @@
       384
     ],
     "alphaBbox": [
-      118,
+      109,
       66,
-      265,
+      275,
       336
     ],
     "groundAnchor": [
@@ -169,9 +169,9 @@
       384
     ],
     "alphaBbox": [
-      110,
+      94,
       66,
-      274,
+      291,
       336
     ],
     "groundAnchor": [
@@ -187,9 +187,9 @@
       384
     ],
     "alphaBbox": [
-      112,
+      94,
       66,
-      273,
+      289,
       336
     ],
     "groundAnchor": [
@@ -205,9 +205,9 @@
       384
     ],
     "alphaBbox": [
-      166,
+      146,
       66,
-      346,
+      365,
       336
     ],
     "groundAnchor": [
@@ -223,9 +223,9 @@
       384
     ],
     "alphaBbox": [
-      123,
+      113,
       66,
-      261,
+      271,
       336
     ],
     "groundAnchor": [
@@ -236,6 +236,204 @@
   {
     "key": "stone-axeman-se-walk-a",
     "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-se-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      96,
+      66,
+      289,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-axeman-se-walk-b",
+    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-se-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      111,
+      66,
+      273,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-axeman-se-attack",
+    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-se-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      125,
+      66,
+      387,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "stone-axeman-s-idle",
+    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-s-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      109,
+      66,
+      275,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-axeman-s-walk-a",
+    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-s-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      106,
+      66,
+      278,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-axeman-s-walk-b",
+    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-s-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      107,
+      66,
+      277,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-axeman-s-attack",
+    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-s-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      133,
+      66,
+      379,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "stone-axeman-sw-idle",
+    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-sw-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      120,
+      66,
+      264,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-axeman-sw-walk-a",
+    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-sw-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      117,
+      66,
+      267,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-axeman-sw-walk-b",
+    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-sw-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      117,
+      66,
+      267,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "stone-axeman-sw-attack",
+    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-sw-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      127,
+      66,
+      385,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "stone-axeman-w-idle",
+    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-w-idle.png",
     "canvas": [
       384,
       384
@@ -252,204 +450,6 @@
     ]
   },
   {
-    "key": "stone-axeman-se-walk-b",
-    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-se-walk-b.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      118,
-      66,
-      267,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "stone-axeman-se-attack",
-    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-se-attack.png",
-    "canvas": [
-      512,
-      384
-    ],
-    "alphaBbox": [
-      160,
-      66,
-      351,
-      336
-    ],
-    "groundAnchor": [
-      256,
-      336
-    ]
-  },
-  {
-    "key": "stone-axeman-s-idle",
-    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-s-idle.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      121,
-      66,
-      263,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "stone-axeman-s-walk-a",
-    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-s-walk-a.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      120,
-      66,
-      265,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "stone-axeman-s-walk-b",
-    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-s-walk-b.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      120,
-      66,
-      263,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "stone-axeman-s-attack",
-    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-s-attack.png",
-    "canvas": [
-      512,
-      384
-    ],
-    "alphaBbox": [
-      173,
-      66,
-      339,
-      336
-    ],
-    "groundAnchor": [
-      256,
-      336
-    ]
-  },
-  {
-    "key": "stone-axeman-sw-idle",
-    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-sw-idle.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      131,
-      66,
-      253,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "stone-axeman-sw-walk-a",
-    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-sw-walk-a.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      130,
-      66,
-      253,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "stone-axeman-sw-walk-b",
-    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-sw-walk-b.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      128,
-      66,
-      255,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "stone-axeman-sw-attack",
-    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-sw-attack.png",
-    "canvas": [
-      512,
-      384
-    ],
-    "alphaBbox": [
-      160,
-      66,
-      353,
-      336
-    ],
-    "groundAnchor": [
-      256,
-      336
-    ]
-  },
-  {
-    "key": "stone-axeman-w-idle",
-    "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-w-idle.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      123,
-      66,
-      261,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
     "key": "stone-axeman-w-walk-a",
     "output": "artifacts/day3-directional-units/stone-axeman/normalized/stone-axeman-w-walk-a.png",
     "canvas": [
@@ -457,9 +457,9 @@
       384
     ],
     "alphaBbox": [
-      118,
+      108,
       66,
-      266,
+      277,
       336
     ],
     "groundAnchor": [
@@ -475,9 +475,9 @@
       384
     ],
     "alphaBbox": [
-      120,
+      106,
       66,
-      265,
+      277,
       336
     ],
     "groundAnchor": [
@@ -493,9 +493,9 @@
       384
     ],
     "alphaBbox": [
-      174,
+      132,
       66,
-      339,
+      380,
       336
     ],
     "groundAnchor": [
@@ -511,9 +511,9 @@
       384
     ],
     "alphaBbox": [
-      140,
+      109,
       66,
-      244,
+      275,
       336
     ],
     "groundAnchor": [
@@ -529,9 +529,9 @@
       384
     ],
     "alphaBbox": [
-      134,
+      100,
       66,
-      249,
+      284,
       336
     ],
     "groundAnchor": [
@@ -547,9 +547,9 @@
       384
     ],
     "alphaBbox": [
-      136,
+      103,
       66,
-      248,
+      281,
       336
     ],
     "groundAnchor": [
@@ -566,7 +566,7 @@
     ],
     "alphaBbox": [
       12,
-      173,
+      197,
       500,
       336
     ],

@@ -1,13 +1,13 @@
 {
   "current": {
     "phase": "lane-siege",
-    "elapsedSec": 1.1998999999999973,
+    "elapsedSec": 5.064826666666667,
     "player": {
       "ageId": "stone",
       "resources": {
         "gold": 9993,
         "wood": 9989,
-        "food": 9999.366666666661,
+        "food": 10002.386589999996,
         "metal": 9999,
         "gunpowder": 9999,
         "fuel": 9999
@@ -21,15 +21,15 @@
         "idle": 0
       },
       "baseHp": 400,
-      "nextWaveInSec": 28.80010000000005
+      "nextWaveInSec": 24.935173333333353
     },
     "enemy": {
       "ageId": "stone",
       "resources": {
-        "gold": 60,
-        "wood": 30,
-        "food": 19.19989999999995,
-        "metal": 18,
+        "gold": 52,
+        "wood": 20,
+        "food": 24.064826666666647,
+        "metal": 10,
         "gunpowder": 0,
         "fuel": 0
       },
@@ -42,7 +42,7 @@
         "idle": 0
       },
       "baseHp": 400,
-      "nextWaveInSec": 28.80010000000005
+      "nextWaveInSec": 24.935173333333353
     },
     "units": [
       {
@@ -50,20 +50,24 @@
         "team": "player",
         "unitId": "stone_axeman",
         "role": "battle",
-        "progress": 0.375,
+        "laneId": "main",
+        "progress": 0.17,
         "laneRow": 0,
         "hp": 34,
         "maxHp": 34,
-        "facingX": -1,
+        "facingX": 1,
+        "facingDirection": "ne",
         "flipX": false,
         "tint": 16777215,
         "motion": {
-          "x": -0.9242166626181643,
-          "y": 0.40320621811997626
+          "x": 0.8985507246379711,
+          "y": 1.014492753623017
         },
-        "pose": "stone-axeman-idle",
-        "renderTexture": "stone-axeman-idle",
+        "pose": "stone-axeman-ne-idle",
+        "renderTexture": "stone-axeman-ne-idle",
         "attackAnimTime": 0,
+        "attackFacingLockSec": 0,
+        "combatFacingHoldSec": 0,
         "attackTargetKind": "unit",
         "manaCurrent": 0,
         "manaMax": 0,
@@ -71,8 +75,8 @@
         "healManaCost": 0,
         "healPower": 0,
         "presentation": {
-          "x": 3079.075783337382,
-          "y": 2280.5346910068097,
+          "x": 2075.031884057971,
+          "y": 2745.926710917294,
           "rotationRad": 0
         },
         "overlay": {
@@ -108,6 +112,7 @@
       "controlPoints": [
         {
           "id": 0,
+          "laneId": "main",
           "pointType": "buildable",
           "allowedBuildingTypes": [
             "supply_depot",
@@ -115,11 +120,11 @@
           ],
           "owner": "player",
           "control": 1,
-          "progress": 0.375,
-          "worldX": 3079.075783337382,
-          "worldY": 2280.40320621812,
-          "labelWorldX": 3079.075783337382,
-          "labelWorldY": 2032.5771192615982,
+          "progress": 0.17,
+          "worldX": 2075.031884057971,
+          "worldY": 2745.6811594202895,
+          "labelWorldX": 2075.031884057971,
+          "labelWorldY": 2497.855072463768,
           "markerTexture": "capture-marker",
           "buildingId": "mint",
           "buildingLevel": 3,
@@ -129,30 +134,32 @@
         },
         {
           "id": 1,
+          "laneId": "main",
           "pointType": "buildable",
           "allowedBuildingTypes": [
             "supply_depot",
             "mint"
           ],
-          "owner": "neutral",
-          "control": 0,
-          "progress": 0.767,
-          "worldX": 4959.510565946078,
-          "worldY": 1304.316249696381,
-          "labelWorldX": 4959.510565946078,
-          "labelWorldY": 1056.4901627398592,
-          "markerTexture": "capture-marker-neutral",
-          "buildingId": null,
-          "buildingLevel": 0,
+          "owner": "enemy",
+          "control": -1,
+          "progress": 0.83,
+          "worldX": 5240.249275362319,
+          "worldY": 1108.724637681159,
+          "labelWorldX": 5240.249275362319,
+          "labelWorldY": 860.8985507246373,
+          "markerTexture": "capture-marker-enemy",
+          "buildingId": "mint",
+          "buildingLevel": 1,
           "availableActions": []
         }
       ],
       "defenseTowers": [
         {
           "id": 0,
+          "laneId": "main",
           "owner": "player",
           "linkedCapturePointId": 0,
-          "progress": 0.6,
+          "progress": 0.37,
           "built": false,
           "hp": 0,
           "maxHp": 130,
@@ -160,9 +167,10 @@
         },
         {
           "id": 1,
+          "laneId": "main",
           "owner": "enemy",
           "linkedCapturePointId": 1,
-          "progress": 0.2,
+          "progress": 0.63,
           "built": true,
           "hp": 130,
           "maxHp": 130,
@@ -176,7 +184,21 @@
       "laneEnd": {
         "x": 5995,
         "y": 580
-      }
+      },
+      "lanes": [
+        {
+          "id": "main",
+          "role": "center",
+          "start": {
+            "x": 1240,
+            "y": 3130
+          },
+          "end": {
+            "x": 5995,
+            "y": 580
+          }
+        }
+      ]
     },
     "ui": {
       "ageLabel": "시대 석기 시대",
@@ -197,20 +219,9 @@
         "9": "detail"
       }
     },
-    "activeProjectiles": [
-      {
-        "textureKey": "projectile-stone",
-        "x": 1942.789560511295,
-        "y": 2659.462270221982
-      },
-      {
-        "textureKey": "projectile-stone",
-        "x": 1977.878310511295,
-        "y": 2662.1978460624136
-      }
-    ],
+    "activeProjectiles": [],
     "engagement": {
-      "uniqueAttackers": 2,
+      "uniqueAttackers": 0,
       "battleUnits": 1,
       "currentlyAnimating": 0
     },
@@ -239,11 +250,11 @@
       "scalePreset": "recommended",
       "visualValidationScenario": false,
       "camera": {
-        "scrollX": 3352.988826815643,
-        "scrollY": 1260.8379888268157,
+        "scrollX": 2255.4666666666667,
+        "scrollY": 1841.333333333333,
         "zoom": 0.46,
-        "centerX": 4152.988826815643,
-        "centerY": 1710.8379888268157
+        "centerX": 3055.4666666666667,
+        "centerY": 2291.333333333333
       },
       "rules": {
         "worldWidth": 7000,
@@ -368,7 +379,7 @@
           {
             "id": 9,
             "unitId": "stone_axeman",
-            "pose": "stone-axeman-idle",
+            "pose": "stone-axeman-ne-idle",
             "worldWidth": 321.54589371980677,
             "worldHeight": 321.54589371980677,
             "canvasScreenWidth": 147.91111111111113,
@@ -390,11 +401,11 @@
             "labelResolution": 2,
             "labelScale": 1,
             "labelVisible": false,
-            "facingX": -1,
+            "facingX": 1,
             "flipX": false,
             "motion": {
-              "x": -0.9242166626181643,
-              "y": 0.40320621811997626
+              "x": 0.8985507246379711,
+              "y": 1.014492753623017
             }
           }
         ],
@@ -403,8 +414,8 @@
             "id": 0,
             "pointType": "defense-tower",
             "textureKey": "defense-tower-ruins",
-            "worldX": 4152.988826815643,
-            "worldY": 1710.8379888268157,
+            "worldX": 3055.4666666666667,
+            "worldY": 2291.333333333333,
             "cssFrameHeight": 263.3142857142857,
             "cssVisibleHeight": 143.99999999999997,
             "originY": 0.875
@@ -413,8 +424,8 @@
             "id": 1,
             "pointType": "defense-tower",
             "textureKey": "defense-tower-full-enemy",
-            "worldX": 2220.380131163469,
-            "worldY": 2676.0553801311635,
+            "worldX": 4298.944927536231,
+            "worldY": 1636.9855072463765,
             "cssFrameHeight": 204.8,
             "cssVisibleHeight": 144,
             "originY": 0.875
@@ -560,32 +571,32 @@
         {
           "id": "sfx.ui.buildSelect",
           "result": "played",
-          "atMs": 6002
+          "atMs": 8766
         },
         {
           "id": "sfx.wave.start",
           "result": "played",
-          "atMs": 6037
+          "atMs": 8812
         },
         {
           "id": "sfx.ui.buildSelect",
           "result": "played",
-          "atMs": 6327
+          "atMs": 9369
         },
         {
           "id": "sfx.ui.hover",
           "result": "played",
-          "atMs": 8545
+          "atMs": 11053
         },
         {
           "id": "sfx.construction.start",
           "result": "played",
-          "atMs": 8545
+          "atMs": 11053
         },
         {
-          "id": "sfx.combat.towerAttack",
+          "id": "sfx.construction.complete",
           "result": "played",
-          "atMs": 9114
+          "atMs": 11320
         }
       ],
       "skippedEventCount": 0,
@@ -621,50 +632,35 @@
         {
           "id": "sfx.ui.buildSelect",
           "result": "played",
-          "atMs": 6002
+          "atMs": 8766
         },
         {
           "id": "sfx.wave.start",
           "result": "played",
-          "atMs": 6037
+          "atMs": 8812
         },
         {
           "id": "sfx.ui.buildSelect",
           "result": "played",
-          "atMs": 6327
+          "atMs": 9369
         },
         {
           "id": "sfx.ui.hover",
           "result": "played",
-          "atMs": 8545
+          "atMs": 11053
         },
         {
           "id": "sfx.construction.start",
           "result": "played",
-          "atMs": 8545
-        },
-        {
-          "id": "sfx.combat.towerAttack",
-          "result": "played",
-          "atMs": 9114
-        },
-        {
-          "id": "sfx.combat.projectileHit",
-          "result": "played",
-          "atMs": 9648
-        },
-        {
-          "id": "sfx.combat.projectileHit",
-          "result": "duplicate",
-          "atMs": 9648
+          "atMs": 11053
         },
         {
           "id": "sfx.construction.complete",
           "result": "played",
-          "atMs": 9927
+          "atMs": 11320
         }
       ],
-      "skippedEventCount": 1,
+      "skippedEventCount": 0,
       "unlockAttemptCount": 1,
       "missingAssetFallback": true,
       "focusMuted": false,
@@ -690,67 +686,67 @@
       },
       "recentEvents": [
         {
-          "id": "sfx.construction.complete",
-          "result": "played",
-          "atMs": 9927
-        },
-        {
-          "id": "sfx.ui.hover",
-          "result": "played",
-          "atMs": 12504
-        },
-        {
-          "id": "sfx.ui.confirm",
-          "result": "played",
-          "atMs": 12504
-        },
-        {
           "id": "sfx.ui.buildSelect",
           "result": "played",
-          "atMs": 13084
-        },
-        {
-          "id": "sfx.support.heal",
-          "result": "played",
-          "atMs": 13804
-        },
-        {
-          "id": "sfx.fortress.warning",
-          "result": "played",
-          "atMs": 13970
+          "atMs": 9369
         },
         {
           "id": "sfx.ui.hover",
           "result": "played",
-          "atMs": 15209
+          "atMs": 11053
         },
         {
           "id": "sfx.construction.start",
           "result": "played",
-          "atMs": 15209
-        },
-        {
-          "id": "sfx.combat.rangedFire",
-          "result": "played",
-          "atMs": 15348
+          "atMs": 11053
         },
         {
           "id": "sfx.construction.complete",
           "result": "played",
-          "atMs": 15766
+          "atMs": 11320
+        },
+        {
+          "id": "sfx.ui.hover",
+          "result": "played",
+          "atMs": 13375
+        },
+        {
+          "id": "sfx.ui.confirm",
+          "result": "played",
+          "atMs": 13375
+        },
+        {
+          "id": "sfx.ui.buildSelect",
+          "result": "played",
+          "atMs": 13781
+        },
+        {
+          "id": "sfx.fortress.warning",
+          "result": "played",
+          "atMs": 14060
+        },
+        {
+          "id": "sfx.ui.hover",
+          "result": "played",
+          "atMs": 15372
+        },
+        {
+          "id": "sfx.construction.start",
+          "result": "played",
+          "atMs": 15372
+        },
+        {
+          "id": "sfx.construction.complete",
+          "result": "played",
+          "atMs": 15790
         },
         {
           "id": "sfx.fortress.rebuilt",
           "result": "played",
-          "atMs": 15766
-        },
-        {
-          "id": "sfx.combat.towerAttack",
-          "result": "sampled",
-          "atMs": 15766
+          "atMs": 15790
         }
       ],
-      "skippedEventCount": 2,
+      "skippedEventCount": 0,
       "unlockAttemptCount": 1,
       "missingAssetFallback": true,
       "focusMuted": false,
@@ -776,54 +772,54 @@
       },
       "recentEvents": [
         {
-          "id": "sfx.ui.confirm",
-          "result": "played",
-          "atMs": 12504
-        },
-        {
-          "id": "sfx.ui.buildSelect",
-          "result": "played",
-          "atMs": 13084
-        },
-        {
-          "id": "sfx.support.heal",
-          "result": "played",
-          "atMs": 13804
-        },
-        {
-          "id": "sfx.fortress.warning",
-          "result": "played",
-          "atMs": 13970
-        },
-        {
-          "id": "sfx.ui.hover",
-          "result": "played",
-          "atMs": 15209
-        },
-        {
           "id": "sfx.construction.start",
           "result": "played",
-          "atMs": 15209
-        },
-        {
-          "id": "sfx.combat.rangedFire",
-          "result": "played",
-          "atMs": 15348
+          "atMs": 11053
         },
         {
           "id": "sfx.construction.complete",
           "result": "played",
-          "atMs": 15766
+          "atMs": 11320
+        },
+        {
+          "id": "sfx.ui.hover",
+          "result": "played",
+          "atMs": 13375
+        },
+        {
+          "id": "sfx.ui.confirm",
+          "result": "played",
+          "atMs": 13375
+        },
+        {
+          "id": "sfx.ui.buildSelect",
+          "result": "played",
+          "atMs": 13781
+        },
+        {
+          "id": "sfx.fortress.warning",
+          "result": "played",
+          "atMs": 14060
+        },
+        {
+          "id": "sfx.ui.hover",
+          "result": "played",
+          "atMs": 15372
+        },
+        {
+          "id": "sfx.construction.start",
+          "result": "played",
+          "atMs": 15372
+        },
+        {
+          "id": "sfx.construction.complete",
+          "result": "played",
+          "atMs": 15790
         },
         {
           "id": "sfx.fortress.rebuilt",
           "result": "played",
-          "atMs": 15766
-        },
-        {
-          "id": "sfx.combat.towerAttack",
-          "result": "sampled",
-          "atMs": 15766
+          "atMs": 15790
         },
         {
           "id": "sfx.ui.buildSelect",
@@ -833,10 +829,10 @@
         {
           "id": "sfx.capture.complete",
           "result": "played",
-          "atMs": 16222
+          "atMs": 16231
         }
       ],
-      "skippedEventCount": 2,
+      "skippedEventCount": 0,
       "unlockAttemptCount": 1,
       "missingAssetFallback": true,
       "focusMuted": false,

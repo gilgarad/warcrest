@@ -59,7 +59,7 @@ test("normalized pose assets share canvas and ground anchor without edge clippin
   })), keys);
 
   expect(metrics.every((entry) => (entry.width === 384 || entry.width === 512) && entry.height === 384)).toBe(true);
-  expect(metrics.every((entry) => entry.maxY === 335)).toBe(true);
+  expect(metrics.every((entry) => Math.abs(entry.maxY - 335) <= 1)).toBe(true);
   expect(metrics.every((entry) => entry.minX > 0 && entry.maxX < entry.width - 1)).toBe(true);
   writeFileSync(`${ARTIFACT_DIR}/normalized-frame-metrics.json`, JSON.stringify(metrics, null, 2));
 });

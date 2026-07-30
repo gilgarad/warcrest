@@ -7,9 +7,9 @@
       384
     ],
     "alphaBbox": [
-      72,
+      80,
       66,
-      313,
+      305,
       336
     ],
     "groundAnchor": [
@@ -25,9 +25,9 @@
       384
     ],
     "alphaBbox": [
-      74,
+      80,
       66,
-      311,
+      304,
       336
     ],
     "groundAnchor": [
@@ -43,9 +43,9 @@
       384
     ],
     "alphaBbox": [
-      36,
+      84,
       66,
-      349,
+      301,
       336
     ],
     "groundAnchor": [
@@ -61,9 +61,9 @@
       384
     ],
     "alphaBbox": [
-      122,
+      112,
       66,
-      389,
+      399,
       336
     ],
     "groundAnchor": [
@@ -74,6 +74,96 @@
   {
     "key": "iron-swordsman-ne-idle",
     "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-ne-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      78,
+      66,
+      306,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-ne-walk-a",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-ne-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      87,
+      66,
+      297,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-ne-walk-b",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-ne-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      88,
+      66,
+      295,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-ne-attack",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-ne-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      106,
+      66,
+      405,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-e-idle",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-e-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      90,
+      66,
+      295,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "iron-swordsman-e-walk-a",
+    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-e-walk-a.png",
     "canvas": [
       384,
       384
@@ -90,96 +180,6 @@
     ]
   },
   {
-    "key": "iron-swordsman-ne-walk-a",
-    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-ne-walk-a.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      96,
-      66,
-      289,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "iron-swordsman-ne-walk-b",
-    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-ne-walk-b.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      62,
-      66,
-      322,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "iron-swordsman-ne-attack",
-    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-ne-attack.png",
-    "canvas": [
-      512,
-      384
-    ],
-    "alphaBbox": [
-      143,
-      66,
-      369,
-      336
-    ],
-    "groundAnchor": [
-      256,
-      336
-    ]
-  },
-  {
-    "key": "iron-swordsman-e-idle",
-    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-e-idle.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      98,
-      66,
-      285,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "iron-swordsman-e-walk-a",
-    "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-e-walk-a.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      99,
-      66,
-      285,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
     "key": "iron-swordsman-e-walk-b",
     "output": "artifacts/day3-directional-units/iron-swordsman/normalized/iron-swordsman-e-walk-b.png",
     "canvas": [
@@ -187,9 +187,9 @@
       384
     ],
     "alphaBbox": [
-      62,
+      88,
       66,
-      321,
+      296,
       336
     ],
     "groundAnchor": [
@@ -205,9 +205,9 @@
       384
     ],
     "alphaBbox": [
-      144,
+      104,
       66,
-      369,
+      409,
       336
     ],
     "groundAnchor": [
@@ -223,9 +223,9 @@
       384
     ],
     "alphaBbox": [
-      98,
+      90,
       66,
-      285,
+      293,
       336
     ],
     "groundAnchor": [
@@ -241,9 +241,9 @@
       384
     ],
     "alphaBbox": [
-      99,
+      91,
       66,
-      285,
+      293,
       336
     ],
     "groundAnchor": [
@@ -259,9 +259,9 @@
       384
     ],
     "alphaBbox": [
-      92,
+      108,
       66,
-      291,
+      275,
       336
     ],
     "groundAnchor": [
@@ -277,9 +277,9 @@
       384
     ],
     "alphaBbox": [
-      157,
+      127,
       66,
-      355,
+      385,
       336
     ],
     "groundAnchor": [
@@ -367,9 +367,9 @@
       384
     ],
     "alphaBbox": [
-      90,
+      84,
       66,
-      293,
+      301,
       336
     ],
     "groundAnchor": [
@@ -385,9 +385,9 @@
       384
     ],
     "alphaBbox": [
-      98,
+      88,
       66,
-      287,
+      295,
       336
     ],
     "groundAnchor": [
@@ -403,9 +403,9 @@
       384
     ],
     "alphaBbox": [
-      68,
+      92,
       66,
-      315,
+      292,
       336
     ],
     "groundAnchor": [
@@ -421,9 +421,9 @@
       384
     ],
     "alphaBbox": [
-      148,
+      106,
       66,
-      364,
+      407,
       336
     ],
     "groundAnchor": [
@@ -439,9 +439,9 @@
       384
     ],
     "alphaBbox": [
-      92,
+      86,
       66,
-      291,
+      299,
       336
     ],
     "groundAnchor": [
@@ -457,9 +457,9 @@
       384
     ],
     "alphaBbox": [
-      94,
+      84,
       66,
-      290,
+      299,
       336
     ],
     "groundAnchor": [
@@ -475,9 +475,9 @@
       384
     ],
     "alphaBbox": [
-      60,
+      85,
       66,
-      323,
+      299,
       336
     ],
     "groundAnchor": [
@@ -493,9 +493,9 @@
       384
     ],
     "alphaBbox": [
-      152,
+      112,
       66,
-      359,
+      399,
       336
     ],
     "groundAnchor": [
@@ -511,9 +511,9 @@
       384
     ],
     "alphaBbox": [
-      74,
+      86,
       66,
-      311,
+      299,
       336
     ],
     "groundAnchor": [
@@ -529,9 +529,9 @@
       384
     ],
     "alphaBbox": [
-      76,
+      87,
       66,
-      308,
+      297,
       336
     ],
     "groundAnchor": [
@@ -547,9 +547,9 @@
       384
     ],
     "alphaBbox": [
-      41,
+      90,
       66,
-      343,
+      295,
       336
     ],
     "groundAnchor": [
@@ -565,9 +565,9 @@
       384
     ],
     "alphaBbox": [
-      121,
+      112,
       66,
-      391,
+      400,
       336
     ],
     "groundAnchor": [

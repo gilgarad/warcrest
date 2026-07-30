@@ -25,6 +25,7 @@ first — a maintained snapshot of current status/architecture/next-steps.
 - [Game Concept](dev-wiki/game-concept.md)
 - [Concept Pivot: Lane Siege](dev-wiki/concept-pivot-lane-siege.md)
 - [Art Direction: Animation](dev-wiki/art-direction-animation.md)
+- [Retro RTS Visual Methodology](dev-wiki/retro-rts-visual-methodology.md)
 - [Terrain Rendering Plan](dev-wiki/terrain-rendering-plan.md)
 - [Central Terrain Prototype Validation](dev-wiki/terrain-prototype-validation.md)
 - [Central Terrain Prototype V2 Validation](dev-wiki/terrain-prototype-v2-validation.md)

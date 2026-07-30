@@ -5,25 +5,48 @@
       "team": "player",
       "unitId": "bronze_spearman",
       "role": "battle",
+      "laneId": "main",
       "progress": 0.5,
       "laneRow": 3,
       "hp": 38,
       "maxHp": 38,
-      "facingX": -1,
-      "flipX": true,
+      "facingX": 1,
+      "facingDirection": "ne",
+      "flipX": false,
       "tint": 16777215,
       "motion": {
         "x": 0,
         "y": 0
       },
-      "pose": "bronze-spearman-idle",
+      "pose": "bronze-spearman-ne-idle",
+      "renderTexture": "bronze-spearman-ne-idle",
       "attackAnimTime": 0,
+      "attackFacingLockSec": 0,
+      "combatFacingHoldSec": 0,
       "attackTargetKind": "unit",
       "manaCurrent": 0,
       "manaMax": 0,
       "manaRegenPerSec": 0,
       "healManaCost": 0,
-      "healPower": 0
+      "healPower": 0,
+      "presentation": {
+        "x": 3762.391304347826,
+        "y": 2127.219073137778,
+        "rotationRad": 0
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "청동창 Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.48,
+        "targetKind": "unit",
+        "eventDelayMs": 220.79999999999998
+      }
     }
   ]
 }

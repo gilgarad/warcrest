@@ -36,6 +36,45 @@ GitHub Issues own task status. This file owns planning context.
   user playtest feedback (`npm run dev`) on feel/readability/rough edges,
   then iterate rather than widening scope blindly. This is likely to be
   superseded by the lane-siege pivot rather than expanded much further.
+- **Structural refactor debt (found 2026-07-28, consulting session, source
+  unmodified)** — a code-structure check requested by the user (they
+  suspected an earlier "finish the refactor" instruction hadn't actually
+  been completed) found concrete debt, separate from and larger than the
+  visual/projection rework in `retro-rts-visual-methodology.md`:
+  - **~2177 lines of fully dead code** from the abandoned dungeon-squad
+    prototype: `src/scenes/DungeonScene.ts` (1333 lines) is not registered
+    in `src/main.ts` (only `BootScene`/`LaneBattleScene`/`GameOverScene`
+    are) since the 2026-07-26 pivot to `LaneBattleScene`, and everything
+    only it references is dead too — `src/systems/dungeonGenerator.ts`,
+    `src/systems/squad.ts`, `src/systems/combat.ts`, `src/data/unitTypes.ts`,
+    `src/data/commands.ts`, `src/data/encounterTypes.ts`, `src/data/skills.ts`,
+    `src/gfx/chibi.ts`, `src/gfx/iso.ts`. None of this has been deleted in
+    the ~2 days since the pivot.
+  - **`src/scenes/LaneBattleScene.ts` is a 3532-line god-scene** — by far
+    the largest file in the project. Recent extractions
+    (`src/presentation/units/combatPresentation.ts` 64 lines,
+    `src/systems/lane-combat/laneOccupancy.ts` 25 lines,
+    `src/gfx/battlefieldWorldRenderer.ts` 148 lines, landed in commit
+    `56a6376`) are real but tiny relative to the file's size — combat,
+    wave/economy logic, capture points, terrain-mode toggling, UI, and
+    audio wiring are still crammed into one file. A 2026-07-27 log entry
+    already flagged this ("실제 병목은 `LaneBattleScene.ts`에 집중... 도메인별
+    서브모듈로 나눠야") but no decomposition plan has been executed since.
+  - **Four terrain renderers coexist live in the scene**:
+    `BattlefieldPrototypeRenderer` is instantiated twice
+    (`terrainPrototype`, `terrainPrototypeV2`) plus
+    `BattlefieldWorldRenderer` (`terrainWorld`), toggled via a
+    `legacy/prototype/prototype-v2/world-surface` debug flag. Useful for
+    A/B comparison during iteration, but now that `world-surface` won and
+    a brand-new top-down renderer is about to be built (see
+    `retro-rts-visual-methodology.md` 4.5.1, decision confirmed 안 A), this
+    should be retired rather than becoming a 5th mode.
+  - Recommended order: delete the dead dungeon-prototype files first
+    (cheap, zero-risk), then decompose `LaneBattleScene.ts` by domain
+    before or alongside the top-down rebuild (rebuilding terrain rendering
+    inside a 3500-line file makes the rebuild itself harder to review),
+    then retire the legacy/prototype/prototype-v2 render-mode scaffolding
+    once the new top-down renderer replaces `world-surface`.
 - **Independent audio system prototype (parallel track)** — built entirely
   in `src/systems/audio/` + `tools/audio-lab/`, deliberately not wired into
   any scene yet (no BGM/SFX files exist in the repo; the manifest marks
@@ -49,6 +88,19 @@ GitHub Issues own task status. This file owns planning context.
 
 ## Recently Closed
 
+- **Unit art coverage gap closed (Day 7.5, 2026-07-28)** — all 6 remaining
+  battle unit types (`bronze_swordsman`, `archer`, `iron_swordsman`,
+  `iron_spearman`, `musketeer`, `knight`; 24 frames) now have production art
+  through the same golden-reference pipeline, replacing the `token-*`
+  procedural placeholders. Verified independently: `npm run build`/`npm test`
+  (29/114) pass, `token-*` fully removed from `src` (`rg -n "token-" src`
+  empty), and a 5-age wave Playwright probe confirms every age's roster
+  renders authored art with no fallback. Full record:
+  `docs/dev-wiki/day7-5-unit-art-validation.md`. Minor follow-up: two
+  evidence screenshots (`wave-bronze.png`, `wave-iron_late.png`) show a HUD
+  age label one tier behind the roster actually on screen — likely a
+  capture-timing artifact, flagged for a quick sanity check during Day 8
+  regression rather than treated as a confirmed bug.
 - **Harness bootstrap** (2026-07-23) — applied the local operating harness
   from `/data/projects/harness`, rewrote testing/patterns/knowledge/wiki for
   this game-jam project, initialized local git, set up

@@ -1,14 +1,14 @@
 [
   {
     "phase": 0.12,
-    "pose": "stone-axeman-attack"
+    "pose": "stone-axeman-se-attack"
   },
   {
     "phase": 0.5,
-    "pose": "stone-axeman-attack"
+    "pose": "stone-axeman-se-attack"
   },
   {
     "phase": 0.88,
-    "pose": "stone-axeman-attack"
+    "pose": "stone-axeman-se-attack"
   }
 ]

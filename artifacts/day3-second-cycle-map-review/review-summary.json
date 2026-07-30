@@ -2,13 +2,13 @@
   "baseline": {
     "start": {
       "phase": "lane-siege",
-      "elapsedSec": 0.19990666666666593,
+      "elapsedSec": 0.033299999999999816,
       "player": {
         "ageId": "stone",
         "resources": {
           "gold": 60,
           "wood": 40,
-          "food": 18.199906666666678,
+          "food": 18.0333,
           "metal": 18,
           "gunpowder": 0,
           "fuel": 0
@@ -22,14 +22,14 @@
           "idle": 0
         },
         "baseHp": 400,
-        "nextWaveInSec": 29.800093333333322
+        "nextWaveInSec": 29.9667
       },
       "enemy": {
         "ageId": "stone",
         "resources": {
           "gold": 60,
           "wood": 40,
-          "food": 18.199906666666678,
+          "food": 18.0333,
           "metal": 18,
           "gunpowder": 0,
           "fuel": 0
@@ -43,7 +43,7 @@
           "idle": 0
         },
         "baseHp": 400,
-        "nextWaveInSec": 29.800093333333322
+        "nextWaveInSec": 29.9667
       },
       "units": [
         {
@@ -51,20 +51,24 @@
           "team": "player",
           "unitId": "stone_slinger",
           "role": "battle",
-          "progress": 0.12419803999999995,
+          "laneId": "main",
+          "progress": 0.1206993,
           "laneRow": -3,
           "hp": 26,
           "maxHp": 26,
           "facingX": 1,
+          "facingDirection": "n",
           "flipX": false,
           "tint": 16777215,
           "motion": {
             "x": 0,
             "y": -2.1739130434780236
           },
-          "pose": "stone-slinger-e-walk-a",
-          "renderTexture": "stone-slinger-e-walk-a",
+          "pose": "stone-slinger-ne-idle",
+          "renderTexture": "stone-slinger-ne-idle",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -72,8 +76,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1764.5652173913045,
-            "y": 2680.8690416973027,
+            "x": 1751.5217391304348,
+            "y": 2688.0256933067535,
             "rotationRad": 0
           },
           "overlay": {
@@ -95,20 +99,24 @@
           "team": "player",
           "unitId": "stone_axeman",
           "role": "battle",
-          "progress": 0.12439794666666665,
+          "laneId": "main",
+          "progress": 0.1207326,
           "laneRow": 0,
           "hp": 34,
           "maxHp": 34,
           "facingX": 1,
+          "facingDirection": "ne",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 2.173913043478251,
+            "x": 0,
             "y": 0
           },
-          "pose": "stone-axeman-ne-walk-a",
-          "renderTexture": "stone-axeman-ne-walk-a",
+          "pose": "stone-axeman-ne-idle",
+          "renderTexture": "stone-axeman-ne-idle",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -116,8 +124,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1845,
-            "y": 2849.9811863512214,
+            "x": 1829.7826086956522,
+            "y": 2857.7182153815074,
             "rotationRad": 0
           },
           "overlay": {
@@ -139,20 +147,24 @@
           "team": "player",
           "unitId": "stone_axeman",
           "role": "battle",
-          "progress": 0.12439794666666665,
+          "laneId": "main",
+          "progress": 0.1207326,
           "laneRow": 3,
           "hp": 34,
           "maxHp": 34,
           "facingX": 1,
+          "facingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 2.173913043478251,
+            "x": 0,
             "y": 0
           },
-          "pose": "stone-axeman-e-walk-b",
-          "renderTexture": "stone-axeman-e-walk-b",
+          "pose": "stone-axeman-e-idle",
+          "renderTexture": "stone-axeman-e-idle",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -160,8 +172,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1923.2608695652175,
-            "y": 3021.1725983840174,
+            "x": 1908.0434782608697,
+            "y": 3026.989924486117,
             "rotationRad": 0
           },
           "overlay": {
@@ -183,20 +195,24 @@
           "team": "player",
           "unitId": "supply_wagon",
           "role": "support",
+          "laneId": "main",
           "progress": 0.09999999999999999,
           "laneRow": 0,
           "hp": 54,
           "maxHp": 54,
-          "facingX": -1,
+          "facingX": 1,
+          "facingDirection": "ne",
           "flipX": false,
           "tint": 16777215,
           "motion": {
             "x": 0,
             "y": 0
           },
-          "pose": "supply-wagon-w-idle",
-          "renderTexture": "supply-wagon-w-idle",
+          "pose": "supply-wagon-ne-idle",
+          "renderTexture": "supply-wagon-ne-idle",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 18,
           "manaMax": 18,
@@ -205,7 +221,7 @@
           "healPower": 4,
           "presentation": {
             "x": 1729.7826086956522,
-            "y": 2903.2047088593213,
+            "y": 2903.387793198652,
             "rotationRad": 0
           },
           "overlay": {
@@ -227,20 +243,24 @@
           "team": "enemy",
           "unitId": "stone_slinger",
           "role": "battle",
-          "progress": 0.8758019599999999,
+          "laneId": "main",
+          "progress": 0.8793007,
           "laneRow": -3,
           "hp": 26,
           "maxHp": 26,
           "facingX": -1,
+          "facingDirection": "w",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 0,
+            "x": -2.1739130434780236,
             "y": 0
           },
-          "pose": "stone-slinger-sw-walk-b",
-          "renderTexture": "stone-slinger-sw-walk-b-enemy",
+          "pose": "stone-slinger-sw-idle",
+          "renderTexture": "stone-slinger-sw-idle-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -248,8 +268,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 5342.826086956522,
-            "y": 810.4755493381548,
+            "x": 5353.695652173913,
+            "y": 801.0185163538333,
             "rotationRad": 0
           },
           "overlay": {
@@ -271,20 +291,24 @@
           "team": "enemy",
           "unitId": "stone_axeman",
           "role": "battle",
-          "progress": 0.8756020533333332,
+          "laneId": "main",
+          "progress": 0.8792674,
           "laneRow": 0,
           "hp": 34,
           "maxHp": 34,
           "facingX": -1,
+          "facingDirection": "w",
           "flipX": false,
           "tint": 16777215,
           "motion": {
             "x": -2.1739130434780236,
-            "y": 2.173913043478251
+            "y": 0
           },
-          "pose": "stone-axeman-w-walk-b",
-          "renderTexture": "stone-axeman-w-walk-b-enemy",
+          "pose": "stone-axeman-sw-idle",
+          "renderTexture": "stone-axeman-sw-idle-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -292,8 +316,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 5447.173913043478,
-            "y": 964.7622716138808,
+            "x": 5460.217391304348,
+            "y": 953.3436658124574,
             "rotationRad": 0
           },
           "overlay": {
@@ -315,20 +339,24 @@
           "team": "enemy",
           "unitId": "stone_axeman",
           "role": "battle",
-          "progress": 0.8756020533333332,
+          "laneId": "main",
+          "progress": 0.8792674,
           "laneRow": 3,
           "hp": 34,
           "maxHp": 34,
           "facingX": -1,
+          "facingDirection": "sw",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": -2.1739130434780236,
-            "y": 2.1739130434780236
+            "x": -2.173913043478933,
+            "y": 2.173913043478251
           },
-          "pose": "stone-axeman-w-walk-b",
-          "renderTexture": "stone-axeman-w-walk-b-enemy",
+          "pose": "stone-axeman-sw-idle",
+          "renderTexture": "stone-axeman-sw-idle-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -336,8 +364,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 5553.695652173913,
-            "y": 1117.1500488758861,
+            "x": 5566.739130434782,
+            "y": 1107.361230526547,
             "rotationRad": 0
           },
           "overlay": {
@@ -359,20 +387,24 @@
           "team": "enemy",
           "unitId": "supply_wagon",
           "role": "support",
+          "laneId": "main",
           "progress": 0.9,
           "laneRow": 0,
           "hp": 54,
           "maxHp": 54,
-          "facingX": 1,
+          "facingX": -1,
+          "facingDirection": "sw",
           "flipX": false,
           "tint": 16777215,
           "motion": {
             "x": 0,
             "y": 0
           },
-          "pose": "supply-wagon-se-idle",
-          "renderTexture": "supply-wagon-se-idle-enemy",
+          "pose": "supply-wagon-sw-idle",
+          "renderTexture": "supply-wagon-sw-idle-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 18,
           "manaMax": 18,
@@ -381,7 +413,7 @@
           "healPower": 4,
           "presentation": {
             "x": 5551.521739130434,
-            "y": 891.8559446464478,
+            "y": 892.4864841030558,
             "rotationRad": 0
           },
           "overlay": {
@@ -417,18 +449,19 @@
         "controlPoints": [
           {
             "id": 0,
+            "laneId": "main",
             "pointType": "buildable",
             "allowedBuildingTypes": [
               "supply_depot",
               "mint"
             ],
             "owner": "neutral",
-            "control": 0,
-            "progress": 0.375,
-            "worldX": 3079.782608695652,
-            "worldY": 2279.1304347826085,
-            "labelWorldX": 3079.782608695652,
-            "labelWorldY": 2031.3043478260868,
+            "control": 0.0359639999999998,
+            "progress": 0.17,
+            "worldX": 2073.2608695652175,
+            "worldY": 2744.3478260869565,
+            "labelWorldX": 2073.2608695652175,
+            "labelWorldY": 2496.521739130435,
             "markerTexture": "capture-marker-neutral",
             "buildingId": null,
             "buildingLevel": 0,
@@ -436,18 +469,19 @@
           },
           {
             "id": 1,
+            "laneId": "main",
             "pointType": "buildable",
             "allowedBuildingTypes": [
               "supply_depot",
               "mint"
             ],
             "owner": "neutral",
-            "control": 0,
-            "progress": 0.767,
-            "worldX": 4960.217391304348,
-            "worldY": 1305.2173913043478,
-            "labelWorldX": 4960.217391304348,
-            "labelWorldY": 1057.391304347826,
+            "control": -0.0359639999999998,
+            "progress": 0.83,
+            "worldX": 5240.652173913044,
+            "worldY": 1109.5652173913043,
+            "labelWorldX": 5240.652173913044,
+            "labelWorldY": 861.7391304347825,
             "markerTexture": "capture-marker-neutral",
             "buildingId": null,
             "buildingLevel": 0,
@@ -457,9 +491,10 @@
         "defenseTowers": [
           {
             "id": 0,
+            "laneId": "main",
             "owner": "player",
             "linkedCapturePointId": 0,
-            "progress": 0.6,
+            "progress": 0.37,
             "built": true,
             "hp": 130,
             "maxHp": 130,
@@ -467,9 +502,10 @@
           },
           {
             "id": 1,
+            "laneId": "main",
             "owner": "enemy",
             "linkedCapturePointId": 1,
-            "progress": 0.2,
+            "progress": 0.63,
             "built": true,
             "hp": 130,
             "maxHp": 130,
@@ -483,7 +519,21 @@
         "laneEnd": {
           "x": 5995,
           "y": 580
-        }
+        },
+        "lanes": [
+          {
+            "id": "main",
+            "role": "center",
+            "start": {
+              "x": 1240,
+              "y": 3130
+            },
+            "end": {
+              "x": 5995,
+              "y": 580
+            }
+          }
+        ]
       },
       "ui": {
         "ageLabel": "시대 석기 시대",
@@ -669,7 +719,7 @@
             {
               "id": 1,
               "unitId": "stone_slinger",
-              "pose": "stone-slinger-e-walk-a",
+              "pose": "stone-slinger-ne-idle",
               "worldWidth": 296.81159420289856,
               "worldHeight": 296.81159420289856,
               "canvasScreenWidth": 136.53333333333333,
@@ -701,7 +751,7 @@
             {
               "id": 2,
               "unitId": "stone_axeman",
-              "pose": "stone-axeman-ne-walk-a",
+              "pose": "stone-axeman-ne-idle",
               "worldWidth": 321.54589371980677,
               "worldHeight": 321.54589371980677,
               "canvasScreenWidth": 147.91111111111113,
@@ -726,14 +776,14 @@
               "facingX": 1,
               "flipX": false,
               "motion": {
-                "x": 2.173913043478251,
+                "x": 0,
                 "y": 0
               }
             },
             {
               "id": 3,
               "unitId": "stone_axeman",
-              "pose": "stone-axeman-e-walk-b",
+              "pose": "stone-axeman-e-idle",
               "worldWidth": 321.54589371980677,
               "worldHeight": 321.54589371980677,
               "canvasScreenWidth": 147.91111111111113,
@@ -758,14 +808,14 @@
               "facingX": 1,
               "flipX": false,
               "motion": {
-                "x": 2.173913043478251,
+                "x": 0,
                 "y": 0
               }
             },
             {
               "id": 4,
               "unitId": "supply_wagon",
-              "pose": "supply-wagon-w-idle",
+              "pose": "supply-wagon-ne-idle",
               "worldWidth": 478.1964573268921,
               "worldHeight": 358.6473429951691,
               "canvasScreenWidth": 219.97037037037038,
@@ -787,7 +837,7 @@
               "labelResolution": 2,
               "labelScale": 1,
               "labelVisible": false,
-              "facingX": -1,
+              "facingX": 1,
               "flipX": false,
               "motion": {
                 "x": 0,
@@ -797,7 +847,7 @@
             {
               "id": 5,
               "unitId": "stone_slinger",
-              "pose": "stone-slinger-sw-walk-b",
+              "pose": "stone-slinger-sw-idle",
               "worldWidth": 296.81159420289856,
               "worldHeight": 296.81159420289856,
               "canvasScreenWidth": 136.53333333333333,
@@ -822,14 +872,14 @@
               "facingX": -1,
               "flipX": false,
               "motion": {
-                "x": 0,
+                "x": -2.1739130434780236,
                 "y": 0
               }
             },
             {
               "id": 6,
               "unitId": "stone_axeman",
-              "pose": "stone-axeman-w-walk-b",
+              "pose": "stone-axeman-sw-idle",
               "worldWidth": 321.54589371980677,
               "worldHeight": 321.54589371980677,
               "canvasScreenWidth": 147.91111111111113,
@@ -855,13 +905,13 @@
               "flipX": false,
               "motion": {
                 "x": -2.1739130434780236,
-                "y": 2.173913043478251
+                "y": 0
               }
             },
             {
               "id": 7,
               "unitId": "stone_axeman",
-              "pose": "stone-axeman-w-walk-b",
+              "pose": "stone-axeman-sw-idle",
               "worldWidth": 321.54589371980677,
               "worldHeight": 321.54589371980677,
               "canvasScreenWidth": 147.91111111111113,
@@ -886,14 +936,14 @@
               "facingX": -1,
               "flipX": false,
               "motion": {
-                "x": -2.1739130434780236,
-                "y": 2.1739130434780236
+                "x": -2.173913043478933,
+                "y": 2.173913043478251
               }
             },
             {
               "id": 8,
               "unitId": "supply_wagon",
-              "pose": "supply-wagon-se-idle",
+              "pose": "supply-wagon-sw-idle",
               "worldWidth": 478.1964573268921,
               "worldHeight": 358.6473429951691,
               "canvasScreenWidth": 219.97037037037038,
@@ -915,7 +965,7 @@
               "labelResolution": 2,
               "labelScale": 1,
               "labelVisible": false,
-              "facingX": 1,
+              "facingX": -1,
               "flipX": false,
               "motion": {
                 "x": 0,
@@ -928,8 +978,8 @@
               "id": 0,
               "pointType": "defense-tower",
               "textureKey": "defense-tower-full",
-              "worldX": 4153.695652173913,
-              "worldY": 1711.7391304347825,
+              "worldX": 3055.8695652173915,
+              "worldY": 2292.173913043478,
               "cssFrameHeight": 204.8,
               "cssVisibleHeight": 144,
               "originY": 0.875
@@ -938,8 +988,8 @@
               "id": 1,
               "pointType": "defense-tower",
               "textureKey": "defense-tower-full-enemy",
-              "worldX": 2221.086956521739,
-              "worldY": 2676.95652173913,
+              "worldX": 4297.173913043478,
+              "worldY": 1637.8260869565217,
               "cssFrameHeight": 204.8,
               "cssVisibleHeight": 144,
               "originY": 0.875
@@ -1059,14 +1109,14 @@
     },
     "end": {
       "phase": "lane-siege",
-      "elapsedSec": 14.912646666666657,
+      "elapsedSec": 30.918753333333324,
       "player": {
         "ageId": "stone",
         "resources": {
-          "gold": 62,
-          "wood": 41,
-          "food": 34.91264666666671,
-          "metal": 19,
+          "gold": 65,
+          "wood": 43,
+          "food": 49.91875333333334,
+          "metal": 21,
           "gunpowder": 0,
           "fuel": 0
         },
@@ -1079,15 +1129,15 @@
           "idle": 0
         },
         "baseHp": 400,
-        "nextWaveInSec": 15.087353333333331
+        "nextWaveInSec": 29.176670000000005
       },
       "enemy": {
         "ageId": "stone",
         "resources": {
-          "gold": 51,
-          "wood": 31,
-          "food": 29.912646666666657,
-          "metal": 11,
+          "gold": 64,
+          "wood": 33,
+          "food": 49.91875333333333,
+          "metal": 13,
           "gunpowder": 0,
           "fuel": 0
         },
@@ -1100,81 +1150,41 @@
           "idle": 0
         },
         "baseHp": 400,
-        "nextWaveInSec": 25.21853000000003
+        "nextWaveInSec": 9.150820000000007
       },
       "units": [
-        {
-          "id": 3,
-          "team": "player",
-          "unitId": "stone_axeman",
-          "role": "battle",
-          "progress": 0.44807822666666647,
-          "laneRow": 3,
-          "hp": 34,
-          "maxHp": 34,
-          "facingX": 1,
-          "flipX": false,
-          "tint": 16777215,
-          "motion": {
-            "x": 13.043478260869506,
-            "y": -8.695652173913004
-          },
-          "pose": "stone-axeman-ne-walk-b",
-          "renderTexture": "stone-axeman-ne-walk-b",
-          "attackAnimTime": 0,
-          "attackTargetKind": "unit",
-          "manaCurrent": 0,
-          "manaMax": 0,
-          "manaRegenPerSec": 0,
-          "healManaCost": 0,
-          "healPower": 0,
-          "presentation": {
-            "x": 3464.787711777914,
-            "y": 2283.789530509885,
-            "rotationRad": 0
-          },
-          "overlay": {
-            "mode": "compact",
-            "hpVisible": true,
-            "manaVisible": false,
-            "labelVisible": false,
-            "labelText": "도끼 Lv.1"
-          },
-          "attackTiming": {
-            "durationSec": 0.46,
-            "eventProgress": 0.48,
-            "targetKind": "unit",
-            "eventDelayMs": 220.79999999999998
-          }
-        },
         {
           "id": 4,
           "team": "player",
           "unitId": "supply_wagon",
           "role": "support",
-          "progress": 0.3499552720000001,
-          "laneRow": 3,
-          "hp": 26,
+          "laneId": "main",
+          "progress": 0.43400360000000016,
+          "laneRow": 0,
+          "hp": 54,
           "maxHp": 54,
           "facingX": 1,
+          "facingDirection": "ne",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 13.043478260869506,
-            "y": -4.347826086956502
+            "x": 0,
+            "y": 0
           },
-          "pose": "supply-wagon-ne-walk-b",
-          "renderTexture": "supply-wagon-ne-walk-b",
+          "pose": "supply-wagon-ne-idle",
+          "renderTexture": "supply-wagon-ne-idle",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
-          "manaCurrent": 11.165975000000012,
+          "manaCurrent": 4.247525000000003,
           "manaMax": 18,
           "manaRegenPerSec": 1.25,
           "healManaCost": 6,
           "healPower": 4,
           "presentation": {
-            "x": 2988.700755256175,
-            "y": 2525.137705029066,
+            "x": 3360.4398856909575,
+            "y": 2130.363130588616,
             "rotationRad": 0
           },
           "overlay": {
@@ -1196,64 +1206,24 @@
           "team": "enemy",
           "unitId": "stone_slinger",
           "role": "battle",
-          "progress": 0.6559059199999993,
-          "laneRow": 1,
-          "hp": 16,
+          "laneId": "main",
+          "progress": 0.513598860000001,
+          "laneRow": 0,
+          "hp": 20,
           "maxHp": 26,
           "facingX": -1,
+          "facingDirection": "sw",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 0,
-            "y": 0
+            "x": -8.695652173913004,
+            "y": 6.521739130434753
           },
-          "pose": "stone-slinger-sw-idle",
-          "renderTexture": "stone-slinger-sw-idle-enemy",
-          "attackAnimTime": 0.58,
-          "attackTargetKind": "structure",
-          "manaCurrent": 0,
-          "manaMax": 0,
-          "manaRegenPerSec": 0,
-          "healManaCost": 0,
-          "healPower": 0,
-          "presentation": {
-            "x": 4451.744233517044,
-            "y": 1630.4451906349902,
-            "rotationRad": 0
-          },
-          "overlay": {
-            "mode": "compact",
-            "hpVisible": true,
-            "manaVisible": false,
-            "labelVisible": false,
-            "labelText": "투석 Lv.1"
-          },
-          "attackTiming": {
-            "durationSec": 0.58,
-            "eventProgress": 0.42,
-            "targetKind": "structure",
-            "eventDelayMs": 243.6
-          }
-        },
-        {
-          "id": 7,
-          "team": "enemy",
-          "unitId": "stone_axeman",
-          "role": "battle",
-          "progress": 0.5519217733333331,
-          "laneRow": 3,
-          "hp": 34,
-          "maxHp": 34,
-          "facingX": -1,
-          "flipX": false,
-          "tint": 16777215,
-          "motion": {
-            "x": -15.217391304347984,
-            "y": 8.695652173913004
-          },
-          "pose": "stone-axeman-sw-walk-b",
-          "renderTexture": "stone-axeman-sw-walk-b-enemy",
+          "pose": "stone-slinger-sw-walk-b",
+          "renderTexture": "stone-slinger-sw-walk-b-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -1261,22 +1231,22 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 4060.4398856909575,
-            "y": 1968.5595045380107,
+            "x": 3775.6572769953054,
+            "y": 1912.0234609974264,
             "rotationRad": 0
           },
           "overlay": {
-            "mode": "compact",
+            "mode": "summary",
             "hpVisible": true,
             "manaVisible": false,
-            "labelVisible": false,
-            "labelText": "도끼 Lv.1"
+            "labelVisible": true,
+            "labelText": "적군 ×6 · HP 95%"
           },
           "attackTiming": {
-            "durationSec": 0.46,
-            "eventProgress": 0.48,
+            "durationSec": 0.58,
+            "eventProgress": 0.42,
             "targetKind": "unit",
-            "eventDelayMs": 220.79999999999998
+            "eventDelayMs": 243.6
           }
         },
         {
@@ -1284,36 +1254,40 @@
           "team": "enemy",
           "unitId": "supply_wagon",
           "role": "support",
-          "progress": 0.644425996,
-          "laneRow": 3,
+          "laneId": "main",
+          "progress": 0.5418560599999993,
+          "laneRow": 0,
           "hp": 54,
           "maxHp": 54,
           "facingX": -1,
+          "facingDirection": "sw",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": -10.869565217391937,
+            "x": -13.043478260869051,
             "y": 6.521739130434753
           },
-          "pose": "supply-wagon-sw-walk-a",
-          "renderTexture": "supply-wagon-sw-walk-a-enemy",
+          "pose": "supply-wagon-w-walk-a",
+          "renderTexture": "supply-wagon-w-walk-a-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
-          "manaCurrent": 13.014524999999997,
+          "manaCurrent": 4.247525000000003,
           "manaMax": 18,
           "manaRegenPerSec": 1.25,
           "healManaCost": 6,
           "healPower": 4,
           "presentation": {
-            "x": 4495.2224943866095,
-            "y": 1748.949456137041,
+            "x": 3914.7877117779144,
+            "y": 1834.756229477369,
             "rotationRad": 0
           },
           "overlay": {
-            "mode": "compact",
-            "hpVisible": true,
-            "manaVisible": true,
-            "labelVisible": true,
+            "mode": "hidden",
+            "hpVisible": false,
+            "manaVisible": false,
+            "labelVisible": false,
             "labelText": "보급 Lv.1"
           },
           "attackTiming": {
@@ -1328,20 +1302,24 @@
           "team": "enemy",
           "unitId": "stone_slinger",
           "role": "battle",
-          "progress": 0.8367192700000002,
-          "laneRow": 1,
+          "laneId": "main",
+          "progress": 0.5138566599999995,
+          "laneRow": -0.616375,
           "hp": 26,
           "maxHp": 26,
           "facingX": -1,
+          "facingDirection": "sw",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": -13.043478260869051,
-            "y": 8.695652173913004
+            "x": -10.869565217391482,
+            "y": 6.521739130434753
           },
-          "pose": "stone-slinger-sw-walk-a",
-          "renderTexture": "stone-slinger-sw-walk-a-enemy",
+          "pose": "stone-slinger-w-walk-b",
+          "renderTexture": "stone-slinger-w-walk-b-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -1349,16 +1327,16 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 5349.570320473566,
-            "y": 1106.0981099524488,
+            "x": 3764.787711777914,
+            "y": 1876.9938655519143,
             "rotationRad": 0
           },
           "overlay": {
-            "mode": "summary",
-            "hpVisible": true,
+            "mode": "hidden",
+            "hpVisible": false,
             "manaVisible": false,
-            "labelVisible": true,
-            "labelText": "적군 ×4 · HP 100%"
+            "labelVisible": false,
+            "labelText": "투석 Lv.1"
           },
           "attackTiming": {
             "durationSec": 0.58,
@@ -1372,20 +1350,24 @@
           "team": "enemy",
           "unitId": "stone_axeman",
           "role": "battle",
-          "progress": 0.8318011399999995,
-          "laneRow": 1.9999999793711505,
-          "hp": 34,
+          "laneId": "main",
+          "progress": 0.47853152000000054,
+          "laneRow": 1.0000000000002272,
+          "hp": 28,
           "maxHp": 34,
           "facingX": -1,
+          "facingDirection": "sw",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": -15.217391304347984,
+            "x": -13.043478260869506,
             "y": 8.695652173913004
           },
-          "pose": "stone-axeman-sw-walk-b",
-          "renderTexture": "stone-axeman-sw-walk-b-enemy",
+          "pose": "stone-axeman-sw-walk-a",
+          "renderTexture": "stone-axeman-sw-walk-a-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -1393,8 +1375,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 5364.7877117779135,
-            "y": 1171.2103922279687,
+            "x": 3653.918146560523,
+            "y": 2045.7544006412688,
             "rotationRad": 0
           },
           "overlay": {
@@ -1416,20 +1398,24 @@
           "team": "enemy",
           "unitId": "stone_axeman",
           "role": "battle",
-          "progress": 0.8318011399999995,
-          "laneRow": 3,
+          "laneId": "main",
+          "progress": 0.47853152000000054,
+          "laneRow": 0.08265395001623486,
           "hp": 34,
           "maxHp": 34,
           "facingX": -1,
+          "facingDirection": "w",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": -13.043478260869051,
-            "y": 8.695652173913004
+            "x": -15.217391304347984,
+            "y": 2.173913043478251
           },
-          "pose": "stone-axeman-sw-walk-a",
-          "renderTexture": "stone-axeman-sw-walk-a-enemy",
+          "pose": "stone-axeman-w-walk-b",
+          "renderTexture": "stone-axeman-w-walk-b-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -1437,8 +1423,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 5401.744233517044,
-            "y": 1221.2722818656675,
+            "x": 3638.700755256175,
+            "y": 2015.8318227217044,
             "rotationRad": 0
           },
           "overlay": {
@@ -1460,20 +1446,216 @@
           "team": "enemy",
           "unitId": "supply_wagon",
           "role": "support",
-          "progress": 0.8636046519999997,
-          "laneRow": 3,
+          "laneId": "main",
+          "progress": 0.554263536,
+          "laneRow": 0,
           "hp": 54,
           "maxHp": 54,
           "facingX": -1,
+          "facingDirection": "sw",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": -13.043478260869051,
-            "y": 8.695652173913231
+            "x": -8.695652173913004,
+            "y": 10.869565217391255
           },
-          "pose": "supply-wagon-sw-walk-b",
-          "renderTexture": "supply-wagon-sw-walk-b-enemy",
+          "pose": "supply-wagon-sw-attack",
+          "renderTexture": "supply-wagon-sw-attack-enemy",
+          "attackAnimTime": 0.24666999999999972,
+          "attackFacingLockSec": 0.24666999999999972,
+          "combatFacingHoldSec": 0.24666999999999972,
+          "attackTargetKind": "unit",
+          "manaCurrent": 8.058275000000004,
+          "manaMax": 18,
+          "manaRegenPerSec": 1.25,
+          "healManaCost": 6,
+          "healPower": 4,
+          "presentation": {
+            "x": 3960.9535499712656,
+            "y": 1778.6346259123893,
+            "rotationRad": -0.011068325087801867
+          },
+          "overlay": {
+            "mode": "hidden",
+            "hpVisible": false,
+            "manaVisible": false,
+            "labelVisible": false,
+            "labelText": "보급 Lv.1"
+          },
+          "attackTiming": {
+            "durationSec": 0.66,
+            "eventProgress": 0.52,
+            "targetKind": "unit",
+            "eventDelayMs": 343.2
+          }
+        },
+        {
+          "id": 13,
+          "team": "player",
+          "unitId": "stone_slinger",
+          "role": "battle",
+          "laneId": "main",
+          "progress": 0.08012493,
+          "laneRow": -1,
+          "hp": 26,
+          "maxHp": 26,
+          "facingX": 1,
+          "facingDirection": "e",
+          "flipX": false,
+          "tint": 16777215,
+          "motion": {
+            "x": 15.217391304347984,
+            "y": 2.1739130434780236
+          },
+          "pose": "stone-slinger-e-walk-b",
+          "renderTexture": "stone-slinger-e-walk-b",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
+          "attackTargetKind": "unit",
+          "manaCurrent": 0,
+          "manaMax": 0,
+          "manaRegenPerSec": 0,
+          "healManaCost": 0,
+          "healPower": 0,
+          "presentation": {
+            "x": 1551.7442335170447,
+            "y": 2881.2843143815903,
+            "rotationRad": 0
+          },
+          "overlay": {
+            "mode": "summary",
+            "hpVisible": true,
+            "manaVisible": false,
+            "labelVisible": true,
+            "labelText": "아군 ×4 · HP 100%"
+          },
+          "attackTiming": {
+            "durationSec": 0.58,
+            "eventProgress": 0.42,
+            "targetKind": "unit",
+            "eventDelayMs": 243.6
+          }
+        },
+        {
+          "id": 14,
+          "team": "player",
+          "unitId": "stone_axeman",
+          "role": "battle",
+          "laneId": "main",
+          "progress": 0.08108326,
+          "laneRow": 0.16861405803319635,
+          "hp": 34,
+          "maxHp": 34,
+          "facingX": 1,
+          "facingDirection": "e",
+          "flipX": false,
+          "tint": 16777215,
+          "motion": {
+            "x": 13.043478260869733,
+            "y": -4.347826086956502
+          },
+          "pose": "stone-axeman-e-walk-a",
+          "renderTexture": "stone-axeman-e-walk-a",
+          "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
+          "attackTargetKind": "unit",
+          "manaCurrent": 0,
+          "manaMax": 0,
+          "manaRegenPerSec": 0,
+          "healManaCost": 0,
+          "healPower": 0,
+          "presentation": {
+            "x": 1599.5703204735664,
+            "y": 2975.1723022259507,
+            "rotationRad": 0
+          },
+          "overlay": {
+            "mode": "hidden",
+            "hpVisible": false,
+            "manaVisible": false,
+            "labelVisible": false,
+            "labelText": "도끼 Lv.1"
+          },
+          "attackTiming": {
+            "durationSec": 0.46,
+            "eventProgress": 0.48,
+            "targetKind": "unit",
+            "eventDelayMs": 220.79999999999998
+          }
+        },
+        {
+          "id": 15,
+          "team": "player",
+          "unitId": "stone_axeman",
+          "role": "battle",
+          "laneId": "main",
+          "progress": 0.08108326,
+          "laneRow": 2.054551607011103,
+          "hp": 34,
+          "maxHp": 34,
+          "facingX": 1,
+          "facingDirection": "ne",
+          "flipX": false,
+          "tint": 16777215,
+          "motion": {
+            "x": 8.695652173913004,
+            "y": -10.869565217391937
+          },
+          "pose": "stone-axeman-ne-walk-a",
+          "renderTexture": "stone-axeman-ne-walk-a",
+          "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
+          "attackTargetKind": "unit",
+          "manaCurrent": 0,
+          "manaMax": 0,
+          "manaRegenPerSec": 0,
+          "healManaCost": 0,
+          "healPower": 0,
+          "presentation": {
+            "x": 1656.0920596040012,
+            "y": 3099.6672647884025,
+            "rotationRad": 0
+          },
+          "overlay": {
+            "mode": "hidden",
+            "hpVisible": false,
+            "manaVisible": false,
+            "labelVisible": false,
+            "labelText": "도끼 Lv.1"
+          },
+          "attackTiming": {
+            "durationSec": 0.46,
+            "eventProgress": 0.48,
+            "targetKind": "unit",
+            "eventDelayMs": 220.79999999999998
+          }
+        },
+        {
+          "id": 16,
+          "team": "player",
+          "unitId": "supply_wagon",
+          "role": "support",
+          "laneId": "main",
+          "progress": 0.04532453599999999,
+          "laneRow": 1,
+          "hp": 54,
+          "maxHp": 54,
+          "facingX": 1,
+          "facingDirection": "se",
+          "flipX": false,
+          "tint": 16777215,
+          "motion": {
+            "x": 2.173913043478251,
+            "y": 2.1739130434780236
+          },
+          "pose": "supply-wagon-se-walk-b",
+          "renderTexture": "supply-wagon-se-walk-b",
+          "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 18,
           "manaMax": 18,
@@ -1481,8 +1663,8 @@
           "healManaCost": 6,
           "healPower": 4,
           "presentation": {
-            "x": 5536.5268422126965,
-            "y": 1127.2876239895468,
+            "x": 1475.6572769953054,
+            "y": 3072.7131504031377,
             "rotationRad": 0
           },
           "overlay": {
@@ -1518,6 +1700,7 @@
         "controlPoints": [
           {
             "id": 0,
+            "laneId": "main",
             "pointType": "buildable",
             "allowedBuildingTypes": [
               "supply_depot",
@@ -1525,11 +1708,11 @@
             ],
             "owner": "player",
             "control": 1,
-            "progress": 0.375,
-            "worldX": 3080.005103082262,
-            "worldY": 2280.4898958971216,
-            "labelWorldX": 3080.005103082262,
-            "labelWorldY": 2032.6638089406,
+            "progress": 0.17,
+            "worldX": 2073.4833639518274,
+            "worldY": 2745.7072872014696,
+            "labelWorldX": 2073.4833639518274,
+            "labelWorldY": 2497.881200244948,
             "markerTexture": "capture-marker",
             "buildingId": null,
             "buildingLevel": 0,
@@ -1540,6 +1723,7 @@
           },
           {
             "id": 1,
+            "laneId": "main",
             "pointType": "buildable",
             "allowedBuildingTypes": [
               "supply_depot",
@@ -1547,11 +1731,11 @@
             ],
             "owner": "enemy",
             "control": -1,
-            "progress": 0.767,
-            "worldX": 4960.439885690957,
-            "worldY": 1304.4029393753826,
-            "labelWorldX": 4960.439885690957,
-            "labelWorldY": 1056.5768524188609,
+            "progress": 0.83,
+            "worldX": 5240.874668299653,
+            "worldY": 1108.7507654623391,
+            "labelWorldX": 5240.874668299653,
+            "labelWorldY": 860.9246785058174,
             "markerTexture": "capture-marker-enemy",
             "buildingId": "mint",
             "buildingLevel": 1,
@@ -1561,21 +1745,23 @@
         "defenseTowers": [
           {
             "id": 0,
+            "laneId": "main",
             "owner": "player",
             "linkedCapturePointId": 0,
-            "progress": 0.6,
+            "progress": 0.37,
             "built": true,
-            "hp": 109,
+            "hp": 130,
             "maxHp": 130,
             "buildRemainingSec": 0
           },
           {
             "id": 1,
+            "laneId": "main",
             "owner": "enemy",
             "linkedCapturePointId": 1,
-            "progress": 0.2,
+            "progress": 0.63,
             "built": true,
-            "hp": 71,
+            "hp": 130,
             "maxHp": 130,
             "buildRemainingSec": 0
           }
@@ -1587,7 +1773,21 @@
         "laneEnd": {
           "x": 5995,
           "y": 580
-        }
+        },
+        "lanes": [
+          {
+            "id": "main",
+            "role": "center",
+            "start": {
+              "x": 1240,
+              "y": 3130
+            },
+            "end": {
+              "x": 5995,
+              "y": 580
+            }
+          }
+        ]
       },
       "ui": {
         "ageLabel": "시대 석기 시대",
@@ -1603,32 +1803,23 @@
         },
         "unitOverlayDensityEnabled": true,
         "unitOverlayModes": {
-          "3": "compact",
           "4": "compact",
-          "5": "compact",
-          "7": "compact",
-          "8": "compact",
-          "9": "summary",
+          "5": "summary",
+          "8": "hidden",
+          "9": "hidden",
           "10": "hidden",
           "11": "hidden",
-          "12": "hidden"
+          "12": "hidden",
+          "13": "summary",
+          "14": "hidden",
+          "15": "hidden",
+          "16": "hidden"
         }
       },
-      "activeProjectiles": [
-        {
-          "textureKey": "projectile-stone",
-          "x": 4144.9181465605225,
-          "y": 1487.5333741579914
-        },
-        {
-          "textureKey": "projectile-stone",
-          "x": 4162.9181465605225,
-          "y": 1483.5333741579914
-        }
-      ],
+      "activeProjectiles": [],
       "engagement": {
-        "uniqueAttackers": 5,
-        "battleUnits": 6,
+        "uniqueAttackers": 10,
+        "battleUnits": 7,
         "currentlyAnimating": 1
       },
       "towerAttackPatterns": {
@@ -1783,41 +1974,9 @@
           },
           "sampledUnits": [
             {
-              "id": 3,
-              "unitId": "stone_axeman",
-              "pose": "stone-axeman-ne-walk-b",
-              "worldWidth": 321.54589371980677,
-              "worldHeight": 321.54589371980677,
-              "canvasScreenWidth": 147.91111111111113,
-              "canvasScreenHeight": 147.91111111111113,
-              "cssFrameWidth": 147.91111111111113,
-              "cssFrameHeight": 147.91111111111113,
-              "cssVisibleHeight": 104,
-              "originX": 0.5,
-              "originY": 0.875,
-              "hpWorldWidth": 113.04347826086956,
-              "hpWorldHeight": 13.043478260869565,
-              "hpCssWidth": 52,
-              "hpCssHeight": 6,
-              "manaCurrent": 0,
-              "manaMax": 0,
-              "manaRegenPerSec": 0,
-              "healManaCost": 0,
-              "labelCssFontSize": 13.8,
-              "labelResolution": 2,
-              "labelScale": 1,
-              "labelVisible": false,
-              "facingX": 1,
-              "flipX": false,
-              "motion": {
-                "x": 13.043478260869506,
-                "y": -8.695652173913004
-              }
-            },
-            {
               "id": 4,
               "unitId": "supply_wagon",
-              "pose": "supply-wagon-ne-walk-b",
+              "pose": "supply-wagon-ne-idle",
               "worldWidth": 478.1964573268921,
               "worldHeight": 358.6473429951691,
               "canvasScreenWidth": 219.97037037037038,
@@ -1831,7 +1990,7 @@
               "hpWorldHeight": 13.043478260869565,
               "hpCssWidth": 52,
               "hpCssHeight": 6,
-              "manaCurrent": 11.165975000000012,
+              "manaCurrent": 4.247525000000003,
               "manaMax": 18,
               "manaRegenPerSec": 1.25,
               "healManaCost": 6,
@@ -1840,38 +1999,6 @@
               "labelScale": 1,
               "labelVisible": true,
               "facingX": 1,
-              "flipX": false,
-              "motion": {
-                "x": 13.043478260869506,
-                "y": -4.347826086956502
-              }
-            },
-            {
-              "id": 5,
-              "unitId": "stone_slinger",
-              "pose": "stone-slinger-sw-idle",
-              "worldWidth": 296.81159420289856,
-              "worldHeight": 296.81159420289856,
-              "canvasScreenWidth": 136.53333333333333,
-              "canvasScreenHeight": 136.53333333333333,
-              "cssFrameWidth": 136.53333333333333,
-              "cssFrameHeight": 136.53333333333333,
-              "cssVisibleHeight": 96.00000000000001,
-              "originX": 0.5,
-              "originY": 0.875,
-              "hpWorldWidth": 113.04347826086956,
-              "hpWorldHeight": 13.043478260869565,
-              "hpCssWidth": 52,
-              "hpCssHeight": 6,
-              "manaCurrent": 0,
-              "manaMax": 0,
-              "manaRegenPerSec": 0,
-              "healManaCost": 0,
-              "labelCssFontSize": 13.8,
-              "labelResolution": 2,
-              "labelScale": 1,
-              "labelVisible": false,
-              "facingX": -1,
               "flipX": false,
               "motion": {
                 "x": 0,
@@ -1879,73 +2006,9 @@
               }
             },
             {
-              "id": 7,
-              "unitId": "stone_axeman",
-              "pose": "stone-axeman-sw-walk-b",
-              "worldWidth": 321.54589371980677,
-              "worldHeight": 321.54589371980677,
-              "canvasScreenWidth": 147.91111111111113,
-              "canvasScreenHeight": 147.91111111111113,
-              "cssFrameWidth": 147.91111111111113,
-              "cssFrameHeight": 147.91111111111113,
-              "cssVisibleHeight": 104,
-              "originX": 0.5,
-              "originY": 0.875,
-              "hpWorldWidth": 113.04347826086956,
-              "hpWorldHeight": 13.043478260869565,
-              "hpCssWidth": 52,
-              "hpCssHeight": 6,
-              "manaCurrent": 0,
-              "manaMax": 0,
-              "manaRegenPerSec": 0,
-              "healManaCost": 0,
-              "labelCssFontSize": 13.8,
-              "labelResolution": 2,
-              "labelScale": 1,
-              "labelVisible": false,
-              "facingX": -1,
-              "flipX": false,
-              "motion": {
-                "x": -15.217391304347984,
-                "y": 8.695652173913004
-              }
-            },
-            {
-              "id": 8,
-              "unitId": "supply_wagon",
-              "pose": "supply-wagon-sw-walk-a",
-              "worldWidth": 478.1964573268921,
-              "worldHeight": 358.6473429951691,
-              "canvasScreenWidth": 219.97037037037038,
-              "canvasScreenHeight": 164.9777777777778,
-              "cssFrameWidth": 219.97037037037038,
-              "cssFrameHeight": 164.9777777777778,
-              "cssVisibleHeight": 116,
-              "originX": 0.5,
-              "originY": 0.875,
-              "hpWorldWidth": 113.04347826086956,
-              "hpWorldHeight": 13.043478260869565,
-              "hpCssWidth": 52,
-              "hpCssHeight": 6,
-              "manaCurrent": 13.014524999999997,
-              "manaMax": 18,
-              "manaRegenPerSec": 1.25,
-              "healManaCost": 6,
-              "labelCssFontSize": 13.8,
-              "labelResolution": 2,
-              "labelScale": 1,
-              "labelVisible": true,
-              "facingX": -1,
-              "flipX": false,
-              "motion": {
-                "x": -10.869565217391937,
-                "y": 6.521739130434753
-              }
-            },
-            {
-              "id": 9,
+              "id": 5,
               "unitId": "stone_slinger",
-              "pose": "stone-slinger-sw-walk-a",
+              "pose": "stone-slinger-sw-walk-b",
               "worldWidth": 296.81159420289856,
               "worldHeight": 296.81159420289856,
               "canvasScreenWidth": 136.53333333333333,
@@ -1970,21 +2033,53 @@
               "facingX": -1,
               "flipX": false,
               "motion": {
-                "x": -13.043478260869051,
-                "y": 8.695652173913004
+                "x": -8.695652173913004,
+                "y": 6.521739130434753
               }
             },
             {
-              "id": 10,
-              "unitId": "stone_axeman",
-              "pose": "stone-axeman-sw-walk-b",
-              "worldWidth": 321.54589371980677,
-              "worldHeight": 321.54589371980677,
-              "canvasScreenWidth": 147.91111111111113,
-              "canvasScreenHeight": 147.91111111111113,
-              "cssFrameWidth": 147.91111111111113,
-              "cssFrameHeight": 147.91111111111113,
-              "cssVisibleHeight": 104,
+              "id": 8,
+              "unitId": "supply_wagon",
+              "pose": "supply-wagon-w-walk-a",
+              "worldWidth": 478.1964573268921,
+              "worldHeight": 358.6473429951691,
+              "canvasScreenWidth": 219.97037037037038,
+              "canvasScreenHeight": 164.9777777777778,
+              "cssFrameWidth": 219.97037037037038,
+              "cssFrameHeight": 164.9777777777778,
+              "cssVisibleHeight": 116,
+              "originX": 0.5,
+              "originY": 0.875,
+              "hpWorldWidth": 113.04347826086956,
+              "hpWorldHeight": 13.043478260869565,
+              "hpCssWidth": 52,
+              "hpCssHeight": 6,
+              "manaCurrent": 4.247525000000003,
+              "manaMax": 18,
+              "manaRegenPerSec": 1.25,
+              "healManaCost": 6,
+              "labelCssFontSize": 13.8,
+              "labelResolution": 2,
+              "labelScale": 1,
+              "labelVisible": false,
+              "facingX": -1,
+              "flipX": false,
+              "motion": {
+                "x": -13.043478260869051,
+                "y": 6.521739130434753
+              }
+            },
+            {
+              "id": 9,
+              "unitId": "stone_slinger",
+              "pose": "stone-slinger-w-walk-b",
+              "worldWidth": 296.81159420289856,
+              "worldHeight": 296.81159420289856,
+              "canvasScreenWidth": 136.53333333333333,
+              "canvasScreenHeight": 136.53333333333333,
+              "cssFrameWidth": 136.53333333333333,
+              "cssFrameHeight": 136.53333333333333,
+              "cssVisibleHeight": 96.00000000000001,
               "originX": 0.5,
               "originY": 0.875,
               "hpWorldWidth": 113.04347826086956,
@@ -2002,12 +2097,12 @@
               "facingX": -1,
               "flipX": false,
               "motion": {
-                "x": -15.217391304347984,
-                "y": 8.695652173913004
+                "x": -10.869565217391482,
+                "y": 6.521739130434753
               }
             },
             {
-              "id": 11,
+              "id": 10,
               "unitId": "stone_axeman",
               "pose": "stone-axeman-sw-walk-a",
               "worldWidth": 321.54589371980677,
@@ -2034,8 +2129,104 @@
               "facingX": -1,
               "flipX": false,
               "motion": {
-                "x": -13.043478260869051,
+                "x": -13.043478260869506,
                 "y": 8.695652173913004
+              }
+            },
+            {
+              "id": 11,
+              "unitId": "stone_axeman",
+              "pose": "stone-axeman-w-walk-b",
+              "worldWidth": 321.54589371980677,
+              "worldHeight": 321.54589371980677,
+              "canvasScreenWidth": 147.91111111111113,
+              "canvasScreenHeight": 147.91111111111113,
+              "cssFrameWidth": 147.91111111111113,
+              "cssFrameHeight": 147.91111111111113,
+              "cssVisibleHeight": 104,
+              "originX": 0.5,
+              "originY": 0.875,
+              "hpWorldWidth": 113.04347826086956,
+              "hpWorldHeight": 13.043478260869565,
+              "hpCssWidth": 52,
+              "hpCssHeight": 6,
+              "manaCurrent": 0,
+              "manaMax": 0,
+              "manaRegenPerSec": 0,
+              "healManaCost": 0,
+              "labelCssFontSize": 13.8,
+              "labelResolution": 2,
+              "labelScale": 1,
+              "labelVisible": false,
+              "facingX": -1,
+              "flipX": false,
+              "motion": {
+                "x": -15.217391304347984,
+                "y": 2.173913043478251
+              }
+            },
+            {
+              "id": 12,
+              "unitId": "supply_wagon",
+              "pose": "supply-wagon-sw-attack",
+              "worldWidth": 478.1964573268921,
+              "worldHeight": 358.6473429951691,
+              "canvasScreenWidth": 219.97037037037038,
+              "canvasScreenHeight": 164.9777777777778,
+              "cssFrameWidth": 219.97037037037038,
+              "cssFrameHeight": 164.9777777777778,
+              "cssVisibleHeight": 116,
+              "originX": 0.5,
+              "originY": 0.875,
+              "hpWorldWidth": 113.04347826086956,
+              "hpWorldHeight": 13.043478260869565,
+              "hpCssWidth": 52,
+              "hpCssHeight": 6,
+              "manaCurrent": 8.058275000000004,
+              "manaMax": 18,
+              "manaRegenPerSec": 1.25,
+              "healManaCost": 6,
+              "labelCssFontSize": 13.8,
+              "labelResolution": 2,
+              "labelScale": 1,
+              "labelVisible": false,
+              "facingX": -1,
+              "flipX": false,
+              "motion": {
+                "x": -8.695652173913004,
+                "y": 10.869565217391255
+              }
+            },
+            {
+              "id": 13,
+              "unitId": "stone_slinger",
+              "pose": "stone-slinger-e-walk-b",
+              "worldWidth": 296.81159420289856,
+              "worldHeight": 296.81159420289856,
+              "canvasScreenWidth": 136.53333333333333,
+              "canvasScreenHeight": 136.53333333333333,
+              "cssFrameWidth": 136.53333333333333,
+              "cssFrameHeight": 136.53333333333333,
+              "cssVisibleHeight": 96.00000000000001,
+              "originX": 0.5,
+              "originY": 0.875,
+              "hpWorldWidth": 152.6086956521739,
+              "hpWorldHeight": 13.043478260869565,
+              "hpCssWidth": 70.2,
+              "hpCssHeight": 6,
+              "manaCurrent": 0,
+              "manaMax": 0,
+              "manaRegenPerSec": 0,
+              "healManaCost": 0,
+              "labelCssFontSize": 13.8,
+              "labelResolution": 2,
+              "labelScale": 1,
+              "labelVisible": true,
+              "facingX": 1,
+              "flipX": false,
+              "motion": {
+                "x": 15.217391304347984,
+                "y": 2.1739130434780236
               }
             }
           ],
@@ -2044,8 +2235,8 @@
               "id": 0,
               "pointType": "defense-tower",
               "textureKey": "defense-tower-full",
-              "worldX": 4153.9181465605225,
-              "worldY": 1710.9246785058174,
+              "worldX": 3056.092059604001,
+              "worldY": 2291.359461114513,
               "cssFrameHeight": 204.8,
               "cssVisibleHeight": 144,
               "originY": 0.875
@@ -2053,9 +2244,9 @@
             {
               "id": 1,
               "pointType": "defense-tower",
-              "textureKey": "defense-tower-damaged-enemy",
-              "worldX": 2221.309450908349,
-              "worldY": 2676.142069810165,
+              "textureKey": "defense-tower-full-enemy",
+              "worldX": 4297.3964074300875,
+              "worldY": 1637.0116350275564,
               "cssFrameHeight": 204.8,
               "cssVisibleHeight": 144,
               "originY": 0.875
@@ -2177,13 +2368,13 @@
   "candidate": {
     "start": {
       "phase": "lane-siege",
-      "elapsedSec": 0.03328666666666692,
+      "elapsedSec": 0.13329999999999972,
       "player": {
         "ageId": "stone",
         "resources": {
           "gold": 60,
           "wood": 40,
-          "food": 18.033286666666665,
+          "food": 18.133300000000006,
           "metal": 18,
           "gunpowder": 0,
           "fuel": 0
@@ -2197,14 +2388,14 @@
           "idle": 0
         },
         "baseHp": 400,
-        "nextWaveInSec": 29.966713333333335
+        "nextWaveInSec": 29.866699999999994
       },
       "enemy": {
         "ageId": "stone",
         "resources": {
           "gold": 60,
           "wood": 40,
-          "food": 18.033286666666665,
+          "food": 18.133300000000006,
           "metal": 18,
           "gunpowder": 0,
           "fuel": 0
@@ -2218,7 +2409,7 @@
           "idle": 0
         },
         "baseHp": 400,
-        "nextWaveInSec": 29.966713333333335
+        "nextWaveInSec": 29.866699999999994
       },
       "units": [
         {
@@ -2226,20 +2417,24 @@
           "team": "player",
           "unitId": "stone_slinger",
           "role": "battle",
-          "progress": 0.12069902,
+          "laneId": "main",
+          "progress": 0.12279929999999997,
           "laneRow": -3,
           "hp": 26,
           "maxHp": 26,
           "facingX": 1,
+          "facingDirection": "ne",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 0,
-            "y": 0
+            "x": 2.173913043478251,
+            "y": -2.1739130434780236
           },
-          "pose": "stone-slinger-e-idle",
-          "renderTexture": "stone-slinger-e-idle",
+          "pose": "stone-slinger-e-walk-b",
+          "renderTexture": "stone-slinger-e-walk-b",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -2247,8 +2442,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1742.2670807453414,
-            "y": 2848.8617280711264,
+            "x": 1750.9627329192547,
+            "y": 2845.691352285726,
             "rotationRad": 0
           },
           "overlay": {
@@ -2270,20 +2465,24 @@
           "team": "player",
           "unitId": "stone_axeman",
           "role": "battle",
-          "progress": 0.12073230666666666,
+          "laneId": "main",
+          "progress": 0.12293259999999998,
           "laneRow": 0,
           "hp": 34,
           "maxHp": 34,
           "facingX": 1,
+          "facingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 0,
-            "y": -2.1739130434780236
+            "x": 2.173913043478251,
+            "y": 0
           },
-          "pose": "stone-axeman-e-idle",
-          "renderTexture": "stone-axeman-e-idle",
+          "pose": "stone-axeman-e-walk-a",
+          "renderTexture": "stone-axeman-e-walk-a",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -2291,8 +2490,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1816.1801242236024,
-            "y": 3018.7894350865345,
+            "x": 1824.8757763975154,
+            "y": 3015.901187986279,
             "rotationRad": 0
           },
           "overlay": {
@@ -2314,20 +2513,24 @@
           "team": "player",
           "unitId": "stone_axeman",
           "role": "battle",
-          "progress": 0.12073230666666666,
+          "laneId": "main",
+          "progress": 0.12293259999999998,
           "laneRow": 3,
           "hp": 34,
           "maxHp": 34,
           "facingX": 1,
+          "facingDirection": "ne",
           "flipX": false,
           "tint": 16777215,
           "motion": {
             "x": 2.173913043478251,
-            "y": 0
+            "y": -2.1739130434780236
           },
-          "pose": "stone-axeman-nw-idle",
-          "renderTexture": "stone-axeman-nw-idle",
+          "pose": "stone-axeman-e-walk-b",
+          "renderTexture": "stone-axeman-e-walk-b",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -2335,8 +2538,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1890.0931677018632,
-            "y": 3190.0541592117715,
+            "x": 1898.7888198757764,
+            "y": 3186.5202241954566,
             "rotationRad": 0
           },
           "overlay": {
@@ -2358,20 +2561,24 @@
           "team": "player",
           "unitId": "supply_wagon",
           "role": "support",
+          "laneId": "main",
           "progress": 0.09999999999999999,
           "laneRow": 0,
           "hp": 54,
           "maxHp": 54,
-          "facingX": -1,
+          "facingX": 1,
+          "facingDirection": "ne",
           "flipX": false,
           "tint": 16777215,
           "motion": {
             "x": 0,
             "y": 0
           },
-          "pose": "supply-wagon-nw-idle",
-          "renderTexture": "supply-wagon-nw-idle",
+          "pose": "supply-wagon-ne-idle",
+          "renderTexture": "supply-wagon-ne-idle",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 18,
           "manaMax": 18,
@@ -2380,7 +2587,7 @@
           "healPower": 4,
           "presentation": {
             "x": 1709.6583850931677,
-            "y": 3063.952085022378,
+            "y": 3064.3065202305816,
             "rotationRad": 0
           },
           "overlay": {
@@ -2402,20 +2609,24 @@
           "team": "enemy",
           "unitId": "stone_slinger",
           "role": "battle",
-          "progress": 0.87930098,
+          "laneId": "main",
+          "progress": 0.8772006999999999,
           "laneRow": -3,
           "hp": 26,
           "maxHp": 26,
           "facingX": -1,
+          "facingDirection": "sw",
           "flipX": false,
           "tint": 16777215,
           "motion": {
             "x": 0,
             "y": 0
           },
-          "pose": "stone-slinger-sw-idle",
-          "renderTexture": "stone-slinger-sw-idle-enemy",
+          "pose": "stone-slinger-sw-walk-b",
+          "renderTexture": "stone-slinger-sw-walk-b-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -2423,8 +2634,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 5470.5279503105585,
-            "y": 781.849505538926,
+            "x": 5466.180124223602,
+            "y": 787.0622896619204,
             "rotationRad": 0
           },
           "overlay": {
@@ -2446,20 +2657,24 @@
           "team": "enemy",
           "unitId": "stone_axeman",
           "role": "battle",
-          "progress": 0.8792676933333333,
+          "laneId": "main",
+          "progress": 0.8770673999999999,
           "laneRow": 0,
           "hp": 34,
           "maxHp": 34,
           "facingX": -1,
+          "facingDirection": "w",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 0,
+            "x": -2.173913043478933,
             "y": 0
           },
-          "pose": "stone-axeman-sw-idle",
-          "renderTexture": "stone-axeman-sw-idle-enemy",
+          "pose": "stone-axeman-sw-walk-a",
+          "renderTexture": "stone-axeman-sw-walk-a-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -2467,8 +2682,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 5592.267080745341,
-            "y": 922.8625445684997,
+            "x": 5585.7453416149065,
+            "y": 927.0066465015616,
             "rotationRad": 0
           },
           "overlay": {
@@ -2490,20 +2705,24 @@
           "team": "enemy",
           "unitId": "stone_axeman",
           "role": "battle",
-          "progress": 0.8792676933333333,
+          "laneId": "main",
+          "progress": 0.8770673999999999,
           "laneRow": 3,
           "hp": 34,
           "maxHp": 34,
           "facingX": -1,
+          "facingDirection": "w",
           "flipX": false,
           "tint": 16777215,
           "motion": {
             "x": 0,
             "y": 0
           },
-          "pose": "stone-axeman-w-idle",
-          "renderTexture": "stone-axeman-w-idle-enemy",
+          "pose": "stone-axeman-w-walk-a",
+          "renderTexture": "stone-axeman-w-walk-a-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -2511,8 +2730,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 5711.8322981366455,
-            "y": 1064.484354359782,
+            "x": 5707.484472049689,
+            "y": 1068.7807718080467,
             "rotationRad": 0
           },
           "overlay": {
@@ -2534,20 +2753,24 @@
           "team": "enemy",
           "unitId": "supply_wagon",
           "role": "support",
+          "laneId": "main",
           "progress": 0.9,
           "laneRow": 0,
           "hp": 54,
           "maxHp": 54,
-          "facingX": 1,
+          "facingX": -1,
+          "facingDirection": "sw",
           "flipX": false,
           "tint": 16777215,
           "motion": {
             "x": 0,
             "y": 0
           },
-          "pose": "supply-wagon-se-idle",
-          "renderTexture": "supply-wagon-se-idle-enemy",
+          "pose": "supply-wagon-sw-idle",
+          "renderTexture": "supply-wagon-sw-idle-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 18,
           "manaMax": 18,
@@ -2556,7 +2779,7 @@
           "healPower": 4,
           "presentation": {
             "x": 5659.658385093167,
-            "y": 866.1925876692125,
+            "y": 866.1914539826226,
             "rotationRad": 0
           },
           "overlay": {
@@ -2592,13 +2815,14 @@
         "controlPoints": [
           {
             "id": 0,
+            "laneId": "main",
             "pointType": "buildable",
             "allowedBuildingTypes": [
               "supply_depot",
               "mint"
             ],
             "owner": "neutral",
-            "control": 0.03594960000000028,
+            "control": 0.1439639999999997,
             "progress": 0.17,
             "worldX": 2077.0496894409935,
             "worldY": 2907.7701863354037,
@@ -2611,13 +2835,14 @@
           },
           {
             "id": 1,
+            "laneId": "main",
             "pointType": "buildable",
             "allowedBuildingTypes": [
               "supply_depot",
               "mint"
             ],
             "owner": "neutral",
-            "control": -0.03594960000000028,
+            "control": -0.1439639999999997,
             "progress": 0.84,
             "worldX": 5440.093167701863,
             "worldY": 1042.552795031056,
@@ -2632,6 +2857,7 @@
         "defenseTowers": [
           {
             "id": 0,
+            "laneId": "main",
             "owner": "player",
             "linkedCapturePointId": 0,
             "progress": 0.37,
@@ -2642,6 +2868,7 @@
           },
           {
             "id": 1,
+            "laneId": "main",
             "owner": "enemy",
             "linkedCapturePointId": 1,
             "progress": 0.64,
@@ -2658,7 +2885,21 @@
         "laneEnd": {
           "x": 5995,
           "y": 580
-        }
+        },
+        "lanes": [
+          {
+            "id": "main",
+            "role": "center",
+            "start": {
+              "x": 1240,
+              "y": 3130
+            },
+            "end": {
+              "x": 5995,
+              "y": 580
+            }
+          }
+        ]
       },
       "ui": {
         "ageLabel": "시대 석기 시대",
@@ -3026,7 +3267,7 @@
             {
               "id": 1,
               "unitId": "stone_slinger",
-              "pose": "stone-slinger-e-idle",
+              "pose": "stone-slinger-e-walk-b",
               "worldWidth": 296.81159420289856,
               "worldHeight": 296.81159420289856,
               "canvasScreenWidth": 136.53333333333333,
@@ -3051,46 +3292,14 @@
               "facingX": 1,
               "flipX": false,
               "motion": {
-                "x": 0,
-                "y": 0
+                "x": 2.173913043478251,
+                "y": -2.1739130434780236
               }
             },
             {
               "id": 2,
               "unitId": "stone_axeman",
-              "pose": "stone-axeman-e-idle",
-              "worldWidth": 321.54589371980677,
-              "worldHeight": 321.54589371980677,
-              "canvasScreenWidth": 147.91111111111113,
-              "canvasScreenHeight": 147.91111111111113,
-              "cssFrameWidth": 147.91111111111113,
-              "cssFrameHeight": 147.91111111111113,
-              "cssVisibleHeight": 104,
-              "originX": 0.5,
-              "originY": 0.875,
-              "hpWorldWidth": 113.04347826086956,
-              "hpWorldHeight": 13.043478260869565,
-              "hpCssWidth": 52,
-              "hpCssHeight": 6,
-              "manaCurrent": 0,
-              "manaMax": 0,
-              "manaRegenPerSec": 0,
-              "healManaCost": 0,
-              "labelCssFontSize": 13.8,
-              "labelResolution": 2,
-              "labelScale": 1,
-              "labelVisible": false,
-              "facingX": 1,
-              "flipX": false,
-              "motion": {
-                "x": 0,
-                "y": -2.1739130434780236
-              }
-            },
-            {
-              "id": 3,
-              "unitId": "stone_axeman",
-              "pose": "stone-axeman-nw-idle",
+              "pose": "stone-axeman-e-walk-a",
               "worldWidth": 321.54589371980677,
               "worldHeight": 321.54589371980677,
               "canvasScreenWidth": 147.91111111111113,
@@ -3120,9 +3329,41 @@
               }
             },
             {
+              "id": 3,
+              "unitId": "stone_axeman",
+              "pose": "stone-axeman-e-walk-b",
+              "worldWidth": 321.54589371980677,
+              "worldHeight": 321.54589371980677,
+              "canvasScreenWidth": 147.91111111111113,
+              "canvasScreenHeight": 147.91111111111113,
+              "cssFrameWidth": 147.91111111111113,
+              "cssFrameHeight": 147.91111111111113,
+              "cssVisibleHeight": 104,
+              "originX": 0.5,
+              "originY": 0.875,
+              "hpWorldWidth": 113.04347826086956,
+              "hpWorldHeight": 13.043478260869565,
+              "hpCssWidth": 52,
+              "hpCssHeight": 6,
+              "manaCurrent": 0,
+              "manaMax": 0,
+              "manaRegenPerSec": 0,
+              "healManaCost": 0,
+              "labelCssFontSize": 13.8,
+              "labelResolution": 2,
+              "labelScale": 1,
+              "labelVisible": false,
+              "facingX": 1,
+              "flipX": false,
+              "motion": {
+                "x": 2.173913043478251,
+                "y": -2.1739130434780236
+              }
+            },
+            {
               "id": 4,
               "unitId": "supply_wagon",
-              "pose": "supply-wagon-nw-idle",
+              "pose": "supply-wagon-ne-idle",
               "worldWidth": 478.1964573268921,
               "worldHeight": 358.6473429951691,
               "canvasScreenWidth": 219.97037037037038,
@@ -3144,7 +3385,7 @@
               "labelResolution": 2,
               "labelScale": 1,
               "labelVisible": false,
-              "facingX": -1,
+              "facingX": 1,
               "flipX": false,
               "motion": {
                 "x": 0,
@@ -3154,7 +3395,7 @@
             {
               "id": 5,
               "unitId": "stone_slinger",
-              "pose": "stone-slinger-sw-idle",
+              "pose": "stone-slinger-sw-walk-b",
               "worldWidth": 296.81159420289856,
               "worldHeight": 296.81159420289856,
               "canvasScreenWidth": 136.53333333333333,
@@ -3186,7 +3427,7 @@
             {
               "id": 6,
               "unitId": "stone_axeman",
-              "pose": "stone-axeman-sw-idle",
+              "pose": "stone-axeman-sw-walk-a",
               "worldWidth": 321.54589371980677,
               "worldHeight": 321.54589371980677,
               "canvasScreenWidth": 147.91111111111113,
@@ -3211,14 +3452,14 @@
               "facingX": -1,
               "flipX": false,
               "motion": {
-                "x": 0,
+                "x": -2.173913043478933,
                 "y": 0
               }
             },
             {
               "id": 7,
               "unitId": "stone_axeman",
-              "pose": "stone-axeman-w-idle",
+              "pose": "stone-axeman-w-walk-a",
               "worldWidth": 321.54589371980677,
               "worldHeight": 321.54589371980677,
               "canvasScreenWidth": 147.91111111111113,
@@ -3250,7 +3491,7 @@
             {
               "id": 8,
               "unitId": "supply_wagon",
-              "pose": "supply-wagon-se-idle",
+              "pose": "supply-wagon-sw-idle",
               "worldWidth": 478.1964573268921,
               "worldHeight": 358.6473429951691,
               "canvasScreenWidth": 219.97037037037038,
@@ -3272,7 +3513,7 @@
               "labelResolution": 2,
               "labelScale": 1,
               "labelVisible": false,
-              "facingX": 1,
+              "facingX": -1,
               "flipX": false,
               "motion": {
                 "x": 0,
@@ -3416,13 +3657,13 @@
     },
     "end": {
       "phase": "lane-siege",
-      "elapsedSec": 30.47036999999998,
+      "elapsedSec": 31.007129999999986,
       "player": {
         "ageId": "stone",
         "resources": {
           "gold": 65,
           "wood": 43,
-          "food": 49.47037,
+          "food": 50.00713,
           "metal": 21,
           "gunpowder": 0,
           "fuel": 0
@@ -3436,14 +3677,14 @@
           "idle": 0
         },
         "baseHp": 400,
-        "nextWaveInSec": 29.556689999999996
+        "nextWaveInSec": 29.10004
       },
       "enemy": {
         "ageId": "stone",
         "resources": {
           "gold": 64,
           "wood": 33,
-          "food": 49.47036999999999,
+          "food": 50.007130000000004,
           "metal": 13,
           "gunpowder": 0,
           "fuel": 0
@@ -3457,7 +3698,7 @@
           "idle": 0
         },
         "baseHp": 400,
-        "nextWaveInSec": 9.555840000000023
+        "nextWaveInSec": 9.074149999999987
       },
       "units": [
         {
@@ -3465,29 +3706,33 @@
           "team": "player",
           "unitId": "supply_wagon",
           "role": "support",
-          "progress": 0.43308828000000027,
-          "laneRow": 0,
+          "laneId": "main",
+          "progress": 0.43508062,
+          "laneRow": 1,
           "hp": 54,
           "maxHp": 54,
           "facingX": 1,
+          "facingDirection": "ne",
           "flipX": false,
           "tint": 16777215,
           "motion": {
             "x": 0,
             "y": 0
           },
-          "pose": "supply-wagon-n-idle",
-          "renderTexture": "supply-wagon-n-idle",
+          "pose": "supply-wagon-ne-idle",
+          "renderTexture": "supply-wagon-ne-idle",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
-          "manaCurrent": 3.7204500000000014,
+          "manaCurrent": 4.4120750000000015,
           "manaMax": 18,
           "manaRegenPerSec": 1.25,
           "healManaCost": 6,
           "healPower": 4,
           "presentation": {
-            "x": 3389.9068322981366,
-            "y": 2028.8491704564738,
+            "x": 3435.55900621118,
+            "y": 2072.423736643519,
             "rotationRad": 0
           },
           "overlay": {
@@ -3509,20 +3754,24 @@
           "team": "enemy",
           "unitId": "stone_slinger",
           "role": "battle",
-          "progress": 0.5259904000000004,
-          "laneRow": 0,
-          "hp": 16,
+          "laneId": "main",
+          "progress": 0.5126192800000008,
+          "laneRow": 1,
+          "hp": 14,
           "maxHp": 26,
           "facingX": -1,
+          "facingDirection": "sw",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": -4.347826086956047,
-            "y": 0
+            "x": -10.869565217391028,
+            "y": 6.521739130434753
           },
-          "pose": "stone-slinger-w-attack",
-          "renderTexture": "stone-slinger-w-attack-enemy",
-          "attackAnimTime": 0.2850099999999991,
+          "pose": "stone-slinger-sw-walk-b",
+          "renderTexture": "stone-slinger-sw-walk-b-enemy",
+          "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -3530,16 +3779,16 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 3906.541281281361,
-            "y": 1824.6175783009473,
-            "rotationRad": 0.03776149115547511
+            "x": 3870.3416149068325,
+            "y": 1877.4524389712647,
+            "rotationRad": 0
           },
           "overlay": {
             "mode": "summary",
             "hpVisible": true,
             "manaVisible": false,
             "labelVisible": true,
-            "labelText": "적군 ×6 · HP 93%"
+            "labelText": "적군 ×6 · HP 92%"
           },
           "attackTiming": {
             "durationSec": 0.58,
@@ -3553,29 +3802,33 @@
           "team": "enemy",
           "unitId": "supply_wagon",
           "role": "support",
-          "progress": 0.5494363599999998,
-          "laneRow": 0,
+          "laneId": "main",
+          "progress": 0.5418248960000005,
+          "laneRow": 1,
           "hp": 54,
           "maxHp": 54,
           "facingX": -1,
+          "facingDirection": "sw",
           "flipX": false,
           "tint": 16777215,
           "motion": {
             "x": -13.043478260869506,
-            "y": 2.173913043478251
+            "y": 10.869565217391255
           },
           "pose": "supply-wagon-sw-walk-b",
           "renderTexture": "supply-wagon-sw-walk-b-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
-          "manaCurrent": 3.5433750000000033,
+          "manaCurrent": 4.230825000000002,
           "manaMax": 18,
           "manaRegenPerSec": 1.25,
           "healManaCost": 6,
           "healPower": 4,
           "presentation": {
-            "x": 4059.472049689441,
-            "y": 1783.9718767529778,
+            "x": 4037.7329192546586,
+            "y": 1831.597125905045,
             "rotationRad": 0
           },
           "overlay": {
@@ -3597,20 +3850,24 @@
           "team": "enemy",
           "unitId": "stone_slinger",
           "role": "battle",
-          "progress": 0.5233068699999994,
-          "laneRow": 0.66099375,
+          "laneId": "main",
+          "progress": 0.5130517299999997,
+          "laneRow": 0.383625,
           "hp": 26,
           "maxHp": 26,
           "facingX": -1,
+          "facingDirection": "sw",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": -6.521739130434526,
-            "y": 6.52173913043498
+            "x": -13.043478260869506,
+            "y": 8.695652173913004
           },
           "pose": "stone-slinger-sw-walk-a",
           "renderTexture": "stone-slinger-sw-walk-a-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -3618,8 +3875,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 3909.472049689441,
-            "y": 1852.7650422019951,
+            "x": 3868.167701863354,
+            "y": 1841.170426895899,
             "rotationRad": 0
           },
           "overlay": {
@@ -3641,20 +3898,24 @@
           "team": "enemy",
           "unitId": "stone_axeman",
           "role": "battle",
-          "progress": 0.4872952199999999,
-          "laneRow": 0.4356000000028555,
+          "laneId": "main",
+          "progress": 0.4766615199999985,
+          "laneRow": 1.0000000000007785,
           "hp": 28,
           "maxHp": 34,
           "facingX": -1,
+          "facingDirection": "w",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": -19.56521739130403,
-            "y": 0
+            "x": -17.391304347826008,
+            "y": 4.347826086956502
           },
           "pose": "stone-axeman-w-walk-b",
           "renderTexture": "stone-axeman-w-walk-b-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -3662,8 +3923,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 3752.9503105590065,
-            "y": 1925.309052312683,
+            "x": 3698.6024844720496,
+            "y": 1951.501183658476,
             "rotationRad": 0
           },
           "overlay": {
@@ -3685,20 +3946,24 @@
           "team": "enemy",
           "unitId": "stone_axeman",
           "role": "battle",
-          "progress": 0.4872952199999999,
-          "laneRow": 0.28749600000564723,
+          "laneId": "main",
+          "progress": 0.4766615199999985,
+          "laneRow": 0.9574206924168197,
           "hp": 34,
           "maxHp": 34,
           "facingX": -1,
+          "facingDirection": "w",
           "flipX": false,
           "tint": 16777215,
           "motion": {
             "x": -19.56521739130403,
-            "y": -2.173913043478251
+            "y": 6.521739130434753
           },
           "pose": "stone-axeman-w-walk-a",
           "renderTexture": "stone-axeman-w-walk-a-enemy",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -3706,8 +3971,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 3752.9503105590065,
-            "y": 1917.3666686628615,
+            "x": 3696.4285714285716,
+            "y": 1944.9572650268371,
             "rotationRad": 0
           },
           "overlay": {
@@ -3729,30 +3994,34 @@
           "team": "enemy",
           "unitId": "supply_wagon",
           "role": "support",
-          "progress": 0.5624629999999994,
-          "laneRow": -1,
+          "laneId": "main",
+          "progress": 0.5530546079999998,
+          "laneRow": 1,
           "hp": 54,
           "maxHp": 54,
           "facingX": -1,
+          "facingDirection": "sw",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": -13.04347826086996,
-            "y": 0
+            "x": -13.043478260869051,
+            "y": 15.217391304347757
           },
-          "pose": "supply-wagon-w-walk-b",
-          "renderTexture": "supply-wagon-w-walk-b-enemy",
-          "attackAnimTime": 0.66,
+          "pose": "supply-wagon-sw-attack",
+          "renderTexture": "supply-wagon-sw-attack-enemy",
+          "attackAnimTime": 0.20835999999999985,
+          "attackFacingLockSec": 0.20835999999999985,
+          "combatFacingHoldSec": 0.20835999999999985,
           "attackTargetKind": "unit",
-          "manaCurrent": 7.652000000000001,
+          "manaCurrent": 8.2144875,
           "manaMax": 18,
           "manaRegenPerSec": 1.25,
           "healManaCost": 6,
           "healPower": 4,
           "presentation": {
-            "x": 4122.515527950311,
-            "y": 1720.4469043502338,
-            "rotationRad": 0
+            "x": 4092.7480448951856,
+            "y": 1786.022975088804,
+            "rotationRad": -0.010044089932719658
           },
           "overlay": {
             "mode": "hidden",
@@ -3773,20 +4042,24 @@
           "team": "player",
           "unitId": "stone_slinger",
           "role": "battle",
-          "progress": 0.07235430000000004,
-          "laneRow": -1,
+          "laneId": "main",
+          "progress": 0.08194416,
+          "laneRow": 0,
           "hp": 26,
           "maxHp": 26,
           "facingX": 1,
+          "facingDirection": "se",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 10.869565217391255,
-            "y": 10.869565217391028
+            "x": 15.217391304347984,
+            "y": 13.043478260869506
           },
-          "pose": "stone-slinger-se-walk-b",
-          "renderTexture": "stone-slinger-se-walk-b",
+          "pose": "stone-slinger-se-walk-a",
+          "renderTexture": "stone-slinger-se-walk-a",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -3794,8 +4067,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1531.2111801242238,
-            "y": 2963.2840459069553,
+            "x": 1572.5155279503108,
+            "y": 3014.6267779725317,
             "rotationRad": 0
           },
           "overlay": {
@@ -3817,20 +4090,24 @@
           "team": "player",
           "unitId": "stone_axeman",
           "role": "battle",
-          "progress": 0.07294260000000002,
-          "laneRow": 0.29324592000673105,
+          "laneId": "main",
+          "progress": 0.08298912,
+          "laneRow": 0.830484262514577,
           "hp": 34,
           "maxHp": 34,
           "facingX": 1,
+          "facingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 10.869565217391255,
-            "y": 0
+            "x": 13.043478260869506,
+            "y": 2.1739130434784784
           },
           "pose": "stone-axeman-e-walk-b",
           "renderTexture": "stone-axeman-e-walk-b",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -3838,8 +4115,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1550.776397515528,
-            "y": 3093.4993611147784,
+            "x": 1587.7329192546586,
+            "y": 3108.8094504535966,
             "rotationRad": 0
           },
           "overlay": {
@@ -3861,20 +4138,24 @@
           "team": "player",
           "unitId": "stone_axeman",
           "role": "battle",
-          "progress": 0.07294260000000002,
-          "laneRow": 1.9215553600048327,
+          "laneId": "main",
+          "progress": 0.08298912,
+          "laneRow": 2.0545516070124266,
           "hp": 34,
           "maxHp": 34,
           "facingX": 1,
+          "facingDirection": "ne",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 8.695652173913004,
-            "y": -10.869565217391028
+            "x": 13.043478260869506,
+            "y": -6.52173913043498
           },
-          "pose": "stone-axeman-ne-walk-a",
-          "renderTexture": "stone-axeman-ne-walk-a",
+          "pose": "stone-axeman-ne-walk-b",
+          "renderTexture": "stone-axeman-ne-walk-b",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 0,
           "manaMax": 0,
@@ -3882,8 +4163,8 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1570.3416149068325,
-            "y": 3245.0796590858413,
+            "x": 1605.1242236024846,
+            "y": 3229.630030064341,
             "rotationRad": 0
           },
           "overlay": {
@@ -3905,20 +4186,24 @@
           "team": "player",
           "unitId": "supply_wagon",
           "role": "support",
-          "progress": 0.04865614400000001,
+          "laneId": "main",
+          "progress": 0.045749267999999996,
           "laneRow": 1,
           "hp": 54,
           "maxHp": 54,
           "facingX": 1,
+          "facingDirection": "se",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 6.521739130434753,
-            "y": 6.52173913043498
+            "x": 2.173913043478251,
+            "y": 2.1739130434780236
           },
-          "pose": "supply-wagon-se-walk-a",
-          "renderTexture": "supply-wagon-se-walk-a",
+          "pose": "supply-wagon-se-walk-b",
+          "renderTexture": "supply-wagon-se-walk-b",
           "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
           "attackTargetKind": "unit",
           "manaCurrent": 18,
           "manaMax": 18,
@@ -3926,8 +4211,8 @@
           "healManaCost": 6,
           "healPower": 4,
           "presentation": {
-            "x": 1452.9503105590063,
-            "y": 3135.3583309076,
+            "x": 1455.1242236024846,
+            "y": 3147.094498014034,
             "rotationRad": 0
           },
           "overlay": {
@@ -3963,6 +4248,7 @@
         "controlPoints": [
           {
             "id": 0,
+            "laneId": "main",
             "pointType": "buildable",
             "allowedBuildingTypes": [
               "supply_depot",
@@ -3985,6 +4271,7 @@
           },
           {
             "id": 1,
+            "laneId": "main",
             "pointType": "buildable",
             "allowedBuildingTypes": [
               "supply_depot",
@@ -4006,6 +4293,7 @@
         "defenseTowers": [
           {
             "id": 0,
+            "laneId": "main",
             "owner": "player",
             "linkedCapturePointId": 0,
             "progress": 0.37,
@@ -4016,6 +4304,7 @@
           },
           {
             "id": 1,
+            "laneId": "main",
             "owner": "enemy",
             "linkedCapturePointId": 1,
             "progress": 0.64,
@@ -4032,7 +4321,21 @@
         "laneEnd": {
           "x": 5995,
           "y": 580
-        }
+        },
+        "lanes": [
+          {
+            "id": "main",
+            "role": "center",
+            "start": {
+              "x": 1240,
+              "y": 3130
+            },
+            "end": {
+              "x": 5995,
+              "y": 580
+            }
+          }
+        ]
       },
       "ui": {
         "ageLabel": "시대 석기 시대",
@@ -4061,17 +4364,11 @@
           "16": "hidden"
         }
       },
-      "activeProjectiles": [
-        {
-          "textureKey": "projectile-stone",
-          "x": 3907.2981366459626,
-          "y": 1705.4124287179502
-        }
-      ],
+      "activeProjectiles": [],
       "engagement": {
         "uniqueAttackers": 10,
         "battleUnits": 7,
-        "currentlyAnimating": 2
+        "currentlyAnimating": 1
       },
       "towerAttackPatterns": {
         "stone": {
@@ -4409,7 +4706,7 @@
             {
               "id": 4,
               "unitId": "supply_wagon",
-              "pose": "supply-wagon-n-idle",
+              "pose": "supply-wagon-ne-idle",
               "worldWidth": 478.1964573268921,
               "worldHeight": 358.6473429951691,
               "canvasScreenWidth": 219.97037037037038,
@@ -4423,7 +4720,7 @@
               "hpWorldHeight": 13.043478260869565,
               "hpCssWidth": 52,
               "hpCssHeight": 6,
-              "manaCurrent": 3.7204500000000014,
+              "manaCurrent": 4.4120750000000015,
               "manaMax": 18,
               "manaRegenPerSec": 1.25,
               "healManaCost": 6,
@@ -4441,12 +4738,12 @@
             {
               "id": 5,
               "unitId": "stone_slinger",
-              "pose": "stone-slinger-w-attack",
-              "worldWidth": 395.7487922705314,
+              "pose": "stone-slinger-sw-walk-b",
+              "worldWidth": 296.81159420289856,
               "worldHeight": 296.81159420289856,
-              "canvasScreenWidth": 182.04444444444445,
+              "canvasScreenWidth": 136.53333333333333,
               "canvasScreenHeight": 136.53333333333333,
-              "cssFrameWidth": 182.04444444444445,
+              "cssFrameWidth": 136.53333333333333,
               "cssFrameHeight": 136.53333333333333,
               "cssVisibleHeight": 96.00000000000001,
               "originX": 0.5,
@@ -4466,8 +4763,8 @@
               "facingX": -1,
               "flipX": false,
               "motion": {
-                "x": -4.347826086956047,
-                "y": 0
+                "x": -10.869565217391028,
+                "y": 6.521739130434753
               }
             },
             {
@@ -4487,7 +4784,7 @@
               "hpWorldHeight": 13.043478260869565,
               "hpCssWidth": 52,
               "hpCssHeight": 6,
-              "manaCurrent": 3.5433750000000033,
+              "manaCurrent": 4.230825000000002,
               "manaMax": 18,
               "manaRegenPerSec": 1.25,
               "healManaCost": 6,
@@ -4499,7 +4796,7 @@
               "flipX": false,
               "motion": {
                 "x": -13.043478260869506,
-                "y": 2.173913043478251
+                "y": 10.869565217391255
               }
             },
             {
@@ -4530,8 +4827,8 @@
               "facingX": -1,
               "flipX": false,
               "motion": {
-                "x": -6.521739130434526,
-                "y": 6.52173913043498
+                "x": -13.043478260869506,
+                "y": 8.695652173913004
               }
             },
             {
@@ -4562,8 +4859,8 @@
               "facingX": -1,
               "flipX": false,
               "motion": {
-                "x": -19.56521739130403,
-                "y": 0
+                "x": -17.391304347826008,
+                "y": 4.347826086956502
               }
             },
             {
@@ -4595,13 +4892,13 @@
               "flipX": false,
               "motion": {
                 "x": -19.56521739130403,
-                "y": -2.173913043478251
+                "y": 6.521739130434753
               }
             },
             {
               "id": 12,
               "unitId": "supply_wagon",
-              "pose": "supply-wagon-w-walk-b",
+              "pose": "supply-wagon-sw-attack",
               "worldWidth": 478.1964573268921,
               "worldHeight": 358.6473429951691,
               "canvasScreenWidth": 219.97037037037038,
@@ -4615,7 +4912,7 @@
               "hpWorldHeight": 13.043478260869565,
               "hpCssWidth": 52,
               "hpCssHeight": 6,
-              "manaCurrent": 7.652000000000001,
+              "manaCurrent": 8.2144875,
               "manaMax": 18,
               "manaRegenPerSec": 1.25,
               "healManaCost": 6,
@@ -4626,14 +4923,14 @@
               "facingX": -1,
               "flipX": false,
               "motion": {
-                "x": -13.04347826086996,
-                "y": 0
+                "x": -13.043478260869051,
+                "y": 15.217391304347757
               }
             },
             {
               "id": 13,
               "unitId": "stone_slinger",
-              "pose": "stone-slinger-se-walk-b",
+              "pose": "stone-slinger-se-walk-a",
               "worldWidth": 296.81159420289856,
               "worldHeight": 296.81159420289856,
               "canvasScreenWidth": 136.53333333333333,
@@ -4658,8 +4955,8 @@
               "facingX": 1,
               "flipX": false,
               "motion": {
-                "x": 10.869565217391255,
-                "y": 10.869565217391028
+                "x": 15.217391304347984,
+                "y": 13.043478260869506
               }
             }
           ],

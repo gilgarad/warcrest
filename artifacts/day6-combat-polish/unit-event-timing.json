@@ -2,12 +2,12 @@
   "melee": {
     "hpBefore": 34,
     "configuredContactDelayMs": 220.79999999999998,
-    "observedCaptureWallMs": 1941
+    "observedCaptureWallMs": 1847
   },
   "ranged": {
     "hpBefore": 34,
     "configuredReleaseDelayMs": 243.6,
-    "observedCaptureWallMs": 2272,
+    "observedCaptureWallMs": 522,
     "projectileCountAtRelease": 1
   }
 }

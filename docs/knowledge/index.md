@@ -2,6 +2,15 @@
 
 Durable project memory for `game_project1`.
 
+## Art Production Reference
+
+- `retro-rts-production-precedent.md`: how Blizzard (Warcraft II/StarCraft),
+  Ensemble (Age of Empires), and Westwood (Dune II/C&C) actually produced
+  consistent sprite art at scale — the master-reference + fixed-render-
+  contract + per-frame-cleanup pattern this project's own asset pipeline
+  should copy. Read before generating another batch of unit/terrain art;
+  see `docs/dev-wiki/wc2-rebuild-plan.md` for how it's applied here.
+
 ## Project Overview
 
 - Goal: build a playable game using AI coding agents (Claude Code, Codex,

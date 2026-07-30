@@ -26,22 +26,22 @@
       {
         "id": "sfx.ui.buildSelect",
         "result": "played",
-        "atMs": 8696
+        "atMs": 8719
       },
       {
         "id": "sfx.wave.start",
         "result": "played",
-        "atMs": 8754
+        "atMs": 8766
       },
       {
         "id": "sfx.ui.buildSelect",
         "result": "cooldown",
-        "atMs": 8789
+        "atMs": 8800
       },
       {
         "id": "sfx.combat.towerAttack",
         "result": "played",
-        "atMs": 8835
+        "atMs": 8858
       }
     ],
     "skippedEventCount": 1,
@@ -77,22 +77,22 @@
       {
         "id": "sfx.ui.buildSelect",
         "result": "played",
-        "atMs": 8696
+        "atMs": 8719
       },
       {
         "id": "sfx.wave.start",
         "result": "played",
-        "atMs": 8754
+        "atMs": 8766
       },
       {
         "id": "sfx.ui.buildSelect",
         "result": "cooldown",
-        "atMs": 8789
+        "atMs": 8800
       },
       {
         "id": "sfx.combat.towerAttack",
         "result": "played",
-        "atMs": 8835
+        "atMs": 8858
       }
     ],
     "skippedEventCount": 1,
@@ -128,22 +128,22 @@
       {
         "id": "sfx.ui.buildSelect",
         "result": "played",
-        "atMs": 8696
+        "atMs": 8719
       },
       {
         "id": "sfx.wave.start",
         "result": "played",
-        "atMs": 8754
+        "atMs": 8766
       },
       {
         "id": "sfx.ui.buildSelect",
         "result": "cooldown",
-        "atMs": 8789
+        "atMs": 8800
       },
       {
         "id": "sfx.combat.towerAttack",
         "result": "played",
-        "atMs": 8835
+        "atMs": 8858
       }
     ],
     "skippedEventCount": 1,
@@ -179,22 +179,22 @@
       {
         "id": "sfx.ui.buildSelect",
         "result": "played",
-        "atMs": 8696
+        "atMs": 8719
       },
       {
         "id": "sfx.wave.start",
         "result": "played",
-        "atMs": 8754
+        "atMs": 8766
       },
       {
         "id": "sfx.ui.buildSelect",
         "result": "cooldown",
-        "atMs": 8789
+        "atMs": 8800
       },
       {
         "id": "sfx.combat.towerAttack",
         "result": "played",
-        "atMs": 8835
+        "atMs": 8858
       }
     ],
     "skippedEventCount": 1,
@@ -230,22 +230,22 @@
       {
         "id": "sfx.ui.buildSelect",
         "result": "played",
-        "atMs": 8696
+        "atMs": 8719
       },
       {
         "id": "sfx.wave.start",
         "result": "played",
-        "atMs": 8754
+        "atMs": 8766
       },
       {
         "id": "sfx.ui.buildSelect",
         "result": "cooldown",
-        "atMs": 8789
+        "atMs": 8800
       },
       {
         "id": "sfx.combat.towerAttack",
         "result": "played",
-        "atMs": 8835
+        "atMs": 8858
       }
     ],
     "skippedEventCount": 1,

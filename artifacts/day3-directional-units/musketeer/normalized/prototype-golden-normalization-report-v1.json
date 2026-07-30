@@ -7,9 +7,9 @@
       384
     ],
     "alphaBbox": [
-      103,
+      106,
       66,
-      281,
+      279,
       336
     ],
     "groundAnchor": [
@@ -25,9 +25,9 @@
       384
     ],
     "alphaBbox": [
-      105,
+      108,
       66,
-      279,
+      275,
       336
     ],
     "groundAnchor": [
@@ -43,9 +43,9 @@
       384
     ],
     "alphaBbox": [
-      106,
+      110,
       66,
-      277,
+      274,
       336
     ],
     "groundAnchor": [
@@ -61,9 +61,9 @@
       384
     ],
     "alphaBbox": [
-      113,
+      120,
       66,
-      399,
+      393,
       336
     ],
     "groundAnchor": [
@@ -79,9 +79,9 @@
       384
     ],
     "alphaBbox": [
-      124,
+      108,
       66,
-      259,
+      277,
       336
     ],
     "groundAnchor": [
@@ -92,6 +92,222 @@
   {
     "key": "musketeer-ne-walk-a",
     "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-ne-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      96,
+      66,
+      289,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "musketeer-ne-walk-b",
+    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-ne-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      98,
+      66,
+      285,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "musketeer-ne-attack",
+    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-ne-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      122,
+      66,
+      390,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "musketeer-e-idle",
+    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-e-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      126,
+      66,
+      259,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "musketeer-e-walk-a",
+    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-e-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      112,
+      66,
+      273,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "musketeer-e-walk-b",
+    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-e-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      109,
+      66,
+      275,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "musketeer-e-attack",
+    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-e-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      118,
+      66,
+      394,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "musketeer-se-idle",
+    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-se-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      132,
+      66,
+      251,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "musketeer-se-walk-a",
+    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-se-walk-a.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      125,
+      66,
+      259,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "musketeer-se-walk-b",
+    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-se-walk-b.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      118,
+      66,
+      267,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "musketeer-se-attack",
+    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-se-attack.png",
+    "canvas": [
+      512,
+      384
+    ],
+    "alphaBbox": [
+      110,
+      66,
+      403,
+      336
+    ],
+    "groundAnchor": [
+      256,
+      336
+    ]
+  },
+  {
+    "key": "musketeer-s-idle",
+    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-s-idle.png",
+    "canvas": [
+      384,
+      384
+    ],
+    "alphaBbox": [
+      113,
+      66,
+      271,
+      336
+    ],
+    "groundAnchor": [
+      192,
+      336
+    ]
+  },
+  {
+    "key": "musketeer-s-walk-a",
+    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-s-walk-a.png",
     "canvas": [
       384,
       384
@@ -108,222 +324,6 @@
     ]
   },
   {
-    "key": "musketeer-ne-walk-b",
-    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-ne-walk-b.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      118,
-      66,
-      265,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "musketeer-ne-attack",
-    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-ne-attack.png",
-    "canvas": [
-      512,
-      384
-    ],
-    "alphaBbox": [
-      157,
-      66,
-      355,
-      336
-    ],
-    "groundAnchor": [
-      256,
-      336
-    ]
-  },
-  {
-    "key": "musketeer-e-idle",
-    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-e-idle.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      138,
-      66,
-      245,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "musketeer-e-walk-a",
-    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-e-walk-a.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      119,
-      66,
-      265,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "musketeer-e-walk-b",
-    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-e-walk-b.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      122,
-      66,
-      262,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "musketeer-e-attack",
-    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-e-attack.png",
-    "canvas": [
-      512,
-      384
-    ],
-    "alphaBbox": [
-      150,
-      66,
-      362,
-      336
-    ],
-    "groundAnchor": [
-      256,
-      336
-    ]
-  },
-  {
-    "key": "musketeer-se-idle",
-    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-se-idle.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      144,
-      66,
-      240,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "musketeer-se-walk-a",
-    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-se-walk-a.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      135,
-      66,
-      249,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "musketeer-se-walk-b",
-    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-se-walk-b.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      131,
-      66,
-      253,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "musketeer-se-attack",
-    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-se-attack.png",
-    "canvas": [
-      512,
-      384
-    ],
-    "alphaBbox": [
-      150,
-      66,
-      363,
-      336
-    ],
-    "groundAnchor": [
-      256,
-      336
-    ]
-  },
-  {
-    "key": "musketeer-s-idle",
-    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-s-idle.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      128,
-      66,
-      256,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
-    "key": "musketeer-s-walk-a",
-    "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-s-walk-a.png",
-    "canvas": [
-      384,
-      384
-    ],
-    "alphaBbox": [
-      130,
-      66,
-      254,
-      336
-    ],
-    "groundAnchor": [
-      192,
-      336
-    ]
-  },
-  {
     "key": "musketeer-s-walk-b",
     "output": "artifacts/day3-directional-units/musketeer/normalized/musketeer-s-walk-b.png",
     "canvas": [
@@ -331,9 +331,9 @@
       384
     ],
     "alphaBbox": [
-      124,
+      112,
       66,
-      260,
+      272,
       336
     ],
     "groundAnchor": [
@@ -349,9 +349,9 @@
       384
     ],
     "alphaBbox": [
-      148,
+      105,
       66,
-      364,
+      407,
       336
     ],
     "groundAnchor": [
@@ -367,9 +367,9 @@
       384
     ],
     "alphaBbox": [
-      144,
+      141,
       66,
-      239,
+      243,
       336
     ],
     "groundAnchor": [
@@ -385,9 +385,9 @@
       384
     ],
     "alphaBbox": [
-      130,
+      112,
       66,
-      254,
+      272,
       336
     ],
     "groundAnchor": [
@@ -403,9 +403,9 @@
       384
     ],
     "alphaBbox": [
-      136,
+      120,
       66,
-      249,
+      263,
       336
     ],
     "groundAnchor": [
@@ -421,9 +421,9 @@
       384
     ],
     "alphaBbox": [
-      146,
+      110,
       66,
-      366,
+      402,
       336
     ],
     "groundAnchor": [
@@ -439,9 +439,9 @@
       384
     ],
     "alphaBbox": [
-      138,
+      127,
       66,
-      245,
+      257,
       336
     ],
     "groundAnchor": [
@@ -457,9 +457,9 @@
       384
     ],
     "alphaBbox": [
-      134,
+      104,
       66,
-      251,
+      279,
       336
     ],
     "groundAnchor": [
@@ -475,9 +475,9 @@
       384
     ],
     "alphaBbox": [
-      129,
+      110,
       66,
-      255,
+      275,
       336
     ],
     "groundAnchor": [
@@ -493,9 +493,9 @@
       384
     ],
     "alphaBbox": [
-      149,
+      111,
       66,
-      363,
+      401,
       336
     ],
     "groundAnchor": [

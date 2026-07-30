@@ -45,7 +45,7 @@ test("keeps two buildable points separate from the defense tower collection", as
   }).controlPoints;
   expect(controlPoints).toHaveLength(2);
   expect(controlPoints.every((point) => point.pointType === "buildable")).toBe(true);
-  expect(controlPoints.map((point) => point.progress)).toEqual([0.375, 0.767]);
+  expect(controlPoints.map((point) => point.progress)).toEqual([0.17, 0.83]);
 
   const towers = ((layout.verification as {
     presentation: { captureTowers: Array<{ id: number; worldX: number; worldY: number }> };
@@ -85,7 +85,11 @@ test("keeps two buildable points separate from the defense tower collection", as
     `${ARTIFACT_DIR}/layout-v2.json`,
     JSON.stringify({
       optionA: "remove-fixed-fortress",
-      progressDistances: { beforeMinimum: 0.179, after: 0.392 },
+      progressDistances: {
+        nearestBuildable: controlPoints[0]?.progress ?? null,
+        farthestBuildable: controlPoints[1]?.progress ?? null,
+        spacing: (controlPoints[1]?.progress ?? 0) - (controlPoints[0]?.progress ?? 0),
+      },
       worldDistance,
       screenDistance,
       controlPoints,

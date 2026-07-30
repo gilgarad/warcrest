@@ -1,5 +1,16 @@
 # Art Direction: Unit Motion And Battle Staging
 
+> **Superseded note (2026-07-28)**: the "high-oblique" battlefield
+> composition standard below (diagonal painted panorama camera) has been
+> replaced by a full top-down projection decision — see
+> `retro-rts-visual-methodology.md` section 4.5/4.5.1/4.5.2. That doc
+> traces this to a misreading: the original ask was a diagonal *lane
+> layout on a flat map* (LoL-style corner bases), not a diagonally tilted
+> *camera*. The "Battlefield Composition Standard" section here describes
+> the tilted-camera reading and should not be used as the current target;
+> the unit-motion sections below (walk/attack pose requirements) still
+> apply regardless of projection.
+
 This page fixes the visual/gameplay interpretation for the current `Warcrest`
 lane-battle prototype before more code is written.
 

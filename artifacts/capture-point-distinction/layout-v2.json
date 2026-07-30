@@ -1,27 +1,31 @@
 {
   "optionA": "remove-fixed-fortress",
   "progressDistances": {
-    "beforeMinimum": 0.179,
-    "after": 0.392
+    "nearestBuildable": 0.17,
+    "farthestBuildable": 0.83,
+    "spacing": 0.6599999999999999
   },
-  "worldDistance": 2118.6742832102536,
-  "screenDistance": 974.5901702767167,
+  "worldDistance": 1405.1367416589474,
+  "screenDistance": 646.3629011631158,
   "controlPoints": [
     {
       "id": 0,
+      "laneId": "main",
       "pointType": "buildable",
       "allowedBuildingTypes": [
-        "watchtower",
         "supply_depot",
         "mint"
       ],
       "owner": "player",
       "control": 1,
-      "progress": 0.375,
-      "towerBuilt": true,
-      "towerHp": 130,
-      "towerMaxHp": 130,
+      "progress": 0.17,
+      "worldX": 2074.8601755460295,
+      "worldY": 2743.968156766687,
+      "labelWorldX": 2074.8601755460295,
+      "labelWorldY": 2496.1420698101656,
+      "markerTexture": "capture-marker",
       "buildingId": null,
+      "buildingLevel": 0,
       "availableActions": [
         "build-supply-depot",
         "build-mint"
@@ -29,27 +33,41 @@
     },
     {
       "id": 1,
+      "laneId": "main",
       "pointType": "buildable",
       "allowedBuildingTypes": [
-        "watchtower",
         "supply_depot",
         "mint"
       ],
       "owner": "enemy",
       "control": -1,
-      "progress": 0.767,
-      "towerBuilt": true,
-      "towerHp": 130,
-      "towerMaxHp": 130,
+      "progress": 0.83,
+      "worldX": 5240.0775668503775,
+      "worldY": 1109.185548071035,
+      "labelWorldX": 5240.0775668503775,
+      "labelWorldY": 861.3594611145134,
+      "markerTexture": "capture-marker-enemy",
       "buildingId": "mint",
+      "buildingLevel": 1,
       "availableActions": []
     }
   ],
   "clickedUi": {
+    "ageLabel": "시대 석기 시대",
     "selectedCapturePointId": 1,
+    "selectedDefenseTowerId": null,
     "visibleCaptureActions": [
       "build-supply-depot",
       "build-mint"
-    ]
+    ],
+    "hudVisible": true,
+    "composition": {
+      "topHeight": 153.11004784688996,
+      "bottomHeight": 210.52631578947367,
+      "openWorldHeight": 536.3636363636364,
+      "openWorldRatio": 0.595959595959596
+    },
+    "unitOverlayDensityEnabled": true,
+    "unitOverlayModes": {}
   }
 }

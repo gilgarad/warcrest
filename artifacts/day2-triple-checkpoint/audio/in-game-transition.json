@@ -26,42 +26,42 @@
       {
         "id": "sfx.ui.buildSelect",
         "result": "played",
-        "atMs": 4017
+        "atMs": 6304
       },
       {
         "id": "sfx.wave.start",
         "result": "played",
-        "atMs": 4075
+        "atMs": 6339
       },
       {
         "id": "sfx.ui.buildSelect",
         "result": "cooldown",
-        "atMs": 4119
+        "atMs": 6374
       },
       {
         "id": "sfx.combat.towerAttack",
         "result": "played",
-        "atMs": 4180
-      },
-      {
-        "id": "sfx.combat.projectileHit",
-        "result": "played",
-        "atMs": 4841
-      },
-      {
-        "id": "sfx.combat.projectileHit",
-        "result": "duplicate",
-        "atMs": 4841
+        "atMs": 6420
       },
       {
         "id": "sfx.combat.meleeAttack",
         "result": "played",
-        "atMs": 4841
+        "atMs": 7094
       },
       {
         "id": "sfx.combat.rangedFire",
         "result": "played",
-        "atMs": 4841
+        "atMs": 7094
+      },
+      {
+        "id": "sfx.combat.projectileHit",
+        "result": "played",
+        "atMs": 7268
+      },
+      {
+        "id": "sfx.combat.projectileHit",
+        "result": "duplicate",
+        "atMs": 7268
       }
     ],
     "skippedEventCount": 2,
@@ -97,42 +97,42 @@
       {
         "id": "sfx.ui.buildSelect",
         "result": "played",
-        "atMs": 4017
+        "atMs": 6304
       },
       {
         "id": "sfx.wave.start",
         "result": "played",
-        "atMs": 4075
+        "atMs": 6339
       },
       {
         "id": "sfx.ui.buildSelect",
         "result": "cooldown",
-        "atMs": 4119
+        "atMs": 6374
       },
       {
         "id": "sfx.combat.towerAttack",
         "result": "played",
-        "atMs": 4180
-      },
-      {
-        "id": "sfx.combat.projectileHit",
-        "result": "played",
-        "atMs": 4841
-      },
-      {
-        "id": "sfx.combat.projectileHit",
-        "result": "duplicate",
-        "atMs": 4841
+        "atMs": 6420
       },
       {
         "id": "sfx.combat.meleeAttack",
         "result": "played",
-        "atMs": 4841
+        "atMs": 7094
       },
       {
         "id": "sfx.combat.rangedFire",
         "result": "played",
-        "atMs": 4841
+        "atMs": 7094
+      },
+      {
+        "id": "sfx.combat.projectileHit",
+        "result": "played",
+        "atMs": 7268
+      },
+      {
+        "id": "sfx.combat.projectileHit",
+        "result": "duplicate",
+        "atMs": 7268
       }
     ],
     "skippedEventCount": 2,
