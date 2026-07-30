@@ -3600,3 +3600,26 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
     기록했다. "빌드가 깨진 채 통과로 보고된 사례가 여러 번 있었다"는
     경고도 하네스 리마인더에 명시했다.
   - 코드는 수정하지 않았다.
+
+## 2026-07-30 (154) — 오디오 트랙: 선택/고용 확인음 추가
+
+- **사용 도구**: Codex (GPT-5), `git log`, `git status`, `npm run build`,
+  `npm test`, Playwright
+- **사용자 지시 원문(핵심)**:
+  - "`cd /data/projects/game_project1-audio`로 이동해서 작업해라(전용 git worktree, 브랜치 `track-audio-ack-sfx`)."
+  - "`assetManifest.ts`에 새 SFX id 추가(예: `sfx.ui.acknowledge`), 기존 synth-fallback 패턴 재사용."
+  - "`거점 클릭, 타워 클릭, 유닛 고용 성공 시 재생되도록 `LaneBattleScene.ts`에 연결해라.`"
+- **AI 산출물 요약**:
+  - 하네스 순서대로 `AGENTS.md -> docs/index.md -> docs/dev-wiki/contract.md`
+    를 먼저 읽고, `git log --oneline -10` 및 `git status`로 오디오 전용
+    worktree 상태와 HEAD `9ae1572`를 확인했다.
+  - `src/systems/audio/assetManifest.ts`에 `sfx.ui.acknowledge`를 추가해
+    기존 missing-asset synth fallback 경로를 그대로 재사용하는 짧은 확인음을
+    만들었다.
+  - `LaneBattleScene.ts`에서는 공유 파일 규칙에 맞춰 오디오 트리거 콜사이트만
+    작게 수정했다. 거점 선택, 타워 선택, 일꾼/연구 일꾼 고용 성공 시
+    새 acknowledge SFX가 울리도록 바꿨다.
+  - 신규 SFX로 늘어난 누락 자산 개수에 맞춰
+    `tools/validation/audio-integration.spec.ts` 기대값을 조정했고,
+    `wc2-systems-gap-review.md` section 4와 `session-tracks.md` 현재 상태를
+    완료 기준으로 갱신했다.

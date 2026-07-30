@@ -82,16 +82,15 @@ checking for uncommitted work first (`git status` inside it).
   AudioSettingsPanel.ts`, `tools/audio-lab/**`, `docs/dev-wiki/
   music-style-brief.md`, `audio-integration-validation.md`.
 - **Current status (2026-07-30)**: all 4 BGM states (`battle-low` through
-  `battle-high`) have measured/verified layered arrangements. No unit-
-  acknowledgment SFX category exists yet — confirmed by grepping
-  `assetManifest.ts` for `hireSuccess`-style entries; nothing for
-  capture-point/tower click or hire acknowledgment
-  (`docs/dev-wiki/wc2-systems-gap-review.md` section 4).
+  `battle-high`) have measured/verified layered arrangements. A minimal
+  synthesized acknowledgment SFX now exists as `sfx.ui.acknowledge` and is
+  wired to capture-point selection, tower selection, and worker/research
+  hire success (`docs/dev-wiki/wc2-systems-gap-review.md` section 4
+  complete).
 - **Next task (optional, small)**: add a minimal synthesized select/
-  acknowledge SFX for capture-point clicks, tower clicks, and hire actions,
-  reusing the existing synth-fallback pattern in `assetManifest.ts`. This is
-  charm, not a blocker — skip it if there's higher-priority work from
-  another track that needs audio wiring instead.
+  acknowledge variant set if the single blip needs richer flavoring later
+  (e.g. distinct hire vs structure-select timbres). Current implementation is
+  intentionally tiny charm work, not a blocker.
 
 ## Shared-file rule: `LaneBattleScene.ts`
 

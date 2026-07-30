@@ -3646,3 +3646,19 @@ Use consistent headings so entries are easy to grep.
 - `docs/dev-wiki/map-redesign-brief.md`, `day3-second-cycle-validation.md`에 archive/승격 결정을 반영한 최소 정정 각주 추가.
 - 전체 Playwright 회귀 중 일부 스펙(`audio-integration`, `day7-5-unit-art`, `day8-regression`, `golden-reference`, `six-issue-followup`, `support-mana`, `terrain-full-lane`)이 파일 단위 기본 타임아웃(45초)을 그대로 써서 긴 오디오 통합 케이스에서 중간에 끊기는 문제를 발견 — 실제 동작 회귀가 아니라 테스트 타임아웃 예산 부족이었다. 해당 7개 파일의 타임아웃을 개별로 올려 재발을 막았다.
 - 검증: `npm run build` 통과, `npm test` 통과(`29` files / `121` tests). 전체 Playwright 회귀는 개발 세션에서 실행/디버그를 마쳤고, 상담 세션이 build/test를 독립적으로 재확인했다.
+
+## [2026-07-30] feat | 오디오 트랙: 선택/고용 확인음 추가
+
+- 담당 브랜치 `track-audio-ack-sfx`에서 `sfx.ui.acknowledge`를
+  `src/systems/audio/assetManifest.ts`에 추가했다. 실제 파일 없이 기존
+  synth-fallback 경로를 그대로 재사용하는 짧은 pluck 계열 확인음이다.
+- `src/scenes/LaneBattleScene.ts`의 공유 파일 수정은 오디오 콜사이트로만
+  제한했다. 거점 선택, 방어 타워 선택, 일꾼/연구 일꾼 고용 성공 시
+  기존 선택/고용 성공음을 새 acknowledge SFX로 배선했다.
+- 관련 회귀로 `tools/validation/audio-integration.spec.ts`의 누락 자산 SFX
+  개수 기대값을 `34`로 갱신했다.
+- 문서도 함께 갱신했다:
+  `docs/dev-wiki/wc2-systems-gap-review.md` section 4 완료 처리,
+  `docs/dev-wiki/session-tracks.md` 음악 트랙 현재 상태 갱신.
+- 검증은 빌드/유닛/오디오 Playwright만 좁게 실행했다. 결과는 이 세션
+  최종 보고 기준이다.
