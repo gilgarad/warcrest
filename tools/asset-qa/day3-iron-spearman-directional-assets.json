@@ -534,8 +534,11 @@
     {
       "key": "iron-spearman-nw-attack",
       "filename": "iron-spearman-nw-attack.png",
-      "column": 3,
-      "row": 7,
+      "source": "art-source/second-cycle/day3/iron-spearman/iron-spearman-nw-attack-repair-alpha.png",
+      "columns": 1,
+      "rows": 1,
+      "column": 0,
+      "row": 0,
       "canvas": [
         512,
         384

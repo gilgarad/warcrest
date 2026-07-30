@@ -68,7 +68,7 @@
     },
     {
       "key": "archer-nw-walk-a",
-      "changedPixels": 85
+      "changedPixels": 1555
     },
     {
       "key": "archer-nw-walk-b",
@@ -132,7 +132,7 @@
     },
     {
       "key": "archer-w-walk-a",
-      "changedPixels": 771
+      "changedPixels": 519
     },
     {
       "key": "archer-w-walk-b",
@@ -492,7 +492,7 @@
     },
     {
       "key": "iron-spearman-nw-attack",
-      "changedPixels": 1793
+      "changedPixels": 2630
     },
     {
       "key": "iron-spearman-nw-idle",
@@ -1068,7 +1068,7 @@
     },
     {
       "key": "stone-axeman-nw-attack",
-      "changedPixels": 24
+      "changedPixels": 435
     },
     {
       "key": "stone-axeman-nw-idle",
@@ -1224,7 +1224,7 @@
     },
     {
       "key": "stone-slinger-nw-walk-b",
-      "changedPixels": 139
+      "changedPixels": 883
     },
     {
       "key": "stone-slinger-s-attack",
@@ -1288,7 +1288,7 @@
     },
     {
       "key": "stone-slinger-w-walk-b",
-      "changedPixels": 954
+      "changedPixels": 608
     },
     {
       "key": "stone-slinger-walk-a",

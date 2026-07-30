@@ -4151,3 +4151,81 @@ docs/dev-wiki/contract.md 순서로 먼저 읽어라. 운영 하네스만 사용
 - 신설 SFX와 배선 내역 (또는 스킵했다면 그 이유)
 - 검증 결과
 ```
+
+## 2026-07-30 (31) — [담당 세션: 음악/오디오] acknowledge SFX 단일화 되돌리고 행동별로 다양화
+
+- **배경**: (30)번 프롬프트로 신설한 `sfx.ui.acknowledge`가 실제로는
+  거점 선택/타워 선택/일꾼 고용/연구 일꾼 고용 5곳 전부를 대체해버려서,
+  기존에 있던 `sfx.ui.buildSelect`(선택)와 `sfx.ui.hireSuccess`(고용
+  성공)가 코드에서 완전히 안 쓰이게 됐다. 상담 세션이 직접 들어보고
+  확인 — 원래 의도는 "새 확인음 추가"였지 "기존 사운드를 전부 하나로
+  통합"이 아니었다. 사용자 피드백: "하나의 음으로 모두 쓰면 안 된다,
+  더 다양하게".
+- **작성한 프롬프트**:
+
+```
+[담당 세션: 음악/오디오] — 이전 세션(2026-07-30 (30))이 만든
+`track-audio-ack-sfx` 브랜치 이어서 작업해라. 시작하기 전에
+`cd /data/projects/game_project1-audio`로 이동해라(git worktree, 이미
+해당 브랜치 체크아웃돼 있음).
+
+`git log --oneline -10`, `git status`로 현재 상태를 먼저 확인해라(최신
+커밋은 `5b9d510`여야 한다).
+
+## 배경
+
+지난 작업에서 `src/scenes/LaneBattleScene.ts`의 다음 5개 호출부가 전부
+새로 만든 `sfx.ui.acknowledge` 하나로 바뀌었다:
+
+- `selectCapturePoint()` (원래 `sfx.ui.buildSelect`)
+- `selectDefenseTower()` (원래 `sfx.ui.buildSelect`)
+- `hireWorker()` (원래 `sfx.ui.hireSuccess`)
+- `hireResearchWorker()`의 direct 분기 (원래 `sfx.ui.hireSuccess`)
+- `hireResearchWorker()`의 convert 분기 (원래 `sfx.ui.hireSuccess`)
+
+그 결과 거점 클릭이든 일꾼 고용이든 전부 똑같은 소리가 나서, 원래 있던
+"단순 선택"과 "고용 성공" 사이의 소리 구분이 없어졌다. 사용자가 직접
+들어보고 "하나의 음으로 모두 쓰면 안 된다"고 명확히 피드백했다 — 최소
+2개 이상의 서로 다른 소리로 다시 나눠라.
+
+## 지금 할 일
+
+### 1. 행동 카테고리를 최소 2가지로 다시 분리
+
+- **선택(select) 계열** — `selectCapturePoint()`, `selectDefenseTower()`:
+  가볍고 짧은 클릭/블립 느낌 유지. 새로 만든 `sfx.ui.acknowledge`를 이
+  용도로 남겨둬도 되고, 원래 `sfx.ui.buildSelect`로 되돌려도 된다 —
+  둘 중 귀로 들어봤을 때 더 자연스러운 쪽으로 정해라.
+- **고용 성공(hire success) 계열** — `hireWorker()`,
+  `hireResearchWorker()`의 direct/convert 분기: 선택음보다 더 뚜렷하게
+  "성공/보상" 느낌이 나는 소리로 복원해라. 원래 있던
+  `sfx.ui.hireSuccess`(chime 계열)를 그대로 되살리는 게 제일 안전하다.
+- 이 둘이 최소한으로 확실히 구분되게 만드는 게 목표다. 시간이 남으면
+  일꾼 고용 vs 연구 일꾼 고용(direct vs convert)도 서로 살짝 다르게
+  (피치나 화성 정도) 갈라도 좋지만 필수는 아니다.
+
+### 2. 배선
+
+`src/scenes/LaneBattleScene.ts`의 위 5개 호출부를 새 분류에 맞게 정리해라.
+`assetManifest.ts`의 `sfx.ui.acknowledge`/`sfx.ui.buildSelect`/
+`sfx.ui.hireSuccess` 정의 자체는 이미 있으니 필요한 것만 그대로
+재사용하고, 굳이 다 새로 만들지 마라.
+
+### 3. 검증
+
+- `tools/audio-lab/`으로 각 사운드를 직접 재생해서 확실히 구분되는지 확인
+- `npm run build`
+- `npm test`
+- 관련 오디오 Playwright 스펙만 좁혀서 실행 (전체 스위트 반복 실행 금지)
+
+### 4. 문서/기록
+
+- `docs/dev-wiki/log.md`, `docs/ai-usage/session-log.md`에 이번 정정
+  내역을 기록해라. 왜 다시 나눴는지(사용자가 직접 듣고 "다양성이
+  줄었다"고 판단) 이유도 남겨라.
+
+## 결과물
+
+- 카테고리별로 어떤 SFX id를 최종적으로 썼는지 표
+- 검증 결과
+```

@@ -3601,6 +3601,37 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
     경고도 하네스 리마인더에 명시했다.
   - 코드는 수정하지 않았다.
 
+## 2026-07-30 (154) — 그래픽 트랙: NW 임시 대체 프레임 4건 감사 및 복구
+
+- **사용 도구**: Codex (GPT-5), repo-local Python/Pillow asset scripts,
+  built-in image generation edit flow, `npm run asset:prepare:units`,
+  `npm run asset:qa:units`, `npm run build`, `npm test`, Playwright 좁힘 실행
+- **사용자 지시 원문(핵심)**:
+  - "[260730목-게임캐릭터] 지금부터 진행하는 것은 무조건 /data/projects/game_project1-graphics 폴더만 보고 거야."
+  - "`iron_spearman` nw-attack은 반드시 포함."
+  - "`npm run asset:qa:units`, `npm run build`, `npm test` 통과 확인. 관련 Playwright 스펙 실행."
+- **AI 작업/산출물 요약**:
+  - 하네스 순서대로 `AGENTS.md -> docs/index.md -> docs/dev-wiki/contract.md`
+    및 그래픽 트랙 소유 범위/스타일 가이드를 다시 읽고,
+    브랜치 `track-graphics-nw-frames`, 최신 커밋 `9ae1572`를 확인했다.
+  - NW 프레임을 원본 directional sheet와 production PNG 둘 다 대조해,
+    debt가 정확히 4건(`stone_slinger` `nw walk-b`, `stone_axeman`
+    `nw attack`, `archer` `nw walk-a`, `iron_spearman` `nw attack`)임을
+    확정했다. 앞 3건은 잘린 source cell, 마지막 1건은 west attack 대체였다.
+  - 4개 repair source PNG를 생성하고, 4개 directional spec이 해당 NW
+    항목만 독립 repair source를 직접 참조하게 바꿨다. 이 방식으로 큰
+    sheet의 component-overlap 잔상을 피하면서 기존 golden-reference
+    정규화/QA 파이프라인을 그대로 재사용했다.
+  - 결과적으로 ally/enemy NW 프레임 4쌍이 전부 고유 전신 NW 포즈로
+    교체됐다. 나머지 7방향 산출물은 다시 원복해 NW만 남겼다.
+- **검증**:
+  - `npm run asset:prepare:units`
+  - `npm run asset:qa:units`
+  - directional QA 4건 개별 통과
+  - `npm run build`
+  - `npm test` (`29` files / `121` tests)
+  - `npx playwright test tools/validation/unit-animation-tower-v2.spec.ts tools/validation/unit-direction.spec.ts tools/validation/day7-5-unit-art.spec.ts --workers=1`
+    -> `8 passed (2.9m)`
 ## 2026-07-30 (154) — 오디오 트랙: 선택/고용 확인음 추가
 
 - **사용 도구**: Codex (GPT-5), `git log`, `git status`, `npm run build`,

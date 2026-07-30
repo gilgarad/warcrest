@@ -3647,6 +3647,48 @@ Use consistent headings so entries are easy to grep.
 - 전체 Playwright 회귀 중 일부 스펙(`audio-integration`, `day7-5-unit-art`, `day8-regression`, `golden-reference`, `six-issue-followup`, `support-mana`, `terrain-full-lane`)이 파일 단위 기본 타임아웃(45초)을 그대로 써서 긴 오디오 통합 케이스에서 중간에 끊기는 문제를 발견 — 실제 동작 회귀가 아니라 테스트 타임아웃 예산 부족이었다. 해당 7개 파일의 타임아웃을 개별로 올려 재발을 막았다.
 - 검증: `npm run build` 통과, `npm test` 통과(`29` files / `121` tests). 전체 Playwright 회귀는 개발 세션에서 실행/디버그를 마쳤고, 상담 세션이 build/test를 독립적으로 재확인했다.
 
+## [2026-07-30] fix | 그래픽 트랙: NW 방향 임시 대체 프레임 4건 감사 및 교체
+
+- 담당 트랙: 그래픽/캐릭터 (`track-graphics-nw-frames`). GitHub Issue는
+  없어서 최소 기록 경로로 이 항목과 `docs/ai-usage/session-log.md`를
+  함께 남겼다.
+- 감사 범위: `public/assets/production/units/`의 10종 x
+  `idle`/`walk-a`/`walk-b`/`attack` x ally/enemy NW 프레임, 그리고
+  원본 `art-source/second-cycle/day2|day3/` directional sheet를 대조.
+- 전수 감사 결과, NW debt는 실제로 **정확히 4건**이었다.
+  - `stone_slinger` `nw walk-b` (ally/enemy): source NW 셀이 잘려서
+    전신이 아닌 파편만 남아 있었음.
+  - `stone_axeman` `nw attack` (ally/enemy): source NW 셀이 잘려서
+    다리 일부만 남아 있었음.
+  - `archer` `nw walk-a` (ally/enemy): source NW 셀이 잘려서
+    일부 하반신만 남아 있었음.
+  - `iron_spearman` `nw attack` (ally/enemy): source NW 셀이 비어 있어
+    west attack 대체 프레임을 써 왔음.
+- 수정:
+  - 위 4프레임의 repair source PNG를 `art-source/second-cycle/day3/*/`
+    아래에 추가했다.
+  - 4개 directional spec
+    (`day3-stone-slinger-directional-assets.json`,
+    `day3-stone-axeman-directional-assets.json`,
+    `day3-archer-directional-assets.json`,
+    `day3-iron-spearman-directional-assets.json`)에서 해당 NW 항목만
+    repair source를 직접 참조하도록 고정했다. 이렇게 해서
+    `assignByComponent`가 대형 시트의 겹침 잔상을 다시 끌고 오지 않게
+    했다.
+  - 원본 alpha sheet도 같은 NW 셀 기준으로 갱신해, debt 위치를 시트
+    차원에서도 덮어썼다.
+- 검증:
+  - `npm run asset:prepare:units`
+  - `npm run asset:qa:units`
+  - 각 변경 유닛 directional spec 4건 개별 QA 통과
+  - `npm run build`
+  - `npm test` (`29` files / `121` tests)
+  - `npx playwright test tools/validation/unit-animation-tower-v2.spec.ts tools/validation/unit-direction.spec.ts tools/validation/day7-5-unit-art.spec.ts --workers=1`
+    -> `8 passed (2.9m)`
+- 아티팩트:
+  - 감사용 비교 이미지와 중간 산출물: `artifacts/nw-audit/`
+  - Playwright 갱신 산출물: `artifacts/unit-animation-tower-v2/`,
+    `artifacts/unit-direction/`, `artifacts/day7-5-unit-art/`
 ## [2026-07-30] feat | 오디오 트랙: 선택/고용 확인음 추가
 
 - 담당 브랜치 `track-audio-ack-sfx`에서 `sfx.ui.acknowledge`를

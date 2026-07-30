@@ -40,15 +40,15 @@ checking for uncommitted work first (`git status` inside it).
   production/units/**`, `tools/asset-qa/*` (unit-related scripts),
   `art-source/**` (unit sheets), `docs/dev-wiki/retro-rts-visual-
   methodology.md`, `art-direction-animation.md`, `style-guide.md`.
-- **Current status (2026-07-30)**: all 10 `BattleUnitId` roster entries have
-  full production art across all 8 directions
-  (`docs/ai-usage/session-log.md`, entries around `d301888`/`818c193`).
-  Known, transparently-recorded debt: **4 frames in the NW direction** still
-  use temporary substitute frames instead of unique production art (same
-  source, not a crash, just a minor visual gap).
-- **Next task**: close the NW-direction debt using the same golden-
-  reference pipeline already proven for the other 7 directions
-  (`asset:prepare:units` / `asset:qa:units` scripts).
+- **Current status (2026-07-30, updated later same day)**: all 10
+  `BattleUnitId` roster entries now have full production art across all 8
+  directions with the previously-recorded NW debt closed. The audited/fixed
+  gaps were exactly 4 frames:
+  `stone_slinger` `nw walk-b`, `stone_axeman` `nw attack`, `archer`
+  `nw walk-a`, `iron_spearman` `nw attack`.
+- **Next task**: no open directional coverage debt remains. Future graphics
+  work can return to higher-level staging/polish tasks rather than emergency
+  frame substitution cleanup.
 
 ### 2. 맵 및 게임 전반 (Map & General Game Systems)
 
