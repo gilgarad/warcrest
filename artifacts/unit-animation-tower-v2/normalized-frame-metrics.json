@@ -57,9 +57,9 @@
     "key": "stone-slinger-w-walk-b",
     "width": 384,
     "height": 384,
-    "minX": 120,
+    "minX": 57,
     "minY": 66,
-    "maxX": 264,
+    "maxX": 326,
     "maxY": 335
   },
   {

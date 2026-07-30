@@ -500,8 +500,11 @@
     {
       "key": "archer-nw-walk-a",
       "filename": "archer-nw-walk-a.png",
-      "column": 1,
-      "row": 7,
+      "source": "art-source/second-cycle/day3/archer/archer-nw-walk-a-repair-alpha.png",
+      "columns": 1,
+      "rows": 1,
+      "column": 0,
+      "row": 0,
       "canvas": [
         384,
         384

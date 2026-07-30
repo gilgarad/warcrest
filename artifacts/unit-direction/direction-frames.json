@@ -5,21 +5,21 @@
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
-      "laneId": "main",
+      "laneId": "north",
       "progress": 0.455,
       "laneRow": 0,
       "hp": 34,
       "maxHp": 34,
       "facingX": -1,
-      "facingDirection": "sw",
+      "facingDirection": "w",
       "flipX": false,
       "tint": 16777215,
       "motion": {
-        "x": -47.826086956521976,
-        "y": 26.086956521739012
+        "x": -50,
+        "y": -2.173913043478251
       },
-      "pose": "stone-axeman-se-walk-b",
-      "renderTexture": "stone-axeman-se-walk-b",
+      "pose": "stone-axeman-se-walk-a",
+      "renderTexture": "stone-axeman-se-walk-a",
       "attackAnimTime": 0,
       "attackFacingLockSec": 0,
       "combatFacingHoldSec": 0,
@@ -30,8 +30,8 @@
       "healManaCost": 0,
       "healPower": 0,
       "presentation": {
-        "x": 3627.8311900387835,
-        "y": 1989.6541120367494,
+        "x": 3698,
+        "y": 1284.7310310155087,
         "rotationRad": 0
       },
       "overlay": {
@@ -53,21 +53,21 @@
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
-      "laneId": "main",
+      "laneId": "north",
       "progress": 0.455,
       "laneRow": 0,
       "hp": 34,
       "maxHp": 34,
       "facingX": -1,
-      "facingDirection": "sw",
+      "facingDirection": "w",
       "flipX": false,
       "tint": 16777215,
       "motion": {
-        "x": -36.95652173913004,
-        "y": 19.565217391304486
+        "x": -36.956521739130494,
+        "y": -2.173913043478251
       },
-      "pose": "stone-axeman-sw-walk-b",
-      "renderTexture": "stone-axeman-sw-walk-b",
+      "pose": "stone-axeman-w-walk-a",
+      "renderTexture": "stone-axeman-w-walk-a",
       "attackAnimTime": 0,
       "attackFacingLockSec": 0,
       "combatFacingHoldSec": 0,
@@ -78,8 +78,8 @@
       "healManaCost": 0,
       "healPower": 0,
       "presentation": {
-        "x": 3590.8746682996534,
-        "y": 2009.219329428054,
+        "x": 3661.0434782608695,
+        "y": 1282.5571179720305,
         "rotationRad": 0
       },
       "overlay": {
@@ -101,21 +101,21 @@
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
-      "laneId": "main",
+      "laneId": "north",
       "progress": 0.455,
       "laneRow": 0,
       "hp": 34,
       "maxHp": 34,
       "facingX": -1,
-      "facingDirection": "sw",
+      "facingDirection": "w",
       "flipX": false,
       "tint": 16777215,
       "motion": {
-        "x": -28.26086956521749,
-        "y": 15.217391304347757
+        "x": -30.434782608695514,
+        "y": 0
       },
-      "pose": "stone-axeman-sw-walk-b",
-      "renderTexture": "stone-axeman-sw-walk-b",
+      "pose": "stone-axeman-w-walk-a",
+      "renderTexture": "stone-axeman-w-walk-a",
       "attackAnimTime": 0,
       "attackFacingLockSec": 0,
       "combatFacingHoldSec": 0,
@@ -126,8 +126,8 @@
       "healManaCost": 0,
       "healPower": 0,
       "presentation": {
-        "x": 3562.613798734436,
-        "y": 2024.4367207324017,
+        "x": 3630.608695652174,
+        "y": 1282.5571179720305,
         "rotationRad": 0
       },
       "overlay": {
@@ -151,21 +151,21 @@
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
-      "laneId": "main",
+      "laneId": "north",
       "progress": 0.545,
       "laneRow": 0,
       "hp": 34,
       "maxHp": 34,
       "facingX": 1,
-      "facingDirection": "ne",
+      "facingDirection": "e",
       "flipX": false,
       "tint": 16777215,
       "motion": {
-        "x": 47.826086956521976,
-        "y": -26.086956521739012
+        "x": 50,
+        "y": 2.173913043478251
       },
-      "pose": "stone-axeman-sw-walk-b",
-      "renderTexture": "stone-axeman-sw-walk-b",
+      "pose": "stone-axeman-w-walk-a",
+      "renderTexture": "stone-axeman-w-walk-a",
       "attackAnimTime": 0,
       "attackFacingLockSec": 0,
       "combatFacingHoldSec": 0,
@@ -176,8 +176,8 @@
       "healManaCost": 0,
       "healPower": 0,
       "presentation": {
-        "x": 3723.4833639518274,
-        "y": 1937.4801989932714,
+        "x": 3798,
+        "y": 1289.0788571024652,
         "rotationRad": 0
       },
       "overlay": {
@@ -199,21 +199,21 @@
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
-      "laneId": "main",
+      "laneId": "north",
       "progress": 0.545,
       "laneRow": 0,
       "hp": 34,
       "maxHp": 34,
       "facingX": 1,
-      "facingDirection": "ne",
+      "facingDirection": "e",
       "flipX": false,
       "tint": 16777215,
       "motion": {
-        "x": 36.95652173913004,
-        "y": -19.565217391304486
+        "x": 36.956521739130494,
+        "y": 2.173913043478251
       },
-      "pose": "stone-axeman-ne-walk-b",
-      "renderTexture": "stone-axeman-ne-walk-b",
+      "pose": "stone-axeman-e-walk-a",
+      "renderTexture": "stone-axeman-e-walk-a",
       "attackAnimTime": 0,
       "attackFacingLockSec": 0,
       "combatFacingHoldSec": 0,
@@ -224,8 +224,8 @@
       "healManaCost": 0,
       "healPower": 0,
       "presentation": {
-        "x": 3760.4398856909575,
-        "y": 1917.914981601967,
+        "x": 3834.9565217391305,
+        "y": 1291.2527701459435,
         "rotationRad": 0
       },
       "overlay": {
@@ -247,21 +247,21 @@
       "team": "player",
       "unitId": "stone_axeman",
       "role": "battle",
-      "laneId": "main",
+      "laneId": "north",
       "progress": 0.545,
       "laneRow": 0,
       "hp": 34,
       "maxHp": 34,
       "facingX": 1,
-      "facingDirection": "ne",
+      "facingDirection": "e",
       "flipX": false,
       "tint": 16777215,
       "motion": {
-        "x": 28.26086956521749,
-        "y": -15.217391304347757
+        "x": 30.434782608695514,
+        "y": 0
       },
-      "pose": "stone-axeman-ne-walk-b",
-      "renderTexture": "stone-axeman-ne-walk-b",
+      "pose": "stone-axeman-e-walk-a",
+      "renderTexture": "stone-axeman-e-walk-a",
       "attackAnimTime": 0,
       "attackFacingLockSec": 0,
       "combatFacingHoldSec": 0,
@@ -272,8 +272,8 @@
       "healManaCost": 0,
       "healPower": 0,
       "presentation": {
-        "x": 3788.700755256175,
-        "y": 1902.6975902976192,
+        "x": 3865.391304347826,
+        "y": 1291.2527701459435,
         "rotationRad": 0
       },
       "overlay": {

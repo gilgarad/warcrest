@@ -4,7 +4,7 @@
     "team": "player",
     "unitId": "stone_slinger",
     "role": "battle",
-    "laneId": "main",
+    "laneId": "north",
     "progress": 0.5,
     "laneRow": -3,
     "hp": 26,
@@ -29,8 +29,8 @@
     "healManaCost": 0,
     "healPower": 0,
     "presentation": {
-      "x": 3588.478260869565,
-      "y": 1799.0306382708884,
+      "x": 3755.339130434782,
+      "y": 1101.6003712424288,
       "rotationRad": 0
     },
     "overlay": {
@@ -52,7 +52,7 @@
     "team": "player",
     "unitId": "bronze_swordsman",
     "role": "battle",
-    "laneId": "main",
+    "laneId": "south",
     "progress": 0.5,
     "laneRow": 0,
     "hp": 42,
@@ -77,8 +77,8 @@
     "healManaCost": 0,
     "healPower": 0,
     "presentation": {
-      "x": 3675.4347826086955,
-      "y": 1964.2187620387424,
+      "x": 3724.9043478260865,
+      "y": 2644.59280992132,
       "rotationRad": 0
     },
     "overlay": {
@@ -100,7 +100,7 @@
     "team": "player",
     "unitId": "bronze_spearman",
     "role": "battle",
-    "laneId": "main",
+    "laneId": "north",
     "progress": 0.5,
     "laneRow": 3,
     "hp": 38,
@@ -125,8 +125,8 @@
     "healManaCost": 0,
     "healPower": 0,
     "presentation": {
-      "x": 3762.391304347826,
-      "y": 2126.611438609083,
+      "x": 3740.1217391304344,
+      "y": 1472.6434134498231,
       "rotationRad": 0
     },
     "overlay": {
@@ -148,7 +148,7 @@
     "team": "player",
     "unitId": "supply_wagon",
     "role": "support",
-    "laneId": "main",
+    "laneId": "south",
     "progress": 0.48,
     "laneRow": 0,
     "hp": 54,
@@ -173,8 +173,8 @@
     "healManaCost": 6,
     "healPower": 4,
     "presentation": {
-      "x": 3579.782608695652,
-      "y": 2013.5848303459268,
+      "x": 3622.730434782608,
+      "y": 2650.9167132826633,
       "rotationRad": 0
     },
     "overlay": {
