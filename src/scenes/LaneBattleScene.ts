@@ -83,6 +83,9 @@ import {
   type UnitOverlayMode,
 } from "../presentation/units/unitOverlayDensity";
 import {
+  resolveWalkMotion,
+} from "../presentation/units/combatPresentation";
+import {
   UNIT_STATS,
   getProjectileKeyForUnit,
 } from "../systems/lane-units/unitStats";
@@ -3050,11 +3053,12 @@ export class LaneBattleScene extends Phaser.Scene {
     const attackProgress = unit.attackAnimTime > 0
       ? 1 - unit.attackAnimTime / attackDurationSec
       : 0;
-    const gait = this.elapsedSec * 7.2 + unit.bobPhase;
+    const walkCycleProgress = ((this.elapsedSec * 1.25 + unit.bobPhase / (Math.PI * 2)) % 1 + 1) % 1;
+    const gait = this.elapsedSec * 6.2 + unit.bobPhase;
     const desiredTexture = unit.presentationOverrideTexture ?? resolveUnitAnimationTexture(
       unit.unitId,
       moving,
-      Math.sin(this.elapsedSec * 6.4 + unit.bobPhase),
+      Math.sin(walkCycleProgress * Math.PI * 2),
       attackProgress,
       unit.facingDirection,
     ) ?? UNIT_STATS[unit.unitId].textureKey;
@@ -3067,7 +3071,8 @@ export class LaneBattleScene extends Phaser.Scene {
     unit.lastPresentationX = pos.x;
     unit.lastPresentationY = pos.y;
 
-    const bob = moving ? Math.sin(gait) * 1.1 : Math.sin(this.elapsedSec * 4 + unit.bobPhase) * 0.35;
+    const walkMotion = moving ? resolveWalkMotion(walkCycleProgress, unit.facingX) : { swayX: 0, lift: 0, rotationRad: 0 };
+    const bob = moving ? Math.sin(gait) * 0.45 + walkMotion.lift : Math.sin(this.elapsedSec * 4 + unit.bobPhase) * 0.35;
     const targetAttackMotion = resolveAttackMotion({
       role: unit.role,
       melee: this.isMeleeUnit(unit),
@@ -3084,15 +3089,30 @@ export class LaneBattleScene extends Phaser.Scene {
     const targetVisibleWorldHeight = this.isPrototypeV2()
       ? this.cssPxToWorld(targetVisibleCssHeight)
       : unit.role === "support" ? 118 : 112;
+    const idleTextureKey = resolveUnitAnimationTexture(
+      unit.unitId,
+      false,
+      0,
+      0,
+      unit.facingDirection,
+    ) ?? UNIT_STATS[unit.unitId].textureKey;
+    const idleFramePresentation = resolveUnitFramePresentation(
+      unit.unitId,
+      targetVisibleWorldHeight,
+      frameAspect,
+      idleTextureKey,
+    );
     const framePresentation = resolveUnitFramePresentation(
       unit.unitId,
       targetVisibleWorldHeight,
       frameAspect,
       desiredTexture,
     );
-    const spriteWidth = this.terrainPrototypeEnabled
+    const unconstrainedSpriteWidth = this.terrainPrototypeEnabled
       ? framePresentation.spriteWidth
       : unit.displaySize * legacyScale;
+    const maxPoseWidth = idleFramePresentation.spriteWidth * 1.16;
+    const spriteWidth = Math.min(unconstrainedSpriteWidth, maxPoseWidth);
     const spriteHeight = this.terrainPrototypeEnabled
       ? framePresentation.spriteHeight
       : unit.displaySize * legacyScale;
@@ -3101,7 +3121,7 @@ export class LaneBattleScene extends Phaser.Scene {
     unit.visualRotationRad = Phaser.Math.Linear(unit.visualRotationRad, targetAttackMotion.rotationRad, 0.18);
     unit.visualSpriteWidth = Phaser.Math.Linear(unit.visualSpriteWidth, spriteWidth, 0.22);
     unit.visualSpriteHeight = Phaser.Math.Linear(unit.visualSpriteHeight, spriteHeight, 0.22);
-    const attackOffsetX = unit.visualOffsetX;
+    const attackOffsetX = unit.visualOffsetX + walkMotion.swayX;
     const attackLift = unit.visualLift;
     const originX = this.isPrototypeV2() ? framePresentation.originX : 0.5;
     const originY = this.isPrototypeV2()
@@ -3157,7 +3177,7 @@ export class LaneBattleScene extends Phaser.Scene {
     unit.sprite
       .setPosition(pos.x + attackOffsetX, pos.y - bob - attackLift)
       .setOrigin(originX, originY)
-      .setRotation(unit.visualRotationRad)
+      .setRotation(unit.visualRotationRad + walkMotion.rotationRad)
       .setFlipX(shouldFlipUnitFrame(unit.unitId, unit.facingX, unit.facingDirection))
       .setDisplaySize(unit.visualSpriteWidth, unit.visualSpriteHeight)
       .setDepth(this.getGroundDepth(pos.y));

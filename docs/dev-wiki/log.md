@@ -3886,3 +3886,16 @@ Use consistent headings so entries are easy to grep.
 - 검증:
   - `npm run build`
   - `npm test`
+
+## [2026-07-30] polish | 공격 포즈 폭 제한 + 보행 리듬 보강
+
+- `src/scenes/LaneBattleScene.ts`
+  - 공격 포즈처럼 wide frame이 나와도 idle 기준 폭 대비 과도하게 커지지 않도록 폭 상한을 추가했다.
+  - 걷기 중에는 4단계 보행 리듬 기반의 lateral sway / vertical lift / slight rotation을 합성해, `walk-a`, `walk-b`만으로 생기던 stiffness를 줄였다.
+- `src/presentation/units/combatPresentation.ts`
+  - `resolveWalkMotion()`을 추가해 contact/down/passing/up에 가까운 보행 곡선을 제공하게 했다.
+- `src/presentation/units/__tests__/combatPresentation.test.ts`
+  - 보행 리듬의 contact/down/passing 구분이 생기는지 검증을 추가했다.
+- 검증:
+  - `npm run build`
+  - `npm test`

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveAttackMotion } from "../combatPresentation";
+import { resolveAttackMotion, resolveWalkMotion } from "../combatPresentation";
 
 describe("resolveAttackMotion", () => {
   it("gives structure strikes a deeper wind-up and longer contact reach", () => {
@@ -21,5 +21,16 @@ describe("resolveAttackMotion", () => {
     const melee = resolveAttackMotion({ role: "battle", melee: true, ranged: false, targetKind: "unit", progress: 0.48, facing: 1 });
     expect(Math.abs(support.offsetX)).toBeLessThan(Math.abs(melee.offsetX));
     expect(support.lift).toBeGreaterThan(1.5);
+  });
+});
+
+describe("resolveWalkMotion", () => {
+  it("creates distinct contact and passing phases", () => {
+    const contact = resolveWalkMotion(0, 1);
+    const midStride = resolveWalkMotion(0.12, 1);
+    const passing = resolveWalkMotion(0.25, 1);
+    expect(contact.lift).toBeLessThan(midStride.lift);
+    expect(passing.lift).toBeGreaterThan(midStride.lift);
+    expect(Math.abs(passing.swayX)).toBeGreaterThan(Math.abs(midStride.swayX));
   });
 });

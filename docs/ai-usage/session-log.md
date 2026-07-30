@@ -3877,3 +3877,18 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
 - **검증**:
   - `npm run build`
   - `npm test`
+
+## 2026-07-30 (165) — 공격 포즈 폭 제한 + 보행 4단계 리듬 보강
+
+- **사용 도구**: Codex (GPT-5), `python3`, `view_image`, web search, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "여전히 캐릭터가 공격시에는 좀 커보이는 상태야"
+  - "단순히 연결 완화 문제가 아니라 ... 프레임이 자연스러워야 하는데"
+- **AI 산출물 요약**:
+  - 로컬 프레임 점검 결과 공격 프레임의 실제 알파 폭이 idle 대비 크게 넓었다. 예를 들어 `stone-axeman-w-attack`은 alpha 폭이 `248px`, idle은 `159px`여서 공격 때 캐릭터가 커 보이는 현상이 실제 자산 수치로도 확인됐다.
+  - 장면 렌더에서 attack 등 wide pose의 폭을 idle 기준 폭 대비 `1.16x` 안으로 제한해, 공격 포즈가 전체 캐릭터 크기까지 커 보이지 않도록 조정했다.
+  - 외부 레퍼런스 확인 결과 자연스러운 걷기는 `contact/down/passing/up` 리듬이 중요하고, 프레임 수가 적으면 stiffness가 쉽게 생긴다. 현재 자산은 사실상 `walk-a`, `walk-b` 2프레임이라 그 리듬이 부족했다.
+  - 이를 보완하기 위해 `resolveWalkMotion()`을 추가해 4단계 보행 리듬 기반의 sway/lift/rotation을 입혔고, 텍스처 선택도 그 주기에 맞춰 다시 연결했다. 단순 전환 완화가 아니라 부족한 contact/passing 대비를 장면에서 보강하는 방향이다.
+- **검증**:
+  - `npm run build`
+  - `npm test`

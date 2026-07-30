@@ -15,9 +15,34 @@ export interface AttackMotion {
   rotationRad: number;
 }
 
+export interface WalkMotion {
+  swayX: number;
+  lift: number;
+  rotationRad: number;
+}
+
 function smoothStep(value: number): number {
   const t = Math.max(0, Math.min(1, value));
   return t * t * (3 - 2 * t);
+}
+
+function pingPong(value: number): number {
+  const wrapped = ((value % 1) + 1) % 1;
+  return wrapped < 0.5 ? wrapped * 2 : (1 - wrapped) * 2;
+}
+
+export function resolveWalkMotion(progress: number, facing: -1 | 1): WalkMotion {
+  const t = ((progress % 1) + 1) % 1;
+  const contactBlend = Math.sin(t * Math.PI * 2);
+  const passingBlend = Math.sin((t - 0.25) * Math.PI * 2);
+  const down = -smoothStep(Math.max(0, 1 - Math.abs(contactBlend) * 1.45)) * 1.6;
+  const up = smoothStep(Math.max(0, 1 - Math.abs(passingBlend) * 1.7)) * 0.9;
+  const side = contactBlend * 1.1 * facing;
+  return {
+    swayX: side,
+    lift: down + up,
+    rotationRad: contactBlend * facing * 0.018 + pingPong(t) * facing * 0.006,
+  };
 }
 
 export function resolveAttackMotion(input: AttackMotionInput): AttackMotion {
