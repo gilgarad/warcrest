@@ -72,6 +72,9 @@ export function tickLaneEconomy(
   deltaSec: number,
 ): void {
   teams.forEach((team) => {
+    tickResourceWorker(team, workerAccumulator, "gold", deltaSec, BASE_RESOURCE_TICK_SEC);
+    tickResourceWorker(team, workerAccumulator, "wood", deltaSec, BASE_RESOURCE_TICK_SEC);
+    tickResourceWorker(team, workerAccumulator, "food", deltaSec, BASE_RESOURCE_TICK_SEC);
     tickResourceWorker(team, workerAccumulator, "metal", deltaSec, BASE_RESOURCE_TICK_SEC);
   });
 }

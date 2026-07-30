@@ -76,7 +76,6 @@ import {
   type UnitFacingDirection,
 } from "../presentation/units/unitAnimationRegistry";
 import {
-  getUnitScaleFactor,
   resolveUnitFramePresentation,
 } from "../presentation/units/unitPresentation";
 import {
@@ -215,6 +214,11 @@ interface LaneUnit {
   lastPresentationY: number;
   motionX: number;
   motionY: number;
+  visualOffsetX: number;
+  visualLift: number;
+  visualRotationRad: number;
+  visualSpriteWidth: number;
+  visualSpriteHeight: number;
   sprite: Phaser.GameObjects.Image;
   shadow: Phaser.GameObjects.Ellipse;
   selectionRing: Phaser.GameObjects.Ellipse;
@@ -1948,6 +1952,11 @@ export class LaneBattleScene extends Phaser.Scene {
       return;
     }
     if (tower.owner === "neutral") return;
+    const expectedMaxHp = getDefenseTowerMaxHp(tower.owner === "enemy" ? this.enemy.ageId : this.player.ageId);
+    if (tower.maxHp !== expectedMaxHp && tower.maxHp > 0) {
+      tower.hp = Math.max(1, tower.hp * (expectedMaxHp / tower.maxHp));
+      tower.maxHp = expectedMaxHp;
+    }
     tower.attackTimerSec -= deltaSec;
     if (tower.attackTimerSec > 0) return;
     const spec = createTowerAttackPattern(tower.owner === "player" ? this.player.ageId : this.enemy.ageId);
@@ -2841,7 +2850,7 @@ export class LaneBattleScene extends Phaser.Scene {
     const initialTextureKey = resolveUnitAnimationTexture(unitId, false, 0, 0, initialFacingDirection) ?? stats.textureKey;
     const shadow = this.add.ellipse(pos.x, pos.y + 22, role === "support" ? 56 : 46, role === "support" ? 20 : 16, 0x000000, 0.2)
       .setDepth(this.getGroundDepth(pos.y, -1));
-    const selectionRing = this.add.ellipse(pos.x, pos.y, 62, 24, 0x72c8ff, 0.12)
+    const selectionRing = this.add.ellipse(pos.x, pos.y, 48, 18, 0x72c8ff, 0.12)
       .setStrokeStyle(3, team === "player" ? 0x8bd7ff : 0xffa0a0, 0.9)
       .setDepth(this.getGroundDepth(pos.y, -2))
       .setVisible(false);
@@ -2904,6 +2913,11 @@ export class LaneBattleScene extends Phaser.Scene {
       lastPresentationY: pos.y,
       motionX: 0,
       motionY: 0,
+      visualOffsetX: 0,
+      visualLift: 0,
+      visualRotationRad: 0,
+      visualSpriteWidth: displaySize,
+      visualSpriteHeight: displaySize,
       sprite,
       shadow,
       selectionRing,
@@ -3036,11 +3050,11 @@ export class LaneBattleScene extends Phaser.Scene {
     const attackProgress = unit.attackAnimTime > 0
       ? 1 - unit.attackAnimTime / attackDurationSec
       : 0;
-    const gait = this.elapsedSec * 10 + unit.bobPhase;
+    const gait = this.elapsedSec * 7.2 + unit.bobPhase;
     const desiredTexture = unit.presentationOverrideTexture ?? resolveUnitAnimationTexture(
       unit.unitId,
       moving,
-      Math.sin(this.elapsedSec * 9 + unit.bobPhase),
+      Math.sin(this.elapsedSec * 6.4 + unit.bobPhase),
       attackProgress,
       unit.facingDirection,
     ) ?? UNIT_STATS[unit.unitId].textureKey;
@@ -3054,7 +3068,7 @@ export class LaneBattleScene extends Phaser.Scene {
     unit.lastPresentationY = pos.y;
 
     const bob = moving ? Math.sin(gait) * 1.1 : Math.sin(this.elapsedSec * 4 + unit.bobPhase) * 0.35;
-    const attackMotion = resolveAttackMotion({
+    const targetAttackMotion = resolveAttackMotion({
       role: unit.role,
       melee: this.isMeleeUnit(unit),
       ranged: this.isRangedUnit(unit),
@@ -3062,17 +3076,11 @@ export class LaneBattleScene extends Phaser.Scene {
       progress: attackProgress,
       facing: unit.facingX,
     });
-    const attackOffsetX = attackMotion.offsetX;
-    const attackLift = attackMotion.lift;
     const legacyScale = unit.role === "support" ? 1.08 : 1;
     const frameAspect = unit.sprite.frame.realHeight > 0
       ? unit.sprite.frame.realWidth / unit.sprite.frame.realHeight
       : 1;
-    const targetVisibleCssHeight = unit.role === "support"
-      ? this.scaleVisualConfig.supportUnitCssHeight
-      : unit.unitId === "knight"
-        ? this.scaleVisualConfig.largeUnitCssHeight
-        : this.scaleVisualConfig.normalUnitCssHeight * getUnitScaleFactor(unit.unitId);
+    const targetVisibleCssHeight = this.scaleVisualConfig.normalUnitCssHeight;
     const targetVisibleWorldHeight = this.isPrototypeV2()
       ? this.cssPxToWorld(targetVisibleCssHeight)
       : unit.role === "support" ? 118 : 112;
@@ -3088,6 +3096,13 @@ export class LaneBattleScene extends Phaser.Scene {
     const spriteHeight = this.terrainPrototypeEnabled
       ? framePresentation.spriteHeight
       : unit.displaySize * legacyScale;
+    unit.visualOffsetX = Phaser.Math.Linear(unit.visualOffsetX, targetAttackMotion.offsetX, 0.22);
+    unit.visualLift = Phaser.Math.Linear(unit.visualLift, targetAttackMotion.lift, 0.2);
+    unit.visualRotationRad = Phaser.Math.Linear(unit.visualRotationRad, targetAttackMotion.rotationRad, 0.18);
+    unit.visualSpriteWidth = Phaser.Math.Linear(unit.visualSpriteWidth, spriteWidth, 0.22);
+    unit.visualSpriteHeight = Phaser.Math.Linear(unit.visualSpriteHeight, spriteHeight, 0.22);
+    const attackOffsetX = unit.visualOffsetX;
+    const attackLift = unit.visualLift;
     const originX = this.isPrototypeV2() ? framePresentation.originX : 0.5;
     const originY = this.isPrototypeV2()
       ? framePresentation.originY
@@ -3111,7 +3126,7 @@ export class LaneBattleScene extends Phaser.Scene {
       ? hpY - this.cssPxToWorld(16)
       : this.terrainPrototypeEnabled ? hpY - 14 : pos.y - 58 - bob - attackLift;
     const shadowWidth = this.terrainPrototypeEnabled
-      ? Math.max(38, spriteWidth * 0.88)
+      ? Math.max(38, unit.visualSpriteWidth * 0.88)
       : unit.role === "support" ? 56 : 46;
     const shadowHeight = this.terrainPrototypeEnabled
       ? unit.role === "support" ? 15 : 12
@@ -3127,17 +3142,24 @@ export class LaneBattleScene extends Phaser.Scene {
       .setFillStyle(0x061016, this.terrainPrototypeEnabled ? 0.3 : 0.2)
       .setScale(moving ? 0.96 : 1, moving ? 0.94 : 1)
       .setDepth(this.getGroundDepth(pos.y, -1));
+    const ringWidth = unit.role === "support"
+      ? Math.max(42, unit.visualSpriteWidth * 0.72)
+      : Math.max(40, unit.visualSpriteWidth * 0.8);
+    const ringHeight = unit.role === "support"
+      ? Math.max(14, shadowHeight * 1.08)
+      : Math.max(14, shadowHeight * 1.18);
+
     unit.selectionRing
       .setPosition(pos.x, pos.y + 3)
-      .setSize(Math.max(52, spriteWidth * 1.08), Math.max(20, shadowHeight * 1.45))
+      .setSize(ringWidth, ringHeight)
       .setDepth(this.getGroundDepth(pos.y, -2))
       .setVisible(this.isPrototypeV2() && (unit.selected || unit.hovered));
     unit.sprite
       .setPosition(pos.x + attackOffsetX, pos.y - bob - attackLift)
       .setOrigin(originX, originY)
-      .setRotation(attackMotion.rotationRad)
+      .setRotation(unit.visualRotationRad)
       .setFlipX(shouldFlipUnitFrame(unit.unitId, unit.facingX, unit.facingDirection))
-      .setDisplaySize(spriteWidth, spriteHeight)
+      .setDisplaySize(unit.visualSpriteWidth, unit.visualSpriteHeight)
       .setDepth(this.getGroundDepth(pos.y));
     unit.hpBg
       .setPosition(pos.x, hpY)
@@ -3256,7 +3278,7 @@ export class LaneBattleScene extends Phaser.Scene {
     }
     const cost = getAgeUpCost(idx);
     if (!canAfford(this.player.resources, cost)) {
-      this.hud.setInfo("시대 업 실패: 금/목재/금속 부족");
+      this.hud.setInfo(`시대 업 실패: ${this.formatResourceShortage(cost)}`);
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "age:shortage" });
       return;
     }
@@ -3299,12 +3321,14 @@ export class LaneBattleScene extends Phaser.Scene {
     this.hud.setStrategicActionLabel("hire-worker", `일꾼 고용\n${this.formatCostShort(BASE_WORKER_COST)}`);
     this.hud.setStrategicActionLabel("hire-research-worker", `연구 일꾼\n${this.formatCostShort(getResearchWorkerDirectCost(this.player.ageId))}`);
     const ageIndex = AGES.findIndex((age) => age.id === this.player.ageId);
+    const ageUpCost = ageIndex >= AGES.length - 1 ? null : getAgeUpCost(ageIndex);
     this.hud.setStrategicActionLabel(
       "age-up",
       ageIndex >= AGES.length - 1
         ? "시대 업\n최종 시대"
-        : `시대 업\n${this.formatCostShort(getAgeUpCost(ageIndex))}`,
+        : `시대 업\n${this.formatCostShort(ageUpCost ?? {})}`,
     );
+    this.hud.setStrategicActionEnabled("age-up", ageUpCost ? canAfford(this.player.resources, ageUpCost) : true);
     this.hud.setStrategicActionLabel("use-instant-wave", `즉시 웨이브\n토큰 ${this.player.instantWaveTokens}`);
 
     this.hud.setCaptureActionLabel("rebuild-defense-tower", `타워 재건\n${this.formatCostShort(getDefenseTowerBuildCost(this.player.ageId))}`);
@@ -3321,6 +3345,22 @@ export class LaneBattleScene extends Phaser.Scene {
     if (cost.food) parts.push(`${Math.round(cost.food)}F`);
     if (cost.metal) parts.push(`${Math.round(cost.metal)}M`);
     return parts.join(" ");
+  }
+
+  private formatResourceShortage(cost: Partial<Record<"gold" | "wood" | "food" | "metal", number>>): string {
+    const labels = {
+      gold: "금",
+      wood: "목재",
+      food: "식량",
+      metal: "금속",
+    } as const;
+    const shortages = (Object.entries(cost) as Array<["gold" | "wood" | "food" | "metal", number | undefined]>)
+      .map(([resourceId, required]) => {
+        const missing = Math.max(0, Math.ceil((required ?? 0) - this.player.resources[resourceId]));
+        return missing > 0 ? `${labels[resourceId]} ${missing}` : null;
+      })
+      .filter((value): value is string => value !== null);
+    return shortages.length > 0 ? shortages.join(", ") + " 부족" : "자원 부족";
   }
 
   private publishDebug(): void {

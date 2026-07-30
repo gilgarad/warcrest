@@ -27,28 +27,28 @@ export function resolveAttackMotion(input: AttackMotionInput): AttackMotion {
   if (input.role === "support") {
     const castPulse = Math.sin(progress * Math.PI);
     return {
-      offsetX: castPulse * 1.8 * input.facing,
-      lift: castPulse * 3.2,
-      rotationRad: input.facing * castPulse * 0.012,
+      offsetX: castPulse * 1.1 * input.facing,
+      lift: castPulse * 2.1,
+      rotationRad: input.facing * castPulse * 0.007,
     };
   }
 
   if (input.ranged) {
     const releaseProgress = 0.42;
     const recoil = progress < releaseProgress
-      ? -smoothStep(progress / releaseProgress) * 5
-      : -5 + smoothStep((progress - releaseProgress) / (1 - releaseProgress)) * 5;
-    const releaseSnap = Math.exp(-Math.pow((progress - releaseProgress) / 0.1, 2));
+      ? -smoothStep(progress / releaseProgress) * 3.8
+      : -3.8 + smoothStep((progress - releaseProgress) / (1 - releaseProgress)) * 3.8;
+    const releaseSnap = Math.exp(-Math.pow((progress - releaseProgress) / 0.11, 2));
     return {
-      offsetX: (recoil + releaseSnap * 2.4) * input.facing,
-      lift: Math.sin(progress * Math.PI) * 1.2,
-      rotationRad: -input.facing * (0.025 * Math.sin(progress * Math.PI) + releaseSnap * 0.028),
+      offsetX: (recoil + releaseSnap * 1.5) * input.facing,
+      lift: Math.sin(progress * Math.PI) * 0.85,
+      rotationRad: -input.facing * (0.016 * Math.sin(progress * Math.PI) + releaseSnap * 0.018),
     };
   }
 
   if (input.melee) {
-    const reach = input.targetKind === "structure" ? 22 : 17;
-    const windBack = input.targetKind === "structure" ? 7 : 5;
+    const reach = input.targetKind === "structure" ? 17 : 13;
+    const windBack = input.targetKind === "structure" ? 5 : 3.5;
     let offset: number;
     if (progress < 0.26) {
       offset = -smoothStep(progress / 0.26) * windBack;
@@ -59,9 +59,9 @@ export function resolveAttackMotion(input: AttackMotionInput): AttackMotion {
     }
     return {
       offsetX: offset * input.facing,
-      lift: Math.sin(progress * Math.PI) * (input.targetKind === "structure" ? 3.2 : 2.2),
+      lift: Math.sin(progress * Math.PI) * (input.targetKind === "structure" ? 2.4 : 1.6),
       rotationRad: input.facing * Math.sin(progress * Math.PI)
-        * (input.targetKind === "structure" ? 0.065 : 0.045),
+        * (input.targetKind === "structure" ? 0.04 : 0.028),
     };
   }
 

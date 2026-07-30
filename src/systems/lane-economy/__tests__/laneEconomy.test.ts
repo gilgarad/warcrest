@@ -11,13 +11,16 @@ import {
 } from "../laneEconomy";
 
 describe("lane economy", () => {
-  it("only keeps metal worker production on the passive economy tick", () => {
+  it("produces one resource per assigned worker every five seconds", () => {
     const team = createTeamState("player", makeResourceMap(0, 0, 0, 0), 400);
+    team.workers.gold = 2;
+    team.workers.wood = 3;
+    team.workers.food = 4;
     team.workers.metal = 2;
-    tickLaneEconomy([team], new Map(), 10);
-    expect(team.resources.gold).toBe(0);
-    expect(team.resources.wood).toBe(0);
-    expect(team.resources.food).toBe(0);
+    tickLaneEconomy([team], new Map(), 5);
+    expect(team.resources.gold).toBe(2);
+    expect(team.resources.wood).toBe(3);
+    expect(team.resources.food).toBe(4);
     expect(team.resources.metal).toBe(2);
   });
 

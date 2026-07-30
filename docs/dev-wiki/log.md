@@ -3816,3 +3816,73 @@ Use consistent headings so entries are easy to grep.
 - 검증:
   - `npm run build`
   - `npm test`
+
+## [2026-07-30] fix | 노동자 자원 수급 5초 tick 복구
+
+- `src/systems/lane-economy/laneEconomy.ts`
+  - 직전 경제 변경에서 잘못 빠진 `gold/wood/food` 노동자 tick을 복구했다. 이제 `gold/wood/food/metal` 배치 일꾼이 모두 자원을 생산한다.
+- `src/data/balance.ts`
+  - `BASE_RESOURCE_TICK_SEC`를 `10`에서 `5`로 낮춰, 일꾼 1기당 5초마다 해당 자원 1을 수급하는 규칙으로 맞췄다.
+- `src/systems/lane-economy/__tests__/laneEconomy.test.ts`
+  - 5초 tick 기준으로 자원별 노동자 생산량을 함께 검증하도록 테스트를 갱신했다.
+- 검증:
+  - `npm run build`
+  - `npm test`
+
+## [2026-07-30] fix | 시대 업 부족 자원 표시 개선
+
+- `src/scenes/LaneBattleScene.ts`
+  - 시대 업 실패 메시지를 일반적인 "금/목재/금속 부족"에서 실제 부족량 표기로 바꿨다. 이제 예를 들어 `금속 58 부족`처럼 직접 표시된다.
+- `src/ui/LaneBattleHudView.ts`
+  - 전략 버튼 상태 표시를 추가해, 시대 업 비용을 아직 못 맞췄을 때 버튼이 붉은 톤으로 보여 현재 자원으로는 불가능하다는 점을 즉시 알 수 있게 했다.
+- 검증:
+  - `npm run build`
+  - `npm test`
+
+## [2026-07-30] fix | 선택 원 축소 + 보급 유닛 내구도 하향
+
+- `src/scenes/LaneBattleScene.ts`
+  - 유닛 선택 원 기본 크기와 동적 크기 계산을 전반적으로 줄였다.
+  - 보급 유닛은 스프라이트가 커서 원이 과장되던 점을 반영해, 일반 유닛보다 더 작은 ring 배율을 따로 적용했다.
+- `src/systems/lane-units/unitStats.ts`
+  - `supply_wagon` 스탯을 `hp 54 / defense 3`에서 `hp 28 / defense 1`로 낮춰, 치유 유닛이 전선 탱커처럼 버티던 인상을 줄였다.
+- 검증:
+  - `npm run build`
+  - `npm test`
+
+## [2026-07-30] polish | 유닛 크기 일관화 + 모션 전환 완화
+
+- `src/scenes/LaneBattleScene.ts`
+  - 유닛 렌더 높이 기준을 통일하고, 공격/힐 전환 때 스프라이트 크기와 오프셋/회전이 즉시 튀지 않도록 보간 계층을 추가했다.
+  - selection ring도 새 보간된 스프라이트 폭 기준으로 다시 맞춰, 포즈별 크기 점프를 따라 함께 커지지 않게 정리했다.
+- `src/presentation/units/combatPresentation.ts`
+  - 근접/원거리/보급 모션의 lunge/recoil/lift/rotation 폭을 줄여, 걷기에서 공격/힐로 넘어갈 때 더 짧고 자연스럽게 연결되도록 조정했다.
+- 검증:
+  - `npm run build`
+  - `npm test`
+
+## [2026-07-30] fix | 타워 시대 연동 정정 + 걷기 리듬 완화
+
+- `src/systems/lane-combat/towerAttack.ts`
+  - 청동기부터 타워 투사체가 화살로 바뀌도록 조건을 정정했다. 기존 로직은 철기 초기부터만 화살을 써, 청동기에서도 돌 투사체가 나가고 있었다.
+- `src/scenes/LaneBattleScene.ts`
+  - 이미 세워진 전용 타워도 시대 업 이후 새 최대 HP를 즉시 반영하도록 보정했다.
+  - 유닛 걷기 gait와 프레임 전환 주기를 낮춰 너무 빠른 `walk-a/walk-b` 토글을 완화했다.
+- `src/presentation/units/unitAnimationRegistry.ts`
+  - 이동 중에도 `idle` 완충 구간을 넣어 `walk-a`, `walk-b` 사이가 더 자연스럽게 이어지도록 조정했다.
+- `src/systems/lane-combat/__tests__/towerAttack.test.ts`
+  - 청동기 화살 전환, 후기 철기 화기 전환 기대값을 추가 검증했다.
+- 검증:
+  - `npm run build`
+  - `npm test`
+
+## [2026-07-30] fix | 타워 발사체 시대 기준 재정정
+
+- `src/systems/lane-combat/towerAttack.ts`
+  - 사용자 정정에 맞춰 타워 발사체 전환 기준을 다시 맞췄다.
+  - 현재는 `석기/청동기=돌`, `초기/중기 철기=화살`, `후기 철기=총알`이다.
+- `src/systems/lane-combat/__tests__/towerAttack.test.ts`
+  - 청동기는 여전히 돌을 쓰고, 초기 철기부터 화살로 넘어간다는 기대값으로 테스트를 수정했다.
+- 검증:
+  - `npm run build`
+  - `npm test`

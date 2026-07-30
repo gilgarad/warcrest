@@ -205,5 +205,6 @@ export function resolveUnitAnimationTexture(
     return poses.attack[frameIndex];
   }
   if (!moving) return poses.idle;
+  if (Math.abs(walkPhase) < 0.34) return poses.idle;
   return walkPhase >= 0 ? poses.walkA : poses.walkB;
 }

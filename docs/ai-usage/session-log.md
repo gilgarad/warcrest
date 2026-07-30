@@ -3789,3 +3789,91 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
 - **검증**:
   - `npm run build`
   - `npm test`
+
+## 2026-07-30 (159) — 노동자 자원 수급 복구 및 5초 tick 정정
+
+- **사용 도구**: Codex (GPT-5), `rg`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "일꾼을 배치했을 때 들어오는 돈 마저도 혹시 끊어버린 거야?"
+  - "일꾼 1기당 5초마다 자원 1씩 수급되도록 해야"
+- **AI 산출물 요약**:
+  - 직전 경제 패치에서 `tickLaneEconomy()`가 `metal` 노동자만 처리하도록 바뀌어, 금/목재/식량 노동자 수급이 실제로 끊긴 상태였음을 재확인했다.
+  - `src/systems/lane-economy/laneEconomy.ts`에서 노동자 tick 대상을 `gold/wood/food/metal` 전부로 복구했다.
+  - `src/data/balance.ts`의 `BASE_RESOURCE_TICK_SEC`를 `10`에서 `5`로 낮춰, 모든 자원 노동자가 1기당 5초마다 자원 1을 생산하도록 수정했다.
+  - `src/systems/lane-economy/__tests__/laneEconomy.test.ts`도 새 계약에 맞게 갱신해, 자원별 노동자 수와 5초 tick 산출량을 함께 검증하게 했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-07-30 (160) — 시대 업 실패 원인 가시화 개선
+
+- **사용 도구**: Codex (GPT-5), `sed`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "스크린샷과 같은 상태인데 시대업을 눌러도 시대가 업되지 않음"
+- **AI 산출물 요약**:
+  - 스크린샷 상태를 코드 규칙과 대조한 결과, 해당 시점은 버튼 라벨 기준 `75G 50W 68M`이 필요한데 상단 자원은 `금속 10`이라 실제로는 시대 업 조건을 만족하지 못하는 상황이었다.
+  - 문제는 로직 오작동보다 HUD 가시성이었다. `LaneBattleScene.ts`의 실패 메시지를 구체화해, 이제 부족 자원을 `금속 58 부족`처럼 직접 알려주도록 바꿨다.
+  - `LaneBattleHudView.ts`에는 전략 버튼 상태 표현을 추가해, 시대 업 불가 시 버튼이 붉은 톤으로 바뀌어 현재 자원으로 불가능하다는 점이 즉시 보이게 했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-07-30 (161) — 유닛 선택 원 축소 + 보급 유닛 내구도 하향
+
+- **사용 도구**: Codex (GPT-5), `rg`, `sed`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "보급만 하단 원이 너무 큼. 그리고 다른 캐릭터들도 터치시 바닥에 생기는 원이 큼."
+  - "보급 병력의 에너지가 너무 적게 다는데, 이유가 뭐야? hp가 많나? 아니면 방어력이 별도로 있어서 적게 다는 건가?"
+- **AI 산출물 요약**:
+  - 선택 원은 `LaneBattleScene.ts`의 유닛 공통 `selectionRing` 크기 계산에서 정해지고 있었고, 보급 유닛은 스프라이트가 커서 동일 배율 계산에서도 특히 더 크게 보이던 상태였다.
+  - 기본 selection ring 생성 크기와 런타임 동적 크기 계산을 모두 줄여, 일반 유닛과 보급 유닛 선택 원이 전반적으로 더 타이트하게 붙도록 조정했다. 보급 유닛은 일반 유닛보다 한 단계 더 작은 배율을 적용했다.
+  - 보급 유닛이 쉽게 안 죽는 이유는 치유뿐 아니라 기본 스탯도 있었다. 기존 `supply_wagon`은 `hp 54`, `defense 3`이었고, 이는 석기 근접 유닛(`hp 34`, `defense 3`)보다 체력이 훨씬 높았다.
+  - `src/systems/lane-units/unitStats.ts`에서 보급 유닛을 `hp 28`, `defense 1`로 낮춰, 전투선 유닛보다 확실히 약하게 만들었다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-07-30 (162) — 유닛 크기 일관화 + 공격/보급 모션 완화
+
+- **사용 도구**: Codex (GPT-5), `rg`, `sed`, `file`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "캐릭터마다 크기 차이가 현재 보이고 있음. 일괄적으로 맞춰야 함."
+  - "공격 모션으로 변경될 때 크기가 커지는 미니언들도 일부 있음."
+  - "걷는 모션, 공격 모션/힐 모션 등이 아직 여전히 너무 투박함."
+- **AI 산출물 요약**:
+  - 분석 결과 전투 프레임이 `384x384`와 `512x384`가 섞여 있고, 장면 쪽에서 프레임별 `setDisplaySize()`가 즉시 바뀌면서 공격 포즈 전환 시 크기 튐이 생기고 있었다.
+  - `LaneBattleScene.ts`에서 유닛 visible height 기준을 사실상 하나로 통일하고, 스프라이트 폭/높이와 공격 오프셋/회전을 보간하도록 바꿨다. 이로써 아군/적군 방향 차이와 포즈 전환 차이에서 보이던 크기 점프를 완화했다.
+  - `combatPresentation.ts`에서는 근접/원거리/보급 모션의 전진량, 반동, 회전, lift를 전반적으로 낮춰 더 짧고 부드러운 모션으로 다듬었다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-07-30 (163) — 타워 시대 연동 정정 + 걷기 프레임 연결 완화
+
+- **사용 도구**: Codex (GPT-5), `rg`, `sed`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "시대가 바뀜에 따라 타워도 업그레이드 되어야 하는데 그렇지 않은 듯함"
+  - "공격 병기가 시대 업그레이드에 따라 제대로 변경되는가?"
+  - "걷는 모션이 자연스럽지 않다는 것은 그림 자체 ... 이걸 제대로 조립해서 쓰지 못하는 경우"
+- **AI 산출물 요약**:
+  - 타워 공격 패턴 점검 결과 실제 버그를 확인했다. `createTowerAttackPattern()`이 화살 타워를 `iron_early`부터만 쓰도록 되어 있어, `bronze`에서도 여전히 돌 투사체가 발사되고 있었다.
+  - 조건을 수정해 이제 `stone -> projectile-stone`, `bronze/iron_early/iron_mid -> projectile-arrow`, `iron_late -> projectile-shot`으로 바뀐다.
+  - 기존에 세워진 전용 방어 타워도 시대 업 이후 즉시 새 `maxHp`를 반영하도록 `tickWatchtower()`에서 현재 HP 비율을 유지한 채 최대 HP를 재계산하게 했다.
+  - 걷기 모션 쪽은 자산이 `walk-a`, `walk-b` 2프레임뿐인데, 기존 장면 로직이 이 둘을 빠르게 바로 토글하고 있어 더 투박하게 보이고 있었다. `resolveUnitAnimationTexture()`에 idle 완충 구간을 추가하고, 장면의 gait/walk phase 주기도 낮춰 `idle -> walk-a -> idle -> walk-b`에 가까운 리듬으로 부드럽게 연결되게 했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-07-30 (164) — 타워 시대 전환 기준 사용자 정정 반영
+
+- **사용 도구**: Codex (GPT-5), `apply_patch`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "석기시대 다음 청동기 시대 때는 여전히 돌이 나가는 게 맞아."
+  - "그 뒤에 초기 철기 때부터 화살 -> 후기 철기 때 총"
+- **AI 산출물 요약**:
+  - 직전 수정에서 청동기부터 화살로 바꿨던 타워 시대 전환 기준을 사용자 의도에 맞게 되돌렸다.
+  - 현재 기준은 `stone/bronze -> projectile-stone`, `iron_early/iron_mid -> projectile-arrow`, `iron_late -> projectile-shot`이다.
+  - `towerAttack.test.ts` 기대값도 같은 계약으로 정정했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`

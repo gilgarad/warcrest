@@ -126,6 +126,14 @@ export class LaneBattleHudView {
     button.text.setText(label);
   }
 
+  setStrategicActionEnabled(actionId: StrategicActionId, enabled: boolean): void {
+    const button = this.strategicActionButtons.get(actionId);
+    if (!button) return;
+    button.rect.setFillStyle(enabled ? 0x1d2d47 : 0x3b2222, enabled ? 0.95 : 0.92);
+    button.rect.setStrokeStyle(2, enabled ? 0xd6b979 : 0xd07c7c, enabled ? 0.65 : 0.8);
+    button.text.setColor(enabled ? "#f3f7fb" : "#ffd4d4");
+  }
+
   setCaptureActionLabel(actionId: CapturePointAction | DefenseTowerAction, label: string): void {
     const button = this.captureActionButtons.get(actionId);
     if (!button) return;
