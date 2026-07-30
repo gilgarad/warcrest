@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   getBuildingDefinition,
+  getBuildingCost,
   resolveCapturedBuilding,
 } from "../captureRules";
 
 describe("capture rules", () => {
   it("owns the building catalogue outside the scene", () => {
     expect(getBuildingDefinition("supply_depot").cost).toEqual({ gold: 18, wood: 12, food: 10 });
+    expect(getBuildingCost("defense_tower", "stone")).toEqual({ gold: 10, wood: 10 });
   });
 
   it("resolves destruction and level-loss capture branches", () => {

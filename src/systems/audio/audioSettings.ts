@@ -1,13 +1,13 @@
 import type { AudioSettingsData } from "./types";
 
 const STORAGE_KEY = "warcrest.audioSettings";
-const CURRENT_VERSION = 2;
+const CURRENT_VERSION = 3;
 
 export const DEFAULT_AUDIO_SETTINGS: AudioSettingsData = {
   version: CURRENT_VERSION,
-  masterVolume: 0.8,
-  bgmVolume: 0.8,
-  sfxVolume: 0.9,
+  masterVolume: 0.92,
+  bgmVolume: 0.96,
+  sfxVolume: 0.95,
   mute: false,
   muteWhenUnfocused: true,
   combatSfxMode: "reduced",
@@ -47,6 +47,16 @@ function migrate(data: Record<string, unknown>): AudioSettingsData | null {
       // The old boolean affected all SFX. Preserve the safe, non-fatiguing
       // behavior by migrating both values to the new combat-only default.
       combatSfxMode: "reduced",
+    };
+    return isValidSettingsShape(candidate) ? candidate as AudioSettingsData : null;
+  }
+  if (version === 2 && isValidSettingsShape(data)) {
+    const candidate = {
+      ...data,
+      version: CURRENT_VERSION,
+      masterVolume: data.masterVolume === 0.8 ? DEFAULT_AUDIO_SETTINGS.masterVolume : data.masterVolume,
+      bgmVolume: data.bgmVolume === 0.8 ? DEFAULT_AUDIO_SETTINGS.bgmVolume : data.bgmVolume,
+      sfxVolume: data.sfxVolume === 0.9 ? DEFAULT_AUDIO_SETTINGS.sfxVolume : data.sfxVolume,
     };
     return isValidSettingsShape(candidate) ? candidate as AudioSettingsData : null;
   }

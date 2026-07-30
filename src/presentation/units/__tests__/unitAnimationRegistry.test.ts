@@ -47,14 +47,14 @@ describe("unit animation registry", () => {
   );
 
   it("uses the approved wide production attack frame throughout the attack window", () => {
-    expect(resolveUnitAnimationTexture("stone_axeman", false, 0, 0.1)).toBe("stone-axeman-w-attack");
-    expect(resolveUnitAnimationTexture("stone_axeman", false, 0, 0.9)).toBe("stone-axeman-w-attack");
+    expect(resolveUnitAnimationTexture("stone_axeman", false, 0, 0.1)).toBe("stone-axeman-e-attack");
+    expect(resolveUnitAnimationTexture("stone_axeman", false, 0, 0.9)).toBe("stone-axeman-e-attack");
     expect(getFrameCanvasAspect("stone_axeman", "stone-axeman-w-idle")).toBe(1);
     expect(getFrameCanvasAspect("stone_axeman", "stone-axeman-w-attack")).toBeCloseTo(512 / 384);
   });
 
   it("registers the bronze spearman without a token fallback", () => {
-    expect(resolveUnitAnimationTexture("bronze_spearman", false, 0, 0)).toBe("bronze-spearman-w-idle");
+    expect(resolveUnitAnimationTexture("bronze_spearman", false, 0, 0)).toBe("bronze-spearman-e-idle");
     expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === "bronze-spearman-ne-attack")).toBe(true);
     expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === "bronze-spearman-se-attack-enemy")).toBe(true);
   });
@@ -75,19 +75,21 @@ describe("unit animation registry", () => {
     ["musketeer", "musketeer"],
     ["knight", "knight"],
   ] as const)("registers full eight-direction production frames for %s", (unitId, prefix) => {
-    expect(resolveUnitAnimationTexture(unitId, false, 0, 0, "w")).toBe(`${prefix}-w-idle`);
+    expect(resolveUnitAnimationTexture(unitId, false, 0, 0, "w")).toBe(`${prefix}-e-idle`);
     expect(resolveUnitAnimationTexture(unitId, false, 0, 0, "n")).toBe(`${prefix}-n-idle`);
     expect(resolveUnitAnimationTexture(unitId, true, 1, 0, "se")).toBe(`${prefix}-se-walk-a`);
-    expect(resolveUnitAnimationTexture(unitId, true, -1, 0, "nw")).toBe(`${prefix}-nw-walk-b`);
-    expect(resolveUnitAnimationTexture(unitId, false, 0, 0.25, "sw")).toBe(`${prefix}-sw-attack`);
+    expect(resolveUnitAnimationTexture(unitId, true, -1, 0, "nw")).toBe(`${prefix}-ne-walk-b`);
+    expect(resolveUnitAnimationTexture(unitId, false, 0, 0.25, "sw")).toBe(`${prefix}-se-attack`);
     expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === `${prefix}-ne-idle-enemy`)).toBe(true);
   });
 
   it("selects team palette variants without whole-sprite tinting", () => {
     expect(resolveTeamUnitTextureKey("stone-axeman-idle", "player")).toBe("stone-axeman-idle");
     expect(resolveTeamUnitTextureKey("stone-axeman-idle", "enemy")).toBe("stone-axeman-idle-enemy");
-    expect(shouldFlipUnitFrame("stone_axeman", -1)).toBe(false);
-    expect(shouldFlipUnitFrame("stone_axeman", 1)).toBe(false);
+    expect(shouldFlipUnitFrame("stone_axeman", -1, "w")).toBe(false);
+    expect(shouldFlipUnitFrame("stone_axeman", 1, "e")).toBe(true);
+    expect(shouldFlipUnitFrame("stone_axeman", 1, "ne")).toBe(true);
+    expect(shouldFlipUnitFrame("stone_axeman", -1, "sw")).toBe(false);
   });
 
   it("defines the complete production direction contract and quantizes screen motion", () => {
@@ -105,12 +107,12 @@ describe("unit animation registry", () => {
 
   it("uses authored bronze-spearman directional frames instead of falling back to west art", () => {
     expect(resolveUnitAnimationTexture("bronze_spearman", false, 0, 0, "w"))
-      .toBe("bronze-spearman-w-idle");
+      .toBe("bronze-spearman-e-idle");
     expect(resolveUnitAnimationTexture("bronze_spearman", false, 0, 0, "n"))
       .toBe("bronze-spearman-n-idle");
     expect(resolveUnitAnimationTexture("bronze_spearman", true, 1, 0, "se"))
       .toBe("bronze-spearman-se-walk-a");
     expect(resolveUnitAnimationTexture("bronze_spearman", false, 0, 0.25, "sw"))
-      .toBe("bronze-spearman-sw-attack");
+      .toBe("bronze-spearman-se-attack");
   });
 });

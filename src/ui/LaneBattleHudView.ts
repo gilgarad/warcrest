@@ -24,6 +24,8 @@ interface ActionButton {
   text: Phaser.GameObjects.Text;
 }
 
+type StrategicActionId = "hire-worker" | "hire-research-worker" | "use-instant-wave" | "age-up";
+
 const HUD_SOURCE_WIDTH = 1672;
 const HUD_TOP_SOURCE_HEIGHT = 160;
 const HUD_BOTTOM_SOURCE_HEIGHT = 220;
@@ -35,6 +37,7 @@ export interface LaneBattleHudCallbacks {
   ageUp: () => void;
   shiftWorker: (role: WorkerRole, delta: 1 | -1) => void;
   rebuildDefenseTower: () => void;
+  buildDefenseTower: () => void;
   buildSupplyDepot: () => void;
   buildMint: () => void;
   dismantle: () => void;
@@ -45,6 +48,7 @@ export class LaneBattleHudView {
   private readonly resourceTexts = new Map<string, Phaser.GameObjects.Text>();
   private readonly workerRows = new Map<WorkerRole, WorkerUiRow>();
   private readonly captureActionButtons = new Map<CapturePointAction | DefenseTowerAction, ActionButton>();
+  private readonly strategicActionButtons = new Map<StrategicActionId, ActionButton>();
   private ageText!: Phaser.GameObjects.Text;
   private waveText!: Phaser.GameObjects.Text;
   private baseText!: Phaser.GameObjects.Text;
@@ -116,6 +120,18 @@ export class LaneBattleHudView {
     return this.ageText.text;
   }
 
+  setStrategicActionLabel(actionId: StrategicActionId, label: string): void {
+    const button = this.strategicActionButtons.get(actionId);
+    if (!button) return;
+    button.text.setText(label);
+  }
+
+  setCaptureActionLabel(actionId: CapturePointAction | DefenseTowerAction, label: string): void {
+    const button = this.captureActionButtons.get(actionId);
+    if (!button) return;
+    button.text.setText(label);
+  }
+
   getCompositionMetrics(): { topHeight: number; bottomHeight: number; openWorldHeight: number; openWorldRatio: number } {
     const scale = this.canvasWidth / HUD_SOURCE_WIDTH;
     const topHeight = HUD_TOP_SOURCE_HEIGHT * scale;
@@ -141,11 +157,13 @@ export class LaneBattleHudView {
     this.baseText = this.scene.add.text(42, 86, "", { fontFamily: "sans-serif", fontSize: "12px", color: "#d6e3f1" }).setDepth(this.depth + 2).setScrollFactor(0);
     this.tokensText = this.scene.add.text(42, 106, "", { fontFamily: "sans-serif", fontSize: "12px", color: "#f3d27a" }).setDepth(this.depth + 2).setScrollFactor(0);
 
-    const resourceXs = [360, 680, 1080, 1400];
+    this.scene.add.rectangle(this.canvasWidth / 2, 54, 900, 82, 0x09131e, 0.76).setStrokeStyle(2, 0x7ea0c9, 0.24).setDepth(this.depth + 1).setScrollFactor(0);
+    const resourceXs = [500, 710, 920, 1130];
     MVP_ACTIVE_RESOURCE_IDS.forEach((resourceId, index) => {
-      this.scene.add.image(resourceXs[index], 46, getResourceIconKey(resourceId)).setDisplaySize(24, 24).setDepth(this.depth + 2).setScrollFactor(0);
-      this.scene.add.text(resourceXs[index], 14, getResource(resourceId).label, { fontFamily: "sans-serif", fontSize: "11px", color: "#97abd0" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0);
-      this.resourceTexts.set(resourceId, this.scene.add.text(resourceXs[index] + 24, 34, "", { fontFamily: "Georgia, serif", fontSize: "21px", color: "#f5fbff" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0, 0));
+      this.scene.add.rectangle(resourceXs[index], 54, 170, 54, 0x132235, 0.74).setStrokeStyle(1, 0xa8bfdc, 0.18).setDepth(this.depth + 2).setScrollFactor(0);
+      this.scene.add.image(resourceXs[index] - 52, 54, getResourceIconKey(resourceId)).setDisplaySize(28, 28).setDepth(this.depth + 3).setScrollFactor(0);
+      this.scene.add.text(resourceXs[index] - 24, 36, getResource(resourceId).label, { fontFamily: "sans-serif", fontSize: "13px", color: "#9fb7d5" }).setDepth(this.depth + 3).setScrollFactor(0).setOrigin(0, 0);
+      this.resourceTexts.set(resourceId, this.scene.add.text(resourceXs[index] - 24, 52, "", { fontFamily: "Georgia, serif", fontSize: "27px", color: "#f5fbff" }).setDepth(this.depth + 3).setScrollFactor(0).setOrigin(0, 0.5));
     });
 
     this.scene.add.text(64, 704, "일꾼 배치", { fontFamily: "Georgia, serif", fontSize: "20px", color: "#f4e6c5" }).setDepth(this.depth + 2).setScrollFactor(0);
@@ -155,10 +173,10 @@ export class LaneBattleHudView {
       workerY += 25;
     });
 
-    this.createActionButton(320, 730, 180, 38, "일꾼 고용", this.callbacks.hireWorker);
-    this.createActionButton(320, 778, 180, 38, "연구 일꾼", this.callbacks.hireResearchWorker);
-    this.createActionButton(1190, 730, 210, 38, "즉시 웨이브", this.callbacks.useInstantWave);
-    this.createActionButton(1190, 778, 210, 38, "시대 업", this.callbacks.ageUp);
+    this.strategicActionButtons.set("hire-worker", this.createActionButton(308, 724, 188, 46, "일꾼 고용", this.callbacks.hireWorker));
+    this.strategicActionButtons.set("hire-research-worker", this.createActionButton(308, 778, 188, 54, "연구 일꾼", this.callbacks.hireResearchWorker));
+    this.strategicActionButtons.set("use-instant-wave", this.createActionButton(1178, 724, 220, 46, "즉시 웨이브", this.callbacks.useInstantWave));
+    this.strategicActionButtons.set("age-up", this.createActionButton(1178, 778, 220, 54, "시대 업", this.callbacks.ageUp));
 
     this.rosterText = this.scene.add.text(530, 714, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#d8e7f6", lineSpacing: 3 }).setDepth(this.depth + 2).setScrollFactor(0);
     this.capturePanelTitle = this.scene.add.text(780, 718, "", { fontFamily: "Georgia, serif", fontSize: "17px", color: "#f4e6c5" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0.5);
@@ -166,9 +184,10 @@ export class LaneBattleHudView {
     this.infoText = this.scene.add.text(780, 870, "", { fontFamily: "sans-serif", fontSize: "11px", color: "#a8bdd7" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0.5);
 
     this.captureActionButtons.set("rebuild-defense-tower", this.createActionButton(920, 708, 150, 32, "타워 재건", this.callbacks.rebuildDefenseTower));
-    this.captureActionButtons.set("build-supply-depot", this.createActionButton(920, 748, 150, 32, "병참", this.callbacks.buildSupplyDepot));
-    this.captureActionButtons.set("build-mint", this.createActionButton(920, 788, 150, 32, "조달소", this.callbacks.buildMint));
-    this.captureActionButtons.set("dismantle", this.createActionButton(920, 828, 150, 28, "폐기", this.callbacks.dismantle));
+    this.captureActionButtons.set("build-defense-tower", this.createActionButton(920, 748, 150, 32, "타워", this.callbacks.buildDefenseTower));
+    this.captureActionButtons.set("build-supply-depot", this.createActionButton(920, 788, 150, 32, "병참", this.callbacks.buildSupplyDepot));
+    this.captureActionButtons.set("build-mint", this.createActionButton(920, 828, 150, 32, "조달소", this.callbacks.buildMint));
+    this.captureActionButtons.set("dismantle", this.createActionButton(920, 868, 150, 28, "폐기", this.callbacks.dismantle));
 
     this.playerBaseBar = this.scene.add.rectangle(300, 140, 180, 9, 0x4fc1ff, 1).setOrigin(0, 0.5).setDepth(this.depth + 2);
     this.enemyBaseBar = this.scene.add.rectangle(1120, 140, 180, 9, 0xff7373, 1).setOrigin(0, 0.5).setDepth(this.depth + 2);
@@ -198,7 +217,7 @@ export class LaneBattleHudView {
 
   private createActionButton(x: number, y: number, width: number, height: number, label: string, onClick: () => void): ActionButton {
     const rect = this.scene.add.rectangle(x + width / 2, y + height / 2, width, height, 0x1d2d47, 0.95).setStrokeStyle(2, 0xd6b979, 0.65).setDepth(this.depth + 2).setScrollFactor(0);
-    const text = this.scene.add.text(rect.x, rect.y, label, { fontFamily: "sans-serif", fontSize: "13px", color: "#f3f7fb" }).setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
+    const text = this.scene.add.text(rect.x, rect.y, label, { fontFamily: "sans-serif", fontSize: "12px", color: "#f3f7fb", align: "center" }).setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
     rect.setInteractive({ useHandCursor: true });
     rect.on("pointerover", () => {
       rect.setFillStyle(0x274165, 0.98);

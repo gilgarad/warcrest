@@ -1,12 +1,22 @@
 import { getAge } from "../data/ages";
-import { getAgeBalance, getOpponentScale, MVP_ACTIVE_RESOURCE_IDS } from "../data/balance";
+import { getAgeBalance, getOpponentScale, getResearchWorkerDirectCost, MVP_ACTIVE_RESOURCE_IDS } from "../data/balance";
 import type { CapturePointDefinition } from "../data/capturePointDefinitions";
 import type { DefenseTowerDefinition } from "../data/defenseTowerDefinitions";
 import type { ResourceId } from "../data/resources";
 import { getWaveRoster } from "../data/unitRosters";
-import { DISMANTLE_COST_GOLD, getBuildingDefinition, type BuildingId } from "../systems/lane-capture/captureRules";
-import type { TeamState, WorkerRole } from "../systems/lane-economy/laneEconomy";
+import { DISMANTLE_COST_GOLD, getBuildingCost, getBuildingDefinition, type BuildingId } from "../systems/lane-capture/captureRules";
+import { getDefenseTowerBuildCost } from "../systems/lane-capture/defenseTowerRules";
+import { getAgeUpCost, type TeamState, type WorkerRole } from "../systems/lane-economy/laneEconomy";
 import { UNIT_STATS } from "../systems/lane-units/unitStats";
+
+function formatCostInline(cost: Partial<Record<ResourceId, number>>): string {
+  const parts: string[] = [];
+  if (cost.gold) parts.push(`${Math.round(cost.gold)}G`);
+  if (cost.wood) parts.push(`${Math.round(cost.wood)}W`);
+  if (cost.food) parts.push(`${Math.round(cost.food)}F`);
+  if (cost.metal) parts.push(`${Math.round(cost.metal)}M`);
+  return parts.join(" ");
+}
 
 export interface LaneHudCapturePoint {
   id: number;
@@ -20,7 +30,7 @@ export interface LaneHudCapturePoint {
 export interface LaneHudDefenseTower {
   id: number;
   definition: DefenseTowerDefinition;
-  owner: "player" | "enemy";
+  owner: "player" | "enemy" | "neutral";
   built: boolean;
   buildRemainingSec: number;
   hp: number;
@@ -109,26 +119,34 @@ export function createLaneBattleHudSnapshot(input: LaneBattleHudInput): LaneBatt
     rosterLines: [
       `다음 웨이브: ${rosterSummary}`,
       `보급대 ${roster.support[0]?.count ?? 0}기 포함`,
-      `웨이브 식량 ${Math.round(getAgeBalance(input.player.ageId).baseWaveFoodCost * getOpponentScale(input.opponentCount).foodCostMultiplier)}`,
+      `웨이브 식량 ${Math.round(getAgeBalance(input.player.ageId).baseWaveFoodCost * getOpponentScale(input.opponentCount).foodCostMultiplier)} | 연구 ${formatCostInline(getResearchWorkerDirectCost(input.player.ageId))} | 시대 업 ${AGESummary(input.player.ageId)}`,
     ],
     captureTitle: selectedTower
       ? `방어 타워 ${selectedTower.id + 1}`
       : selected ? `건설 거점 ${selected.id + 1}` : "거점 또는 타워 선택",
     captureLines: selectedTower
       ? [
-          `소유 ${selectedTower.owner === "player" ? "아군" : "적"}`,
+          `소유 ${selectedTower.owner === "player" ? "아군" : selectedTower.owner === "enemy" ? "적" : "중립"}`,
           selectedTower.built
             ? `가동 중 HP ${Math.round(selectedTower.hp)}/${Math.round(selectedTower.maxHp)}`
             : selectedTower.buildRemainingSec > 0
               ? `재건 중 ${Math.ceil(selectedTower.buildRemainingSec)}초`
-              : "파괴됨",
-          "거점 점령과 독립된 방어 구조물",
+              : "폐허 거점",
+          `재건 비용 ${formatCostInline(getDefenseTowerBuildCost(input.player.ageId))}`,
         ]
       : selected
       ? [
           `소유 ${selected.owner === "player" ? "아군" : selected.owner === "enemy" ? "적" : "중립"} | 점령 ${Math.round(Math.abs(selected.control) * 100)}%`,
           `건설 ${selected.buildingId ? `${getBuildingDefinition(selected.buildingId).label} Lv.${selected.buildingLevel}` : "없음"} | 폐기 ${DISMANTLE_COST_GOLD}G`,
+          selected.owner === "player" && !selected.buildingId
+            ? `타워 ${formatCostInline(getBuildingCost("defense_tower", input.player.ageId))} · 병참 ${formatCostInline(getBuildingCost("supply_depot", input.player.ageId))} · 조달소 ${formatCostInline(getBuildingCost("mint", input.player.ageId))}`
+            : "파괴 후 중립화되며 점령 뒤 재건 가능",
         ]
       : ["거점이나 타워를 터치해 선택", "두 구조물은 서로 다른 위치와 규칙을 사용"],
   };
+}
+
+function AGESummary(ageId: TeamState["ageId"]): string {
+  const ageIndex = ["stone", "bronze", "iron_early", "iron_mid", "iron_late"].indexOf(ageId);
+  return ageIndex >= 4 ? "최종" : formatCostInline(getAgeUpCost(ageIndex));
 }

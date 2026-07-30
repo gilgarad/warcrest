@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   advanceTeamAge,
   canAfford,
-  convertWorkersToResearch,
   createTeamState,
   getAgeUpCost,
   makeResourceMap,
@@ -12,12 +11,14 @@ import {
 } from "../laneEconomy";
 
 describe("lane economy", () => {
-  it("ticks both passive food and worker production through one accumulator", () => {
+  it("only keeps metal worker production on the passive economy tick", () => {
     const team = createTeamState("player", makeResourceMap(0, 0, 0, 0), 400);
-    team.workers.gold = 2;
+    team.workers.metal = 2;
     tickLaneEconomy([team], new Map(), 10);
-    expect(team.resources.food).toBeGreaterThan(10);
-    expect(team.resources.gold).toBe(2);
+    expect(team.resources.gold).toBe(0);
+    expect(team.resources.wood).toBe(0);
+    expect(team.resources.food).toBe(0);
+    expect(team.resources.metal).toBe(2);
   });
 
   it("keeps affordability and payment as one shared rule", () => {
@@ -36,12 +37,4 @@ describe("lane economy", () => {
     expect(team.ageId).toBe("bronze");
   });
 
-  it("converts workers atomically into research workers", () => {
-    const team = createTeamState("player", makeResourceMap(0, 0, 0, 0), 400);
-    team.workers.idle = 6;
-    team.workers.gold = 4;
-    expect(convertWorkersToResearch(team.workers, 10, 1)).toBe(true);
-    expect(team.workers.research).toBe(1);
-    expect(team.workers.idle + team.workers.gold).toBe(0);
-  });
 });

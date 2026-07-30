@@ -4,10 +4,17 @@ import { BootScene } from "./scenes/BootScene";
 import { LaneBattleScene } from "./scenes/LaneBattleScene";
 import { GameOverScene } from "./scenes/GameOverScene";
 import { GoldenReferenceScene } from "./scenes/GoldenReferenceScene";
+import { destroySharedAudioSystem } from "./systems/audio";
 
 document.title = GAME_TITLE;
 
-new Phaser.Game({
+const existingGame = (window as unknown as { __warcrestGame?: Phaser.Game }).__warcrestGame;
+if (existingGame) {
+  existingGame.destroy(true);
+  destroySharedAudioSystem();
+}
+
+const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: "game",
   width: 1600,
@@ -25,3 +32,14 @@ new Phaser.Game({
   },
   scene: [BootScene, LaneBattleScene, GameOverScene, GoldenReferenceScene],
 });
+
+(window as unknown as { __warcrestGame?: Phaser.Game }).__warcrestGame = game;
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    game.destroy(true);
+    destroySharedAudioSystem();
+    delete (window as unknown as { __warcrestGame?: Phaser.Game }).__warcrestGame;
+    document.getElementById("game")?.replaceChildren();
+  });
+}

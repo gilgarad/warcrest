@@ -362,23 +362,27 @@ export const DAY3_THREE_FRONTS_LANE_PATH_NODES: LanePathNodeSpec[] = [
 ];
 
 export const TWO_LANE_NORTH_PATH_NODES: LanePathNodeSpec[] = [
-  { progress: 0.00, position: { x: 1180, y: 1600 } },
-  { progress: 0.14, position: { x: 1760, y: 1440 } },
-  { progress: 0.28, position: { x: 2580, y: 1310 } },
-  { progress: 0.46, position: { x: 3550, y: 1280 } },
-  { progress: 0.66, position: { x: 4540, y: 1320 } },
-  { progress: 0.82, position: { x: 5300, y: 1410 } },
-  { progress: 1.00, position: { x: 5840, y: 1500 } },
+  { progress: 0.00, position: { x: 1160, y: 1980 } },
+  { progress: 0.09, position: { x: 1460, y: 1280 } },
+  { progress: 0.21, position: { x: 2020, y: 980 } },
+  { progress: 0.35, position: { x: 2860, y: 860 } },
+  { progress: 0.50, position: { x: 3840, y: 860 } },
+  { progress: 0.65, position: { x: 4720, y: 930 } },
+  { progress: 0.79, position: { x: 5380, y: 1080 } },
+  { progress: 0.91, position: { x: 5780, y: 1280 } },
+  { progress: 1.00, position: { x: 5960, y: 1980 } },
 ];
 
 export const TWO_LANE_SOUTH_PATH_NODES: LanePathNodeSpec[] = [
-  { progress: 0.00, position: { x: 1180, y: 2320 } },
-  { progress: 0.14, position: { x: 1760, y: 2470 } },
-  { progress: 0.28, position: { x: 2580, y: 2605 } },
-  { progress: 0.46, position: { x: 3520, y: 2660 } },
-  { progress: 0.66, position: { x: 4540, y: 2580 } },
-  { progress: 0.82, position: { x: 5300, y: 2480 } },
-  { progress: 1.00, position: { x: 5840, y: 2400 } },
+  { progress: 0.00, position: { x: 1160, y: 1980 } },
+  { progress: 0.09, position: { x: 1460, y: 2680 } },
+  { progress: 0.21, position: { x: 2020, y: 2980 } },
+  { progress: 0.35, position: { x: 2860, y: 3100 } },
+  { progress: 0.50, position: { x: 3840, y: 3100 } },
+  { progress: 0.65, position: { x: 4720, y: 3030 } },
+  { progress: 0.79, position: { x: 5380, y: 2880 } },
+  { progress: 0.91, position: { x: 5780, y: 2680 } },
+  { progress: 1.00, position: { x: 5960, y: 1980 } },
 ];
 
 const DAY2_PLAYER_FRONT_PATCH_ROWS = [10, 10, 8, 6, 8, 8, 10] as const;
@@ -504,13 +508,15 @@ const DAY3_THREE_FRONTS_PROPS: TerrainPropSpec[] = [
   { id: "day3-east-basin-log", textureKey: "fallen-log", position: { x: 5750, y: 640 }, displayWidth: 224, displayHeight: 224, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 126, height: 60, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
 ];
 
-const TWO_LANE_PATCH_ROWS = [8, 8, 6, 6, 8, 8] as const;
+const TWO_LANE_PATCH_ROWS = [10, 10, 8, 8, 8, 8, 10, 10] as const;
 const TWO_LANE_BANDS: readonly TerrainBandProfile[] = [
+  { stoneHalfRows: 2, dirtHalfRows: 4 },
   { stoneHalfRows: 2, dirtHalfRows: 4 },
   { stoneHalfRows: 1, dirtHalfRows: 4 },
   { stoneHalfRows: 1, dirtHalfRows: 3 },
   { stoneHalfRows: 1, dirtHalfRows: 3 },
   { stoneHalfRows: 1, dirtHalfRows: 4 },
+  { stoneHalfRows: 2, dirtHalfRows: 4 },
   { stoneHalfRows: 2, dirtHalfRows: 4 },
 ];
 

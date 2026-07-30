@@ -24,7 +24,7 @@ export const AGES: AgeDef[] = [
     baseWaveFoodCost: 5,
     bonusUnitFoodBase: 2,
     foodWorkerIntervalSec: 5,
-    killGoldBase: 1,
+    killGoldBase: 6,
     immediateWaveTokenGranted: true,
   },
   {
@@ -35,7 +35,7 @@ export const AGES: AgeDef[] = [
     baseWaveFoodCost: 8,
     bonusUnitFoodBase: 2,
     foodWorkerIntervalSec: 4,
-    killGoldBase: 1.4,
+    killGoldBase: 9,
     immediateWaveTokenGranted: true,
   },
   {
@@ -46,7 +46,7 @@ export const AGES: AgeDef[] = [
     baseWaveFoodCost: 11,
     bonusUnitFoodBase: 3,
     foodWorkerIntervalSec: 3,
-    killGoldBase: 1.8,
+    killGoldBase: 12,
     immediateWaveTokenGranted: true,
   },
   {
@@ -57,7 +57,7 @@ export const AGES: AgeDef[] = [
     baseWaveFoodCost: 15,
     bonusUnitFoodBase: 3,
     foodWorkerIntervalSec: 2,
-    killGoldBase: 2.3,
+    killGoldBase: 18,
     immediateWaveTokenGranted: true,
   },
   {
@@ -68,7 +68,7 @@ export const AGES: AgeDef[] = [
     baseWaveFoodCost: 20,
     bonusUnitFoodBase: 4,
     foodWorkerIntervalSec: 1,
-    killGoldBase: 3,
+    killGoldBase: 27,
     immediateWaveTokenGranted: true,
     notes: "강철 시대가 아니라 중세 끝무렵을 뜻하는 단계.",
   },

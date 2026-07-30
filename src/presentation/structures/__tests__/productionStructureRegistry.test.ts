@@ -17,7 +17,7 @@ describe("production structure registry", () => {
 
   it("resolves state-specific tower scale and team textures", () => {
     expect(getDefenseTowerTexture("construction", "enemy")).toBe("defense-tower-construction-enemy");
-    expect(getDefenseTowerVisibleHeightRatio("ruins")).toBeCloseTo(280 / 512);
+    expect(getDefenseTowerVisibleHeightRatio("ruins")).toBeCloseTo(360 / 512);
     expect(getMainBaseTexture("enemy")).toBe("main-base-enemy");
     expect(getCaptureMarkerTexture("neutral")).toBe("capture-marker-neutral");
   });

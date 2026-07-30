@@ -3689,6 +3689,7 @@ Use consistent headings so entries are easy to grep.
   - 감사용 비교 이미지와 중간 산출물: `artifacts/nw-audit/`
   - Playwright 갱신 산출물: `artifacts/unit-animation-tower-v2/`,
     `artifacts/unit-direction/`, `artifacts/day7-5-unit-art/`
+
 ## [2026-07-30] feat | 오디오 트랙: 선택/고용 확인음 추가
 
 - 담당 브랜치 `track-audio-ack-sfx`에서 `sfx.ui.acknowledge`를
@@ -3720,3 +3721,98 @@ Use consistent headings so entries are easy to grep.
 - 검증은 Audio Lab에서 `buildSelect`와 `hireSuccess`를 직접 재생하고,
   이어서 `npm run build`, `npm test`, 관련 오디오 Playwright만 좁혀
   실행했다. 결과 상세는 최종 보고 기준이다.
+
+## [2026-07-30] fix | 맵/UI 트랙: 2레인 간격 확대 + 레인별 웨이브 복제 + 방향 반전 완화
+
+- 담당: 맵 및 게임 전반 트랙. 사용자가 보고한 3건을 바로 수정했다.
+- `src/data/battlefieldMaps.ts`
+  - `warcrest-two-lane-v1`의 북/남 레인 경로를 위아래로 더 벌려, 중앙에서 거의 붙어 보이던 형태를 넓은 직사각형에 가까운 레이아웃으로 조정했다.
+- `src/scenes/LaneBattleScene.ts`
+  - `spawnWaveUnits()`를 round-robin 분배에서 레인별 전체 roster 복제로 변경했다. 이제 위 레인도 독립된 1웨이브, 아래 레인도 동일한 1웨이브를 받는다. 기존처럼 한 웨이브 병력이 두 레인으로 나뉘지 않는다.
+  - 전투/이동 중 `facingX`를 갱신하는 기준에 별도 수평 dead-zone을 추가했다. 목표나 보간 위치가 거의 수직선상일 때는 좌우 반전을 바꾸지 않도록 해, 근거리 교전에서 빠르게 좌우 뒤집히는 현상을 완화했다.
+- 검증:
+  - `npm run build`
+  - `npm test`
+
+## [2026-07-30] fix | 맵/UI 트랙: 이동 방향 기준 캐릭터 방향 안정화 + 기본 오디오 음량 상향
+
+- 담당: 맵 및 게임 전반 트랙.
+- `src/scenes/LaneBattleScene.ts`
+  - 캐릭터 방향이 렌더 보간값(`visualProgress`/`visualLaneRow`)에 따라 매 프레임 다시 계산되던 구조를 정리했다.
+  - 이제 이동 중 방향은 `advanceUnit()`에서 실제 목표 이동 지점 기준으로만 갱신하고, `syncUnitPresentation()`은 더 이상 화면 보간 흔들림으로 방향을 다시 바꾸지 않는다. 이로써 이동 중 앞/뒤 또는 대각 방향이 빠르게 교차되던 현상을 줄였다.
+- `src/systems/audio/audioSettings.ts`
+  - 음악 자산이나 편곡 로직은 건드리지 않고, 기본 설정 레이어만 조정했다.
+  - 기본 음량을 `master 0.92 / bgm 0.96 / sfx 0.95`로 상향했다.
+  - 기존 `version: 2` 저장값 중 예전 기본값(`0.8 / 0.8 / 0.9`) 그대로인 경우에만 새 louder baseline으로 마이그레이션하도록 `version: 3` 마이그레이션을 추가했다. 사용자가 이미 따로 조정한 값은 그대로 유지된다.
+- `src/systems/audio/__tests__/audioSettings.test.ts`
+  - 버전 상향과 v2 -> v3 마이그레이션 계약을 반영해 테스트를 갱신했다.
+- 검증:
+  - `npm run build`
+  - `npm test`
+
+## [2026-07-30] fix | 런타임: 로컬 웹 리로드 시 Phaser/오디오 인스턴스 누적 방지
+
+- 담당: 맵 및 게임 전반 트랙.
+- `src/main.ts`
+  - 전역 `window.__warcrestGame`에 현재 `Phaser.Game` 인스턴스를 보관하고, 새 진입 또는 Vite HMR dispose 시 이전 게임 인스턴스를 `destroy(true)`로 파기하도록 정리 훅을 추가했다.
+  - `#game` 컨테이너도 dispose 시 비워, 개발 중 반복 리로드에서 캔버스/DOM 잔재가 남지 않게 했다.
+- `src/systems/audio/audioSystem.ts`, `src/systems/audio/index.ts`
+  - 공유 오디오 singleton을 명시적으로 정리하는 `destroySharedAudioSystem()` export를 추가했다.
+  - 오디오 시스템 `destroy()` 때 전역 디버그 핸들(`window.__audioDebugControl`)까지 제거해 listener/debug 참조가 남지 않게 했다.
+- 목적:
+  - 로컬 개발 서버에서 탭 강제 새로고침/HMR 이후 메모리가 조금씩 더 쌓이는 문제를 줄이고, 중복 게임 루프/오디오 listener가 살아남지 않게 하는 것.
+
+## [2026-07-30] ops | master 원격 동기화 + 로컬 웹 기동 확인
+
+- `master`에서 `git pull --rebase --autostash origin master`로 원격 2커밋(캐릭터/음악 트랙 포함)을 반영했다.
+- autostash 재적용 시 충돌은 `docs/ai-usage/session-log.md`, `docs/dev-wiki/log.md` 두 기록 파일에만 발생했고, 양쪽 로그를 모두 유지하는 방식으로 정리했다.
+- pull 후 `npm run build` 재실행 통과.
+- 기존 5173/4173 포트는 이미 사용 중이어서 Vite dev 서버를 새 포트 4174에서 기동했다. `curl`과 Playwright headless smoke check로 `http://127.0.0.1:4174/game_project1/` 접속, 캔버스 생성, 에러 오버레이 부재를 확인했다.
+
+## [2026-07-30] fix | 전장 UI/타워 규칙 재정렬
+
+- `src/presentation/structures/productionStructureRegistry.ts`
+  - 타워 `full/damaged/critical/ruins/construction` 상태의 visible-height 정규화를 통일해, 폐허/재건 스프라이트가 과대 확대되지 않게 수정했다.
+- `src/scenes/LaneBattleScene.ts`
+  - 유닛 군집 요약 라벨(`아군 x3`, `적군 x4`)을 제거하고, 유닛/타워/건설 거점 월드 라벨은 선택 또는 hover 시에만 노출되게 바꿨다. 본진 라벨은 상향된 폰트 크기를 사용한다.
+  - 파괴된 타워는 `neutral` 폐허로 전환되고, 주변 우세 병력에 따라 재점령된 뒤 재건할 수 있게 했다.
+  - 일반 건설 거점에 `타워` 건설 액션을 추가했고, 거점 타워도 자동 공격을 수행하도록 연결했다.
+  - 타워 HP를 기존 대비 5배 추가 상향하고, 타워 사거리를 석기 원거리 기준 약 2배로 늘렸다.
+  - 병참은 근처 아군 공격력 20% 강화 + 지원 유닛 마나 보급으로, 조달소는 근처 아군 치유로 역할을 재정의했다. 병참 거점은 지원 유닛 기준 3배 마나 풀을 가진다.
+- `src/data/capturePointDefinitions.ts`, `src/systems/lane-capture/captureRules.ts`, `src/ui/LaneBattleHudView.ts`, `src/ui/laneBattleHudModel.ts`
+  - 거점 액션/표시 계약에 `build-defense-tower`와 중립 타워 소유 상태를 반영했다.
+- 검증:
+  - `npm run build`
+  - `npm test`
+
+## [2026-07-30] fix | 경제 규칙 재정의 + 거점 구조물 접지감 보정
+
+- `src/scenes/LaneBattleScene.ts`
+  - 건설 거점 마커와 전용 타워 스프라이트를 소켓 쪽으로 더 내려 붙여 구조물이 공중에 떠 보이던 인상을 줄였다.
+  - 팀 초기 자원을 `금 20 / 목재 20 / 식량 20 / 금속 0`으로 낮췄다.
+  - 연구 일꾼은 더 이상 일반 일꾼 전환을 사용하지 않고, 시대별 자원 비용으로 직접 고용만 가능하게 바꿨다.
+  - 적 처치 보상을 `금/목재/식량` 3자원 랜덤 분배로 바꿨다. 총량은 석기 `6`, 청동기 `9`, 초기 철기 `12`, 중기 철기 `18`, 후기 철기 `27`.
+- `src/data/balance.ts`, `src/data/ages.ts`, `src/systems/lane-economy/laneEconomy.ts`
+  - 연구 일꾼 직접 고용 비용 함수를 추가했다.
+  - 금/목재/식량 자동 수급 tick을 제거하고, 금속 노동자 tick만 남겼다.
+  - 시대별 처치 보상 총량을 상향 재정의했다.
+- 검증:
+  - `npm run build`
+  - `npm test`
+
+## [2026-07-30] polish | 메인 화면/프리로드/HUD 비용 안내 재정비
+
+- `src/scenes/BootScene.ts`
+  - 메인 화면을 중앙 카드형의 더 단순한 레이아웃으로 줄였다.
+  - 전장 자산 준비 상태를 `전장 준비 중 ... / 자산 xx% / 전장 준비 완료`로 직접 보여주고, 사용자가 먼저 눌러도 준비 완료 즉시 시작되게 처리했다.
+- `src/scenes/laneBattleAssetPreload.ts` 신설, `src/scenes/LaneBattleScene.ts`
+  - 전장 자산 로드 목록을 분리했다.
+  - 이전에는 `LaneBattleScene.preload()`가 시작 버튼 이후에 전장 자산을 한꺼번에 로드해 체감 진입 지연을 만들고 있었다.
+  - 이제 메뉴 진입 직후 현재 terrain 모드에 필요한 전장 자산만 백그라운드로 선행 로드하고, `LaneBattleScene.preload()`는 fallback 역할만 한다.
+- `src/ui/LaneBattleHudView.ts`, `src/ui/laneBattleHudModel.ts`, `src/scenes/LaneBattleScene.ts`
+  - 상단 자원 바를 가운데 카드형 레이아웃으로 재배치하고, 폰트와 숫자 크기를 키웠다.
+  - 연구 일꾼, 시대 업, 타워/병참/조달소/폐기 액션 버튼에 비용 표시를 추가했다.
+  - 선택된 거점/타워 패널에도 재건/건설 비용 정보를 함께 보여주도록 정리했다.
+- 검증:
+  - `npm run build`
+  - `npm test`

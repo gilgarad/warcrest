@@ -1,4 +1,4 @@
-export { AudioSystem, getAudioSystem, getAudioDirector, type AudioPlayResult } from "./audioSystem";
+export { AudioSystem, getAudioSystem, getAudioDirector, destroySharedAudioSystem, type AudioPlayResult } from "./audioSystem";
 export { AudioDirector } from "./audioDirector";
 export { BgmManager } from "./bgmManager";
 export { SfxManager, type SfxPlayResult } from "./sfxManager";

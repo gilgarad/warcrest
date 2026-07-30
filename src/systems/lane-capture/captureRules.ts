@@ -1,5 +1,7 @@
+import type { AgeId } from "../../data/ages";
 import type { ResourceCost } from "../../data/balance";
 import type { CaptureBuildingId } from "../../data/capturePointDefinitions";
+import { getDefenseTowerBuildCost } from "./defenseTowerRules";
 
 export type BuildingId = CaptureBuildingId;
 
@@ -21,14 +23,20 @@ export interface CapturedBuildingOutcome {
 export const DISMANTLE_COST_GOLD = 8;
 
 export const BUILDING_DEFINITIONS: readonly BuildingDefinition[] = [
-  { id: "supply_depot", label: "병참", shortLabel: "병참", cost: { gold: 18, wood: 12, food: 10 }, description: "근처 아군 치유와 보급" },
-  { id: "mint", label: "조달소", shortLabel: "조달", cost: { gold: 16, wood: 10, metal: 8 }, description: "주기적으로 금 수급" },
+  { id: "defense_tower", label: "타워", shortLabel: "타워", cost: { gold: 10, wood: 10 }, description: "거점에서 적을 자동 공격" },
+  { id: "supply_depot", label: "병참", shortLabel: "병참", cost: { gold: 18, wood: 12, food: 10 }, description: "근처 아군 공격 강화와 마나 보급" },
+  { id: "mint", label: "조달소", shortLabel: "조달", cost: { gold: 16, wood: 10, metal: 8 }, description: "근처 아군 치유" },
 ];
 
 export function getBuildingDefinition(id: BuildingId): BuildingDefinition {
   const definition = BUILDING_DEFINITIONS.find((entry) => entry.id === id);
   if (!definition) throw new Error(`Unknown capture building: ${id}`);
   return definition;
+}
+
+export function getBuildingCost(id: BuildingId, ageId: AgeId): ResourceCost {
+  if (id === "defense_tower") return getDefenseTowerBuildCost(ageId);
+  return getBuildingDefinition(id).cost;
 }
 
 export function resolveCapturedBuilding(

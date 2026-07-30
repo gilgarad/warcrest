@@ -89,7 +89,7 @@ export interface LaneBattleDebugSnapshot {
     defenseTowers: Array<{
       id: number;
       laneId: string;
-      owner: TeamId;
+      owner: TeamId | "neutral";
       linkedCapturePointId: number;
       progress: number;
       built: boolean;

@@ -83,9 +83,28 @@ describe("AudioSettings", () => {
       crossfadeDurationMs: 800,
     }));
     const settings = new AudioSettings(storage);
-    expect(settings.get().version).toBe(2);
+    expect(settings.get().version).toBe(3);
     expect(settings.get().masterVolume).toBe(0.4);
     expect(settings.get().combatSfxMode).toBe("reduced");
+  });
+
+  it("raises unchanged v2 default volumes to the new louder baseline", () => {
+    const storage = fakeStorage();
+    storage.setItem("warcrest.audioSettings", JSON.stringify({
+      version: 2,
+      masterVolume: 0.8,
+      bgmVolume: 0.8,
+      sfxVolume: 0.9,
+      mute: false,
+      muteWhenUnfocused: true,
+      combatSfxMode: "reduced",
+      crossfadeDurationMs: 1200,
+    }));
+    const settings = new AudioSettings(storage);
+    expect(settings.get().version).toBe(3);
+    expect(settings.get().masterVolume).toBe(DEFAULT_AUDIO_SETTINGS.masterVolume);
+    expect(settings.get().bgmVolume).toBe(DEFAULT_AUDIO_SETTINGS.bgmVolume);
+    expect(settings.get().sfxVolume).toBe(DEFAULT_AUDIO_SETTINGS.sfxVolume);
   });
 
   it("recovers when combatSfxMode contains an unknown value", () => {

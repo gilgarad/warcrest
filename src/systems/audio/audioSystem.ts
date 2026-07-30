@@ -243,6 +243,9 @@ export class AudioSystem {
       this.focusHandlerBound = false;
     }
     this.removeUnlockHandling();
+    if (typeof window !== "undefined") {
+      delete (window as unknown as { __audioDebugControl?: unknown }).__audioDebugControl;
+    }
   }
 
   private handleVisibilityChange = (): void => {
@@ -338,4 +341,10 @@ export function getAudioSystem(): AudioSystem {
 
 export function getAudioDirector(): AudioDirector {
   return getAudioSystem().audioDirector;
+}
+
+export function destroySharedAudioSystem(): void {
+  if (!sharedAudioSystem) return;
+  sharedAudioSystem.destroy();
+  sharedAudioSystem = null;
 }

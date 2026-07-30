@@ -47,6 +47,6 @@ describe("lane battle HUD model", () => {
     });
 
     expect(snapshot.captureTitle).toContain("방어 타워");
-    expect(snapshot.captureLines).toContain("거점 점령과 독립된 방어 구조물");
+    expect(snapshot.captureLines[2]).toContain("재건 비용");
   });
 });

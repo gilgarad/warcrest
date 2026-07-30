@@ -27,9 +27,9 @@ export const STRUCTURE_GROUND_ORIGIN = { x: 0.5, y: 448 / 512 } as const;
 const TOWER_VISIBLE_HEIGHT_RATIOS: Record<DefenseTowerVisualState, number> = {
   full: 360 / 512,
   damaged: 360 / 512,
-  critical: 350 / 512,
-  ruins: 280 / 512,
-  construction: 340 / 512,
+  critical: 360 / 512,
+  ruins: 360 / 512,
+  construction: 360 / 512,
 };
 
 export function getDefenseTowerTexture(

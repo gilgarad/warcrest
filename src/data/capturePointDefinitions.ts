@@ -3,9 +3,10 @@ import {
   type BattlefieldMapSpec,
 } from "./battlefieldMaps";
 
-export type CaptureBuildingId = "supply_depot" | "mint";
+export type CaptureBuildingId = "supply_depot" | "mint" | "defense_tower";
 export type CapturePointType = "buildable";
 export type CapturePointAction =
+  | "build-defense-tower"
   | "build-supply-depot"
   | "build-mint"
   | "dismantle";
@@ -30,7 +31,7 @@ export const CAPTURE_POINT_DEFINITIONS: readonly CapturePointDefinition[] = [
     id: 0,
     progress: CAPTURE_POINT_PROGRESS[0],
     pointType: "buildable",
-    allowedBuildingTypes: ["supply_depot", "mint"],
+    allowedBuildingTypes: ["defense_tower", "supply_depot", "mint"],
     initialBuilding: null,
     canDemolish: true,
     canReplaceBuilding: true,
@@ -39,7 +40,7 @@ export const CAPTURE_POINT_DEFINITIONS: readonly CapturePointDefinition[] = [
     id: 1,
     progress: CAPTURE_POINT_PROGRESS[1],
     pointType: "buildable",
-    allowedBuildingTypes: ["supply_depot", "mint"],
+    allowedBuildingTypes: ["defense_tower", "supply_depot", "mint"],
     initialBuilding: null,
     canDemolish: true,
     canReplaceBuilding: true,
@@ -56,7 +57,7 @@ export function getCapturePointDefinitions(
     id: index,
     progress: socket.progress,
     pointType: "buildable",
-    allowedBuildingTypes: ["supply_depot", "mint"],
+    allowedBuildingTypes: ["defense_tower", "supply_depot", "mint"],
     initialBuilding: null,
     canDemolish: true,
     canReplaceBuilding: true,
@@ -71,6 +72,7 @@ export function getCapturePointActions(
 
   const actions: CapturePointAction[] = [];
   if (!state.buildingId) {
+    if (definition.allowedBuildingTypes.includes("defense_tower")) actions.push("build-defense-tower");
     if (definition.allowedBuildingTypes.includes("supply_depot")) actions.push("build-supply-depot");
     if (definition.allowedBuildingTypes.includes("mint")) actions.push("build-mint");
   }

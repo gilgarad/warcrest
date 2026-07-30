@@ -19,24 +19,11 @@ export const BASE_WORKER_COST: ResourceCost = {
   food: 10,
 };
 
-export const RESEARCH_WORKER_DIRECT_COST: ResourceCost = {
-  gold: BASE_WORKER_COST.gold * 5,
-  wood: BASE_WORKER_COST.wood * 5,
-  food: BASE_WORKER_COST.food * 5,
-  metal: 50,
-};
-
-export const RESEARCH_WORKER_CONVERSION = {
-  workerCount: 10,
-  resultCount: 1,
-};
-
 export const WAVE_INTERVAL_SEC = 30;
 export const INSTANT_WAVE_TOKEN_COOLDOWN_AFTER_WAVE_SEC = 10;
 export const AI_INSTANT_WAVE_MIN_REMAINING_RATIO = 22 / 90;
 export const AI_INSTANT_WAVE_MIN_REMAINING_SEC = WAVE_INTERVAL_SEC * AI_INSTANT_WAVE_MIN_REMAINING_RATIO;
 export const BASE_RESOURCE_TICK_SEC = 10;
-export const BASE_FOOD_REGEN_PER_SEC = 1;
 export const EVENT_WAVE_BONUS_MIN = 1;
 export const EVENT_WAVE_BONUS_MAX = 3;
 export const EVENT_EXTRA_UNIT_COUNT = 1;
@@ -58,6 +45,14 @@ export const AGE_BALANCE = AGES.map((age) => ({
   killGoldBase: age.killGoldBase,
 }));
 
+const RESEARCH_WORKER_COST_BY_AGE: Record<AgeId, ResourceCost> = {
+  stone: { gold: 50, wood: 50, food: 50, metal: 50 },
+  bronze: { gold: 75, wood: 75, food: 75, metal: 75 },
+  iron_early: { gold: 100, wood: 100, food: 100, metal: 100 },
+  iron_mid: { gold: 150, wood: 150, food: 150, metal: 150 },
+  iron_late: { gold: 225, wood: 225, food: 225, metal: 225 },
+};
+
 export function getOpponentScale(opponentCount: 1 | 2 | 3): OpponentScalePreset {
   const found = OPPONENT_SCALE_PRESETS.find((preset) => preset.opponentCount === opponentCount);
   if (!found) throw new Error(`Unknown opponent scaling preset: ${opponentCount}`);
@@ -68,4 +63,8 @@ export function getAgeBalance(ageId: AgeId) {
   const found = AGE_BALANCE.find((entry) => entry.ageId === ageId);
   if (!found) throw new Error(`Unknown age balance: ${ageId}`);
   return found;
+}
+
+export function getResearchWorkerDirectCost(ageId: AgeId): ResourceCost {
+  return RESEARCH_WORKER_COST_BY_AGE[ageId];
 }

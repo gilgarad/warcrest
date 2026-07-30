@@ -1,8 +1,6 @@
 import { AGES, type AgeId } from "../../data/ages";
 import {
-  BASE_FOOD_REGEN_PER_SEC,
   BASE_RESOURCE_TICK_SEC,
-  getAgeBalance,
   WAVE_INTERVAL_SEC,
   type ResourceCost,
 } from "../../data/balance";
@@ -74,17 +72,7 @@ export function tickLaneEconomy(
   deltaSec: number,
 ): void {
   teams.forEach((team) => {
-    team.resources.food += BASE_FOOD_REGEN_PER_SEC * deltaSec;
-    tickResourceWorker(team, workerAccumulator, "gold", deltaSec, BASE_RESOURCE_TICK_SEC);
-    tickResourceWorker(team, workerAccumulator, "wood", deltaSec, BASE_RESOURCE_TICK_SEC);
     tickResourceWorker(team, workerAccumulator, "metal", deltaSec, BASE_RESOURCE_TICK_SEC);
-    tickResourceWorker(
-      team,
-      workerAccumulator,
-      "food",
-      deltaSec,
-      getAgeBalance(team.ageId).foodWorkerIntervalSec,
-    );
   });
 }
 
@@ -111,26 +99,6 @@ export function advanceTeamAge(team: TeamState): boolean {
   const ageIndex = AGES.findIndex((age) => age.id === team.ageId);
   if (ageIndex < 0 || ageIndex >= AGES.length - 1) return false;
   team.ageId = AGES[ageIndex + 1].id;
-  return true;
-}
-
-export function countConvertibleWorkers(workers: Record<WorkerRole, number>): number {
-  return workers.idle + workers.gold + workers.wood + workers.food + workers.metal;
-}
-
-export function convertWorkersToResearch(
-  workers: Record<WorkerRole, number>,
-  workerCount: number,
-  resultCount: number,
-): boolean {
-  if (countConvertibleWorkers(workers) < workerCount) return false;
-  let remaining = workerCount;
-  (["idle", "gold", "wood", "food", "metal"] as const).forEach((role) => {
-    const spent = Math.min(remaining, workers[role]);
-    workers[role] -= spent;
-    remaining -= spent;
-  });
-  workers.research += resultCount;
   return true;
 }
 

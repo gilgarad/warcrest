@@ -1,12 +1,10 @@
 import Phaser from "phaser";
-import { assetUrl } from "../config/assetUrl";
 import { AGES, getAge, type AgeId } from "../data/ages";
 import {
   BASE_WORKER_COST,
   AI_INSTANT_WAVE_MIN_REMAINING_SEC,
   getAgeBalance,
-  RESEARCH_WORKER_CONVERSION,
-  RESEARCH_WORKER_DIRECT_COST,
+  getResearchWorkerDirectCost,
   WAVE_INTERVAL_SEC,
 } from "../data/balance";
 import {
@@ -49,16 +47,12 @@ import {
 } from "../data/defenseTowerDefinitions";
 import {
   BattlefieldPrototypeRenderer,
-  PROTOTYPE_TERRAIN_ASSETS,
   type StructureGroundPresentation,
 } from "../gfx/battlefieldPrototypeRenderer";
 import { BattlefieldWorldRenderer } from "../gfx/battlefieldWorldRenderer";
-import { PRODUCTION_TERRAIN_ASSETS } from "../presentation/terrain/productionTerrainRegistry";
-import { PRODUCTION_PROP_ASSETS } from "../presentation/terrain/productionPropRegistry";
 import {
   CAPTURE_MARKER_VISIBLE_HEIGHT_RATIO,
   MAIN_BASE_VISIBLE_HEIGHT_RATIO,
-  PRODUCTION_STRUCTURE_ASSETS,
   STRUCTURE_GROUND_ORIGIN,
   getCaptureMarkerTexture,
   getDefenseTowerTexture,
@@ -71,8 +65,8 @@ import { getAudioSystem } from "../systems/audio";
 import { LaneBattleAudioWiring } from "../systems/audio/laneBattleAudioWiring";
 import { LaneBattleHudView } from "../ui/LaneBattleHudView";
 import { createLaneBattleHudSnapshot } from "../ui/laneBattleHudModel";
+import { areLaneBattleAssetsReady, queueLaneBattleAssets } from "./laneBattleAssetPreload";
 import {
-  UNIT_ANIMATION_ASSETS,
   getUnitAnimationDefinition,
   getUnitDirectionalPoses,
   resolveUnitAnimationTexture,
@@ -121,7 +115,6 @@ import {
 import {
   advanceTeamAge,
   canAfford,
-  convertWorkersToResearch,
   createTeamState,
   getAgeUpCost,
   makeResourceMap,
@@ -144,6 +137,7 @@ import {
   BUILDING_DEFINITIONS,
   DISMANTLE_COST_GOLD,
   getBuildingDefinition,
+  getBuildingCost,
   resolveCapturedBuilding,
   type BuildingDefinition,
   type BuildingId,
@@ -178,6 +172,7 @@ const CENTRAL_CAPTURE_PROGRESS = 0.588;
 const DEFAULT_VERIFICATION_SEED = "warcrest-central-v1";
 const QUERY_PARAMS = new URLSearchParams(window.location.search);
 const FACING_DEAD_ZONE_WORLD_PX = 1.5;
+const HORIZONTAL_FACING_FLIP_DEAD_ZONE_WORLD_PX = 22;
 const COMBAT_FACING_HOLD_SEC = 0.2;
 
 
@@ -263,8 +258,12 @@ interface CapturePointState {
   control: number;
   buildingId?: BuildingId;
   buildingLevel: number;
+  attackTimerSec: number;
   incomeTimerSec: number;
   supplyTimerSec: number;
+  manaCurrent: number;
+  manaMax: number;
+  manaRegenPerSec: number;
   ring: Phaser.GameObjects.Arc;
   core: Phaser.GameObjects.Arc;
   marker: Phaser.GameObjects.Image;
@@ -278,7 +277,8 @@ interface DefenseTowerState {
   definition: DefenseTowerDefinition;
   laneId: string;
   progress: number;
-  owner: TeamId;
+  owner: TeamId | "neutral";
+  control: number;
   attackTimerSec: number;
   buildRemainingSec: number;
   built: boolean;
@@ -300,6 +300,11 @@ let nextUnitId = 1;
 
 const CAPTURE_RADIUS_PROGRESS = 0.06;
 const CAPTURE_RATE_PER_SEC = 0.36;
+const TOWER_CAPTURE_RADIUS_PROGRESS = 0.065;
+const TOWER_CAPTURE_RATE_PER_SEC = 0.34;
+const SUPPLY_DEPOT_ATTACK_BUFF_MULTIPLIER = 1.2;
+const SUPPLY_DEPOT_SUPPORT_MANA_RESTORE = 6;
+const STRUCTURE_SOCKET_ATTACH_Y = 12;
 function progressBetween(a: number, b: number): number {
   return Math.abs(a - b);
 }
@@ -365,27 +370,9 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   preload(): void {
-    this.load.image("lane-battlefield-bg", assetUrl("assets/battle/lane-battlefield-object-base-v4.png"));
-    this.load.image("lane-battlefield-bg-v2", assetUrl("assets/battle/lane-battlefield-object-base-v4-prototype-v2.png"));
-    this.load.image("war-table-hud", assetUrl("assets/battle/war-table-hud.png"));
-    this.load.image("base-player", assetUrl("assets/battlefield-objects/base-player.png"));
-    this.load.image("base-enemy", assetUrl("assets/battlefield-objects/base-enemy.png"));
-    this.load.image("tower-full", assetUrl("assets/battlefield-objects/tower-full.png"));
-    this.load.image("tower-damaged", assetUrl("assets/battlefield-objects/tower-damaged.png"));
-    this.load.image("tower-critical", assetUrl("assets/battlefield-objects/tower-critical.png"));
-    this.load.image("tower-ruin-asset", assetUrl("assets/battlefield-objects/tower-ruin.png"));
-    this.load.image("tower-build", assetUrl("assets/battlefield-objects/tower-build.png"));
-    this.load.image("fixed-fortress-v1", assetUrl("assets/battlefield-objects/fixed-fortress-v1.png"));
-    this.load.image("rock-cluster", assetUrl("assets/battlefield-objects/rock-cluster.png"));
-    this.load.image("tree-cluster", assetUrl("assets/battlefield-objects/tree-cluster.png"));
-    this.load.image("stone-slinger-unit", assetUrl("assets/lane-units/stone-slinger-unit.png"));
-    this.load.image("stone-axeman-unit", assetUrl("assets/lane-units/stone-axeman-unit.png"));
-    this.load.image("stone-supply-unit", assetUrl("assets/lane-units/stone-supply-unit.png"));
-    UNIT_ANIMATION_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
-    PROTOTYPE_TERRAIN_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
-    PRODUCTION_TERRAIN_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
-    PRODUCTION_PROP_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
-    PRODUCTION_STRUCTURE_ASSETS.forEach((asset) => this.load.image(asset.key, asset.path));
+    if (!areLaneBattleAssetsReady(this, this.terrainMode)) {
+      queueLaneBattleAssets(this, this.terrainMode);
+    }
   }
 
   create(): void {
@@ -405,8 +392,8 @@ export class LaneBattleScene extends Phaser.Scene {
 
     this.createUiIconTextures();
 
-    this.player = createTeamState("player", makeResourceMap(60, 40, 18, 18), PLAYER_BASE_HP);
-    this.enemy = createTeamState("enemy", makeResourceMap(60, 40, 18, 18), ENEMY_BASE_HP);
+    this.player = createTeamState("player", makeResourceMap(20, 20, 20, 0), PLAYER_BASE_HP);
+    this.enemy = createTeamState("enemy", makeResourceMap(20, 20, 20, 0), ENEMY_BASE_HP);
 
     this.drawBattlefield();
     this.worldObjects.push(...this.children.list);
@@ -1199,7 +1186,7 @@ export class LaneBattleScene extends Phaser.Scene {
         .setStrokeStyle(4, 0xf8e2a5, 0.55);
       const core = this.add.circle(pos.x, pos.y, 14, 0xf8e2a5, 0.78)
         .setDepth(this.getGroundDepth(pos.y, -5));
-      const marker = this.add.image(pos.x, pos.y, getCaptureMarkerTexture("neutral"))
+      const marker = this.add.image(pos.x, pos.y + STRUCTURE_SOCKET_ATTACH_Y, getCaptureMarkerTexture("neutral"))
         .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
         .setDepth(this.getGroundDepth(pos.y))
         .setVisible(this.terrainMode === "world-surface");
@@ -1238,8 +1225,12 @@ export class LaneBattleScene extends Phaser.Scene {
         control: 0,
         buildingId: undefined,
         buildingLevel: 0,
+        attackTimerSec: 0,
         incomeTimerSec: 0,
         supplyTimerSec: 0,
+        manaCurrent: 0,
+        manaMax: 0,
+        manaRegenPerSec: 0,
         ring,
         core,
         marker,
@@ -1259,7 +1250,7 @@ export class LaneBattleScene extends Phaser.Scene {
       const progress = socket?.progress ?? definition.progress;
       const laneId = socket?.laneRef.laneId ?? this.primaryLaneSpec.id;
       const pos = this.progressToScreen(progress, 0, laneId);
-      const sprite = this.add.image(pos.x, pos.y, getDefenseTowerTexture("full", definition.owner))
+      const sprite = this.add.image(pos.x, pos.y + STRUCTURE_SOCKET_ATTACH_Y, getDefenseTowerTexture("full", definition.owner))
         .setDisplaySize(TOWER_W, TOWER_H)
         .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
         .setDepth(this.getGroundDepth(pos.y));
@@ -1291,6 +1282,7 @@ export class LaneBattleScene extends Phaser.Scene {
         laneId,
         progress,
         owner: definition.owner,
+        control: definition.owner === "player" ? 1 : -1,
         attackTimerSec: 0,
         buildRemainingSec: 0,
         built: true,
@@ -1331,14 +1323,14 @@ export class LaneBattleScene extends Phaser.Scene {
       .setDepth(this.getGroundDepth(enemyBase.y));
     this.add.text(playerBase.x - 8, playerBase.y - baseVisibleWorldHeight - this.cssPxToWorld(20), "아군 본진", {
       fontFamily: "Georgia, serif",
-      fontSize: "16px",
+      fontSize: "24px",
       color: "#dceeff",
       stroke: "#16202a",
       strokeThickness: 4,
     }).setOrigin(0.5).setDepth(this.getGroundDepth(playerBase.y, 4));
     this.add.text(enemyBase.x + 4, enemyBase.y - baseVisibleWorldHeight - this.cssPxToWorld(20), "적 본진", {
       fontFamily: "Georgia, serif",
-      fontSize: "16px",
+      fontSize: "24px",
       color: "#ffe1e1",
       stroke: "#2a1616",
       strokeThickness: 4,
@@ -1356,6 +1348,7 @@ export class LaneBattleScene extends Phaser.Scene {
         ageUp: () => this.tryAgeUpPlayer(),
         shiftWorker: (role, delta) => this.shiftWorker(role, delta),
         rebuildDefenseTower: () => this.tryRebuildSelectedDefenseTower(),
+        buildDefenseTower: () => this.tryBuildAtSelectedPoint("defense_tower"),
         buildSupplyDepot: () => this.tryBuildAtSelectedPoint("supply_depot"),
         buildMint: () => this.tryBuildAtSelectedPoint("mint"),
         dismantle: () => this.tryDismantleSelectedPoint(),
@@ -1494,7 +1487,7 @@ export class LaneBattleScene extends Phaser.Scene {
             `attack:${unit.id}:tower:${enemyTower.id}:${Math.round(this.elapsedSec * 1000)}`,
           );
           const damageBase = unit.attack * (1 - unit.attrition);
-          const damage = Math.max(1, Math.round(damageBase));
+          const damage = Math.max(1, Math.round(damageBase * this.getAttackBuffMultiplier(unit)));
           if (this.isRangedUnit(unit)) {
             const start = this.getUnitProjectileAnchor(unit);
             const end = this.getTowerProjectileAnchor(enemyTower, false);
@@ -1529,7 +1522,7 @@ export class LaneBattleScene extends Phaser.Scene {
           `attack:${unit.id}:unit:${nearest.id}:${Math.round(this.elapsedSec * 1000)}`,
         );
         const damageBase = unit.attack * (1 - unit.attrition);
-        const damage = Math.max(1, Math.round(damageBase - nearest.defense * 0.35));
+        const damage = Math.max(1, Math.round(damageBase * this.getAttackBuffMultiplier(unit) - nearest.defense * 0.35));
         if (this.isRangedUnit(unit)) {
           const start = this.getUnitProjectileAnchor(unit);
           const end = this.getUnitProjectileAnchor(nearest);
@@ -1692,7 +1685,7 @@ export class LaneBattleScene extends Phaser.Scene {
       && Math.abs(deltaY) <= FACING_DEAD_ZONE_WORLD_PX
     ) return;
     unit.facingDirection = resolveUnitFacingDirection(deltaX, deltaY, unit.facingDirection);
-    if (Math.abs(deltaX) > FACING_DEAD_ZONE_WORLD_PX) unit.facingX = deltaX >= 0 ? 1 : -1;
+    if (Math.abs(deltaX) > HORIZONTAL_FACING_FLIP_DEAD_ZONE_WORLD_PX) unit.facingX = deltaX >= 0 ? 1 : -1;
     unit.combatFacingHoldSec = Math.max(unit.combatFacingHoldSec, holdSec);
   }
 
@@ -1701,6 +1694,7 @@ export class LaneBattleScene extends Phaser.Scene {
     if (combatTarget && this.isMeleeUnit(unit)) {
       const slot = this.findCombatSlot(unit, combatTarget);
       if (slot) {
+        this.setUnitTravelFacing(unit, slot.progress, slot.laneRow);
         unit.laneRow = Phaser.Math.Linear(unit.laneRow, slot.laneRow, 0.34);
         const moveStep = unit.speed * UNIT_PROGRESS_SPEED * deltaSec;
         unit.progress = this.moveToward(unit.progress, slot.progress, moveStep);
@@ -1730,6 +1724,7 @@ export class LaneBattleScene extends Phaser.Scene {
           const packedDesired = unit.team === "player"
             ? Math.min(desired, friendAhead.progress - 0.006)
             : Math.max(desired, friendAhead.progress + 0.006);
+          this.setUnitTravelFacing(unit, packedDesired, unit.laneRow);
           unit.progress = Phaser.Math.Clamp(packedDesired, 0.01, 0.99);
           this.keepUnitInPlayableLane(unit);
           return;
@@ -1737,6 +1732,7 @@ export class LaneBattleScene extends Phaser.Scene {
       }
     }
 
+    this.setUnitTravelFacing(unit, desired, unit.laneRow);
     unit.progress = Phaser.Math.Clamp(desired, 0.01, 0.99);
     this.keepUnitInPlayableLane(unit);
   }
@@ -1841,6 +1837,25 @@ export class LaneBattleScene extends Phaser.Scene {
     return current + Math.sign(target - current) * maxDelta;
   }
 
+  private setUnitTravelFacing(unit: LaneUnit, targetProgress: number, targetLaneRow: number): void {
+    const current = this.progressToScreen(unit.progress, unit.laneRow, unit.laneId);
+    const next = this.progressToScreen(
+      Phaser.Math.Clamp(targetProgress, 0.01, 0.99),
+      Phaser.Math.Clamp(targetLaneRow, LANE_ROW_MIN, LANE_ROW_MAX),
+      unit.laneId,
+    );
+    const deltaX = next.x - current.x;
+    const deltaY = next.y - current.y;
+    if (
+      Math.abs(deltaX) <= FACING_DEAD_ZONE_WORLD_PX
+      && Math.abs(deltaY) <= FACING_DEAD_ZONE_WORLD_PX
+    ) return;
+    unit.facingDirection = resolveUnitFacingDirection(deltaX, deltaY, unit.facingDirection);
+    if (Math.abs(deltaX) > HORIZONTAL_FACING_FLIP_DEAD_ZONE_WORLD_PX) {
+      unit.facingX = deltaX >= 0 ? 1 : -1;
+    }
+  }
+
   private findNearestEnemy(unit: LaneUnit): LaneUnit | undefined {
     return this.units
       .filter((other) => other.team !== unit.team && other.laneId === unit.laneId)
@@ -1900,6 +1915,7 @@ export class LaneBattleScene extends Phaser.Scene {
         }
       }
 
+      if (point.buildingId === "defense_tower") this.tickCapturePointTower(point, deltaSec);
       if (point.buildingId === "supply_depot") this.tickSupplyDepot(point, deltaSec);
       if (point.buildingId === "mint") this.tickMint(point, deltaSec);
     });
@@ -1916,7 +1932,7 @@ export class LaneBattleScene extends Phaser.Scene {
       tower.buildRemainingSec = Math.max(0, tower.buildRemainingSec - deltaSec);
       if (tower.buildRemainingSec === 0) {
         tower.built = true;
-        tower.maxHp = getDefenseTowerMaxHp(tower.owner === "player" ? this.player.ageId : this.enemy.ageId);
+        tower.maxHp = getDefenseTowerMaxHp(tower.owner === "enemy" ? this.enemy.ageId : this.player.ageId);
         tower.hp = tower.maxHp;
         tower.attackTimerSec = 0.3;
         if (tower.owner === "player") this.hud.setInfo("타워 재건축 완료");
@@ -1927,7 +1943,11 @@ export class LaneBattleScene extends Phaser.Scene {
       }
       return;
     }
-    if (!tower.built) return;
+    if (!tower.built) {
+      this.tickTowerRuinControl(tower, deltaSec);
+      return;
+    }
+    if (tower.owner === "neutral") return;
     tower.attackTimerSec -= deltaSec;
     if (tower.attackTimerSec > 0) return;
     const spec = createTowerAttackPattern(tower.owner === "player" ? this.player.ageId : this.enemy.ageId);
@@ -1966,7 +1986,39 @@ export class LaneBattleScene extends Phaser.Scene {
     });
   }
 
+  private tickTowerRuinControl(tower: DefenseTowerState, deltaSec: number): void {
+    const nearbyPlayer = this.units.filter((unit) => unit.team === "player" && unit.laneId === tower.laneId && progressBetween(unit.progress, tower.progress) <= TOWER_CAPTURE_RADIUS_PROGRESS).length;
+    const nearbyEnemy = this.units.filter((unit) => unit.team === "enemy" && unit.laneId === tower.laneId && progressBetween(unit.progress, tower.progress) <= TOWER_CAPTURE_RADIUS_PROGRESS).length;
+    const pressure = Phaser.Math.Clamp((nearbyPlayer - nearbyEnemy) * TOWER_CAPTURE_RATE_PER_SEC * deltaSec, -0.8, 0.8);
+    if (pressure !== 0) tower.control = Phaser.Math.Clamp(tower.control + pressure, -1, 1);
+    if (nearbyPlayer > 0 && nearbyEnemy > 0 && Math.abs(tower.control) < 0.92) {
+      tower.owner = "neutral";
+      return;
+    }
+    if (tower.control >= 1) tower.owner = "player";
+    else if (tower.control <= -1) tower.owner = "enemy";
+    else if (Math.abs(tower.control) < 0.08) tower.owner = "neutral";
+  }
+
   private tickSupplyDepot(point: CapturePointState, deltaSec: number): void {
+    point.manaCurrent = Math.min(point.manaMax, point.manaCurrent + point.manaRegenPerSec * deltaSec);
+    point.supplyTimerSec -= deltaSec;
+    if (point.owner === "neutral" || point.supplyTimerSec > 0 || point.manaCurrent <= 0) return;
+    const support = this.units
+      .filter((unit) =>
+        unit.team === point.owner
+        && unit.role === "support"
+        && progressBetween(unit.progress, point.progress) <= CAPTURE_RADIUS_PROGRESS,
+      )
+      .sort((a, b) => a.manaCurrent / Math.max(1, a.manaMax) - b.manaCurrent / Math.max(1, b.manaMax))[0];
+    if (!support || support.manaCurrent >= support.manaMax) return;
+    point.supplyTimerSec = 1.5;
+    point.manaCurrent = Math.max(0, point.manaCurrent - SUPPLY_DEPOT_SUPPORT_MANA_RESTORE);
+    support.manaCurrent = Math.min(support.manaMax, support.manaCurrent + SUPPLY_DEPOT_SUPPORT_MANA_RESTORE + point.buildingLevel * 2);
+    this.spawnToast("병참", support.sprite.x, support.sprite.y - 28, "#92b8ff");
+  }
+
+  private tickMint(point: CapturePointState, deltaSec: number): void {
     point.supplyTimerSec -= deltaSec;
     if (point.owner === "neutral" || point.supplyTimerSec > 0) return;
     const ally = this.units
@@ -1976,17 +2028,45 @@ export class LaneBattleScene extends Phaser.Scene {
     point.supplyTimerSec = 1.5;
     ally.hp = Math.min(ally.maxHp, ally.hp + 4 + point.buildingLevel * 2);
     ally.attrition = Math.max(0, ally.attrition - (0.05 + point.buildingLevel * 0.02));
-    this.spawnToast("보급", ally.sprite.x, ally.sprite.y - 28, "#92f1a5");
+    this.spawnToast("조달", ally.sprite.x, ally.sprite.y - 28, "#92f1a5");
   }
 
-  private tickMint(point: CapturePointState, deltaSec: number): void {
-    point.incomeTimerSec -= deltaSec;
-    if (point.owner === "neutral" || point.incomeTimerSec > 0) return;
-    point.incomeTimerSec = 4;
-    const team = point.owner === "player" ? this.player : this.enemy;
-    const gain = 1 + point.buildingLevel;
-    team.resources.gold += gain;
-    if (point.owner === "player") this.spawnToast(`+${gain}G`, point.core.x, point.core.y - 28, "#f4d35e");
+  private tickCapturePointTower(point: CapturePointState, deltaSec: number): void {
+    if (point.owner === "neutral") return;
+    point.attackTimerSec -= deltaSec;
+    if (point.attackTimerSec > 0) return;
+    const ageId = point.owner === "player" ? this.player.ageId : this.enemy.ageId;
+    const spec = createTowerAttackPattern(ageId);
+    const target = this.units
+      .filter((unit) => unit.team !== point.owner && unit.laneId === point.laneId && progressBetween(unit.progress, point.progress) <= spec.rangeProgress)
+      .sort((a, b) => a.hp - b.hp)[0];
+    if (!target) return;
+    point.attackTimerSec = spec.cooldownSec;
+    const start = this.getCapturePointProjectileAnchor(point, true);
+    this.playWorldSfx(
+      "sfx.combat.towerAttack",
+      start.x,
+      start.y,
+      `capture-tower:${point.id}:${target.id}:${Math.round(this.elapsedSec * 1000)}`,
+    );
+    Array.from({ length: spec.projectileCount }, (_, index) => {
+      const centeredIndex = index - (spec.projectileCount - 1) / 2;
+      const offset = centeredIndex * spec.spreadWorldPx * 2;
+      const launch = start.clone().add(new Phaser.Math.Vector2(centeredIndex * spec.spreadWorldPx, -centeredIndex * 4));
+      const aim = this.getUnitProjectileAnchor(target).add(new Phaser.Math.Vector2(offset, index * 3));
+      this.launchProjectile(
+        launch,
+        aim,
+        spec.projectileKey,
+        () => this.applyDamageToUnit(
+          target,
+          spec.perProjectileDamage,
+          point.owner === "player" ? "#8fd2ff" : "#ffb4b4",
+          "타워",
+        ),
+        1,
+      );
+    });
   }
 
   private selectCapturePoint(id: number): void {
@@ -2029,16 +2109,16 @@ export class LaneBattleScene extends Phaser.Scene {
       this.audio.playSfx("sfx.ui.cancel", { eventKey: `build:${point.id}:occupied` });
       return;
     }
-    if (!canAfford(this.player.resources, building.cost)) {
+    const cost = getBuildingCost(buildingId, this.player.ageId);
+    if (!canAfford(this.player.resources, cost)) {
       this.hud.setInfo(`${building.label} 건설 자원 부족`);
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `build:${point.id}:shortage:${buildingId}` });
       return;
     }
-    payCost(this.player.resources, building.cost);
+    payCost(this.player.resources, cost);
     point.buildingId = buildingId;
     point.buildingLevel = 1;
-    point.incomeTimerSec = 4;
-    point.supplyTimerSec = 0.4;
+    this.initializeCaptureBuildingState(point);
     this.hud.setInfo(`${building.label} 건설 완료`);
     this.audio.playSfx("sfx.construction.start", { eventKey: `build:${point.id}:start:${buildingId}` });
     this.time.delayedCall(180, () => {
@@ -2059,12 +2139,12 @@ export class LaneBattleScene extends Phaser.Scene {
     );
     if (choices.length === 0) return;
     const choice = choices[target.id % choices.length];
-    if (!canAfford(this.enemy.resources, choice.cost)) return;
-    payCost(this.enemy.resources, choice.cost);
+    const cost = getBuildingCost(choice.id, this.enemy.ageId);
+    if (!canAfford(this.enemy.resources, cost)) return;
+    payCost(this.enemy.resources, cost);
     target.buildingId = choice.id;
     target.buildingLevel = 1;
-    target.incomeTimerSec = 4;
-    target.supplyTimerSec = 0.4;
+    this.initializeCaptureBuildingState(target);
   }
 
   private enemyAutoRebuildDefenseTower(): void {
@@ -2093,6 +2173,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.player.resources.gold -= DISMANTLE_COST_GOLD;
     point.buildingId = undefined;
     point.buildingLevel = 0;
+    this.resetCaptureBuildingState(point);
     this.hud.setInfo(`거점 건물을 폐기했습니다 (-${DISMANTLE_COST_GOLD}G)`);
     this.audio.playSfx("sfx.ui.confirm", { eventKey: `dismantle:${point.id}:complete` });
     this.refreshCapturePointVisuals();
@@ -2123,6 +2204,7 @@ export class LaneBattleScene extends Phaser.Scene {
     }
     payCost(this.player.resources, cost);
     tower.buildRemainingSec = DEFENSE_TOWER_BUILD_DURATION_SEC;
+    tower.control = 1;
     this.hud.setInfo(`타워 재건을 시작했습니다 (${DEFENSE_TOWER_BUILD_DURATION_SEC}초)`);
     this.audio.playSfx("sfx.construction.start", { eventKey: `tower:${tower.id}:start` });
     this.refreshDefenseTowerVisuals();
@@ -2137,6 +2219,8 @@ export class LaneBattleScene extends Phaser.Scene {
     );
     point.buildingId = outcome.buildingId;
     point.buildingLevel = outcome.buildingLevel;
+    if (!point.buildingId) this.resetCaptureBuildingState(point);
+    else this.initializeCaptureBuildingState(point);
     if (outcome.result === "none") return;
     if (outcome.result === "destroyed") {
       if (toOwner === "player") this.hud.setInfo("적 거점 건물이 파괴되었습니다");
@@ -2216,10 +2300,13 @@ export class LaneBattleScene extends Phaser.Scene {
         .setPosition(pos.x, pos.y)
         .setDepth(this.getGroundDepth(pos.y, -5))
         .setVisible(!structuredPoint || selected);
-      const markerHeight = this.cssPxToWorld(96 / CAPTURE_MARKER_VISIBLE_HEIGHT_RATIO);
+      const showingTower = point.buildingId === "defense_tower";
+      const markerHeight = showingTower
+        ? this.cssPxToWorld(this.scaleVisualConfig.captureTowerCssHeight / getDefenseTowerVisibleHeightRatio("full"))
+        : this.cssPxToWorld(96 / CAPTURE_MARKER_VISIBLE_HEIGHT_RATIO);
       point.marker
-        .setTexture(getCaptureMarkerTexture(point.owner))
-        .setPosition(pos.x, pos.y)
+        .setTexture(showingTower ? getDefenseTowerTexture("full", point.owner === "enemy" ? "enemy" : "player") : getCaptureMarkerTexture(point.owner))
+        .setPosition(pos.x, pos.y + STRUCTURE_SOCKET_ATTACH_Y)
         .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
         .setDisplaySize(markerHeight, markerHeight)
         .setDepth(this.getGroundDepth(pos.y))
@@ -2236,9 +2323,16 @@ export class LaneBattleScene extends Phaser.Scene {
       point.label
         .setText(`건설 거점 ${point.id + 1}`)
         .setPosition(pos.x, labelY)
-        .setDepth(this.getGroundDepth(pos.y, 7));
-      point.ownerText.setPosition(pos.x, ownerY).setDepth(this.getGroundDepth(pos.y, 7));
-      point.buildingText.setPosition(pos.x, buildingY).setDepth(this.getGroundDepth(pos.y, 7));
+        .setDepth(this.getGroundDepth(pos.y, 7))
+        .setVisible(selected);
+      point.ownerText
+        .setPosition(pos.x, ownerY)
+        .setDepth(this.getGroundDepth(pos.y, 7))
+        .setVisible(selected);
+      point.buildingText
+        .setPosition(pos.x, buildingY)
+        .setDepth(this.getGroundDepth(pos.y, 7))
+        .setVisible(selected);
       point.buildingText.setText(
         point.buildingId
           ? `${getBuildingDefinition(point.buildingId).shortLabel} Lv.${point.buildingLevel}`
@@ -2274,7 +2368,7 @@ export class LaneBattleScene extends Phaser.Scene {
   private refreshDefenseTowerVisuals(): void {
     this.defenseTowers.forEach((tower) => {
       const selected = this.selectedDefenseTowerId === tower.id;
-      const ownerColor = tower.owner === "player" ? 0x61c3ff : 0xff7f7f;
+      const ownerColor = tower.owner === "player" ? 0x61c3ff : tower.owner === "enemy" ? 0xff7f7f : 0xf3cc6a;
       const rawPos = this.progressToScreen(tower.progress, 0, tower.laneId);
       const pos = this.isPrototypeV2() ? this.snapWorldPointToCanvasPixel(rawPos.x, rawPos.y) : rawPos;
       const selectedScale = this.isPrototypeV2() ? 1 : selected ? 1.04 : 1;
@@ -2287,10 +2381,10 @@ export class LaneBattleScene extends Phaser.Scene {
         ? towerHeight * (tower.sprite.frame.realWidth / tower.sprite.frame.realHeight)
         : TOWER_W * selectedScale;
       const hpRatio = tower.maxHp > 0 ? tower.hp / tower.maxHp : 0;
-      const texture = getDefenseTowerTexture(visualState, tower.owner);
+      const texture = getDefenseTowerTexture(visualState, tower.owner === "enemy" ? "enemy" : "player");
       tower.sprite
         .setTexture(texture)
-        .setPosition(pos.x, pos.y)
+        .setPosition(pos.x, pos.y + STRUCTURE_SOCKET_ATTACH_Y)
         .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
         .setDisplaySize(towerWidth, towerHeight)
         .setDepth(this.getGroundDepth(pos.y))
@@ -2317,7 +2411,12 @@ export class LaneBattleScene extends Phaser.Scene {
       tower.ownerText.setPosition(pos.x, pos.y + (this.isPrototypeV2() ? this.cssPxToWorld(18) : 34));
       tower.statusText
         .setPosition(pos.x, pos.y + (this.isPrototypeV2() ? this.cssPxToWorld(36) : 52))
-        .setText(tower.buildRemainingSec > 0 ? `재건 ${Math.ceil(tower.buildRemainingSec)}초` : tower.built ? "가동 중" : "파괴됨");
+        .setText(tower.buildRemainingSec > 0 ? `재건 ${Math.ceil(tower.buildRemainingSec)}초` : tower.built ? "가동 중" : tower.owner === "neutral" ? "중립 폐허" : "재건 가능");
+      tower.label.setVisible(selected);
+      tower.ownerText
+        .setText(tower.owner === "player" ? "아군 타워" : tower.owner === "enemy" ? "적 타워" : "중립 타워 거점")
+        .setVisible(selected);
+      tower.statusText.setVisible(selected);
       tower.groundPresentation?.shadow.setVisible(this.terrainMode === "prototype" && tower.built);
       tower.groundPresentationV2?.shadow.setVisible(this.terrainMode === "prototype-v2" && tower.built);
       tower.groundPresentationWorld?.shadow.setVisible(this.terrainMode === "world-surface" && tower.built);
@@ -2334,6 +2433,42 @@ export class LaneBattleScene extends Phaser.Scene {
     if (!tower.built) return "ruins";
     const hpRatio = tower.maxHp > 0 ? tower.hp / tower.maxHp : 0;
     return hpRatio > 0.66 ? "full" : hpRatio > 0.33 ? "damaged" : "critical";
+  }
+
+  private getAttackBuffMultiplier(unit: LaneUnit): number {
+    return this.capturePoints.some((point) =>
+      point.owner === unit.team
+      && point.buildingId === "supply_depot"
+      && point.laneId === unit.laneId
+      && progressBetween(point.progress, unit.progress) <= CAPTURE_RADIUS_PROGRESS,
+    )
+      ? SUPPLY_DEPOT_ATTACK_BUFF_MULTIPLIER
+      : 1;
+  }
+
+  private initializeCaptureBuildingState(point: CapturePointState): void {
+    point.attackTimerSec = 0.25;
+    point.incomeTimerSec = 4;
+    point.supplyTimerSec = 0.4;
+    if (point.buildingId === "supply_depot") {
+      const profile = getSupportResourceProfile(point.owner === "enemy" ? this.enemy.ageId : this.player.ageId);
+      point.manaMax = profile.manaMax * 3;
+      point.manaCurrent = point.manaMax;
+      point.manaRegenPerSec = profile.manaRegenPerSec * 1.5;
+      return;
+    }
+    point.manaCurrent = 0;
+    point.manaMax = 0;
+    point.manaRegenPerSec = 0;
+  }
+
+  private resetCaptureBuildingState(point: CapturePointState): void {
+    point.attackTimerSec = 0;
+    point.incomeTimerSec = 0;
+    point.supplyTimerSec = 0;
+    point.manaCurrent = 0;
+    point.manaMax = 0;
+    point.manaRegenPerSec = 0;
   }
 
   private getUnitProjectileAnchor(unit: LaneUnit): Phaser.Math.Vector2 {
@@ -2353,6 +2488,20 @@ export class LaneBattleScene extends Phaser.Scene {
       point.sprite.y - (
         this.terrainPrototypeEnabled
           ? point.sprite.displayHeight * visibleHeightRatio * (launch ? 0.72 : 0.48)
+          : launch ? 18 : 12
+      ),
+    );
+  }
+
+  private getCapturePointProjectileAnchor(point: CapturePointState, launch: boolean): Phaser.Math.Vector2 {
+    const visibleHeightRatio = point.buildingId === "defense_tower"
+      ? getDefenseTowerVisibleHeightRatio("full")
+      : CAPTURE_MARKER_VISIBLE_HEIGHT_RATIO;
+    return new Phaser.Math.Vector2(
+      point.marker.x,
+      point.marker.y - (
+        this.terrainPrototypeEnabled
+          ? point.marker.displayHeight * visibleHeightRatio * (launch ? 0.72 : 0.48)
           : launch ? 18 : 12
       ),
     );
@@ -2436,6 +2585,8 @@ export class LaneBattleScene extends Phaser.Scene {
     this.spawnToast(`${damage}`, point.sprite.x, point.sprite.y - 58, attackerTeam === "player" ? "#ffd67a" : "#ff8f8f");
     if (point.hp <= 0) {
       point.built = false;
+      point.owner = "neutral";
+      point.control = 0;
       point.attackTimerSec = 0;
       point.buildRemainingSec = 0;
       this.audio.playSfx("sfx.fortress.destroyed", { eventKey: `tower:${point.id}:destroyed` });
@@ -2494,11 +2645,32 @@ export class LaneBattleScene extends Phaser.Scene {
     this.destroyUnitPresentation(unit);
 
     if (unit.team === "enemy") {
-      const gain = Math.round(getAgeBalance(this.enemy.ageId).killGoldBase);
-      this.player.resources.gold += gain;
-      this.spawnToast(`+${gain}G`, 108, 156, "#f4d35e");
+      const reward = this.rollKillResourceReward(this.enemy.ageId);
+      this.applyKillResourceReward(this.player, reward, 108, 156);
     } else {
-      this.enemy.resources.gold += Math.round(getAgeBalance(this.player.ageId).killGoldBase);
+      this.applyKillResourceReward(this.enemy, this.rollKillResourceReward(this.player.ageId));
+    }
+  }
+
+  private rollKillResourceReward(ageId: AgeId): { gold: number; wood: number; food: number } {
+    const total = Math.round(getAgeBalance(ageId).killGoldBase);
+    const gold = Phaser.Math.Between(1, total - 2);
+    const wood = Phaser.Math.Between(1, total - gold - 1);
+    const food = total - gold - wood;
+    return { gold, wood, food };
+  }
+
+  private applyKillResourceReward(
+    team: TeamState,
+    reward: { gold: number; wood: number; food: number },
+    toastX?: number,
+    toastY?: number,
+  ): void {
+    team.resources.gold += reward.gold;
+    team.resources.wood += reward.wood;
+    team.resources.food += reward.food;
+    if (team.id === "player" && toastX !== undefined && toastY !== undefined) {
+      this.spawnToast(`+${reward.gold}G +${reward.wood}W +${reward.food}F`, toastX, toastY, "#f4d35e");
     }
   }
 
@@ -2623,34 +2795,33 @@ export class LaneBattleScene extends Phaser.Scene {
     const battleRows = [-3, 0, 3];
     const laneIds = this.mapSpec.lanes.map((lane) => lane.id);
     const spawnProgress = overrideSpawnProgress ?? (team.id === "player" ? 0.06 : 0.94);
-    let index = 0;
-    roster.battleline.forEach((entry) => {
-      for (let i = 0; i < entry.count; i++) {
-        const laneId = laneIds[index % laneIds.length] ?? this.primaryLaneSpec.id;
-        this.spawnLaneUnit(
-          team.id,
-          "battle",
-          entry.unitId,
-          spawnProgress,
-          battleRows[index % battleRows.length],
-          laneId,
-        );
-        index += 1;
-      }
-    });
-    roster.support.forEach((entry) => {
-      for (let i = 0; i < entry.count; i++) {
-        const laneId = laneIds[index % laneIds.length] ?? this.primaryLaneSpec.id;
-        this.spawnLaneUnit(
-          team.id,
-          "support",
-          entry.unitId,
-          team.id === "player" ? spawnProgress - 0.02 : spawnProgress + 0.02,
-          0,
-          laneId,
-        );
-        index += 1;
-      }
+    laneIds.forEach((laneId) => {
+      let laneIndex = 0;
+      roster.battleline.forEach((entry) => {
+        for (let i = 0; i < entry.count; i++) {
+          this.spawnLaneUnit(
+            team.id,
+            "battle",
+            entry.unitId,
+            spawnProgress,
+            battleRows[laneIndex % battleRows.length],
+            laneId,
+          );
+          laneIndex += 1;
+        }
+      });
+      roster.support.forEach((entry) => {
+        for (let i = 0; i < entry.count; i++) {
+          this.spawnLaneUnit(
+            team.id,
+            "support",
+            entry.unitId,
+            team.id === "player" ? spawnProgress - 0.02 : spawnProgress + 0.02,
+            0,
+            laneId,
+          );
+        }
+      });
     });
   }
 
@@ -2799,19 +2970,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private shouldShowV2UnitLabel(unit: LaneUnit): boolean {
-    const policy = this.scaleVisualConfig.unitLabelPolicy;
-    if (policy === "always") return true;
-    if (unit.selected || unit.hovered) return true;
-    if (policy !== "priority" || unit.role !== "support") return false;
-
-    const unitPos = this.progressToScreen(unit.visualProgress, unit.visualLaneRow, unit.laneId);
-    return !this.units.some((other) => {
-      if (other.id >= unit.id || other.team !== unit.team || other.role !== "support" || other.laneId !== unit.laneId) return false;
-      const otherPos = this.progressToScreen(other.visualProgress, other.visualLaneRow, other.laneId);
-      const screenDistance = Phaser.Math.Distance.Between(unitPos.x, unitPos.y, otherPos.x, otherPos.y)
-        * this.cameras.main.zoom;
-      return screenDistance < 86;
-    });
+    return unit.selected || unit.hovered;
   }
 
   private refreshUnitOverlayDensity(): void {
@@ -2858,14 +3017,11 @@ export class LaneBattleScene extends Phaser.Scene {
       unit.manaFill.setVisible(showResource);
 
       if (summary) {
-        const teamLabel = unit.team === "player" ? "아군" : "적군";
-        unit.label
-          .setText(`${teamLabel} ×${decision?.groupSize ?? 1} · HP ${Math.round(aggregateRatio * 100)}%`)
-          .setVisible(true);
+        unit.label.setVisible(false);
       } else {
         unit.label
           .setText(this.isPrototypeV2() ? `${UNIT_STATS[unit.unitId].label} Lv.1` : UNIT_STATS[unit.unitId].label)
-          .setVisible(!hidden && (mode === "detail" || this.shouldShowV2UnitLabel(unit)));
+          .setVisible(!hidden && this.shouldShowV2UnitLabel(unit));
       }
     });
   }
@@ -2894,17 +3050,6 @@ export class LaneBattleScene extends Phaser.Scene {
     }
     unit.motionX = pos.x - unit.lastPresentationX;
     unit.motionY = pos.y - unit.lastPresentationY;
-    if (
-      unit.attackFacingLockSec <= 0
-      && unit.combatFacingHoldSec <= 0
-      && (
-        Math.abs(unit.motionX) > FACING_DEAD_ZONE_WORLD_PX
-        || Math.abs(unit.motionY) > FACING_DEAD_ZONE_WORLD_PX
-      )
-    ) {
-      unit.facingDirection = resolveUnitFacingDirection(unit.motionX, unit.motionY, unit.facingDirection);
-      unit.facingX = unit.motionX >= 0 ? 1 : -1;
-    }
     unit.lastPresentationX = pos.x;
     unit.lastPresentationY = pos.y;
 
@@ -2991,7 +3136,7 @@ export class LaneBattleScene extends Phaser.Scene {
       .setPosition(pos.x + attackOffsetX, pos.y - bob - attackLift)
       .setOrigin(originX, originY)
       .setRotation(attackMotion.rotationRad)
-      .setFlipX(shouldFlipUnitFrame(unit.unitId, unit.facingX))
+      .setFlipX(shouldFlipUnitFrame(unit.unitId, unit.facingX, unit.facingDirection))
       .setDisplaySize(spriteWidth, spriteHeight)
       .setDepth(this.getGroundDepth(pos.y));
     unit.hpBg
@@ -3029,7 +3174,7 @@ export class LaneBattleScene extends Phaser.Scene {
       unit.label.setVisible(this.shouldShowV2UnitLabel(unit));
     } else {
       unit.label
-        .setVisible(true)
+        .setVisible(this.shouldShowV2UnitLabel(unit))
         .setScale(1)
         .setStroke("#132033", 3)
         .setShadow(0, 0, "#000000", 0, false, false)
@@ -3074,25 +3219,16 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private hireResearchWorker(): void {
-    if (canAfford(this.player.resources, RESEARCH_WORKER_DIRECT_COST)) {
-      payCost(this.player.resources, RESEARCH_WORKER_DIRECT_COST);
+    const cost = getResearchWorkerDirectCost(this.player.ageId);
+    if (canAfford(this.player.resources, cost)) {
+      payCost(this.player.resources, cost);
       this.player.workers.research += 1;
       this.hud.setInfo("연구 일꾼을 직접 고용했습니다");
       this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:research:direct:${this.player.workers.research}` });
       return;
     }
 
-    if (convertWorkersToResearch(
-      this.player.workers,
-      RESEARCH_WORKER_CONVERSION.workerCount,
-      RESEARCH_WORKER_CONVERSION.resultCount,
-    )) {
-      this.hud.setInfo("일반 일꾼 10명을 연구 일꾼으로 전환했습니다");
-      this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:research:convert:${this.player.workers.research}` });
-      return;
-    }
-
-    this.hud.setInfo("연구 일꾼 조건 미달");
+    this.hud.setInfo("연구 일꾼 고용 자원 부족");
     this.audio.playSfx("sfx.ui.hireFail", { eventKey: "hire:research:failed" });
   }
 
@@ -3156,6 +3292,35 @@ export class LaneBattleScene extends Phaser.Scene {
     });
     const selectedActions = this.getSelectedCaptureActions();
     this.hud.apply(snapshot, selectedActions);
+    this.refreshHudActionLabels();
+  }
+
+  private refreshHudActionLabels(): void {
+    this.hud.setStrategicActionLabel("hire-worker", `일꾼 고용\n${this.formatCostShort(BASE_WORKER_COST)}`);
+    this.hud.setStrategicActionLabel("hire-research-worker", `연구 일꾼\n${this.formatCostShort(getResearchWorkerDirectCost(this.player.ageId))}`);
+    const ageIndex = AGES.findIndex((age) => age.id === this.player.ageId);
+    this.hud.setStrategicActionLabel(
+      "age-up",
+      ageIndex >= AGES.length - 1
+        ? "시대 업\n최종 시대"
+        : `시대 업\n${this.formatCostShort(getAgeUpCost(ageIndex))}`,
+    );
+    this.hud.setStrategicActionLabel("use-instant-wave", `즉시 웨이브\n토큰 ${this.player.instantWaveTokens}`);
+
+    this.hud.setCaptureActionLabel("rebuild-defense-tower", `타워 재건\n${this.formatCostShort(getDefenseTowerBuildCost(this.player.ageId))}`);
+    this.hud.setCaptureActionLabel("build-defense-tower", `타워\n${this.formatCostShort(getBuildingCost("defense_tower", this.player.ageId))}`);
+    this.hud.setCaptureActionLabel("build-supply-depot", `병참\n${this.formatCostShort(getBuildingCost("supply_depot", this.player.ageId))}`);
+    this.hud.setCaptureActionLabel("build-mint", `조달소\n${this.formatCostShort(getBuildingCost("mint", this.player.ageId))}`);
+    this.hud.setCaptureActionLabel("dismantle", `폐기\n${DISMANTLE_COST_GOLD}G`);
+  }
+
+  private formatCostShort(cost: Partial<Record<"gold" | "wood" | "food" | "metal", number>>): string {
+    const parts: string[] = [];
+    if (cost.gold) parts.push(`${Math.round(cost.gold)}G`);
+    if (cost.wood) parts.push(`${Math.round(cost.wood)}W`);
+    if (cost.food) parts.push(`${Math.round(cost.food)}F`);
+    if (cost.metal) parts.push(`${Math.round(cost.metal)}M`);
+    return parts.join(" ");
   }
 
   private publishDebug(): void {

@@ -26,6 +26,25 @@ export interface UnitAnimationDefinition {
   scaleFactor: number;
 }
 
+function resolveAuthoredDirection(direction: UnitFacingDirection): UnitFacingDirection {
+  switch (direction) {
+    case "e":
+    case "w":
+      return "e";
+    case "ne":
+    case "nw":
+      return "ne";
+    case "se":
+    case "sw":
+      return "se";
+    default: return direction;
+  }
+}
+
+function shouldMirrorDirection(direction: UnitFacingDirection): boolean {
+  return direction === "e" || direction === "ne" || direction === "se";
+}
+
 const STANDARD_ASPECT = 1;
 const WIDE_ASPECT = 512 / 384;
 const PRODUCTION_GROUND_ORIGIN_X = 0.5;
@@ -137,7 +156,8 @@ export function getUnitDirectionalPoses(
 ): UnitDirectionalPoseSet | undefined {
   const definition = getUnitAnimationDefinition(unitId);
   if (!definition) return undefined;
-  return definition.directions[direction] ?? definition.directions[definition.fallbackDirection];
+  const authoredDirection = resolveAuthoredDirection(direction);
+  return definition.directions[authoredDirection] ?? definition.directions[definition.fallbackDirection];
 }
 
 export function getFrameVisibleHeightRatio(unitId: LaneUnitId, textureKey?: string): number | undefined {
@@ -158,8 +178,13 @@ export function resolveTeamUnitTextureKey(textureKey: string, team: "player" | "
   return team === "enemy" ? `${textureKey}-enemy` : textureKey;
 }
 
-export function shouldFlipUnitFrame(unitId: LaneUnitId, facingX: number): boolean {
+export function shouldFlipUnitFrame(
+  unitId: LaneUnitId,
+  facingX: number,
+  direction?: UnitFacingDirection,
+): boolean {
   const definition = getUnitAnimationDefinition(unitId);
+  if (direction) return shouldMirrorDirection(direction);
   return Boolean(definition?.legacyHorizontalMirror && facingX > 0);
 }
 

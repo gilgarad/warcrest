@@ -17,5 +17,5 @@ export function getDefenseTowerBuildCost(ageId: AgeId): ResourceCost {
 export function getDefenseTowerMaxHp(ageId: AgeId): number {
   const roster = getWaveRoster(ageId);
   const sampleUnit = roster.battleline[0]?.unitId ?? "stone_axeman";
-  return UNIT_STATS[sampleUnit].hp * 5;
+  return UNIT_STATS[sampleUnit].hp * 25;
 }
