@@ -1,21 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
+import type { LaneBattleDebugSnapshot } from "../../src/scenes/laneBattleDebugSnapshot";
 
 const ARTIFACT_DIR = "artifacts/unit-animation-tower-v2";
 const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-animation-tower-v2";
 
 type UnitId = "stone_axeman" | "stone_slinger" | "supply_wagon" | "bronze_spearman";
-
-interface DebugSnapshot {
-  units: Array<{ unitId: string; pose: string; renderTexture: string; attackAnimTime: number }>;
-  activeProjectiles: Array<{ textureKey: string; x: number; y: number }>;
-  towerAttackPatterns: Record<string, {
-    projectileCount: number;
-    perProjectileDamage: number;
-    cooldownSec: number;
-  }>;
-  verification: { unitStats: Record<string, { attack: number; attackCooldownSec: number }> };
-}
 
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 
@@ -105,7 +95,7 @@ test("renders authored player and enemy team-color regions without whole tint", 
     control.setPaused(true);
   });
   const units = (await page.evaluate(() => (
-    (window as unknown as { __gameDebug: DebugSnapshot }).__gameDebug.units
+    (window as unknown as { __gameDebug: LaneBattleDebugSnapshot }).__gameDebug.units
   ))).filter((unit) => unit.unitId === "bronze_spearman");
   expect(units).toHaveLength(2);
   expect(units.every((unit) => unit.renderTexture.endsWith("-idle") || unit.renderTexture.endsWith("-idle-enemy"))).toBe(true);
@@ -133,7 +123,7 @@ test("captures the axeman attack motion phases with the production frame", async
         .__terrainPrototypeControl.setAttackVisualPhase("stone_axeman", "player", nextPhase);
     }, phase);
     const pose = await page.evaluate(() => (
-      (window as unknown as { __gameDebug: DebugSnapshot }).__gameDebug.units
+      (window as unknown as { __gameDebug: LaneBattleDebugSnapshot }).__gameDebug.units
         .find((unit) => unit.unitId === "stone_axeman")?.pose ?? "missing"
     ));
     attackFrames.push({ phase, pose });
@@ -153,7 +143,7 @@ test("spawns the bronze spearman art in an actual bronze roster", async ({ page 
     control.setPaused(true);
   });
   const snapshot = await page.evaluate(() => (
-    (window as unknown as { __gameDebug: DebugSnapshot }).__gameDebug
+    (window as unknown as { __gameDebug: LaneBattleDebugSnapshot }).__gameDebug
   ));
   const spearman = snapshot.units.find((unit) => unit.unitId === "bronze_spearman");
   expect(spearman?.pose.endsWith("-idle")).toBe(true);
@@ -169,7 +159,7 @@ test("freezes two simultaneous full-strength tower stones in flight", async ({ p
       .__terrainPrototypeControl.prepareTowerVolleyProbe();
   });
   const snapshot = await page.evaluate(() => (
-    (window as unknown as { __gameDebug: DebugSnapshot }).__gameDebug
+    (window as unknown as { __gameDebug: LaneBattleDebugSnapshot }).__gameDebug
   ));
   expect(snapshot.activeProjectiles).toHaveLength(2);
   expect(snapshot.activeProjectiles.every((projectile) => projectile.textureKey === "projectile-stone")).toBe(true);

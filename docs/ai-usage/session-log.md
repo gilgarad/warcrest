@@ -2212,3 +2212,26 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - 좌/우 본진, 북/남 레인 좌표 드래프트, 레인별 타워/거점 배치 원칙,
     향후 3인/4인 확장 검토, 기존 렌더링 엔진 재사용 범위를 함께 명시했다.
   - 이번 단계는 설계 체크포인트만 수행했고, 런타임 구현/맵 데이터 교체는 하지 않았다.
+
+
+## 2026-07-30 (151) — A4 방향 흔들림 수정 + 0번 디버그 스냅샷 타입 공용화
+
+- **사용자 지시 요약**:
+  - 프롬프트 25의 A/B1 뒤에 A4를 추가. 교전 중 캐릭터 방향이 프레임마다
+    반대로 흔들리는 새 증상을 먼저 고치고, 그 다음 0번(빌드 수정+재발 방지 구조)
+    및 B2로 넘어갈 것.
+- **AI 작업 요약**:
+  - `syncUnitPresentation()`와 공격 시작 로직을 읽어, 공격 시작 시에는
+    `facingX`만 잠그고 8방향 `facingDirection`은 미세 motion 기반으로 계속
+    재계산되던 구조를 확인했다.
+  - `LaneBattleScene.ts`에 `combatFacingHoldSec`와 `holdUnitCombatFacing()`을
+    추가하고, 타깃 사거리 안에 들어온 교전 상태에서는 타깃 기준 방향을 일정 시간
+    유지하도록 변경했다. `FACING_DEAD_ZONE_WORLD_PX`도 1.5로 올렸다.
+  - `createVerificationSnapshot()` 반환 타입을 새 공용 타입
+    `LaneBattleDebugSnapshot`으로 분리하고, Playwright 검증 스펙 4개가 이 타입을
+    직접 import하도록 바꿨다. 더 이상 로컬 `DebugSnapshot` 수기 선언으로 빌드가
+    깨지지 않게 했다.
+  - 새 검증 스펙 `tools/validation/a4-facing-stability.spec.ts`를 추가해 근접 교전
+    중 100ms 간격 방향/모션/락 타이머를 샘플링했고, steady window 방향이 `ne`
+    하나로 유지되는 것을 확인했다. 증거는 `artifacts/a4-facing-stability/`에 저장했다.
+  - 검증은 `npm run build`, `npm test`, `npx playwright test tools/validation/a4-facing-stability.spec.ts tools/validation/a-bugfix-review.spec.ts --workers=1`.

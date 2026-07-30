@@ -1,34 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { cpSync, mkdirSync, writeFileSync } from "node:fs";
+import type { LaneBattleDebugSnapshot } from "../../src/scenes/laneBattleDebugSnapshot";
 
 const ARTIFACT_DIR = "artifacts/a-bugfix-review";
 const BASE_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&seed=a-bugfix-review";
-
-interface DebugSnapshot {
-  units: Array<{
-    id: number;
-    team: "player" | "enemy";
-    role: "battle" | "support";
-    progress: number;
-    attackTargetKind: "unit" | "structure";
-    renderTexture: string;
-  }>;
-  battlefield: {
-    defenseTowers: Array<{
-      id: number;
-      owner: "player" | "enemy";
-      progress: number;
-      built: boolean;
-      hp: number;
-      maxHp: number;
-    }>;
-    controlPoints: Array<{
-      id: number;
-      progress: number;
-      owner: "player" | "enemy" | "neutral";
-    }>;
-  };
-}
 
 test.beforeAll(() => {
   mkdirSync(ARTIFACT_DIR, { recursive: true });
@@ -61,8 +36,8 @@ async function openGame(page: Page, query: string): Promise<void> {
   throw new Error(`validation probe did not initialize for ${query}`);
 }
 
-const snapshot = (page: Page): Promise<DebugSnapshot> => page.evaluate(() => (
-  (window as unknown as { __gameDebug: DebugSnapshot }).__gameDebug
+const snapshot = (page: Page): Promise<LaneBattleDebugSnapshot> => page.evaluate(() => (
+  (window as unknown as { __gameDebug: LaneBattleDebugSnapshot }).__gameDebug
 ));
 
 async function focusProgress(page: Page, progress: number): Promise<void> {

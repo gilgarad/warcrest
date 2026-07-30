@@ -2435,3 +2435,30 @@ Use consistent headings so entries are easy to grep.
     설계 기준으로 명시했다.
 - 이번 단계에서는 문서만 추가했고, 실제 맵 데이터/런타임 스키마 구현은 다음
   체크포인트로 넘겼다.
+
+
+## [2026-07-30] fix | A4 방향 흔들림 안정화 + 디버그 스냅샷 타입 공용화
+
+- 같은 상담 세션의 연속. GitHub Issue 없음, 최소 기록 예외로 이 항목과
+  `docs/ai-usage/session-log.md`를 사용했다.
+- 사용자가 실플레이에서 지적한 "교전 중 유닛 방향이 좌우/앞뒤로 빠르게
+  흔들린다"는 증상을 A4로 조사했다. `syncUnitPresentation()`가 미세한
+  시각 위치 변화만으로도 8방향 `facingDirection`을 다시 계산하던 구조에,
+  공격 시작 시에는 `facingX`만 타깃 기준으로 맞추고 실제 8방향은 잠그지
+  않던 점이 핵심 원인이라고 확인했다.
+- `LaneBattleScene.ts`에서:
+  - `FACING_DEAD_ZONE_WORLD_PX`를 1.5로 상향,
+  - `combatFacingHoldSec` 상태를 추가,
+  - 근접/원거리/지원 모두 공격 가능 범위에서 타깃 방향으로
+    `holdUnitCombatFacing()`을 갱신,
+  - 공격 시작 시 `targetX + targetY` 기준으로 8방향 `facingDirection` 자체를
+    잠그도록 변경했다.
+- 동시에 세 번째 재발 방지 과제로, `createVerificationSnapshot()` 반환 형태를
+  `src/scenes/laneBattleDebugSnapshot.ts`의 공용 타입으로 뽑고 Playwright 스펙
+  파일들이 로컬 `DebugSnapshot`을 다시 선언하지 않도록 정리했다.
+- 검증:
+  - `npm run build` 통과
+  - `npm test` 통과 (29 files / 121 tests)
+  - `npx playwright test tools/validation/a4-facing-stability.spec.ts tools/validation/a-bugfix-review.spec.ts --workers=1` 통과
+  - `artifacts/a4-facing-stability/facing-timeline.json`에서 지속 교전 1.8초 동안
+    steady window 방향이 `ne` 하나로 유지됨을 확인했다.

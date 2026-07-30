@@ -1,0 +1,169 @@
+{
+  "steadyWindowUniqueDirections": [
+    "ne"
+  ],
+  "timeline": [
+    {
+      "tMs": 0,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0.44334000000000007,
+      "combatFacingHoldSec": 0.44334000000000007,
+      "pose": "stone-axeman-ne-attack"
+    },
+    {
+      "tMs": 100,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0.4266800000000001,
+      "combatFacingHoldSec": 0.4266800000000001,
+      "pose": "stone-axeman-ne-attack"
+    },
+    {
+      "tMs": 200,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0.41002000000000016,
+      "combatFacingHoldSec": 0.41002000000000016,
+      "pose": "stone-axeman-ne-attack"
+    },
+    {
+      "tMs": 300,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0.3933600000000002,
+      "combatFacingHoldSec": 0.3933600000000002,
+      "pose": "stone-axeman-ne-attack"
+    },
+    {
+      "tMs": 400,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0.22669333333333358,
+      "combatFacingHoldSec": 0.22669333333333358,
+      "pose": "stone-axeman-ne-attack"
+    },
+    {
+      "tMs": 500,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0.21002666666666692,
+      "combatFacingHoldSec": 0.21002666666666692,
+      "pose": "stone-axeman-ne-attack"
+    },
+    {
+      "tMs": 600,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0.19336000000000025,
+      "combatFacingHoldSec": 0.2,
+      "pose": "stone-axeman-ne-attack"
+    },
+    {
+      "tMs": 700,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0.1766933333333336,
+      "combatFacingHoldSec": 0.2,
+      "pose": "stone-axeman-ne-attack"
+    },
+    {
+      "tMs": 800,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0.14836333333333349,
+      "combatFacingHoldSec": 0.2,
+      "pose": "stone-axeman-ne-attack"
+    },
+    {
+      "tMs": 900,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0.1083700000000001,
+      "combatFacingHoldSec": 0.2,
+      "pose": "stone-axeman-ne-attack"
+    },
+    {
+      "tMs": 1000,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0.20001000000000008,
+      "combatFacingHoldSec": 0.20001000000000008,
+      "pose": "stone-axeman-ne-attack"
+    },
+    {
+      "tMs": 1100,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0.07001999999999992,
+      "combatFacingHoldSec": 0.2,
+      "pose": "stone-axeman-ne-attack"
+    },
+    {
+      "tMs": 1200,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0,
+      "combatFacingHoldSec": 0.2,
+      "pose": "stone-axeman-ne-idle"
+    },
+    {
+      "tMs": 1300,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0,
+      "combatFacingHoldSec": 0.2,
+      "pose": "stone-axeman-ne-idle"
+    },
+    {
+      "tMs": 1400,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0,
+      "combatFacingHoldSec": 0.2,
+      "pose": "stone-axeman-ne-idle"
+    },
+    {
+      "tMs": 1500,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0,
+      "combatFacingHoldSec": 0.2,
+      "pose": "stone-axeman-ne-idle"
+    },
+    {
+      "tMs": 1600,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0.3266700000000001,
+      "combatFacingHoldSec": 0.3266700000000001,
+      "pose": "stone-axeman-ne-attack"
+    },
+    {
+      "tMs": 1700,
+      "facingDirection": "ne",
+      "motionX": 0,
+      "motionY": 0,
+      "attackFacingLockSec": 0.19501000000000027,
+      "combatFacingHoldSec": 0.2,
+      "pose": "stone-axeman-ne-attack"
+    }
+  ]
+}

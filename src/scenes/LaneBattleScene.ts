@@ -152,6 +152,7 @@ import {
   getDefenseTowerBuildCost,
   getDefenseTowerMaxHp,
 } from "../systems/lane-capture/defenseTowerRules";
+import type { LaneBattleDebugSnapshot } from "./laneBattleDebugSnapshot";
 
 const CANVAS_W = 1600;
 const CANVAS_H = 900;
@@ -175,7 +176,8 @@ const TOWER_H = 176;
 const CENTRAL_CAPTURE_PROGRESS = 0.588;
 const DEFAULT_VERIFICATION_SEED = "warcrest-central-v1";
 const QUERY_PARAMS = new URLSearchParams(window.location.search);
-const FACING_DEAD_ZONE_WORLD_PX = 0.35;
+const FACING_DEAD_ZONE_WORLD_PX = 1.5;
+const COMBAT_FACING_HOLD_SEC = 0.2;
 
 
 interface LaneUnit {
@@ -197,6 +199,7 @@ interface LaneUnit {
   attackTimerSec: number;
   attackAnimTime: number;
   attackFacingLockSec: number;
+  combatFacingHoldSec: number;
   attackTargetKind: AttackTargetKind;
   attackSequence: number;
   healPower: number;
@@ -1439,6 +1442,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.units.forEach((unit) => {
       unit.attackAnimTime = Math.max(0, unit.attackAnimTime - deltaSec);
       unit.attackFacingLockSec = Math.max(0, unit.attackFacingLockSec - deltaSec);
+      unit.combatFacingHoldSec = Math.max(0, unit.combatFacingHoldSec - deltaSec);
       unit.attackTimerSec -= deltaSec;
       if (unit.role === "support") {
         unit.manaCurrent = Math.min(unit.manaMax, unit.manaCurrent + unit.manaRegenPerSec * deltaSec);
@@ -1458,6 +1462,7 @@ export class LaneBattleScene extends Phaser.Scene {
           this.advanceUnit(unit, deltaSec);
           return;
         }
+        this.holdUnitCombatFacing(unit, enemyTower.sprite.x, enemyTower.sprite.y);
         if (unit.attackTimerSec <= 0) {
           unit.attackTimerSec = unit.attackCooldownSec;
           this.playWorldSfx(
@@ -1471,11 +1476,11 @@ export class LaneBattleScene extends Phaser.Scene {
           if (this.isRangedUnit(unit)) {
             const start = this.getUnitProjectileAnchor(unit);
             const end = this.getTowerProjectileAnchor(enemyTower, false);
-            this.startRangedAttack(unit, enemyTower.sprite.x, "structure", () => {
+            this.startRangedAttack(unit, enemyTower.sprite.x, enemyTower.sprite.y, "structure", () => {
               this.launchProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToTower(enemyTower, damage, unit.team), 1.02);
             });
           } else {
-            this.startMeleeAttack(unit, enemyTower.sprite.x, "structure", () => {
+            this.startMeleeAttack(unit, enemyTower.sprite.x, enemyTower.sprite.y, "structure", () => {
               this.applyDamageToTower(enemyTower, damage, unit.team);
             });
           }
@@ -1492,6 +1497,7 @@ export class LaneBattleScene extends Phaser.Scene {
         this.advanceUnit(unit, deltaSec, nearest);
         return;
       }
+      this.holdUnitCombatFacing(unit, nearest.sprite.x, nearest.sprite.y);
       if (unit.attackTimerSec <= 0) {
         unit.attackTimerSec = unit.attackCooldownSec;
         this.playWorldSfx(
@@ -1505,12 +1511,12 @@ export class LaneBattleScene extends Phaser.Scene {
         if (this.isRangedUnit(unit)) {
           const start = this.getUnitProjectileAnchor(unit);
           const end = this.getUnitProjectileAnchor(nearest);
-          this.startRangedAttack(unit, nearest.sprite.x, "unit", () => {
+          this.startRangedAttack(unit, nearest.sprite.x, nearest.sprite.y, "unit", () => {
             if (!this.units.includes(nearest)) return;
             this.launchProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToUnit(nearest, damage, unit.team === "player" ? "#ffd67a" : "#ff8f8f"), 1.04);
           });
         } else {
-          this.startMeleeAttack(unit, nearest.sprite.x, "unit", () => {
+          this.startMeleeAttack(unit, nearest.sprite.x, nearest.sprite.y, "unit", () => {
             if (!this.units.includes(nearest)) return;
             nearest.hp -= damage;
             this.playWorldSfx(
@@ -1539,7 +1545,7 @@ export class LaneBattleScene extends Phaser.Scene {
     if (injured.length > 0 && unit.attackTimerSec <= 0 && unit.manaCurrent >= unit.healManaCost) {
       unit.attackTimerSec = unit.attackCooldownSec;
       unit.manaCurrent -= unit.healManaCost;
-      this.startSupportCast(unit, injured[0].sprite.x, () => this.applySupportHeal(unit));
+      this.startSupportCast(unit, injured[0].sprite.x, injured[0].sprite.y, () => this.applySupportHeal(unit));
       return;
     }
 
@@ -1596,6 +1602,7 @@ export class LaneBattleScene extends Phaser.Scene {
   private beginAttackPresentation(
     unit: LaneUnit,
     targetX: number,
+    targetY: number,
     targetKind: AttackTargetKind,
   ): AttackTimingProfile {
     const timing = this.getUnitAttackTiming(unit, targetKind);
@@ -1603,18 +1610,18 @@ export class LaneBattleScene extends Phaser.Scene {
     unit.attackFacingLockSec = timing.durationSec;
     unit.attackTargetKind = targetKind;
     this.engagedUnitIds.add(unit.id);
-    const deltaX = targetX - unit.sprite.x;
-    if (Math.abs(deltaX) > FACING_DEAD_ZONE_WORLD_PX) unit.facingX = deltaX >= 0 ? 1 : -1;
+    this.holdUnitCombatFacing(unit, targetX, targetY, timing.durationSec);
     return timing;
   }
 
   private startMeleeAttack(
     unit: LaneUnit,
     targetX: number,
+    targetY: number,
     targetKind: AttackTargetKind,
     onContact: () => void,
   ): void {
-    const timing = this.beginAttackPresentation(unit, targetX, targetKind);
+    const timing = this.beginAttackPresentation(unit, targetX, targetY, targetKind);
     const sequence = ++unit.attackSequence;
     this.time.delayedCall(timing.eventDelayMs, () => {
       if (!this.units.includes(unit) || unit.attackSequence !== sequence) return;
@@ -1625,10 +1632,11 @@ export class LaneBattleScene extends Phaser.Scene {
   private startRangedAttack(
     unit: LaneUnit,
     targetX: number,
+    targetY: number,
     targetKind: AttackTargetKind,
     onRelease: () => void,
   ): void {
-    const timing = this.beginAttackPresentation(unit, targetX, targetKind);
+    const timing = this.beginAttackPresentation(unit, targetX, targetY, targetKind);
     const sequence = ++unit.attackSequence;
     this.time.delayedCall(timing.eventDelayMs, () => {
       if (!this.units.includes(unit) || unit.attackSequence !== sequence) return;
@@ -1636,13 +1644,30 @@ export class LaneBattleScene extends Phaser.Scene {
     });
   }
 
-  private startSupportCast(unit: LaneUnit, targetX: number, onCast: () => void): void {
-    const timing = this.beginAttackPresentation(unit, targetX, "unit");
+  private startSupportCast(unit: LaneUnit, targetX: number, targetY: number, onCast: () => void): void {
+    const timing = this.beginAttackPresentation(unit, targetX, targetY, "unit");
     const sequence = ++unit.attackSequence;
     this.time.delayedCall(timing.eventDelayMs, () => {
       if (!this.units.includes(unit) || unit.attackSequence !== sequence) return;
       onCast();
     });
+  }
+
+  private holdUnitCombatFacing(
+    unit: LaneUnit,
+    targetX: number,
+    targetY: number,
+    holdSec = COMBAT_FACING_HOLD_SEC,
+  ): void {
+    const deltaX = targetX - unit.sprite.x;
+    const deltaY = targetY - unit.sprite.y;
+    if (
+      Math.abs(deltaX) <= FACING_DEAD_ZONE_WORLD_PX
+      && Math.abs(deltaY) <= FACING_DEAD_ZONE_WORLD_PX
+    ) return;
+    unit.facingDirection = resolveUnitFacingDirection(deltaX, deltaY, unit.facingDirection);
+    if (Math.abs(deltaX) > FACING_DEAD_ZONE_WORLD_PX) unit.facingX = deltaX >= 0 ? 1 : -1;
+    unit.combatFacingHoldSec = Math.max(unit.combatFacingHoldSec, holdSec);
   }
 
   private advanceUnit(unit: LaneUnit, deltaSec: number, combatTarget?: LaneUnit): void {
@@ -2411,11 +2436,11 @@ export class LaneBattleScene extends Phaser.Scene {
     if (this.isRangedUnit(unit)) {
       const start = this.getUnitProjectileAnchor(unit);
       const end = target.clone().add(new Phaser.Math.Vector2(0, -96));
-      this.startRangedAttack(unit, target.x, "structure", () => {
+      this.startRangedAttack(unit, target.x, target.y, "structure", () => {
         this.launchProjectile(start, end, getProjectileKeyForUnit(unit.unitId), applyDamage, 1.05);
       });
     } else {
-      this.startMeleeAttack(unit, target.x, "structure", applyDamage);
+      this.startMeleeAttack(unit, target.x, target.y, "structure", applyDamage);
     }
   }
 
@@ -2626,6 +2651,7 @@ export class LaneBattleScene extends Phaser.Scene {
       attackTimerSec: stats.attackCooldownSec * Phaser.Math.FloatBetween(0.4, 0.95),
       attackAnimTime: 0,
       attackFacingLockSec: 0,
+      combatFacingHoldSec: 0,
       attackTargetKind: "unit",
       attackSequence: 0,
       healPower: role === "support" ? supportProfile.healPower : stats.healPower ?? 0,
@@ -2806,6 +2832,7 @@ export class LaneBattleScene extends Phaser.Scene {
     unit.motionY = pos.y - unit.lastPresentationY;
     if (
       unit.attackFacingLockSec <= 0
+      && unit.combatFacingHoldSec <= 0
       && (
         Math.abs(unit.motionX) > FACING_DEAD_ZONE_WORLD_PX
         || Math.abs(unit.motionY) > FACING_DEAD_ZONE_WORLD_PX
@@ -3071,7 +3098,7 @@ export class LaneBattleScene extends Phaser.Scene {
     (window as unknown as { __gameDebug: unknown }).__gameDebug = this.createVerificationSnapshot();
   }
 
-  private createVerificationSnapshot(): Record<string, unknown> {
+  private createVerificationSnapshot(): LaneBattleDebugSnapshot {
     return {
       phase: "lane-siege",
       elapsedSec: this.elapsedSec,
@@ -3099,12 +3126,15 @@ export class LaneBattleScene extends Phaser.Scene {
         hp: unit.hp,
         maxHp: unit.maxHp,
         facingX: unit.facingX,
+        facingDirection: unit.facingDirection,
         flipX: unit.sprite.flipX,
         tint: unit.sprite.tintTopLeft,
         motion: { x: unit.motionX, y: unit.motionY },
         pose: unit.currentTextureKey,
         renderTexture: unit.sprite.texture.key,
         attackAnimTime: unit.attackAnimTime,
+        attackFacingLockSec: unit.attackFacingLockSec,
+        combatFacingHoldSec: unit.combatFacingHoldSec,
         attackTargetKind: unit.attackTargetKind,
         manaCurrent: unit.manaCurrent,
         manaMax: unit.manaMax,

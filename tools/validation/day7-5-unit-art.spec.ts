@@ -1,21 +1,11 @@
 import { expect, test } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
+import type { LaneBattleDebugSnapshot, LaneBattleDebugUnitSnapshot } from "../../src/scenes/laneBattleDebugSnapshot";
 
 const ARTIFACT_DIR = "artifacts/day7-5-unit-art";
 const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&seed=warcrest-day7-5";
 
 type AgeId = "stone" | "bronze" | "iron_early" | "iron_mid" | "iron_late";
-
-interface DebugUnit {
-  unitId: string;
-  pose: string;
-  renderTexture: string;
-}
-
-interface DebugSnapshot {
-  player: { ageId: AgeId };
-  units: DebugUnit[];
-}
 
 const EXPECTED_ROSTERS: Record<AgeId, string[]> = {
   stone: ["stone_slinger", "stone_axeman", "stone_axeman", "supply_wagon"],
@@ -41,7 +31,7 @@ async function openGame(page: import("@playwright/test").Page): Promise<void> {
 
 test("all five age rosters render production unit art", async ({ page }) => {
   await openGame(page);
-  const snapshots: Partial<Record<AgeId, DebugUnit[]>> = {};
+  const snapshots: Partial<Record<AgeId, LaneBattleDebugUnitSnapshot[]>> = {};
 
   for (const ageId of Object.keys(EXPECTED_ROSTERS) as AgeId[]) {
     await page.evaluate((age) => {
@@ -56,7 +46,7 @@ test("all five age rosters render production unit art", async ({ page }) => {
     }, ageId);
 
     const snapshot = await page.evaluate(() => (
-      (window as unknown as { __gameDebug: DebugSnapshot }).__gameDebug
+      (window as unknown as { __gameDebug: LaneBattleDebugSnapshot }).__gameDebug
     ));
     const playerUnits = snapshot.units.filter((unit) => unit.renderTexture && !unit.renderTexture.endsWith("-enemy"));
     expect(snapshot.player.ageId).toBe(ageId);
