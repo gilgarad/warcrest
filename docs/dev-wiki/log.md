@@ -3899,3 +3899,23 @@ Use consistent headings so entries are easy to grep.
 - 검증:
   - `npm run build`
   - `npm test`
+
+## [2026-07-30] fix | world-surface 레인 외곽 seam 블렌드 보강
+
+- `src/gfx/battlefieldWorldRenderer.ts`
+  - world-surface 렌더러에 patch 단위 dirt boundary blend와 road shoulder
+    dust blend 레이어를 추가했다.
+  - grass 전체 base 위에 dirt/road cell만 바로 올라가며 생기던 날카로운
+    폴리곤 절단감을 완화하는 목적이다.
+- 진단:
+  - `artifacts/terrain-seam-pass/before/` 6장 기준으로 중앙보다
+    player/enemy 쪽 끝 segment의 seam이 더 심했다.
+  - 특히 `player-north`, `enemy-south`에서 grass-dirt 경계가 가장
+    부자연스럽게 드러났다.
+- 산출물:
+  - 수정 전후 비교 캡처: `artifacts/terrain-seam-pass/before/`,
+    `artifacts/terrain-seam-pass/after/`
+- 검증:
+  - `npm run build`
+  - `npm test`
+  - `npx playwright test tools/validation/world-surface.spec.ts --workers=1`

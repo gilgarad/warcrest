@@ -35,6 +35,13 @@ and correctable rather than acted on blind.
   actual fix.
 - **Open question for user**: none blocking — ready for a research/fix
   prompt once screenshots pinpoint the worst offending lane segment.
+- **2026-07-30 progress**: screenshot pass and first fix completed on the map
+  track. The worst seam was not the central capture zone but the outer lane
+  segments (`player-north`, `enemy-south`) where the grass plane and dirt
+  shoulder ended in visibly sharp polygon cuts. `BattlefieldWorldRenderer`
+  now adds dirt-boundary and road-shoulder blend layers to soften that
+  transition; follow-up should judge whether this is sufficient or whether
+  some specific end segments still need authored patch-width/band tuning.
 
 ## 2. Camera/unit angle ("하늘에서 비스듬히" feel)
 

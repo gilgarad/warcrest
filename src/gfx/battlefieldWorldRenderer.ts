@@ -17,6 +17,9 @@ import {
 
 const SURFACE_DEPTH = 2;
 const PROP_SHADOW_COLOR = 0x172018;
+const DIRT_BLEND_COLOR = 0x6d6047;
+const DIRT_OUTER_BLEND_COLOR = 0x69744d;
+const ROAD_DUST_COLOR = 0x8f846e;
 
 type VisibleGameObject = Phaser.GameObjects.GameObject & {
   setVisible(visible: boolean): Phaser.GameObjects.GameObject;
@@ -91,8 +94,59 @@ export class BattlefieldWorldRenderer {
   }
 
   private createLaneSurface(patch: TerrainPatchSpec): void {
+    this.createPatchBoundaryBlend(patch);
     this.createMaterialLayer(patch, "dirt", includesDirtShoulder, SURFACE_DEPTH + 2);
+    this.createRoadShoulderBlend(patch);
     this.createMaterialLayer(patch, "road", includesRoad, SURFACE_DEPTH + 3);
+  }
+
+  private createPatchBoundaryBlend(patch: TerrainPatchSpec): void {
+    const patchWidth = patch.columns * patch.cellWidth;
+    const dirtHeight = patch.cellHeight * Math.max(4.2, patch.rows - 2.2);
+    const outer = this.scene.add.graphics()
+      .setPosition(patch.center.x, patch.center.y)
+      .setRotation(patch.rotationRad)
+      .setDepth(SURFACE_DEPTH + 1);
+    outer.fillStyle(DIRT_OUTER_BLEND_COLOR, 0.17);
+    outer.fillRoundedRect(
+      -patchWidth / 2 - 52,
+      -dirtHeight / 2 - 34,
+      patchWidth + 104,
+      dirtHeight + 68,
+      112,
+    );
+
+    const inner = this.scene.add.graphics()
+      .setPosition(patch.center.x, patch.center.y)
+      .setRotation(patch.rotationRad)
+      .setDepth(SURFACE_DEPTH + 1.5);
+    inner.fillStyle(DIRT_BLEND_COLOR, 0.18);
+    inner.fillRoundedRect(
+      -patchWidth / 2 - 22,
+      -dirtHeight / 2 - 16,
+      patchWidth + 44,
+      dirtHeight + 32,
+      92,
+    );
+    this.objects.push(outer, inner);
+  }
+
+  private createRoadShoulderBlend(patch: TerrainPatchSpec): void {
+    const patchWidth = patch.columns * patch.cellWidth;
+    const roadHeight = patch.cellHeight * 3.1;
+    const dust = this.scene.add.graphics()
+      .setPosition(patch.center.x, patch.center.y)
+      .setRotation(patch.rotationRad)
+      .setDepth(SURFACE_DEPTH + 2.5);
+    dust.fillStyle(ROAD_DUST_COLOR, 0.12);
+    dust.fillRoundedRect(
+      -patchWidth / 2 - 8,
+      -roadHeight / 2 - 14,
+      patchWidth + 16,
+      roadHeight + 28,
+      72,
+    );
+    this.objects.push(dust);
   }
 
   private createMaterialLayer(
