@@ -517,8 +517,11 @@
     {
       "key": "stone-slinger-nw-walk-b",
       "filename": "stone-slinger-nw-walk-b.png",
-      "column": 2,
-      "row": 7,
+      "source": "art-source/second-cycle/day3/stone-slinger/stone-slinger-nw-walk-b-repair-alpha.png",
+      "columns": 1,
+      "rows": 1,
+      "column": 0,
+      "row": 0,
       "canvas": [
         384,
         384

@@ -2,15 +2,15 @@
   "passed": true,
   "results": [
     {
-      "key": "bronze-swordsman-idle",
+      "key": "stone-slinger-idle",
       "canvas": [
         384,
         384
       ],
       "alphaBbox": [
-        88,
+        133,
         66,
-        296,
+        251,
         336
       ],
       "opaqueHeight": 270,
@@ -24,15 +24,15 @@
       }
     },
     {
-      "key": "bronze-swordsman-walk-a",
+      "key": "stone-slinger-walk-a",
       "canvas": [
         384,
         384
       ],
       "alphaBbox": [
-        78,
+        101,
         66,
-        305,
+        283,
         336
       ],
       "opaqueHeight": 270,
@@ -46,145 +46,13 @@
       }
     },
     {
-      "key": "bronze-swordsman-walk-b",
+      "key": "stone-slinger-walk-b",
       "canvas": [
         384,
         384
       ],
       "alphaBbox": [
-        80,
-        66,
-        303,
-        336
-      ],
-      "opaqueHeight": 270,
-      "anchorDelta": 0,
-      "checks": {
-        "canvas": true,
-        "opaqueHeight": true,
-        "groundAnchor": true,
-        "edgeMargin": true,
-        "transparentCorners": true
-      }
-    },
-    {
-      "key": "bronze-swordsman-attack",
-      "canvas": [
-        512,
-        384
-      ],
-      "alphaBbox": [
-        88,
-        66,
-        425,
-        336
-      ],
-      "opaqueHeight": 270,
-      "anchorDelta": 0,
-      "checks": {
-        "canvas": true,
-        "opaqueHeight": true,
-        "groundAnchor": true,
-        "edgeMargin": true,
-        "transparentCorners": true
-      }
-    },
-    {
-      "key": "archer-idle",
-      "canvas": [
-        384,
-        384
-      ],
-      "alphaBbox": [
-        105,
-        66,
-        279,
-        336
-      ],
-      "opaqueHeight": 270,
-      "anchorDelta": 0,
-      "checks": {
-        "canvas": true,
-        "opaqueHeight": true,
-        "groundAnchor": true,
-        "edgeMargin": true,
-        "transparentCorners": true
-      }
-    },
-    {
-      "key": "archer-walk-a",
-      "canvas": [
-        384,
-        384
-      ],
-      "alphaBbox": [
-        116,
-        66,
-        269,
-        336
-      ],
-      "opaqueHeight": 270,
-      "anchorDelta": 0,
-      "checks": {
-        "canvas": true,
-        "opaqueHeight": true,
-        "groundAnchor": true,
-        "edgeMargin": true,
-        "transparentCorners": true
-      }
-    },
-    {
-      "key": "archer-walk-b",
-      "canvas": [
-        384,
-        384
-      ],
-      "alphaBbox": [
-        34,
-        66,
-        351,
-        336
-      ],
-      "opaqueHeight": 270,
-      "anchorDelta": 0,
-      "checks": {
-        "canvas": true,
-        "opaqueHeight": true,
-        "groundAnchor": true,
-        "edgeMargin": true,
-        "transparentCorners": true
-      }
-    },
-    {
-      "key": "archer-attack",
-      "canvas": [
-        512,
-        384
-      ],
-      "alphaBbox": [
-        118,
-        66,
-        393,
-        336
-      ],
-      "opaqueHeight": 270,
-      "anchorDelta": 0,
-      "checks": {
-        "canvas": true,
-        "opaqueHeight": true,
-        "groundAnchor": true,
-        "edgeMargin": true,
-        "transparentCorners": true
-      }
-    },
-    {
-      "key": "iron-swordsman-idle",
-      "canvas": [
-        384,
-        384
-      ],
-      "alphaBbox": [
-        83,
+        84,
         66,
         301,
         336
@@ -200,51 +68,7 @@
       }
     },
     {
-      "key": "iron-swordsman-walk-a",
-      "canvas": [
-        384,
-        384
-      ],
-      "alphaBbox": [
-        70,
-        66,
-        314,
-        336
-      ],
-      "opaqueHeight": 270,
-      "anchorDelta": 0,
-      "checks": {
-        "canvas": true,
-        "opaqueHeight": true,
-        "groundAnchor": true,
-        "edgeMargin": true,
-        "transparentCorners": true
-      }
-    },
-    {
-      "key": "iron-swordsman-walk-b",
-      "canvas": [
-        384,
-        384
-      ],
-      "alphaBbox": [
-        69,
-        66,
-        315,
-        336
-      ],
-      "opaqueHeight": 270,
-      "anchorDelta": 0,
-      "checks": {
-        "canvas": true,
-        "opaqueHeight": true,
-        "groundAnchor": true,
-        "edgeMargin": true,
-        "transparentCorners": true
-      }
-    },
-    {
-      "key": "iron-swordsman-attack",
+      "key": "stone-slinger-attack",
       "canvas": [
         512,
         384
@@ -252,7 +76,7 @@
       "alphaBbox": [
         104,
         66,
-        407,
+        408,
         336
       ],
       "opaqueHeight": 270,
@@ -266,15 +90,15 @@
       }
     },
     {
-      "key": "iron-spearman-idle",
+      "key": "stone-axeman-idle",
       "canvas": [
         384,
         384
       ],
       "alphaBbox": [
-        122,
+        95,
         66,
-        262,
+        289,
         336
       ],
       "opaqueHeight": 270,
@@ -288,15 +112,15 @@
       }
     },
     {
-      "key": "iron-spearman-walk-a",
+      "key": "stone-axeman-walk-a",
       "canvas": [
         384,
         384
       ],
       "alphaBbox": [
-        110,
+        84,
         66,
-        273,
+        299,
         336
       ],
       "opaqueHeight": 270,
@@ -310,15 +134,15 @@
       }
     },
     {
-      "key": "iron-spearman-walk-b",
+      "key": "stone-axeman-walk-b",
       "canvas": [
         384,
         384
       ],
       "alphaBbox": [
-        111,
+        53,
         66,
-        273,
+        331,
         336
       ],
       "opaqueHeight": 270,
@@ -332,15 +156,15 @@
       }
     },
     {
-      "key": "iron-spearman-attack",
+      "key": "stone-axeman-attack",
       "canvas": [
         512,
         384
       ],
       "alphaBbox": [
-        76,
+        94,
         66,
-        437,
+        417,
         336
       ],
       "opaqueHeight": 270,
@@ -354,81 +178,15 @@
       }
     },
     {
-      "key": "musketeer-idle",
-      "canvas": [
-        384,
-        384
-      ],
-      "alphaBbox": [
-        112,
-        66,
-        272,
-        336
-      ],
-      "opaqueHeight": 270,
-      "anchorDelta": 0,
-      "checks": {
-        "canvas": true,
-        "opaqueHeight": true,
-        "groundAnchor": true,
-        "edgeMargin": true,
-        "transparentCorners": true
-      }
-    },
-    {
-      "key": "musketeer-walk-a",
-      "canvas": [
-        384,
-        384
-      ],
-      "alphaBbox": [
-        78,
-        66,
-        307,
-        336
-      ],
-      "opaqueHeight": 270,
-      "anchorDelta": 0,
-      "checks": {
-        "canvas": true,
-        "opaqueHeight": true,
-        "groundAnchor": true,
-        "edgeMargin": true,
-        "transparentCorners": true
-      }
-    },
-    {
-      "key": "musketeer-walk-b",
-      "canvas": [
-        384,
-        384
-      ],
-      "alphaBbox": [
-        120,
-        66,
-        264,
-        336
-      ],
-      "opaqueHeight": 270,
-      "anchorDelta": 0,
-      "checks": {
-        "canvas": true,
-        "opaqueHeight": true,
-        "groundAnchor": true,
-        "edgeMargin": true,
-        "transparentCorners": true
-      }
-    },
-    {
-      "key": "musketeer-attack",
+      "key": "supply-wagon-idle",
       "canvas": [
         512,
         384
       ],
       "alphaBbox": [
-        96,
+        168,
         66,
-        416,
+        345,
         336
       ],
       "opaqueHeight": 270,
@@ -442,15 +200,15 @@
       }
     },
     {
-      "key": "knight-idle",
+      "key": "supply-wagon-walk-a",
       "canvas": [
         512,
         384
       ],
       "alphaBbox": [
-        132,
+        148,
         66,
-        380,
+        365,
         336
       ],
       "opaqueHeight": 270,
@@ -464,15 +222,15 @@
       }
     },
     {
-      "key": "knight-walk-a",
+      "key": "supply-wagon-walk-b",
       "canvas": [
         512,
         384
       ],
       "alphaBbox": [
-        119,
+        166,
         66,
-        393,
+        347,
         336
       ],
       "opaqueHeight": 270,
@@ -486,37 +244,15 @@
       }
     },
     {
-      "key": "knight-walk-b",
+      "key": "supply-wagon-attack",
       "canvas": [
         512,
         384
       ],
       "alphaBbox": [
-        128,
+        137,
         66,
-        384,
-        336
-      ],
-      "opaqueHeight": 270,
-      "anchorDelta": 0,
-      "checks": {
-        "canvas": true,
-        "opaqueHeight": true,
-        "groundAnchor": true,
-        "edgeMargin": true,
-        "transparentCorners": true
-      }
-    },
-    {
-      "key": "knight-attack",
-      "canvas": [
-        512,
-        384
-      ],
-      "alphaBbox": [
-        98,
-        66,
-        415,
+        375,
         336
       ],
       "opaqueHeight": 270,
