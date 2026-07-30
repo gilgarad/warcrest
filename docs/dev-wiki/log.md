@@ -3590,3 +3590,33 @@ Use consistent headings so entries are easy to grep.
   - `npm test` 통과 (`29` files / `121` tests)
   - `npx playwright test tools/validation/capture-point-distinction.spec.ts tools/validation/unit-animation-tower-v2.spec.ts --workers=1` 통과 (`7` tests)
   - `npx playwright test --workers=1` 재실행 통과 (`53 passed`, 약 `21.2m`)
+
+## [2026-07-30] docs | 사용자 결정: Three Fronts archive, 2레인 맵 승격 확정
+
+- 상담 세션(`stock_predict_rev` harness, `game_project1`-only, 소스 미수정)이
+  개발 세션 인계 프롬프트(`docs/dev-wiki/codex-prompt-log.md` 2026-07-30 (27))에
+  남아있던 사용자 확인 대기 2건을 직접 질문해 답을 받았다:
+  - `warcrest-day3-three-fronts-v1`(단일 레인 재설계 후보): **archive 표시 후
+    유지**. 코드/후보 자체는 삭제하지 않고, 2레인 요청으로 대체된 구식
+    후보임을 문서/코드 주석에 명시만 한다.
+  - `warcrest-two-lane-v1`: **기본 프로덕션 맵으로 승격**. 회귀
+    (`53 passed`, 21.2m)와 플레이 리뷰(북/남 양 레인 독립 캡처·타워
+    파괴/재건 확인, 2026-07-30 로그 참고)가 모두 통과한 상태에서 내려진
+    결정.
+- 코드는 수정하지 않았다. 실제 archive 표시 추가와 기본 맵 전환 구현은
+  다음 개발 세션 프롬프트(`docs/dev-wiki/codex-prompt-log.md` 2026-07-30
+  (28))에서 진행한다.
+
+## [2026-07-30] docs | 세 트랙(그래픽/캐릭터, 맵 및 게임 전반, 음악) 분리 조정 문서 추가
+
+- 상담 세션(`stock_predict_rev` harness, `game_project1`-only, 소스
+  미수정)이 사용자 요청으로 `docs/dev-wiki/session-tracks.md`를 새로
+  작성했다. 세 트랙 각각의 스코프, 소유 파일 목록, 현재 상태, 다음
+  과제, 그리고 세 트랙 모두가 건드리는 `LaneBattleScene.ts`(3,491줄)에
+  대한 공유 파일 규칙(수정 전 `git log`/`git status`로 다른 트랙의
+  미완료 변경이 없는지 확인, 완료 즉시 커밋/푸시)을 명시했다.
+  `docs/dev-wiki/index.md`에 링크를 추가했다.
+- 앞으로 모든 인계 프롬프트는 `[담당 세션: <트랙 이름>]`으로 시작해
+  어느 트랙 작업인지 명확히 하기로 했다. 이번 사용자 지적("아까 3개로
+  갈라달라고 했는데 프롬프트에 어느 세션용인지 안 적었다")을 반영한
+  조치다.

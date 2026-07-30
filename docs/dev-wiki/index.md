@@ -55,6 +55,10 @@ repository work.
   pre-integration baseline from commit `f57303b`
 - `audio-integration-validation.md`: live scene integration, dynamic music,
   SFX policy, settings UI, browser evidence, and remaining asset work
+- `session-tracks.md`: the three parallel work streams (그래픽/캐릭터, 맵 및
+  게임 전반, 음악/오디오) — scope, owned files per track, current status,
+  and the shared-file rule for `LaneBattleScene.ts`. Every handoff prompt
+  should be labeled with one of these tracks; read this before writing one
 - `../knowledge/`: durable project knowledge
 - `../patterns/`: reusable implementation patterns
 - `../wiki/`: human-facing documentation and wiki policy

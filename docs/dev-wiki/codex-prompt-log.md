@@ -3875,3 +3875,279 @@ AGENTS.md -> docs/index.md -> docs/dev-wiki/contract.md 순서로 먼저
 - 4번: 전체 회귀 결과
 - 사용자가 최종적으로 결정해야 할 것 목록
 ```
+
+## 2026-07-30 (28) — 사용자 결정 반영: Three Fronts archive 표시 + 2레인 맵 기본 승격
+
+- **사용자 지시 원문(핵심)**: 상담 세션이 (27)번 프롬프트에 남아있던 두 확인
+  대기 항목을 직접 질문 — "Three Fronts 후보를 archive 표시 후 유지할지,
+  삭제할지, 그대로 둘지"와 "2레인 맵을 기본으로 승격할지, 보류할지". 답변:
+  **archive 표시 후 유지**, **기본 맵으로 승격**.
+- **확인한 현재 코드 상태** (2026-07-30, 최신 커밋 `6564b1c`, `master`):
+  `npm run build`/`npm test`/전체 Playwright(`npx playwright test
+  --workers=1`) 모두 통과 확인됨 (`53 passed`, 21.2m). `warcrest-two-lane-v1`
+  플레이 리뷰에서 북/남 양 레인 독립 스폰·캡처·타워 파괴/재건 확인됨.
+  기본 맵은 여전히 `warcrest-full-lane-hybrid-v1`이고, 코드 검색 결과
+  `battlefieldMaps.ts`에 "기본 맵" 선택을 담당하는 단일 지점이 있을
+  것으로 보이나 상담 세션은 소스를 수정하지 않으므로 정확한 위치는
+  이 세션이 직접 찾아라.
+- **담당 세션**: "맵 및 게임 전반" 트랙 (그래픽/캐릭터, 음악 트랙과는
+  분리 — 이 작업은 `battlefieldMaps.ts`/맵 스키마/전체 회귀만 건드리고
+  유닛 아트나 오디오 파일은 건드리지 않는다).
+- **작성한 프롬프트**:
+
+```
+[담당 세션: 맵 및 게임 전반] — 그래픽/캐릭터 세션, 음악 세션과는 별도로
+진행하는 프롬프트다. 이 작업은 맵 스키마(`battlefieldMaps.ts`)와 전체
+회귀만 다루고, 유닛 아트/애니메이션이나 오디오 자산은 건드리지 않는다.
+
+이 저장소의 로컬 harness 규약대로 작업해. AGENTS.md -> docs/index.md ->
+docs/dev-wiki/contract.md 순서로 먼저 읽어라. 운영 하네스만 사용하고,
+런타임 하네스나 추가 자동화는 설정하지 마. 이 세션은
+`/data/projects/game_project1` 폴더만 보고 작업한다.
+
+`git log --oneline -10`, `git status`로 현재 상태가 `master` /
+커밋 `6564b1c` 기준과 일치하는지 먼저 확인해라(다른 세션이 그 사이
+더 진행했을 수 있다).
+
+## 배경
+
+지난 인계 프롬프트(`docs/dev-wiki/codex-prompt-log.md` 2026-07-30 (27))에서
+사용자 확인이 필요하다고 남겨둔 두 가지에 대해 답을 받았다:
+
+1. `warcrest-day3-three-fronts-v1`(단일 레인 재설계 후보, 2레인 요청으로
+   사실상 대체됨) -> **archive 표시 후 유지** (삭제하지 않는다).
+2. `warcrest-two-lane-v1` -> **기본 프로덕션 맵으로 승격**. 회귀와 플레이
+   리뷰가 모두 통과한 상태에서 내려진 결정이다.
+
+## 지금 할 일
+
+### 1. Three Fronts를 archive 표시
+
+- `src/data/battlefieldMaps.ts`에서 `warcrest-day3-three-fronts-v1` 정의를
+  찾아 구식/보관용임을 나타내는 표시를 추가해라(예: 주석 + 필요하다면
+  스키마에 이미 있는 status/tag 필드 활용, 없다면 주석만으로 충분하다 —
+  새 필드를 무리하게 추가하지 마라). `?map=warcrest-day3-three-fronts-v1`로
+  여전히 켤 수 있는 상태는 유지한다(삭제 아님).
+- 관련 문서(`docs/dev-wiki/map-redesign-brief.md`,
+  `docs/dev-wiki/day3-second-cycle-validation.md` 등에서 이 후보를
+  언급하는 부분)에도 "2레인 요청으로 대체된 archive 후보"라는 점을
+  간단히 덧붙여라. 기존 서술을 대량으로 다시 쓰지 말고, 최소한의 정정
+  각주만 추가해라.
+
+### 2. 2레인 맵을 기본 맵으로 승격
+
+- `warcrest-two-lane-v1`을 실제 기본 맵으로 전환해라. 기존 기본 맵이었던
+  `warcrest-full-lane-hybrid-v1`은 삭제하지 말고 `?map=`으로 계속 선택
+  가능한 후보로 남겨라(정확히 반대 방향 전환 — 기존에 2레인이 `?map=`
+  후보였던 것을 뒤집는다).
+- 기본 맵을 결정하는 지점이 코드에서 정확히 어디인지 먼저 찾아라(상담
+  세션은 소스를 수정하지 않아 정확한 라인을 짚어주지 못한다 — 이 세션이
+  직접 grep해서 찾아라). 여러 곳에 하드코딩돼 있다면 전부 갱신해라.
+- 기존에 `warcrest-two-lane-v1`을 명시적으로 요구하던 테스트/스펙
+  (`tools/validation/b2-two-lane-map.spec.ts` 등)이 "이건 후보 맵이다"라는
+  전제로 짜여 있었다면, 승격 이후에도 여전히 말이 되는지 확인하고
+  필요한 곳만 갱신해라(기본 동작 자체가 바뀌었으니 "기본 맵은
+  `warcrest-full-lane-hybrid-v1`"을 고정 기대하던 스펙이 있다면 그것도
+  찾아서 갱신해라).
+
+### 3. 전체 회귀
+
+- `npm run build`
+- `npm test`
+- `npx playwright test --workers=1` (전체 스위트, 워커 1개로)
+- 위 셋 모두 실제로 통과했는지 직접 확인하고, 실패가 있으면 원인을
+  진단해서 고쳐라(과거 스펙이 구식 기대값을 갖고 있었을 뿐인지, 실제
+  회귀인지 구분해서 기록해라 — (25)번 항목처럼 실제로 여러 번 있었던
+  패턴이다).
+
+### 4. 문서/기록
+
+- `docs/dev-wiki/log.md`에 이번 변경(archive 표시 + 기본 맵 전환)을
+  기록해라. `docs/dev-wiki/backlog.md`도 관련 항목이 있으면 갱신해라.
+
+## 하네스 규칙 리마인더
+
+- The Second Rule(`docs/dev-wiki/contract.md`): 의미 있는 턴마다
+  `docs/ai-usage/session-log.md`에 기록해라 — 대회 제출 4번 자료,
+  생략 불가.
+- The One Rule: 변경할 때마다 backlog 또는 최소 `docs/dev-wiki/log.md`
+  기록을 남겨라.
+- 완료 보고 전 `npm run build`와 `npm test`를 **반드시 둘 다** 실행해라 —
+  지금까지 이걸 건너뛰어서 빌드가 깨진 채 "통과"로 보고된 사례가 여러 번
+  있었다.
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- Three Fronts archive 표시 적용 내역 (실제 diff 요약)
+- 기본 맵 전환 적용 내역 (기본 맵 결정 지점을 어디서 찾았는지 포함)
+- 전체 회귀 결과 (build/test/playwright 전부)
+- 남은 이슈나 다음에 확인이 필요한 것이 있다면 목록
+```
+
+## 2026-07-30 (29) — [담당 세션: 그래픽/캐릭터] NW 방향 임시 대체 프레임 정리
+
+- **배경**: 상담 세션이 세 트랙 분리 조정 문서(`docs/dev-wiki/session-tracks.md`)를
+  작성하면서, 그래픽/캐릭터 트랙에 이미 알려진 채 방치된 debt(NW 방향
+  임시 대체 프레임)를 다음 과제로 지정했다. `docs/dev-wiki/log.md`
+  2026-07-29 항목에 확인된 구체 사례 1건(`iron_spearman`의 nw-attack이
+  west-attack 프레임으로 대체됨)이 있고, "NW 방향 4곳"이라는 집계만
+  남아있어 나머지 사례는 이 세션이 직접 감사해서 찾아야 한다.
+- **작성한 프롬프트**:
+
+```
+[담당 세션: 그래픽/캐릭터] — 맵 및 게임 전반 세션, 음악 세션과는 별도로
+진행하는 프롬프트다. 이 작업은 유닛 스프라이트/애니메이션만 다루고
+`battlefieldMaps.ts`나 `src/systems/audio/**`는 건드리지 않는다. 소유
+파일 범위는 `docs/dev-wiki/session-tracks.md`의 "1. 그래픽/캐릭터"
+절을 참고해라.
+
+이 저장소의 로컬 harness 규약대로 작업해. AGENTS.md -> docs/index.md ->
+docs/dev-wiki/contract.md 순서로 먼저 읽어라. 운영 하네스만 사용하고,
+런타임 하네스나 추가 자동화는 설정하지 마. 이 세션은
+`/data/projects/game_project1` 폴더만 보고 작업한다.
+
+`git log --oneline -10`, `git status`로 현재 상태를 먼저 확인해라.
+
+## 배경
+
+10종 유닛 전부 8방향 프로덕션 자산 배선이 끝났지만(`docs/dev-wiki/log.md`
+2026-07-29 항목), NW(북서) 방향에 임시 대체 프레임이 남아있는 게 그때
+확인됐다. 구체적으로 확인된 사례는:
+
+- `iron_spearman`의 `nw attack` 소스 셀이 비어있어서, west attack 프레임을
+  그대로 복사해 채워넣었다(`art-source/second-cycle/day3/` 생성 당시).
+
+당시 로그에는 "NW 방향 4곳의 임시 대체 프레임"이라고만 집계돼 있고
+나머지 사례는 항목별로 기록되지 않았다 — 이 세션이 직접 감사해서
+전체 목록을 만들어야 한다.
+
+## 지금 할 일
+
+### 1. 감사: NW 방향 대체 프레임 전수 조사
+
+- `public/assets/production/units/`의 10종 x (idle/walk-a/walk-b/attack) x
+  (ally/enemy 팔레트) NW 프레임을 스타일 가이드(`docs/dev-wiki/
+  style-guide.md`)의 8방향 생산 계약과 대조해서, west 프레임을 그대로
+  재사용했거나 다른 방향과 부자연스럽게 동일한 프레임이 몇 곳이나
+  있는지 정확히 찾아라. `iron_spearman` nw-attack은 이미 확인된
+  사례이니 반드시 포함해라.
+- 찾은 목록을 표로 정리해서 최종 보고에 포함해라(유닛명, 포즈, 팔레트).
+
+### 2. 수정
+
+- 1번에서 찾은 각 대체 프레임을, 이미 검증된 골든 레퍼런스 파이프라인
+  (`npm run asset:prepare:units`, `npm run asset:qa:units`)을 그대로
+  써서 실제 NW 방향 고유 프레임으로 교체해라. 파이프라인/QA 스크립트
+  자체를 새로 만들 필요는 없다 — 이미 있는 걸 그대로 재사용해라.
+- 나머지 7방향(west 포함) 자산은 건드리지 마라.
+
+### 3. 검증
+
+- `npm run asset:qa:units` 통과 확인
+- `npm run build`
+- `npm test`
+- 관련 Playwright 스펙이 있다면(`tools/validation/day7-5-unit-art.spec.ts`,
+  `unit-direction.spec.ts` 등) 실행해서 통과 확인
+
+### 4. 문서/기록
+
+- `docs/dev-wiki/log.md`에 이번 감사 결과(찾은 전체 목록)와 수정 내역을
+  기록해라. `docs/dev-wiki/session-tracks.md`의 "그래픽/캐릭터" 절
+  "현재 상태"도 이 debt가 닫혔다는 내용으로 갱신해라.
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 의미 있는 턴마다 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 변경할 때마다 backlog 또는 최소 `docs/dev-wiki/log.md` 기록을 남겨라.
+- 완료 보고 전 `npm run build`와 `npm test`를 **반드시 둘 다** 실행해라.
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- NW 대체 프레임 전수 조사 결과 표
+- 수정 적용 내역
+- 검증 결과 (asset QA / build / test / Playwright)
+```
+
+## 2026-07-30 (30) — [담당 세션: 음악/오디오] 유닛 확인(acknowledge) SFX 신설 (선택)
+
+- **배경**: `docs/dev-wiki/wc2-systems-gap-review.md` section 4에서 제안된
+  선택적 마무리 작업. `assetManifest.ts`를 grep해 `hireSuccess`류 UI SFX는
+  있지만 거점/타워 클릭이나 고용 시 확인음 카테고리는 아직 없음을
+  상담 세션이 재확인했다. 4개 BGM 상태는 이미 측정/검증 완료 상태라
+  음악 트랙에 남은 급한 작업은 없고, 이 항목이 다음 소규모 과제다.
+- **작성한 프롬프트**:
+
+```
+[담당 세션: 음악/오디오] — 그래픽/캐릭터 세션, 맵 및 게임 전반 세션과는
+별도로 진행하는 프롬프트다. 이 작업은 `src/systems/audio/**`만 다루고
+유닛 스프라이트나 `battlefieldMaps.ts`는 건드리지 않는다. 소유 파일
+범위는 `docs/dev-wiki/session-tracks.md`의 "3. 음악/오디오" 절을
+참고해라.
+
+이 저장소의 로컬 harness 규약대로 작업해. AGENTS.md -> docs/index.md ->
+docs/dev-wiki/contract.md 순서로 먼저 읽어라. 운영 하네스만 사용하고,
+런타임 하네스나 추가 자동화는 설정하지 마. 이 세션은
+`/data/projects/game_project1` 폴더만 보고 작업한다.
+
+`git log --oneline -10`, `git status`로 현재 상태를 먼저 확인해라.
+
+## 배경
+
+`docs/dev-wiki/wc2-systems-gap-review.md` section 4: 워크래프트 2의 유닛
+확인(acknowledgment) 음성 대사에서 착안한, 이 게임의 오토배틀 정체성에
+맞는 축소 버전 제안 — 거점/타워를 클릭하거나 유닛을 고용할 때 짧은
+합성 "확인음(select/acknowledge blip)"을 재생한다. `assetManifest.ts`에
+`sfx.ui.hireSuccess` 같은 패턴은 이미 있지만 이 카테고리는 아직 없다.
+**이건 선택 사항이다 — charm이지 블로커가 아니다.** 다른 급한 오디오
+작업이 있다면 그걸 먼저 하고 이건 미뤄도 된다.
+
+## 지금 할 일 (해당 시)
+
+### 1. SFX 신설
+
+- `src/systems/audio/assetManifest.ts`에 새 SFX id를 추가해라(예:
+  `sfx.ui.acknowledge` 또는 대상별로 세분화 — 기존 명명 규칙을 따라라).
+  기존 synth-fallback 패턴(`kind: "chime"` 등)을 그대로 재사용해라.
+  실제 오디오 파일을 만들 수 있는 도구가 있다면 우선 검토하고(그 경우
+  출처/라이선스를 `licenseNote`에 기록), 없으면 지금처럼 합성으로 가라.
+
+### 2. 배선
+
+- 거점 클릭, 타워 클릭, 유닛 고용 성공 시 이 SFX가 재생되도록
+  `LaneBattleScene.ts`의 관련 핸들러에 연결해라. **주의**: 이 파일은
+  맵/게임 전반 트랙도 소유하고 있다 — 수정 전 `docs/dev-wiki/
+  session-tracks.md`의 공유 파일 규칙대로 `git log -1 -- src/scenes/
+  LaneBattleScene.ts`와 `git status`로 다른 트랙의 미완료 변경이 없는지
+  확인하고, 완료 즉시 커밋/푸시해라.
+
+### 3. 검증
+
+- `tools/audio-lab/`으로 재생 확인
+- `npm run build`
+- `npm test`
+- 관련 오디오 Playwright 스펙(`audio-integration.spec.ts`,
+  `audio-signal.spec.ts`) 실행
+
+### 4. 문서/기록
+
+- `docs/dev-wiki/log.md`에 기록해라. `docs/dev-wiki/wc2-systems-gap-review.md`
+  section 4를 "완료" 상태로 갱신하고, `session-tracks.md`의 음악 트랙
+  "현재 상태"도 갱신해라.
+
+## 하네스 규칙 리마인더
+
+- The Second Rule: 의미 있는 턴마다 `docs/ai-usage/session-log.md`에 기록해라.
+- The One Rule: 변경할 때마다 backlog 또는 최소 `docs/dev-wiki/log.md` 기록을 남겨라.
+- 완료 보고 전 `npm run build`와 `npm test`를 **반드시 둘 다** 실행해라.
+
+## 결과물
+
+최종 응답에 포함해라.
+
+- 신설 SFX와 배선 내역 (또는 스킵했다면 그 이유)
+- 검증 결과
+```
