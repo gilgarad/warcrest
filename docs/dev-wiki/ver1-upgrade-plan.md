@@ -97,7 +97,15 @@ and correctable rather than acted on blind.
   new attack-effort vocal layer distinct from the existing hit-reaction
   grunt. Reuse the existing synth-fallback pattern; no real audio assets
   needed unless the audio session confirms a generation tool is available.
-- **Open question for user**: none blocking — ready for a prompt.
+- **Implemented (2026-07-30)**:
+  - Weapon-family split landed as `slash`, `blunt`, `bow`, `thrown`, plus a
+    separate `shot` family for `musketeer`.
+  - `LaneBattleScene.ts` now branches combat attack/hit playback by unit
+    family instead of using one generic melee/ranged pair.
+  - A new `sfx.combat.attackShout` grunt layer was added for attack-start
+    effort vocalization, throttled by both asset cooldown and scene-level
+    probability/min-interval gating so it does not fire on every swing.
+- **Open question for user**: none blocking — complete for the current pass.
 
 ## Sequencing recommendation
 
@@ -114,7 +122,7 @@ target:
 
 ## Status
 
-All four items have user-confirmed direction as of 2026-07-30. No item is
-blocked on further discussion. Next step: user reviews this document, then
-the consulting session writes one handoff prompt per track in sequencing
-order above.
+Items 1-4 all have user-confirmed direction as of 2026-07-30. Item 4
+(combat SFX variety + attack vocalizations) is now implemented on the audio
+track. Remaining next steps are the visual/map items and any later polish
+follow-up after user listening feedback.

@@ -1,6 +1,7 @@
 import { getSupportHealPower, type BattleUnitId, type SupportUnitId } from "../../data/unitRosters";
 
 export type LaneUnitId = BattleUnitId | SupportUnitId;
+export type UnitWeaponAudioFamily = "slash" | "blunt" | "bow" | "thrown" | "shot" | "support";
 
 export interface UnitStatDef {
   hp: number;
@@ -33,4 +34,25 @@ export function getProjectileKeyForUnit(unitId: LaneUnitId): string {
   if (unitId === "archer") return "projectile-arrow";
   if (unitId === "musketeer") return "projectile-shot";
   return "projectile-stone";
+}
+
+export function getUnitWeaponAudioFamily(unitId: LaneUnitId): UnitWeaponAudioFamily {
+  switch (unitId) {
+    case "stone_slinger":
+      return "thrown";
+    case "stone_axeman":
+      return "blunt";
+    case "bronze_swordsman":
+    case "bronze_spearman":
+    case "iron_swordsman":
+    case "iron_spearman":
+    case "knight":
+      return "slash";
+    case "archer":
+      return "bow";
+    case "musketeer":
+      return "shot";
+    case "supply_wagon":
+      return "support";
+  }
 }

@@ -22,4 +22,18 @@ describe("audio asset manifest", () => {
     expect(asset.missingAsset).toBe(true);
     expect(asset.licenseNote).toContain("Web Audio");
   });
+
+  it.each([
+    ["sfx.combat.slashAttack", "blade"],
+    ["sfx.combat.bluntAttack", "impact"],
+    ["sfx.combat.bowFire", "pluck"],
+    ["sfx.combat.thrownFire", "sweepDown"],
+    ["sfx.combat.shotFire", "impact"],
+    ["sfx.combat.attackShout", "grunt"],
+  ] as const)("registers %s with the %s synth family", (id, kind) => {
+    const asset = getSfxAsset(id);
+    expect(asset).toBeDefined();
+    expect(asset?.synth.kind).toBe(kind);
+    expect(asset?.category).toBe("combat");
+  });
 });

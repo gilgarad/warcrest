@@ -3892,3 +3892,34 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
 - **검증**:
   - `npm run build`
   - `npm test`
+
+## 2026-07-30 (166) — 오디오 트랙: 무기군별 전투 SFX와 공격 기합 추가
+
+- **사용 도구**: Codex (GPT-5), `git log`, `git status`, Audio Lab,
+  `npm run build`, `npm test`, Playwright
+- **사용자 지시 원문(핵심)**:
+  - "`docs/dev-wiki/ver1-upgrade-plan.md` 항목 4와 `src/systems/audio/assetManifest.ts`를 먼저 읽어라."
+  - "무기별 공격/타격음 분화 ... 최소 다음 카테고리로 나눠라:
+    베기(검/창), 둔기(도끼/둔중한 타격), 활(원거리), 투석/투척(원거리)"
+  - "공격 기합(attack vocalization) 신설 ... 매 공격마다 울리면 시끄러우니
+    쿨다운/확률 감쇠를 걸어라."
+- **AI 산출물 요약**:
+  - `assetManifest.ts`에 무기군별 공격/명중 SFX를 추가했다:
+    `slash`, `blunt`, `bow`, `thrown`, 그리고 현재 로스터상 별도 음색이 더
+    자연스러운 `musketeer`용 `shot` 패밀리.
+  - `unitStats.ts`에 유닛 ID -> 무기군 오디오 패밀리 매핑을 추가하고,
+    `LaneBattleScene.ts`가 공격 시작/명중 시 그 매핑을 읽어 분기 재생하게
+    바꿨다. 본진 공격도 같은 경로를 쓰도록 맞췄다.
+  - 새 `sfx.combat.attackShout`를 추가해 공격 시작 기합층을 만들었다.
+    발화량 제어는 세 겹으로 걸었다:
+    장면 레벨 최소 간격 `1.4s`, 무기군별 확률
+    (`slash 28%`, `blunt 24%`, `bow 14%`, `thrown 18%`, `shot 12%`),
+    자산 레벨 쿨다운 `260ms`.
+  - `ver1-upgrade-plan.md` 항목 4를 구현 완료 상태로 갱신하고,
+    `docs/dev-wiki/log.md`에도 같은 이유와 정책을 기록했다.
+- **검증**:
+  - Audio Lab 직접 재생 비교 산출물: `artifacts/audio-lab-combat-sfx/`
+  - `npm run build`
+  - `npm test`
+  - `npx playwright test tools/validation/audio-signal.spec.ts --workers=1`
+  - `npx playwright test tools/validation/audio-integration.spec.ts --grep "Audio Lab plays the layered score and distinct combat synthesis families" --workers=1`

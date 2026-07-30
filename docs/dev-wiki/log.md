@@ -3899,3 +3899,33 @@ Use consistent headings so entries are easy to grep.
 - 검증:
   - `npm run build`
   - `npm test`
+
+## [2026-07-30] feat | 오디오 트랙: 전투 SFX 무기군 분화 + 공격 기합 추가
+
+- 담당 브랜치 `track-audio-combat-sfx`, 시작 시점 HEAD는 `ad9e0b1`, 공유 파일
+  `src/scenes/LaneBattleScene.ts`의 직전 변경은 `5ca9a82`였다. 오디오 콜사이트
+  범위로만 수정했다.
+- `src/systems/audio/assetManifest.ts`
+  - 기존 generic `meleeAttack` / `meleeHit`, `rangedFire` / `projectileHit`
+    외에 무기군별 전투 SFX를 추가했다:
+    `slash`, `blunt`, `bow`, `thrown`, 그리고 `musketeer`용 `shot`.
+  - 새 공격 기합 `sfx.combat.attackShout`도 추가했다. 합성 엔진은 늘리지 않고
+    기존 `blade` / `impact` / `pluck` / `sweepDown` / `grunt` 조합만 재사용했다.
+- `src/systems/lane-units/unitStats.ts`
+  - 유닛 ID -> 무기군 오디오 패밀리 매핑 헬퍼를 추가했다.
+- `src/scenes/LaneBattleScene.ts`
+  - 공격 시작 시 `getCombatAttackSfxId()`로 무기군별 공격음을 재생하고,
+    유닛 명중 시 `getCombatImpactSfxId()`로 무기군별 타격음을 재생하도록 바꿨다.
+  - 공격 기합은 `maybePlayAttackShout()`로 추가했다.
+    정책:
+    `ATTACK_SHOUT_MIN_INTERVAL_SEC = 1.4` 최소 간격 +
+    무기군별 확률(`slash 28%`, `blunt 24%`, `bow 14%`, `thrown 18%`, `shot 12%`) +
+    자산 쿨다운 `260ms`를 함께 사용한다.
+  - 구조물/본진 공격도 같은 무기군 공격음과 기합 정책을 공유한다.
+- `docs/dev-wiki/ver1-upgrade-plan.md` 항목 4를 구현 완료 기준으로 갱신했다.
+- 검증:
+  - Audio Lab 직접 재생 비교: `artifacts/audio-lab-combat-sfx/`
+  - `npm run build`
+  - `npm test`
+  - `npx playwright test tools/validation/audio-signal.spec.ts --workers=1`
+  - `npx playwright test tools/validation/audio-integration.spec.ts --grep "Audio Lab plays the layered score and distinct combat synthesis families" --workers=1`

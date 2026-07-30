@@ -114,7 +114,7 @@ test("Audio Lab plays the layered score and distinct combat synthesis families",
   expect(state.currentBgmId).toBe("bgm.battle.high");
   expect(state.activeBgmVoices).toBeGreaterThan(0);
   expect(state.lastError).toBeNull();
-  expect(state.missingAssetCounts).toEqual({ bgm: 6, sfx: 34 });
+  expect(state.missingAssetCounts).toEqual({ bgm: 6, sfx: 45 });
   expect(failedResponses).toEqual([]);
   expect(runtimeErrors).toEqual([]);
 

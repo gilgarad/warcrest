@@ -88,6 +88,7 @@ import {
 import {
   UNIT_STATS,
   getProjectileKeyForUnit,
+  getUnitWeaponAudioFamily,
 } from "../systems/lane-units/unitStats";
 import { createTowerAttackPattern } from "../systems/lane-combat/towerAttack";
 import {
@@ -176,6 +177,7 @@ const QUERY_PARAMS = new URLSearchParams(window.location.search);
 const FACING_DEAD_ZONE_WORLD_PX = 1.5;
 const HORIZONTAL_FACING_FLIP_DEAD_ZONE_WORLD_PX = 22;
 const COMBAT_FACING_HOLD_SEC = 0.2;
+const ATTACK_SHOUT_MIN_INTERVAL_SEC = 1.4;
 
 
 interface LaneUnit {
@@ -359,6 +361,7 @@ export class LaneBattleScene extends Phaser.Scene {
   private readonly engagedUnitIds = new Set<number>();
   private unitOverlayDensityEnabled = true;
   private unitOverlayModes = new Map<number, UnitOverlayMode>();
+  private lastAttackShoutAtSec = new Map<number, number>();
   private readonly audio = getAudioSystem();
   private readonly audioWiring = new LaneBattleAudioWiring(this.audio);
   private hud!: LaneBattleHudView;
@@ -1423,6 +1426,68 @@ export class LaneBattleScene extends Phaser.Scene {
     );
   }
 
+  private getCombatAttackSfxId(unit: LaneUnit): string {
+    switch (getUnitWeaponAudioFamily(unit.unitId)) {
+      case "slash":
+        return "sfx.combat.slashAttack";
+      case "blunt":
+        return "sfx.combat.bluntAttack";
+      case "bow":
+        return "sfx.combat.bowFire";
+      case "thrown":
+        return "sfx.combat.thrownFire";
+      case "shot":
+        return "sfx.combat.shotFire";
+      case "support":
+        return "sfx.support.heal";
+    }
+  }
+
+  private getCombatImpactSfxId(unit: LaneUnit): string {
+    switch (getUnitWeaponAudioFamily(unit.unitId)) {
+      case "slash":
+        return "sfx.combat.slashHit";
+      case "blunt":
+        return "sfx.combat.bluntHit";
+      case "bow":
+        return "sfx.combat.bowHit";
+      case "thrown":
+        return "sfx.combat.thrownHit";
+      case "shot":
+        return "sfx.combat.shotHit";
+      case "support":
+        return "sfx.support.heal";
+    }
+  }
+
+  private getAttackShoutChance(unit: LaneUnit): number {
+    switch (getUnitWeaponAudioFamily(unit.unitId)) {
+      case "slash":
+        return 0.28;
+      case "blunt":
+        return 0.24;
+      case "bow":
+        return 0.14;
+      case "thrown":
+        return 0.18;
+      case "shot":
+        return 0.12;
+      case "support":
+        return 0;
+    }
+  }
+
+  private maybePlayAttackShout(unit: LaneUnit, eventKey: string): void {
+    if (unit.role !== "battle") return;
+    const shoutChance = this.getAttackShoutChance(unit);
+    if (shoutChance <= 0) return;
+    const lastAtSec = this.lastAttackShoutAtSec.get(unit.id) ?? -Infinity;
+    if (this.elapsedSec - lastAtSec < ATTACK_SHOUT_MIN_INTERVAL_SEC) return;
+    if (Phaser.Math.FloatBetween(0, 1) > shoutChance) return;
+    this.lastAttackShoutAtSec.set(unit.id, this.elapsedSec);
+    this.playWorldSfx("sfx.combat.attackShout", unit.sprite.x, unit.sprite.y, eventKey);
+  }
+
   private updateAudioDebugOverlay(): void {
     this.hud.setAudioDebugLines(this.audioWiring.getDebugLines());
   }
@@ -1487,8 +1552,12 @@ export class LaneBattleScene extends Phaser.Scene {
         this.holdUnitCombatFacing(unit, enemyTower.sprite.x, enemyTower.sprite.y);
         if (unit.attackTimerSec <= 0) {
           unit.attackTimerSec = unit.attackCooldownSec;
+          this.maybePlayAttackShout(
+            unit,
+            `shout:attack:${unit.id}:tower:${enemyTower.id}:${Math.round(this.elapsedSec * 1000)}`,
+          );
           this.playWorldSfx(
-            this.isRangedUnit(unit) ? "sfx.combat.rangedFire" : "sfx.combat.meleeAttack",
+            this.getCombatAttackSfxId(unit),
             unit.sprite.x,
             unit.sprite.y,
             `attack:${unit.id}:tower:${enemyTower.id}:${Math.round(this.elapsedSec * 1000)}`,
@@ -1522,8 +1591,12 @@ export class LaneBattleScene extends Phaser.Scene {
       this.holdUnitCombatFacing(unit, nearest.sprite.x, nearest.sprite.y);
       if (unit.attackTimerSec <= 0) {
         unit.attackTimerSec = unit.attackCooldownSec;
+        this.maybePlayAttackShout(
+          unit,
+          `shout:attack:${unit.id}:unit:${nearest.id}:${Math.round(this.elapsedSec * 1000)}`,
+        );
         this.playWorldSfx(
-          this.isRangedUnit(unit) ? "sfx.combat.rangedFire" : "sfx.combat.meleeAttack",
+          this.getCombatAttackSfxId(unit),
           unit.sprite.x,
           unit.sprite.y,
           `attack:${unit.id}:unit:${nearest.id}:${Math.round(this.elapsedSec * 1000)}`,
@@ -1535,14 +1608,26 @@ export class LaneBattleScene extends Phaser.Scene {
           const end = this.getUnitProjectileAnchor(nearest);
           this.startRangedAttack(unit, nearest.sprite.x, nearest.sprite.y, "unit", () => {
             if (!this.units.includes(nearest)) return;
-            this.launchProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToUnit(nearest, damage, unit.team === "player" ? "#ffd67a" : "#ff8f8f"), 1.04);
+            this.launchProjectile(
+              start,
+              end,
+              getProjectileKeyForUnit(unit.unitId),
+              () => this.applyDamageToUnit(
+                nearest,
+                damage,
+                unit.team === "player" ? "#ffd67a" : "#ff8f8f",
+                undefined,
+                this.getCombatImpactSfxId(unit),
+              ),
+              1.04,
+            );
           });
         } else {
           this.startMeleeAttack(unit, nearest.sprite.x, nearest.sprite.y, "unit", () => {
             if (!this.units.includes(nearest)) return;
             nearest.hp -= damage;
             this.playWorldSfx(
-              "sfx.combat.meleeHit",
+              this.getCombatImpactSfxId(unit),
               nearest.sprite.x,
               nearest.sprite.y,
               `impact:melee:${unit.id}:${nearest.id}:${Math.round(this.elapsedSec * 1000)}`,
@@ -2550,11 +2635,17 @@ export class LaneBattleScene extends Phaser.Scene {
     });
   }
 
-  private applyDamageToUnit(target: LaneUnit, damage: number, color: string, label?: string): void {
+  private applyDamageToUnit(
+    target: LaneUnit,
+    damage: number,
+    color: string,
+    label?: string,
+    impactSfxId = "sfx.combat.projectileHit",
+  ): void {
     if (!this.units.includes(target)) return;
     target.hp -= damage;
     this.playWorldSfx(
-      "sfx.combat.projectileHit",
+      impactSfxId,
       target.sprite.x,
       target.sprite.y,
       `impact:projectile:${target.id}:${Math.round(this.elapsedSec * 1000)}`,
@@ -2623,6 +2714,16 @@ export class LaneBattleScene extends Phaser.Scene {
     const targetProgress = targetTeam.id === "player" ? 0 : 1;
     const target = this.getBaseAnchor(targetTeam.id, unit.laneId, targetProgress);
     const damage = Math.max(1, Math.round(5.8 * unit.attackCooldownSec * (1 - unit.attrition)));
+    this.maybePlayAttackShout(
+      unit,
+      `shout:attack:${unit.id}:base:${targetTeam.id}:${Math.round(this.elapsedSec * 1000)}`,
+    );
+    this.playWorldSfx(
+      this.getCombatAttackSfxId(unit),
+      unit.sprite.x,
+      unit.sprite.y,
+      `attack:${unit.id}:base:${targetTeam.id}:${Math.round(this.elapsedSec * 1000)}`,
+    );
     const applyDamage = () => {
       targetTeam.baseHp = Math.max(0, targetTeam.baseHp - damage);
       this.playWorldSfx(
@@ -2647,6 +2748,7 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private killUnit(unit: LaneUnit): void {
     if (!this.units.includes(unit)) return;
+    this.lastAttackShoutAtSec.delete(unit.id);
     this.playWorldSfx(
       "sfx.combat.unitDeath",
       unit.sprite.x,

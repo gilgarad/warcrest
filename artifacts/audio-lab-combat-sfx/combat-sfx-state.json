@@ -1,0 +1,12 @@
+{
+  "unlocked": true,
+  "currentBgmId": null,
+  "bgmState": null,
+  "activeBgmVoices": 0,
+  "activeSfxVoices": 1,
+  "lastError": null,
+  "missingAssetCounts": {
+    "bgm": 6,
+    "sfx": 45
+  }
+}
