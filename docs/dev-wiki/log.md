@@ -3662,3 +3662,19 @@ Use consistent headings so entries are easy to grep.
   `docs/dev-wiki/session-tracks.md` 음악 트랙 현재 상태 갱신.
 - 검증은 빌드/유닛/오디오 Playwright만 좁게 실행했다. 결과는 이 세션
   최종 보고 기준이다.
+
+## [2026-07-30] fix | 오디오 트랙: 선택음과 고용 성공음을 다시 분리
+
+- 사용자 피드백: 지난 오디오 트랙 변경 후 거점 선택과 일꾼 고용 성공이
+  모두 같은 `sfx.ui.acknowledge`로 들려 "다양성이 줄었다", "하나의 음으로
+  모두 쓰면 안 된다"는 명확한 수정 요청이 들어왔다.
+- `src/scenes/LaneBattleScene.ts`의 5개 호출부를 최소 수정으로 정정했다.
+  - 거점 선택 / 타워 선택: `sfx.ui.buildSelect`
+  - 일꾼 고용 / 연구 일꾼 직접 고용 / 연구 일꾼 전환 성공:
+    `sfx.ui.hireSuccess`
+- 새로 만든 `sfx.ui.acknowledge` 자산 자체는 유지하되, 이 장면의 선택/고용
+  성공 공용음으로는 더 이상 쓰지 않는다. 기존의 짧은 선택음과 더 또렷한
+  성공음 구분을 복원하는 것이 목적이다.
+- 검증은 Audio Lab에서 `buildSelect`와 `hireSuccess`를 직접 재생하고,
+  이어서 `npm run build`, `npm test`, 관련 오디오 Playwright만 좁혀
+  실행했다. 결과 상세는 최종 보고 기준이다.

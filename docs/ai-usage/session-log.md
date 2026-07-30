@@ -3623,3 +3623,22 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
     `tools/validation/audio-integration.spec.ts` 기대값을 조정했고,
     `wc2-systems-gap-review.md` section 4와 `session-tracks.md` 현재 상태를
     완료 기준으로 갱신했다.
+
+## 2026-07-30 (155) — 오디오 트랙: 선택음/고용 성공음 재분리
+
+- **사용 도구**: Codex (GPT-5), `git log`, `git status`, Audio Lab,
+  `npm run build`, `npm test`, Playwright
+- **사용자 지시 원문(핵심)**:
+  - "사용자가 직접 들어보고 '하나의 음으로 모두 쓰면 안 된다'고 명확히 피드백했다 — 최소 2개 이상의 서로 다른 소리로 다시 나눠라."
+  - "선택(select) 계열 ... 새로 만든 `sfx.ui.acknowledge`를 이 용도로 남겨둬도 되고, 원래 `sfx.ui.buildSelect`로 되돌려도 된다"
+  - "고용 성공(hire success) 계열 ... 원래 있던 `sfx.ui.hireSuccess`(chime 계열)를 그대로 되살리는 게 제일 안전하다."
+- **AI 산출물 요약**:
+  - 현재 HEAD `5b9d510`과 깨끗한 작업트리를 확인한 뒤, 지난 세션이
+    `LaneBattleScene.ts`의 선택/고용 성공 5개 호출부를 모두
+    `sfx.ui.acknowledge`로 통일한 상태를 재확인했다.
+  - 수정은 자산 추가 없이 배선만 되돌렸다. 선택 계열은
+    `sfx.ui.buildSelect`, 고용 성공 계열은 `sfx.ui.hireSuccess`로 다시
+    분리해 원래의 역할 차이를 복원했다.
+  - 이유도 함께 문서화했다. 사용자가 직접 들어보고 "다양성이 줄었다"고
+    판단한 점, 그래서 최소 2개의 역할별 음색 구분이 필요하다는 점을
+    `docs/dev-wiki/log.md`와 이 AI 사용 로그에 남겼다.

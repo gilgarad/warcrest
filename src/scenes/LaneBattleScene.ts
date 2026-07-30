@@ -1992,7 +1992,7 @@ export class LaneBattleScene extends Phaser.Scene {
   private selectCapturePoint(id: number): void {
     this.selectedCapturePointId = id;
     this.selectedDefenseTowerId = null;
-    this.audio.playSfx("sfx.ui.acknowledge", { eventKey: `capture:select:${id}` });
+    this.audio.playSfx("sfx.ui.buildSelect", { eventKey: `capture:select:${id}` });
     this.refreshCapturePointVisuals();
     this.refreshUi();
   }
@@ -2000,7 +2000,7 @@ export class LaneBattleScene extends Phaser.Scene {
   private selectDefenseTower(id: number): void {
     this.selectedDefenseTowerId = id;
     this.selectedCapturePointId = null;
-    this.audio.playSfx("sfx.ui.acknowledge", { eventKey: `tower:select:${id}` });
+    this.audio.playSfx("sfx.ui.buildSelect", { eventKey: `tower:select:${id}` });
     this.refreshCapturePointVisuals();
     this.refreshDefenseTowerVisuals();
     this.refreshUi();
@@ -3070,7 +3070,7 @@ export class LaneBattleScene extends Phaser.Scene {
     payCost(this.player.resources, BASE_WORKER_COST);
     this.player.workers.idle += 1;
     this.hud.setInfo("일꾼 1명을 고용했습니다");
-    this.audio.playSfx("sfx.ui.acknowledge", { eventKey: `hire:worker:${this.player.workers.idle}` });
+    this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:worker:${this.player.workers.idle}` });
   }
 
   private hireResearchWorker(): void {
@@ -3078,7 +3078,7 @@ export class LaneBattleScene extends Phaser.Scene {
       payCost(this.player.resources, RESEARCH_WORKER_DIRECT_COST);
       this.player.workers.research += 1;
       this.hud.setInfo("연구 일꾼을 직접 고용했습니다");
-      this.audio.playSfx("sfx.ui.acknowledge", { eventKey: `hire:research:direct:${this.player.workers.research}` });
+      this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:research:direct:${this.player.workers.research}` });
       return;
     }
 
@@ -3088,7 +3088,7 @@ export class LaneBattleScene extends Phaser.Scene {
       RESEARCH_WORKER_CONVERSION.resultCount,
     )) {
       this.hud.setInfo("일반 일꾼 10명을 연구 일꾼으로 전환했습니다");
-      this.audio.playSfx("sfx.ui.acknowledge", { eventKey: `hire:research:convert:${this.player.workers.research}` });
+      this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:research:convert:${this.player.workers.research}` });
       return;
     }
 
