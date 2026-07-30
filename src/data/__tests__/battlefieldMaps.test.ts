@@ -83,7 +83,8 @@ describe("battlefield map specs", () => {
 
   it("exposes the Day 2 player-front candidate as a switchable map spec", () => {
     expect(getBattlefieldMapSpec(DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC.id)).toBe(DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC);
-    expect(DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC.lanePath).toHaveLength(DAY2_PLAYER_FRONT_LANE_PATH_NODES.length);
+    expect(DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC.lanes).toHaveLength(1);
+    expect(DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC.lanes[0]?.path).toHaveLength(DAY2_PLAYER_FRONT_LANE_PATH_NODES.length);
     expect(DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC.terrainPatches).toHaveLength(DAY2_PLAYER_FRONT_LANE_PATH_NODES.length - 1);
     expect(DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC.terrainProps).toHaveLength(8);
     expect(DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC.structureSockets.map((socket) => socket.progress)).toEqual([0.17, 0.37, 0.64, 0.84]);
@@ -99,7 +100,8 @@ describe("battlefield map specs", () => {
 
   it("exposes the Day 3 full-map candidate with authored width changes and denser landmarks", () => {
     expect(getBattlefieldMapSpec(DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC.id)).toBe(DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC);
-    expect(DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC.lanePath).toHaveLength(DAY3_THREE_FRONTS_LANE_PATH_NODES.length);
+    expect(DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC.lanes).toHaveLength(1);
+    expect(DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC.lanes[0]?.path).toHaveLength(DAY3_THREE_FRONTS_LANE_PATH_NODES.length);
     expect(DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC.terrainPatches).toHaveLength(DAY3_THREE_FRONTS_LANE_PATH_NODES.length - 1);
     expect(DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC.structureSockets.map((socket) => socket.progress)).toEqual([0.17, 0.37, 0.64, 0.84]);
     DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC.structureSockets.forEach((socket, index, all) => {

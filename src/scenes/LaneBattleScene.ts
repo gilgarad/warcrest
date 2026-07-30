@@ -18,6 +18,7 @@ import {
 import {
   CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC,
   getBattlefieldMapSpec,
+  getPrimaryLaneSpec,
   getCapturePointSocketId,
   getDefenseTowerSocketId,
   getStructureSocket,
@@ -36,13 +37,13 @@ import {
   type TerrainRenderMode,
 } from "../config/prototypeVisualConfig";
 import {
-  CAPTURE_POINT_DEFINITIONS,
+  getCapturePointDefinitions,
   getCapturePointActions,
   type CapturePointAction,
   type CapturePointDefinition,
 } from "../data/capturePointDefinitions";
 import {
-  DEFENSE_TOWER_DEFINITIONS,
+  getDefenseTowerDefinitions,
   type DefenseTowerAction,
   type DefenseTowerDefinition,
 } from "../data/defenseTowerDefinitions";
@@ -185,6 +186,7 @@ interface LaneUnit {
   team: TeamId;
   role: "battle" | "support";
   unitId: BattleUnitId | SupportUnitId;
+  laneId: string;
   progress: number;
   laneRow: number;
   visualProgress: number;
@@ -255,6 +257,7 @@ interface LanePathNode {
 interface CapturePointState {
   id: number;
   definition: CapturePointDefinition;
+  laneId: string;
   progress: number;
   owner: TeamId | "neutral";
   control: number;
@@ -273,6 +276,7 @@ interface CapturePointState {
 interface DefenseTowerState {
   id: number;
   definition: DefenseTowerDefinition;
+  laneId: string;
   progress: number;
   owner: TeamId;
   attackTimerSec: number;
@@ -327,10 +331,12 @@ export class LaneBattleScene extends Phaser.Scene {
   private readonly visualValidationScenario = QUERY_PARAMS.get("scenario") === "visual-validation";
   private readonly terrainDebugInputEnabled = isTerrainDebugInputEnabled(QUERY_PARAMS.get("terrainDebug"));
   private readonly mapSpec = getBattlefieldMapSpec(QUERY_PARAMS.get("map"));
-  private readonly lanePath: LanePathNode[] = this.mapSpec.lanePath.map((node) => ({
+  private readonly primaryLaneSpec = getPrimaryLaneSpec(this.mapSpec);
+  private readonly lanePaths = new Map(this.mapSpec.lanes.map((lane) => [lane.id, lane.path.map((node) => ({
     progress: node.progress,
     position: new Phaser.Math.Vector2(node.position.x, node.position.y),
-  }));
+  }))]));
+  private readonly lanePath: LanePathNode[] = this.lanePaths.get(this.primaryLaneSpec.id) ?? [];
   private readonly laneStart = this.lanePath[0].position.clone();
   private readonly laneEnd = this.lanePath[this.lanePath.length - 1].position.clone();
   private isDraggingField = false;
@@ -615,6 +621,10 @@ export class LaneBattleScene extends Phaser.Scene {
         const focus = this.progressToScreen(Phaser.Math.Clamp(progress, 0, 1), 0);
         this.cameras.main.centerOn(focus.x, focus.y);
       },
+      focusLaneProgress: (laneId: string, progress: number) => {
+        const focus = this.progressToScreen(Phaser.Math.Clamp(progress, 0, 1), 0, laneId);
+        this.cameras.main.centerOn(focus.x, focus.y);
+      },
       setPaused: (paused: boolean) => {
         if (paused) {
           this.scene.pause();
@@ -682,7 +692,7 @@ export class LaneBattleScene extends Phaser.Scene {
         tower.built = false;
         tower.hp = 0;
         tower.buildRemainingSec = DEFENSE_TOWER_BUILD_DURATION_SEC;
-        const focus = this.progressToScreen(tower.progress, 0);
+        const focus = this.progressToScreen(tower.progress, 0, tower.laneId);
         this.cameras.main.centerOn(focus.x, focus.y);
         this.refreshDefenseTowerVisuals();
         this.publishDebug();
@@ -698,7 +708,7 @@ export class LaneBattleScene extends Phaser.Scene {
           : state === "damaged"
             ? tower.maxHp * 0.5
             : state === "critical" ? tower.maxHp * 0.2 : 0;
-        const focus = this.progressToScreen(tower.progress, 0);
+        const focus = this.progressToScreen(tower.progress, 0, tower.laneId);
         this.cameras.main.centerOn(focus.x, focus.y);
         this.refreshDefenseTowerVisuals();
         this.publishDebug();
@@ -709,7 +719,7 @@ export class LaneBattleScene extends Phaser.Scene {
         if (!point) return;
         point.owner = owner;
         point.control = owner === "player" ? 1 : owner === "enemy" ? -1 : 0;
-        const focus = this.progressToScreen(point.progress, 0);
+        const focus = this.progressToScreen(point.progress, 0, point.laneId);
         this.cameras.main.centerOn(focus.x, focus.y);
         this.refreshCapturePointVisuals();
         this.publishDebug();
@@ -727,7 +737,7 @@ export class LaneBattleScene extends Phaser.Scene {
         point.control = 1;
         point.buildingId = undefined;
         point.buildingLevel = 0;
-        const focus = this.progressToScreen(point.progress, 0);
+        const focus = this.progressToScreen(point.progress, 0, point.laneId);
         this.cameras.main.centerOn(focus.x, focus.y);
         this.selectCapturePoint(point.id);
         this.publishDebug();
@@ -801,10 +811,10 @@ export class LaneBattleScene extends Phaser.Scene {
         tower.built = true;
         tower.hp = tower.maxHp;
         tower.attackTimerSec = 0;
-        this.spawnLaneUnit("enemy", "battle", "stone_axeman", tower.progress + 0.065, 0);
+        this.spawnLaneUnit("enemy", "battle", "stone_axeman", tower.progress + 0.065, 0, tower.laneId);
         this.tickWatchtower(tower, 0);
         this.activeProjectiles.forEach((projectile) => setLaneProjectileProgress(projectile, 0.45));
-        const focus = this.progressToScreen(tower.progress, 0);
+        const focus = this.progressToScreen(tower.progress, 0, tower.laneId);
         this.cameras.main.centerOn(focus.x, focus.y);
         this.publishDebug();
         this.scene.pause();
@@ -840,10 +850,10 @@ export class LaneBattleScene extends Phaser.Scene {
         point.buildRemainingSec = 0;
         point.hp = point.maxHp;
         const offset = unitId === "stone_axeman" ? 0.012 : 0.046;
-        this.spawnLaneUnit("player", "battle", unitId, point.progress - offset, 0);
+        this.spawnLaneUnit("player", "battle", unitId, point.progress - offset, 0, point.laneId);
         const unit = this.units[0];
         unit.attackTimerSec = 0;
-        const focus = this.progressToScreen(point.progress - 0.018, 0);
+        const focus = this.progressToScreen(point.progress - 0.018, 0, point.laneId);
         this.cameras.main.centerOn(focus.x, focus.y);
         this.refreshCapturePointVisuals();
         this.publishDebug();
@@ -984,7 +994,7 @@ export class LaneBattleScene extends Phaser.Scene {
         unit.laneRow = 0;
         unit.visualLaneRow = 0;
         unit.facingX = direction === 1 ? -1 : 1;
-        const start = this.progressToScreen(unit.visualProgress, unit.visualLaneRow);
+        const start = this.progressToScreen(unit.visualProgress, unit.visualLaneRow, unit.laneId);
         unit.lastPresentationX = start.x;
         unit.lastPresentationY = start.y;
         const focus = this.progressToScreen(0.5, 0);
@@ -1173,13 +1183,17 @@ export class LaneBattleScene extends Phaser.Scene {
       this.legacyObstacleObjects.push(object);
     });
 
-    this.capturePoints = CAPTURE_POINT_DEFINITIONS.map((definition) => {
+    const captureDefinitions = getCapturePointDefinitions(this.mapSpec);
+    const captureSockets = this.mapSpec.structureSockets.filter((socket) => socket.kind === "capture-point");
+    this.capturePoints = captureDefinitions.map((definition, socketIndex) => {
       const { id: index } = definition;
-      const progress = getStructureSocket(
+      const socket = captureSockets[socketIndex] ?? getStructureSocket(
         this.mapSpec,
         getCapturePointSocketId(index),
-      )?.progress ?? definition.progress;
-      const pos = this.progressToScreen(progress, 0);
+      );
+      const progress = socket?.progress ?? definition.progress;
+      const laneId = socket?.laneRef.laneId ?? this.primaryLaneSpec.id;
+      const pos = this.progressToScreen(progress, 0, laneId);
       const ring = this.add.circle(pos.x, pos.y, 34, 0xf3cc6a, 0.2)
         .setDepth(this.getGroundDepth(pos.y, -6))
         .setStrokeStyle(4, 0xf8e2a5, 0.55);
@@ -1218,6 +1232,7 @@ export class LaneBattleScene extends Phaser.Scene {
       return {
         id: index,
         definition,
+        laneId,
         progress,
         owner: "neutral",
         control: 0,
@@ -1234,12 +1249,16 @@ export class LaneBattleScene extends Phaser.Scene {
       };
     });
 
-    this.defenseTowers = DEFENSE_TOWER_DEFINITIONS.map((definition) => {
-      const progress = getStructureSocket(
+    const towerDefinitions = getDefenseTowerDefinitions(this.mapSpec);
+    const towerSockets = this.mapSpec.structureSockets.filter((socket) => socket.kind === "defense-tower");
+    this.defenseTowers = towerDefinitions.map((definition, socketIndex) => {
+      const socket = towerSockets[socketIndex] ?? getStructureSocket(
         this.mapSpec,
         getDefenseTowerSocketId(definition.id),
-      )?.progress ?? definition.progress;
-      const pos = this.progressToScreen(progress, 0);
+      );
+      const progress = socket?.progress ?? definition.progress;
+      const laneId = socket?.laneRef.laneId ?? this.primaryLaneSpec.id;
+      const pos = this.progressToScreen(progress, 0, laneId);
       const sprite = this.add.image(pos.x, pos.y, getDefenseTowerTexture("full", definition.owner))
         .setDisplaySize(TOWER_W, TOWER_H)
         .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
@@ -1269,6 +1288,7 @@ export class LaneBattleScene extends Phaser.Scene {
       return {
         id: definition.id,
         definition,
+        laneId,
         progress,
         owner: definition.owner,
         attackTimerSec: 0,
@@ -1289,8 +1309,10 @@ export class LaneBattleScene extends Phaser.Scene {
       };
     });
 
-    const playerBase = this.progressToScreen(0, 0);
-    const enemyBase = this.progressToScreen(1, 0);
+    const laneStarts = this.mapSpec.lanes.map((lane) => this.progressToScreen(0, 0, lane.id));
+    const laneEnds = this.mapSpec.lanes.map((lane) => this.progressToScreen(1, 0, lane.id));
+    const playerBase = laneStarts.reduce((sum, point) => sum.add(point), new Phaser.Math.Vector2(0, 0)).scale(1 / laneStarts.length);
+    const enemyBase = laneEnds.reduce((sum, point) => sum.add(point), new Phaser.Math.Vector2(0, 0)).scale(1 / laneEnds.length);
     const baseVisibleWorldHeight = this.cssPxToWorld(220);
     const baseDisplaySize = baseVisibleWorldHeight / MAIN_BASE_VISIBLE_HEIGHT_RATIO;
     this.add.ellipse(playerBase.x + 8, playerBase.y + 3, 250, 82, 0x111918, 0.34)
@@ -1538,7 +1560,11 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private tickSupport(unit: LaneUnit, deltaSec: number): void {
-    const allies = this.units.filter((other) => other.team === unit.team && other.role === "battle");
+    const allies = this.units.filter((other) =>
+      other.team === unit.team
+      && other.role === "battle"
+      && other.laneId === unit.laneId,
+    );
     const injured = allies
       .filter((ally) => ally.hp < ally.maxHp && this.unitDistance(unit, ally) <= unit.range * RANGE_TO_PROGRESS)
       .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
@@ -1688,7 +1714,12 @@ export class LaneBattleScene extends Phaser.Scene {
     if (enemyAhead && this.unitDistance(unit, enemyAhead) <= ENGAGE_GAP + unit.range * RANGE_TO_PROGRESS * 0.3 && !this.isMeleeUnit(unit)) return;
 
     const friendAhead = this.units
-      .filter((other) => other.id !== unit.id && other.team === unit.team && Math.abs(other.laneRow - unit.laneRow) < 0.5)
+      .filter((other) =>
+        other.id !== unit.id
+        && other.team === unit.team
+        && other.laneId === unit.laneId
+        && Math.abs(other.laneRow - unit.laneRow) < 0.5,
+      )
       .filter((other) => (unit.team === "player" ? other.progress > unit.progress : other.progress < unit.progress))
       .sort((a, b) => progressBetween(a.progress, unit.progress) - progressBetween(b.progress, unit.progress))[0];
 
@@ -1749,7 +1780,13 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private isLaneRowFree(unit: LaneUnit, laneRow: number): boolean {
-    return !this.units.some((other) => other.id !== unit.id && other.team === unit.team && Math.abs(other.laneRow - laneRow) < COMBAT_ROW_CLEARANCE && progressBetween(other.progress, unit.progress) < FRIENDLY_GAP);
+    return !this.units.some((other) =>
+      other.id !== unit.id
+      && other.team === unit.team
+      && other.laneId === unit.laneId
+      && Math.abs(other.laneRow - laneRow) < COMBAT_ROW_CLEARANCE
+      && progressBetween(other.progress, unit.progress) < FRIENDLY_GAP,
+    );
   }
 
   private isMeleeUnit(unit: LaneUnit): boolean {
@@ -1793,6 +1830,7 @@ export class LaneBattleScene extends Phaser.Scene {
     return !this.units.some((other) =>
       other.id !== unit.id &&
       other.team === unit.team &&
+      other.laneId === unit.laneId &&
       progressBetween(other.progress, slot.progress) < COMBAT_PROGRESS_CLEARANCE &&
       Math.abs(other.laneRow - slot.laneRow) < COMBAT_ROW_CLEARANCE,
     );
@@ -1805,13 +1843,13 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private findNearestEnemy(unit: LaneUnit): LaneUnit | undefined {
     return this.units
-      .filter((other) => other.team !== unit.team)
+      .filter((other) => other.team !== unit.team && other.laneId === unit.laneId)
       .sort((a, b) => this.unitDistance(unit, a) - this.unitDistance(unit, b))[0];
   }
 
   private findNearestEnemyTower(unit: LaneUnit): DefenseTowerState | undefined {
     return this.defenseTowers
-      .filter((tower) => tower.owner !== unit.team && tower.built)
+      .filter((tower) => tower.owner !== unit.team && tower.built && tower.laneId === unit.laneId)
       .sort((a, b) => this.towerDistance(unit, a) - this.towerDistance(unit, b))[0];
   }
 
@@ -1841,8 +1879,8 @@ export class LaneBattleScene extends Phaser.Scene {
   private tickCapturePoints(deltaSec: number): void {
     this.capturePoints.forEach((point) => {
       const prevOwner = point.owner;
-      const nearbyPlayer = this.units.filter((unit) => unit.team === "player" && progressBetween(unit.progress, point.progress) <= CAPTURE_RADIUS_PROGRESS).length;
-      const nearbyEnemy = this.units.filter((unit) => unit.team === "enemy" && progressBetween(unit.progress, point.progress) <= CAPTURE_RADIUS_PROGRESS).length;
+      const nearbyPlayer = this.units.filter((unit) => unit.team === "player" && unit.laneId === point.laneId && progressBetween(unit.progress, point.progress) <= CAPTURE_RADIUS_PROGRESS).length;
+      const nearbyEnemy = this.units.filter((unit) => unit.team === "enemy" && unit.laneId === point.laneId && progressBetween(unit.progress, point.progress) <= CAPTURE_RADIUS_PROGRESS).length;
       const pressure = Phaser.Math.Clamp((nearbyPlayer - nearbyEnemy) * CAPTURE_RATE_PER_SEC * deltaSec, -0.8, 0.8);
 
       if (pressure !== 0) point.control = Phaser.Math.Clamp(point.control + pressure, -1, 1);
@@ -1894,7 +1932,7 @@ export class LaneBattleScene extends Phaser.Scene {
     if (tower.attackTimerSec > 0) return;
     const spec = createTowerAttackPattern(tower.owner === "player" ? this.player.ageId : this.enemy.ageId);
     const target = this.units
-      .filter((unit) => unit.team !== tower.owner && progressBetween(unit.progress, tower.progress) <= spec.rangeProgress)
+      .filter((unit) => unit.team !== tower.owner && unit.laneId === tower.laneId && progressBetween(unit.progress, tower.progress) <= spec.rangeProgress)
       .sort((a, b) => a.hp - b.hp)[0];
     if (!target) return;
     tower.attackTimerSec = spec.cooldownSec;
@@ -2160,7 +2198,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.capturePoints.forEach((point) => {
       const selected = this.selectedCapturePointId === point.id;
       const ownerColor = point.owner === "player" ? 0x61c3ff : point.owner === "enemy" ? 0xff7f7f : 0xf3cc6a;
-      const rawPos = this.progressToScreen(point.progress, 0);
+      const rawPos = this.progressToScreen(point.progress, 0, point.laneId);
       const pos = this.isPrototypeV2()
         ? this.snapWorldPointToCanvasPixel(rawPos.x, rawPos.y)
         : rawPos;
@@ -2237,7 +2275,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.defenseTowers.forEach((tower) => {
       const selected = this.selectedDefenseTowerId === tower.id;
       const ownerColor = tower.owner === "player" ? 0x61c3ff : 0xff7f7f;
-      const rawPos = this.progressToScreen(tower.progress, 0);
+      const rawPos = this.progressToScreen(tower.progress, 0, tower.laneId);
       const pos = this.isPrototypeV2() ? this.snapWorldPointToCanvasPixel(rawPos.x, rawPos.y) : rawPos;
       const selectedScale = this.isPrototypeV2() ? 1 : selected ? 1.04 : 1;
       const visualState = this.getDefenseTowerVisualState(tower);
@@ -2420,7 +2458,7 @@ export class LaneBattleScene extends Phaser.Scene {
     if (unit.attackTimerSec > 0) return;
     unit.attackTimerSec = unit.attackCooldownSec;
     const targetProgress = targetTeam.id === "player" ? 0 : 1;
-    const target = this.progressToScreen(targetProgress, 0);
+    const target = this.getBaseAnchor(targetTeam.id, unit.laneId, targetProgress);
     const damage = Math.max(1, Math.round(5.8 * unit.attackCooldownSec * (1 - unit.attrition)));
     const applyDamage = () => {
       targetTeam.baseHp = Math.max(0, targetTeam.baseHp - damage);
@@ -2529,7 +2567,7 @@ export class LaneBattleScene extends Phaser.Scene {
       ["enemy", "support", "supply_wagon", 0.632, 0],
     ];
     units.forEach(([team, role, unitId, progress, laneRow]) => {
-      this.spawnLaneUnit(team, role, unitId, progress, laneRow);
+      this.spawnLaneUnit(team, role, unitId, progress, laneRow, this.primaryLaneSpec.id);
     });
     this.units.forEach((unit, index) => {
       unit.attackTimerSec = index % 3 === 0 ? 0.05 : 0.28 + (index % 4) * 0.08;
@@ -2553,7 +2591,7 @@ export class LaneBattleScene extends Phaser.Scene {
       unit.attackTimerSec = 10;
       unit.visualProgress = Phaser.Math.Clamp(unit.progress + offsets[index].progress, 0.01, 0.99);
       unit.visualLaneRow = Phaser.Math.Clamp(unit.laneRow + offsets[index].row, -5, 5);
-      const visual = this.progressToScreen(unit.visualProgress, unit.visualLaneRow);
+      const visual = this.progressToScreen(unit.visualProgress, unit.visualLaneRow, unit.laneId);
       unit.lastPresentationX = visual.x;
       unit.lastPresentationY = visual.y;
     });
@@ -2583,25 +2621,50 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private spawnWaveUnits(team: TeamState, roster = getWaveRoster(team.ageId), overrideSpawnProgress?: number): void {
     const battleRows = [-3, 0, 3];
+    const laneIds = this.mapSpec.lanes.map((lane) => lane.id);
     const spawnProgress = overrideSpawnProgress ?? (team.id === "player" ? 0.06 : 0.94);
     let index = 0;
     roster.battleline.forEach((entry) => {
       for (let i = 0; i < entry.count; i++) {
-        this.spawnLaneUnit(team.id, "battle", entry.unitId, spawnProgress, battleRows[index % battleRows.length]);
+        const laneId = laneIds[index % laneIds.length] ?? this.primaryLaneSpec.id;
+        this.spawnLaneUnit(
+          team.id,
+          "battle",
+          entry.unitId,
+          spawnProgress,
+          battleRows[index % battleRows.length],
+          laneId,
+        );
         index += 1;
       }
     });
     roster.support.forEach((entry) => {
       for (let i = 0; i < entry.count; i++) {
-        this.spawnLaneUnit(team.id, "support", entry.unitId, team.id === "player" ? spawnProgress - 0.02 : spawnProgress + 0.02, 0);
+        const laneId = laneIds[index % laneIds.length] ?? this.primaryLaneSpec.id;
+        this.spawnLaneUnit(
+          team.id,
+          "support",
+          entry.unitId,
+          team.id === "player" ? spawnProgress - 0.02 : spawnProgress + 0.02,
+          0,
+          laneId,
+        );
+        index += 1;
       }
     });
   }
 
-  private spawnLaneUnit(team: TeamId, role: "battle" | "support", unitId: BattleUnitId | SupportUnitId, progress: number, laneRow: number): void {
+  private spawnLaneUnit(
+    team: TeamId,
+    role: "battle" | "support",
+    unitId: BattleUnitId | SupportUnitId,
+    progress: number,
+    laneRow: number,
+    laneId = this.primaryLaneSpec.id,
+  ): void {
     const stats = UNIT_STATS[unitId];
     const teamAgeId = team === "player" ? this.player.ageId : this.enemy.ageId;
-    const pos = this.progressToScreen(progress, laneRow);
+    const pos = this.progressToScreen(progress, laneRow, laneId);
     const displaySize = role === "support" ? 86 : 76;
     const initialFacingDirection: UnitFacingDirection = team === "player" ? "ne" : "sw";
     const initialTextureKey = resolveUnitAnimationTexture(unitId, false, 0, 0, initialFacingDirection) ?? stats.textureKey;
@@ -2637,6 +2700,7 @@ export class LaneBattleScene extends Phaser.Scene {
       team,
       role,
       unitId,
+      laneId,
       progress,
       laneRow,
       visualProgress: progress,
@@ -2740,10 +2804,10 @@ export class LaneBattleScene extends Phaser.Scene {
     if (unit.selected || unit.hovered) return true;
     if (policy !== "priority" || unit.role !== "support") return false;
 
-    const unitPos = this.progressToScreen(unit.visualProgress, unit.visualLaneRow);
+    const unitPos = this.progressToScreen(unit.visualProgress, unit.visualLaneRow, unit.laneId);
     return !this.units.some((other) => {
-      if (other.id >= unit.id || other.team !== unit.team || other.role !== "support") return false;
-      const otherPos = this.progressToScreen(other.visualProgress, other.visualLaneRow);
+      if (other.id >= unit.id || other.team !== unit.team || other.role !== "support" || other.laneId !== unit.laneId) return false;
+      const otherPos = this.progressToScreen(other.visualProgress, other.visualLaneRow, other.laneId);
       const screenDistance = Phaser.Math.Distance.Between(unitPos.x, unitPos.y, otherPos.x, otherPos.y)
         * this.cameras.main.zoom;
       return screenDistance < 86;
@@ -2807,7 +2871,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private syncUnitPresentation(unit: LaneUnit): void {
-    const rawPos = this.progressToScreen(unit.visualProgress, unit.visualLaneRow);
+    const rawPos = this.progressToScreen(unit.visualProgress, unit.visualLaneRow, unit.laneId);
     const pos = this.isPrototypeV2()
       ? this.snapWorldPointToCanvasPixel(rawPos.x, rawPos.y)
       : rawPos;
@@ -3121,6 +3185,7 @@ export class LaneBattleScene extends Phaser.Scene {
         team: unit.team,
         unitId: unit.unitId,
         role: unit.role,
+        laneId: unit.laneId,
         progress: unit.progress,
         laneRow: unit.laneRow,
         hp: unit.hp,
@@ -3159,6 +3224,7 @@ export class LaneBattleScene extends Phaser.Scene {
         capturePoints: this.battlefield.capturePoints,
         controlPoints: this.capturePoints.map((point) => ({
           id: point.id,
+          laneId: point.laneId,
           pointType: point.definition.pointType,
           allowedBuildingTypes: point.definition.allowedBuildingTypes,
           owner: point.owner,
@@ -3175,6 +3241,7 @@ export class LaneBattleScene extends Phaser.Scene {
         })),
         defenseTowers: this.defenseTowers.map((tower) => ({
           id: tower.id,
+          laneId: tower.laneId,
           owner: tower.owner,
           linkedCapturePointId: tower.definition.linkedCapturePointId,
           progress: tower.progress,
@@ -3185,6 +3252,12 @@ export class LaneBattleScene extends Phaser.Scene {
         })),
         laneStart: { x: this.laneStart.x, y: this.laneStart.y },
         laneEnd: { x: this.laneEnd.x, y: this.laneEnd.y },
+        lanes: this.mapSpec.lanes.map((lane) => ({
+          id: lane.id,
+          role: lane.role,
+          start: lane.path[0]?.position ?? { x: 0, y: 0 },
+          end: lane.path[lane.path.length - 1]?.position ?? { x: 0, y: 0 },
+        })),
       },
       ui: {
         ageLabel: this.hud.getAgeLabelText(),
@@ -3366,14 +3439,23 @@ export class LaneBattleScene extends Phaser.Scene {
     };
   }
 
-  private progressToScreen(progress: number, laneRow: number): Phaser.Math.Vector2 {
+  private getBaseAnchor(teamId: TeamId, laneId: string, fallbackProgress: number): Phaser.Math.Vector2 {
+    const lanePath = this.lanePaths.get(laneId);
+    if (lanePath?.length) {
+      return this.progressToScreen(teamId === "player" ? 0 : 1, 0, laneId);
+    }
+    return this.progressToScreen(fallbackProgress, 0, this.primaryLaneSpec.id);
+  }
+
+  private progressToScreen(progress: number, laneRow: number, laneId = this.primaryLaneSpec.id): Phaser.Math.Vector2 {
+    const lanePath = this.lanePaths.get(laneId) ?? this.lanePath;
     const clampedProgress = Phaser.Math.Clamp(progress, 0, 1);
     const endIndex = Math.max(
       1,
-      this.lanePath.findIndex((node) => node.progress >= clampedProgress),
+      lanePath.findIndex((node) => node.progress >= clampedProgress),
     );
-    const startNode = this.lanePath[endIndex - 1];
-    const endNode = this.lanePath[endIndex] ?? this.lanePath[this.lanePath.length - 1];
+    const startNode = lanePath[endIndex - 1];
+    const endNode = lanePath[endIndex] ?? lanePath[lanePath.length - 1];
     const segmentSpan = Math.max(0.0001, endNode.progress - startNode.progress);
     const segmentProgress = (clampedProgress - startNode.progress) / segmentSpan;
     const segmentDir = endNode.position.clone().subtract(startNode.position).normalize();

@@ -2462,3 +2462,41 @@ Use consistent headings so entries are easy to grep.
   - `npx playwright test tools/validation/a4-facing-stability.spec.ts tools/validation/a-bugfix-review.spec.ts --workers=1` 통과
   - `artifacts/a4-facing-stability/facing-timeline.json`에서 지속 교전 1.8초 동안
     steady window 방향이 `ne` 하나로 유지됨을 확인했다.
+
+## [2026-07-30] feat | B2 두 레인 스키마/후보 맵 구현
+
+- 같은 연속 작업의 다음 단계. GitHub Issue 없음, 최소 기록 예외로 이 항목과
+  `docs/ai-usage/session-log.md`를 사용했다.
+- `BattlefieldMapSpec`을 실제 다중 레인 런타임 데이터로 확장했다.
+  `battlefieldMaps.ts`에 `lanes[]`, `laneRef`, 레인별 `terrainPatches`,
+  `terrainProps`, `structureSockets`를 추가했고, 새 후보 맵
+  `warcrest-two-lane-v1`을 북/남 2레인 구조로 authored data로 정의했다.
+- `capturePointDefinitions.ts` / `defenseTowerDefinitions.ts`는 더 이상
+  단일 레인 상수 배열만 보지 않고, 활성 `mapSpec`의 capture/tower socket에서
+  런타임 정의를 구성하도록 바꿨다.
+- `LaneBattleScene.ts`는 다중 레인 인지형으로 정리했다.
+  - 유닛 상태에 `laneId`를 추가하고, 웨이브 스폰을 활성 레인들에
+    round-robin 배분하도록 변경.
+  - `progressToScreen()`이 `laneId`별 path를 사용하도록 바꾸고,
+    capture/tower 렌더 좌표, 유닛 시각 위치, 본진 타격 좌표도 같은 규칙을
+    따르게 했다.
+  - 적 탐색/타워 탐색/보급/근접 슬롯 충돌/전선 압박/오버레이 요약 계산이
+    모두 same-lane만 보도록 좁혔다.
+  - 디버그 스냅샷과 terrain control에 `laneId` 기반 정보와
+    `focusLaneProgress()`를 추가해 검증 비용을 낮췄다.
+- 회귀 대응으로 `src/data/__tests__/battlefieldMaps.test.ts`를
+  `lanePath` -> `lanes[0].path` 구조에 맞춰 갱신했다.
+- 새 Playwright 검증 `tools/validation/b2-two-lane-map.spec.ts`를 추가했다.
+  기본 프로덕션 맵이 계속 `warcrest-full-lane-hybrid-v1`인 것을 확인한 뒤,
+  `?map=warcrest-two-lane-v1`에서:
+  - lane 2개 / capture 4개 / tower 4개가 실제 스폰되는지,
+  - player tower는 두 레인 모두 progress `< 0.5`, enemy tower는 `> 0.5`인지,
+  - 플레이어 전투 유닛이 북/남 두 레인 모두에 실제 배분되는지,
+  - 북/남 player-front 및 center-engaged 캡처가 정상 생성되는지
+  검증했다.
+- 검증:
+  - `npm run build` 통과
+  - `npm test` 통과 (29 files / 121 tests)
+  - `npx playwright test tools/validation/b2-two-lane-map.spec.ts --workers=1` 통과
+  - 산출물은 `artifacts/b2-two-lane-map/`와
+    `artifacts/b2-two-lane-map/two-lane-summary.json`에 저장했다.

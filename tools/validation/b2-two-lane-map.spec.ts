@@ -1,0 +1,141 @@
+import { expect, test, type Page } from "@playwright/test";
+import { mkdirSync, writeFileSync } from "node:fs";
+import type { LaneBattleDebugSnapshot } from "../../src/scenes/laneBattleDebugSnapshot";
+
+const ARTIFACT_DIR = "artifacts/b2-two-lane-map";
+const BASE_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&seed=b2-two-lane-map";
+const CANDIDATE_MAP_ID = "warcrest-two-lane-v1";
+
+test.beforeAll(() => {
+  mkdirSync(ARTIFACT_DIR, { recursive: true });
+});
+
+test.setTimeout(120_000);
+
+async function clickLogical(page: Page, x: number, y: number): Promise<void> {
+  const canvas = page.locator("canvas");
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error("Canvas is not visible");
+  await canvas.click({
+    position: { x: x * box.width / 1600, y: y * box.height / 900 },
+    force: true,
+  });
+}
+
+async function openGame(page: Page, mapId: string | null): Promise<void> {
+  const url = mapId ? `${BASE_URL}&map=${mapId}` : BASE_URL;
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto(url);
+  await page.waitForTimeout(1_000);
+  for (let attempt = 0; attempt < 15; attempt += 1) {
+    await clickLogical(page, 800, 805);
+    await page.waitForTimeout(750);
+    const ready = await page.evaluate(() => Boolean(
+      (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+    ));
+    if (ready) return;
+  }
+  throw new Error(`two-lane validation probe did not initialize for ${mapId ?? "baseline"}`);
+}
+
+const snapshot = (page: Page): Promise<LaneBattleDebugSnapshot> => page.evaluate(() => (
+  (window as unknown as { __gameDebug: LaneBattleDebugSnapshot }).__gameDebug
+));
+
+async function focusLane(page: Page, laneId: string, progress: number): Promise<void> {
+  await page.evaluate(({ nextLaneId, nextProgress }) => {
+    (window as unknown as {
+      __terrainPrototypeControl: { focusLaneProgress: (laneId: string, progress: number) => void };
+    }).__terrainPrototypeControl.focusLaneProgress(nextLaneId, nextProgress);
+  }, { nextLaneId: laneId, nextProgress: progress });
+  await page.waitForTimeout(220);
+}
+
+test("keeps the legacy production map as default and exposes a working two-lane candidate", async ({ browser }) => {
+  const baselinePage = await browser.newPage();
+  await openGame(baselinePage, null);
+  const baseline = await snapshot(baselinePage);
+  expect(baseline.verification.terrain.mapSpecId).toBe("warcrest-full-lane-hybrid-v1");
+  await baselinePage.screenshot({ path: `${ARTIFACT_DIR}/baseline-default-map.png` });
+  await baselinePage.close();
+
+  const candidatePage = await browser.newPage();
+  await openGame(candidatePage, CANDIDATE_MAP_ID);
+  const initial = await snapshot(candidatePage);
+
+  expect(initial.verification.terrain.mapSpecId).toBe(CANDIDATE_MAP_ID);
+  expect(initial.battlefield.lanes).toHaveLength(2);
+  expect(initial.battlefield.controlPoints).toHaveLength(4);
+  expect(initial.battlefield.defenseTowers).toHaveLength(4);
+
+  const lanes = initial.battlefield.lanes;
+  const northLane = lanes.find((lane) => lane.id === "north");
+  const southLane = lanes.find((lane) => lane.id === "south");
+  expect(northLane).toBeTruthy();
+  expect(southLane).toBeTruthy();
+
+  const playerTowers = initial.battlefield.defenseTowers.filter((tower) => tower.owner === "player");
+  const enemyTowers = initial.battlefield.defenseTowers.filter((tower) => tower.owner === "enemy");
+  expect(playerTowers).toHaveLength(2);
+  expect(enemyTowers).toHaveLength(2);
+  playerTowers.forEach((tower) => expect(tower.progress).toBeLessThan(0.5));
+  enemyTowers.forEach((tower) => expect(tower.progress).toBeGreaterThan(0.5));
+
+  await expect.poll(async () => {
+    const state = await snapshot(candidatePage);
+    const playerBattleUnits = state.units.filter((unit) => unit.team === "player" && unit.role === "battle");
+    return new Set(playerBattleUnits.map((unit) => unit.laneId)).size;
+  }, {
+    timeout: 12_000,
+  }).toBe(2);
+
+  await focusLane(candidatePage, "north", 0.18);
+  await candidatePage.screenshot({ path: `${ARTIFACT_DIR}/candidate-north-player-front.png` });
+  await focusLane(candidatePage, "south", 0.18);
+  await candidatePage.screenshot({ path: `${ARTIFACT_DIR}/candidate-south-player-front.png` });
+
+  await expect.poll(async () => (await snapshot(candidatePage)).engagement.uniqueAttackers, {
+    timeout: 20_000,
+  }).toBeGreaterThan(0);
+
+  await focusLane(candidatePage, "north", 0.5);
+  await candidatePage.screenshot({ path: `${ARTIFACT_DIR}/candidate-north-center-engaged.png` });
+  await focusLane(candidatePage, "south", 0.5);
+  await candidatePage.screenshot({ path: `${ARTIFACT_DIR}/candidate-south-center-engaged.png` });
+
+  const engaged = await snapshot(candidatePage);
+  const laneUnitCounts = engaged.units.reduce<Record<string, { player: number; enemy: number }>>((acc, unit) => {
+    const lane = acc[unit.laneId] ?? { player: 0, enemy: 0 };
+    lane[unit.team] += 1;
+    acc[unit.laneId] = lane;
+    return acc;
+  }, {});
+
+  writeFileSync(
+    `${ARTIFACT_DIR}/two-lane-summary.json`,
+    JSON.stringify({
+      baselineMap: baseline.verification.terrain.mapSpecId,
+      candidateMap: initial.verification.terrain.mapSpecId,
+      lanes,
+      laneUnitCounts,
+      controlPoints: engaged.battlefield.controlPoints.map((point) => ({
+        id: point.id,
+        laneId: point.laneId,
+        owner: point.owner,
+        progress: point.progress,
+        worldX: point.worldX,
+        worldY: point.worldY,
+      })),
+      defenseTowers: engaged.battlefield.defenseTowers.map((tower) => ({
+        id: tower.id,
+        laneId: tower.laneId,
+        owner: tower.owner,
+        progress: tower.progress,
+        built: tower.built,
+      })),
+      engagement: engaged.engagement,
+    }, null, 2),
+  );
+
+  await candidatePage.close();
+});

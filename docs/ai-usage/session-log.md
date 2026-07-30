@@ -2235,3 +2235,29 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
     중 100ms 간격 방향/모션/락 타이머를 샘플링했고, steady window 방향이 `ne`
     하나로 유지되는 것을 확인했다. 증거는 `artifacts/a4-facing-stability/`에 저장했다.
   - 검증은 `npm run build`, `npm test`, `npx playwright test tools/validation/a4-facing-stability.spec.ts tools/validation/a-bugfix-review.spec.ts --workers=1`.
+
+## 2026-07-30 (152) — B2 두 레인 후보 맵 구현 및 검증
+
+- **사용자 지시 요약**:
+  - A4와 0(build 수정)을 끝낸 뒤 `B2`를 진행. 2레인 스키마와 새 후보 맵을
+    실제로 구현하되, 기존 기본 맵은 유지하고 `?map=`으로만 전환 가능하게 만들 것.
+- **AI 작업 요약**:
+  - `battlefieldMaps.ts`를 다중 레인 스키마(`lanes[]`, `laneRef`)로 확장하고
+    `warcrest-two-lane-v1` 후보 맵을 북/남 2레인 구조로 추가했다.
+  - `capturePointDefinitions.ts` / `defenseTowerDefinitions.ts`는 활성 맵의
+    structure socket에서 런타임 capture/tower 정의를 생성하도록 바꿨다.
+  - `LaneBattleScene.ts`는 유닛 `laneId`, lane-aware `progressToScreen()`,
+    레인별 웨이브 분산 스폰, same-lane 전투/보급/충돌/타워 타겟팅으로 정리했다.
+    디버그 스냅샷에도 `laneId`와 다중 레인 메타데이터를 추가했고, 검증용
+    `focusLaneProgress()` 제어를 노출했다.
+  - `src/data/__tests__/battlefieldMaps.test.ts`를 새 `lanes[0].path` 구조에 맞게
+    갱신했다.
+  - 새 Playwright 스펙 `tools/validation/b2-two-lane-map.spec.ts`를 추가해,
+    기본 맵이 여전히 `warcrest-full-lane-hybrid-v1`인 것과
+    `warcrest-two-lane-v1`에서 북/남 양 레인에 실제 유닛/거점/타워가
+    분리 배치되는 것을 캡처와 JSON으로 남겼다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+  - `npx playwright test tools/validation/b2-two-lane-map.spec.ts --workers=1`
+  - 산출물: `artifacts/b2-two-lane-map/`

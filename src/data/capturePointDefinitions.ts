@@ -1,4 +1,7 @@
-import { CAPTURE_POINT_PROGRESS } from "./battlefieldMaps";
+import {
+  CAPTURE_POINT_PROGRESS,
+  type BattlefieldMapSpec,
+} from "./battlefieldMaps";
 
 export type CaptureBuildingId = "supply_depot" | "mint";
 export type CapturePointType = "buildable";
@@ -42,6 +45,23 @@ export const CAPTURE_POINT_DEFINITIONS: readonly CapturePointDefinition[] = [
     canReplaceBuilding: true,
   },
 ];
+
+export function getCapturePointDefinitions(
+  mapSpec?: BattlefieldMapSpec,
+): readonly CapturePointDefinition[] {
+  if (!mapSpec) return CAPTURE_POINT_DEFINITIONS;
+  const sockets = mapSpec.structureSockets.filter((socket) => socket.kind === "capture-point");
+  if (sockets.length === 0) return CAPTURE_POINT_DEFINITIONS;
+  return sockets.map((socket, index) => ({
+    id: index,
+    progress: socket.progress,
+    pointType: "buildable",
+    allowedBuildingTypes: ["supply_depot", "mint"],
+    initialBuilding: null,
+    canDemolish: true,
+    canReplaceBuilding: true,
+  }));
+}
 
 export function getCapturePointActions(
   definition: CapturePointDefinition,

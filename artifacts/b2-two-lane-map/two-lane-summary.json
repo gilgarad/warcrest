@@ -1,0 +1,109 @@
+{
+  "baselineMap": "warcrest-full-lane-hybrid-v1",
+  "candidateMap": "warcrest-two-lane-v1",
+  "lanes": [
+    {
+      "id": "north",
+      "role": "north",
+      "start": {
+        "x": 1180,
+        "y": 1600
+      },
+      "end": {
+        "x": 5840,
+        "y": 1500
+      }
+    },
+    {
+      "id": "south",
+      "role": "south",
+      "start": {
+        "x": 1180,
+        "y": 2320
+      },
+      "end": {
+        "x": 5840,
+        "y": 2400
+      }
+    }
+  ],
+  "laneUnitCounts": {
+    "north": {
+      "player": 1,
+      "enemy": 3
+    },
+    "south": {
+      "player": 2,
+      "enemy": 4
+    }
+  },
+  "controlPoints": [
+    {
+      "id": 0,
+      "laneId": "north",
+      "owner": "player",
+      "progress": 0.18,
+      "worldX": 1993.5652173913045,
+      "worldY": 1402.695652173913
+    },
+    {
+      "id": 1,
+      "laneId": "north",
+      "owner": "enemy",
+      "progress": 0.82,
+      "worldX": 5300.086956521739,
+      "worldY": 1409.217391304348
+    },
+    {
+      "id": 2,
+      "laneId": "south",
+      "owner": "player",
+      "progress": 0.18,
+      "worldX": 1993.5652173913045,
+      "worldY": 2509.217391304348
+    },
+    {
+      "id": 3,
+      "laneId": "south",
+      "owner": "enemy",
+      "progress": 0.82,
+      "worldX": 5300.086956521739,
+      "worldY": 2480.9565217391305
+    }
+  ],
+  "defenseTowers": [
+    {
+      "id": 0,
+      "laneId": "north",
+      "owner": "player",
+      "progress": 0.38,
+      "built": true
+    },
+    {
+      "id": 1,
+      "laneId": "north",
+      "owner": "enemy",
+      "progress": 0.62,
+      "built": true
+    },
+    {
+      "id": 2,
+      "laneId": "south",
+      "owner": "player",
+      "progress": 0.38,
+      "built": true
+    },
+    {
+      "id": 3,
+      "laneId": "south",
+      "owner": "enemy",
+      "progress": 0.62,
+      "built": true
+    }
+  ],
+  "engagement": {
+    "uniqueAttackers": 6,
+    "battleUnits": 7,
+    "currentlyAnimating": 3
+  }
+}

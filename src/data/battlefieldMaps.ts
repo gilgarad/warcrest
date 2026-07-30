@@ -14,6 +14,7 @@ export interface TerrainCellSpec {
 
 export interface TerrainPatchSpec {
   id: string;
+  laneId?: string;
   center: WorldPointSpec;
   rotationRad: number;
   columns: number;
@@ -28,6 +29,17 @@ export interface LanePathNodeSpec {
   position: WorldPointSpec;
 }
 
+export interface BattlefieldLaneSpec {
+  id: string;
+  role: "north" | "south" | "center" | "custom";
+  path: LanePathNodeSpec[];
+}
+
+export interface LaneSocketProgressRef {
+  laneId: string;
+  progress: number;
+}
+
 export interface StructureFootprintSpec {
   shape: "ellipse";
   width: number;
@@ -38,10 +50,13 @@ export interface StructureFootprintSpec {
 export interface StructureSocketSpec {
   id: string;
   kind: "capture-point" | "defense-tower";
+  laneRef: LaneSocketProgressRef;
   progress: number;
   position: WorldPointSpec;
   footprint: StructureFootprintSpec;
   bypassSlots: WorldPointSpec[];
+  teamOwner?: "player" | "enemy" | "neutral";
+  linkedSocketId?: string;
 }
 
 export type TerrainPropTextureKey =
@@ -53,6 +68,7 @@ export type TerrainPropTextureKey =
 
 export interface TerrainPropSpec {
   id: string;
+  laneId?: string;
   textureKey: TerrainPropTextureKey;
   position: WorldPointSpec;
   displayWidth: number;
@@ -75,9 +91,9 @@ export interface TerrainPropSpec {
  * into this shape instead of leaking their schema into gameplay or rendering.
  */
 export interface BattlefieldMapSpec {
-  schemaVersion: 1;
+  schemaVersion: 2;
   id: string;
-  lanePath: LanePathNodeSpec[];
+  lanes: BattlefieldLaneSpec[];
   terrainPatches: TerrainPatchSpec[];
   structureSockets: StructureSocketSpec[];
   terrainProps: TerrainPropSpec[];
@@ -86,7 +102,8 @@ export interface BattlefieldMapSpec {
 export type BattlefieldMapId =
   | "warcrest-full-lane-hybrid-v1"
   | "warcrest-day2-player-front-v1"
-  | "warcrest-day3-three-fronts-v1";
+  | "warcrest-day3-three-fronts-v1"
+  | "warcrest-two-lane-v1";
 
 export const LANE_PATH_NODES: LanePathNodeSpec[] = [
   { progress: 0, position: { x: 1240, y: 3130 } },
@@ -95,6 +112,10 @@ export const LANE_PATH_NODES: LanePathNodeSpec[] = [
   { progress: 0.767, position: { x: 4960, y: 1305 } },
   { progress: 1, position: { x: 5995, y: 580 } },
 ];
+
+export const MAIN_LANE_ID = "main";
+export const NORTH_LANE_ID = "north";
+export const SOUTH_LANE_ID = "south";
 
 const CENTRAL_CAPTURE = LANE_PATH_NODES[2].position;
 const CENTRAL_LANE_ROTATION = Math.atan2(1305 - 2280, 4960 - 3080);
@@ -148,6 +169,7 @@ const LANE_PATCH_TARGET_CELL_WIDTH = 148;
 const LANE_PATCH_OVERLAP = 240;
 
 function createLaneTerrainPatchesForPath(
+  laneId: string,
   lanePath: readonly LanePathNodeSpec[],
   patchRows: readonly number[],
   bandProfiles: readonly TerrainBandProfile[],
@@ -164,6 +186,7 @@ function createLaneTerrainPatchesForPath(
 
     return {
       id: `${idPrefix}-${index + 1}`,
+      laneId,
       center: {
         x: (start.position.x + endNode.position.x) / 2,
         y: (start.position.y + endNode.position.y) / 2,
@@ -180,6 +203,7 @@ function createLaneTerrainPatchesForPath(
 
 function createLaneTerrainPatches(): TerrainPatchSpec[] {
   return createLaneTerrainPatchesForPath(
+    MAIN_LANE_ID,
     LANE_PATH_NODES,
     Array(LANE_PATH_NODES.length - 1).fill(LANE_PATCH_ROWS),
     Array(LANE_PATH_NODES.length - 1).fill(DEFAULT_TERRAIN_BANDS),
@@ -202,6 +226,17 @@ export function getStructureSocket(
   return mapSpec.structureSockets.find((socket) => socket.id === socketId);
 }
 
+export function getLaneSpec(
+  mapSpec: BattlefieldMapSpec,
+  laneId: string,
+): BattlefieldLaneSpec | undefined {
+  return mapSpec.lanes.find((lane) => lane.id === laneId);
+}
+
+export function getPrimaryLaneSpec(mapSpec: BattlefieldMapSpec): BattlefieldLaneSpec {
+  return mapSpec.lanes[0];
+}
+
 export function getLanePositionAtProgressOnPath(
   lanePath: readonly LanePathNodeSpec[],
   progress: number,
@@ -217,15 +252,17 @@ export function getLanePositionAtProgressOnPath(
   };
 }
 
-export function getLanePositionAtProgress(progress: number): WorldPointSpec {
-  return getLanePositionAtProgressOnPath(LANE_PATH_NODES, progress);
+export function getLanePositionAtProgress(progress: number, lanePath = LANE_PATH_NODES): WorldPointSpec {
+  return getLanePositionAtProgressOnPath(lanePath, progress);
 }
 
 function createStructureSocketForPath(
+  laneId: string,
   lanePath: readonly LanePathNodeSpec[],
   id: string,
   kind: StructureSocketSpec["kind"],
   progress: number,
+  options: Pick<StructureSocketSpec, "teamOwner" | "linkedSocketId"> = {},
 ): StructureSocketSpec {
   const current = getLanePositionAtProgressOnPath(lanePath, progress);
   const before = getLanePositionAtProgressOnPath(lanePath, Math.max(0, progress - 0.01));
@@ -240,6 +277,7 @@ function createStructureSocketForPath(
   return {
     id,
     kind,
+    laneRef: { laneId, progress },
     progress,
     position: { ...current },
     footprint: {
@@ -258,6 +296,7 @@ function createStructureSocketForPath(
         y: current.y - perpendicularY * bypassDistance,
       },
     ],
+    ...options,
   };
 }
 
@@ -266,7 +305,7 @@ function createStructureSocket(
   kind: StructureSocketSpec["kind"],
   progress: number,
 ): StructureSocketSpec {
-  return createStructureSocketForPath(LANE_PATH_NODES, id, kind, progress);
+  return createStructureSocketForPath(MAIN_LANE_ID, LANE_PATH_NODES, id, kind, progress);
 }
 
 export const PLAYER_SIDE_PROGRESS_MAX = 0.5;
@@ -277,7 +316,17 @@ export const DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID = [0.37, 0.63] as const;
 
 const STRUCTURE_SOCKETS = [
   ...CAPTURE_POINT_PROGRESS.map((progress, id) => createStructureSocket(getCapturePointSocketId(id), "capture-point", progress)),
-  ...DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID.map((progress, id) => createStructureSocket(getDefenseTowerSocketId(id), "defense-tower", progress)),
+  ...DEFENSE_TOWER_PROGRESS_BY_CAPTURE_ID.map((progress, id) => createStructureSocketForPath(
+    MAIN_LANE_ID,
+    LANE_PATH_NODES,
+    getDefenseTowerSocketId(id),
+    "defense-tower",
+    progress,
+    {
+      teamOwner: id === 0 ? "player" : "enemy",
+      linkedSocketId: getCapturePointSocketId(id),
+    },
+  )),
 ];
 
 const TERRAIN_PROPS: TerrainPropSpec[] = [
@@ -312,6 +361,26 @@ export const DAY3_THREE_FRONTS_LANE_PATH_NODES: LanePathNodeSpec[] = [
   { progress: 1.00, position: { x: 5995, y: 580 } },
 ];
 
+export const TWO_LANE_NORTH_PATH_NODES: LanePathNodeSpec[] = [
+  { progress: 0.00, position: { x: 1180, y: 1600 } },
+  { progress: 0.14, position: { x: 1760, y: 1440 } },
+  { progress: 0.28, position: { x: 2580, y: 1310 } },
+  { progress: 0.46, position: { x: 3550, y: 1280 } },
+  { progress: 0.66, position: { x: 4540, y: 1320 } },
+  { progress: 0.82, position: { x: 5300, y: 1410 } },
+  { progress: 1.00, position: { x: 5840, y: 1500 } },
+];
+
+export const TWO_LANE_SOUTH_PATH_NODES: LanePathNodeSpec[] = [
+  { progress: 0.00, position: { x: 1180, y: 2320 } },
+  { progress: 0.14, position: { x: 1760, y: 2470 } },
+  { progress: 0.28, position: { x: 2580, y: 2605 } },
+  { progress: 0.46, position: { x: 3520, y: 2660 } },
+  { progress: 0.66, position: { x: 4540, y: 2580 } },
+  { progress: 0.82, position: { x: 5300, y: 2480 } },
+  { progress: 1.00, position: { x: 5840, y: 2400 } },
+];
+
 const DAY2_PLAYER_FRONT_PATCH_ROWS = [10, 10, 8, 6, 8, 8, 10] as const;
 const DAY2_PLAYER_FRONT_BANDS: readonly TerrainBandProfile[] = [
   { stoneHalfRows: 2, dirtHalfRows: 4 },
@@ -325,24 +394,30 @@ const DAY2_PLAYER_FRONT_BANDS: readonly TerrainBandProfile[] = [
 
 const DAY2_PLAYER_FRONT_STRUCTURE_SOCKETS = [
   createStructureSocketForPath(
+    MAIN_LANE_ID,
     DAY2_PLAYER_FRONT_LANE_PATH_NODES,
     getCapturePointSocketId(0),
     "capture-point",
     0.17,
   ),
   createStructureSocketForPath(
+    MAIN_LANE_ID,
     DAY2_PLAYER_FRONT_LANE_PATH_NODES,
     getDefenseTowerSocketId(0),
     "defense-tower",
     0.37,
+    { teamOwner: "player", linkedSocketId: getCapturePointSocketId(0) },
   ),
   createStructureSocketForPath(
+    MAIN_LANE_ID,
     DAY2_PLAYER_FRONT_LANE_PATH_NODES,
     getDefenseTowerSocketId(1),
     "defense-tower",
     0.64,
+    { teamOwner: "enemy", linkedSocketId: getCapturePointSocketId(1) },
   ),
   createStructureSocketForPath(
+    MAIN_LANE_ID,
     DAY2_PLAYER_FRONT_LANE_PATH_NODES,
     getCapturePointSocketId(1),
     "capture-point",
@@ -375,24 +450,30 @@ const DAY3_THREE_FRONTS_BANDS: readonly TerrainBandProfile[] = [
 
 const DAY3_THREE_FRONTS_STRUCTURE_SOCKETS = [
   createStructureSocketForPath(
+    MAIN_LANE_ID,
     DAY3_THREE_FRONTS_LANE_PATH_NODES,
     getCapturePointSocketId(0),
     "capture-point",
     0.17,
   ),
   createStructureSocketForPath(
+    MAIN_LANE_ID,
     DAY3_THREE_FRONTS_LANE_PATH_NODES,
     getDefenseTowerSocketId(0),
     "defense-tower",
     0.37,
+    { teamOwner: "player", linkedSocketId: getCapturePointSocketId(0) },
   ),
   createStructureSocketForPath(
+    MAIN_LANE_ID,
     DAY3_THREE_FRONTS_LANE_PATH_NODES,
     getDefenseTowerSocketId(1),
     "defense-tower",
     0.64,
+    { teamOwner: "enemy", linkedSocketId: getCapturePointSocketId(1) },
   ),
   createStructureSocketForPath(
+    MAIN_LANE_ID,
     DAY3_THREE_FRONTS_LANE_PATH_NODES,
     getCapturePointSocketId(1),
     "capture-point",
@@ -423,13 +504,45 @@ const DAY3_THREE_FRONTS_PROPS: TerrainPropSpec[] = [
   { id: "day3-east-basin-log", textureKey: "fallen-log", position: { x: 5750, y: 640 }, displayWidth: 224, displayHeight: 224, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 126, height: 60, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
 ];
 
+const TWO_LANE_PATCH_ROWS = [8, 8, 6, 6, 8, 8] as const;
+const TWO_LANE_BANDS: readonly TerrainBandProfile[] = [
+  { stoneHalfRows: 2, dirtHalfRows: 4 },
+  { stoneHalfRows: 1, dirtHalfRows: 4 },
+  { stoneHalfRows: 1, dirtHalfRows: 3 },
+  { stoneHalfRows: 1, dirtHalfRows: 3 },
+  { stoneHalfRows: 1, dirtHalfRows: 4 },
+  { stoneHalfRows: 2, dirtHalfRows: 4 },
+];
+
+const TWO_LANE_STRUCTURE_SOCKETS: StructureSocketSpec[] = [
+  createStructureSocketForPath(NORTH_LANE_ID, TWO_LANE_NORTH_PATH_NODES, "north-capture-player", "capture-point", 0.18),
+  createStructureSocketForPath(NORTH_LANE_ID, TWO_LANE_NORTH_PATH_NODES, "north-tower-player", "defense-tower", 0.38, { teamOwner: "player", linkedSocketId: "north-capture-player" }),
+  createStructureSocketForPath(NORTH_LANE_ID, TWO_LANE_NORTH_PATH_NODES, "north-tower-enemy", "defense-tower", 0.62, { teamOwner: "enemy", linkedSocketId: "north-capture-enemy" }),
+  createStructureSocketForPath(NORTH_LANE_ID, TWO_LANE_NORTH_PATH_NODES, "north-capture-enemy", "capture-point", 0.82),
+  createStructureSocketForPath(SOUTH_LANE_ID, TWO_LANE_SOUTH_PATH_NODES, "south-capture-player", "capture-point", 0.18),
+  createStructureSocketForPath(SOUTH_LANE_ID, TWO_LANE_SOUTH_PATH_NODES, "south-tower-player", "defense-tower", 0.38, { teamOwner: "player", linkedSocketId: "south-capture-player" }),
+  createStructureSocketForPath(SOUTH_LANE_ID, TWO_LANE_SOUTH_PATH_NODES, "south-tower-enemy", "defense-tower", 0.62, { teamOwner: "enemy", linkedSocketId: "south-capture-enemy" }),
+  createStructureSocketForPath(SOUTH_LANE_ID, TWO_LANE_SOUTH_PATH_NODES, "south-capture-enemy", "capture-point", 0.82),
+];
+
+const TWO_LANE_PROPS: TerrainPropSpec[] = [
+  { id: "two-lane-north-west-pines", laneId: NORTH_LANE_ID, textureKey: "field-pine", position: { x: 1620, y: 1090 }, displayWidth: 238, displayHeight: 238, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 122, height: 58, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "two-lane-north-west-rock", laneId: NORTH_LANE_ID, textureKey: "rock-cluster", position: { x: 2320, y: 1010 }, displayWidth: 208, displayHeight: 208, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 158, height: 60, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
+  { id: "two-lane-center-divider-oak", textureKey: "field-oak", position: { x: 3470, y: 1970 }, displayWidth: 256, displayHeight: 256, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 134, height: 62, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "two-lane-center-divider-boulder", textureKey: "field-boulder", position: { x: 3925, y: 1985 }, displayWidth: 212, displayHeight: 212, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 160, height: 62, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
+  { id: "two-lane-south-west-log", laneId: SOUTH_LANE_ID, textureKey: "fallen-log", position: { x: 2260, y: 3050 }, displayWidth: 224, displayHeight: 224, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 126, height: 60, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "two-lane-south-west-oaks", laneId: SOUTH_LANE_ID, textureKey: "field-oak", position: { x: 1760, y: 3200 }, displayWidth: 252, displayHeight: 252, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 132, height: 60, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+  { id: "two-lane-north-east-boulder", laneId: NORTH_LANE_ID, textureKey: "field-boulder", position: { x: 5175, y: 990 }, displayWidth: 210, displayHeight: 210, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 158, height: 60, blocksMovement: false }, shadow: { offsetX: 4, offsetY: 2, widthScale: 0.92, heightScale: 0.5, rotationRad: -0.08, alpha: 0.3 }, occludesUnits: true },
+  { id: "two-lane-south-east-pines", laneId: SOUTH_LANE_ID, textureKey: "field-pine", position: { x: 5210, y: 2935 }, displayWidth: 236, displayHeight: 236, groundOriginY: 0.875, footprint: { shape: "ellipse", width: 122, height: 58, blocksMovement: false }, shadow: { offsetX: 7, offsetY: 3, widthScale: 0.84, heightScale: 0.52, rotationRad: -0.1, alpha: 0.34 }, occludesUnits: true },
+];
 export const CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC: BattlefieldMapSpec = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   id: "warcrest-central-terrain-prototype-v1",
-  lanePath: LANE_PATH_NODES,
+  lanes: [{ id: MAIN_LANE_ID, role: "center", path: LANE_PATH_NODES }],
   terrainPatches: [
     {
       id: "central-capture-prototype",
+      laneId: MAIN_LANE_ID,
       center: CENTRAL_CAPTURE,
       rotationRad: CENTRAL_LANE_ROTATION,
       columns: CENTRAL_PATCH_COLUMNS,
@@ -444,19 +557,20 @@ export const CENTRAL_TERRAIN_PROTOTYPE_MAP_SPEC: BattlefieldMapSpec = {
 };
 
 export const LANE_BATTLEFIELD_MAP_SPEC: BattlefieldMapSpec = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   id: "warcrest-full-lane-hybrid-v1",
-  lanePath: LANE_PATH_NODES,
+  lanes: [{ id: MAIN_LANE_ID, role: "center", path: LANE_PATH_NODES }],
   terrainPatches: createLaneTerrainPatches(),
   structureSockets: STRUCTURE_SOCKETS,
   terrainProps: TERRAIN_PROPS,
 };
 
 export const DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC: BattlefieldMapSpec = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   id: "warcrest-day2-player-front-v1",
-  lanePath: DAY2_PLAYER_FRONT_LANE_PATH_NODES,
+  lanes: [{ id: MAIN_LANE_ID, role: "center", path: DAY2_PLAYER_FRONT_LANE_PATH_NODES }],
   terrainPatches: createLaneTerrainPatchesForPath(
+    MAIN_LANE_ID,
     DAY2_PLAYER_FRONT_LANE_PATH_NODES,
     DAY2_PLAYER_FRONT_PATCH_ROWS,
     DAY2_PLAYER_FRONT_BANDS,
@@ -467,10 +581,11 @@ export const DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC: BattlefieldMapSpec = {
 };
 
 export const DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC: BattlefieldMapSpec = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   id: "warcrest-day3-three-fronts-v1",
-  lanePath: DAY3_THREE_FRONTS_LANE_PATH_NODES,
+  lanes: [{ id: MAIN_LANE_ID, role: "center", path: DAY3_THREE_FRONTS_LANE_PATH_NODES }],
   terrainPatches: createLaneTerrainPatchesForPath(
+    MAIN_LANE_ID,
     DAY3_THREE_FRONTS_LANE_PATH_NODES,
     DAY3_THREE_FRONTS_PATCH_ROWS,
     DAY3_THREE_FRONTS_BANDS,
@@ -480,10 +595,38 @@ export const DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC: BattlefieldMapSpec = {
   terrainProps: DAY3_THREE_FRONTS_PROPS,
 };
 
+export const TWO_LANE_MAP_CANDIDATE_SPEC: BattlefieldMapSpec = {
+  schemaVersion: 2,
+  id: "warcrest-two-lane-v1",
+  lanes: [
+    { id: NORTH_LANE_ID, role: "north", path: TWO_LANE_NORTH_PATH_NODES },
+    { id: SOUTH_LANE_ID, role: "south", path: TWO_LANE_SOUTH_PATH_NODES },
+  ],
+  terrainPatches: [
+    ...createLaneTerrainPatchesForPath(
+      NORTH_LANE_ID,
+      TWO_LANE_NORTH_PATH_NODES,
+      TWO_LANE_PATCH_ROWS,
+      TWO_LANE_BANDS,
+      "two-lane-north-segment",
+    ),
+    ...createLaneTerrainPatchesForPath(
+      SOUTH_LANE_ID,
+      TWO_LANE_SOUTH_PATH_NODES,
+      TWO_LANE_PATCH_ROWS,
+      TWO_LANE_BANDS,
+      "two-lane-south-segment",
+    ),
+  ],
+  structureSockets: TWO_LANE_STRUCTURE_SOCKETS,
+  terrainProps: TWO_LANE_PROPS,
+};
+
 export const BATTLEFIELD_MAP_SPECS: readonly BattlefieldMapSpec[] = [
   LANE_BATTLEFIELD_MAP_SPEC,
   DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC,
   DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC,
+  TWO_LANE_MAP_CANDIDATE_SPEC,
 ];
 
 export function getBattlefieldMapSpec(mapId?: string | null): BattlefieldMapSpec {

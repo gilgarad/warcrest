@@ -8,6 +8,7 @@ export interface LaneBattleDebugUnitSnapshot {
   team: TeamId;
   unitId: string;
   role: "battle" | "support";
+  laneId: string;
   progress: number;
   laneRow: number;
   hp: number;
@@ -70,6 +71,7 @@ export interface LaneBattleDebugSnapshot {
     capturePoints: unknown;
     controlPoints: Array<{
       id: number;
+      laneId: string;
       pointType: string;
       allowedBuildingTypes: readonly string[];
       owner: "player" | "enemy" | "neutral";
@@ -86,6 +88,7 @@ export interface LaneBattleDebugSnapshot {
     }>;
     defenseTowers: Array<{
       id: number;
+      laneId: string;
       owner: TeamId;
       linkedCapturePointId: number;
       progress: number;
@@ -96,6 +99,12 @@ export interface LaneBattleDebugSnapshot {
     }>;
     laneStart: { x: number; y: number };
     laneEnd: { x: number; y: number };
+    lanes: Array<{
+      id: string;
+      role: string;
+      start: { x: number; y: number };
+      end: { x: number; y: number };
+    }>;
   };
   ui: {
     ageLabel: string;
