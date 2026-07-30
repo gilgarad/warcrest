@@ -7,6 +7,27 @@ streams they belong to. Every future Codex/Claude Code prompt for this
 project should start with `[담당 세션: <트랙 이름>]` and stay inside that
 track's owned files unless a prompt explicitly says otherwise.
 
+## Working directories (git worktrees)
+
+Each track runs in its own `git worktree` — same repo/object store, separate
+working directory and branch, so three sessions can run at once without
+clobbering each other's uncommitted changes or fighting over `npm run dev`
+ports. Set up 2026-07-30:
+
+| Track | Directory | Branch |
+| --- | --- | --- |
+| 맵 및 게임 전반 | `/data/projects/game_project1` (unchanged, main session) | `master` |
+| 그래픽/캐릭터 | `/data/projects/game_project1-graphics` | `track-graphics-nw-frames` |
+| 음악/오디오 | `/data/projects/game_project1-audio` | `track-audio-ack-sfx` |
+
+Both new worktrees already have `npm ci` run and `npm run build` verified
+clean as of creation. Each track commits/pushes on its own branch; merge to
+`master` when a track's unit of work is done (open a PR, or fast-forward
+merge directly per this project's existing light-process convention — see
+`AGENTS.md`). Run `git worktree list` from any of the three directories to
+see all three at once. Do not `git worktree remove` one of these without
+checking for uncommitted work first (`git status` inside it).
+
 ## The three tracks
 
 ### 1. 그래픽/캐릭터 (Graphics / Character)
@@ -76,24 +97,25 @@ track's owned files unless a prompt explicitly says otherwise.
 
 All three tracks touch this one 3,491-line file (animation trigger calls =
 graphics track, core combat/capture/tower/economy logic = map track, audio
-trigger calls = music track). Running two tracks against it at the same time
-risks silent overwrites or merge conflicts. Until/unless it's split into
-per-concern modules (not required to start work, just a future option if
-conflicts become frequent):
+trigger calls = music track). Now that each track has its own worktree and
+branch (see above), simultaneous edits no longer silently clobber each
+other's working-directory state — they become a normal git merge conflict
+at merge time instead, which is a much safer failure mode. Still:
 
-- Before starting a `LaneBattleScene.ts` change, run
-  `git log -1 --format='%H %s' -- src/scenes/LaneBattleScene.ts` and
-  `git status` to confirm no other track has an in-flight, uncommitted
-  change in this file.
-- Commit and push promptly after finishing a change to this file — don't
-  sit on an uncommitted edit while another track's prompt might also touch
-  it.
-- If two tracks genuinely need to touch it in the same window, sequence
-  them (one finishes and pushes, then the next starts) rather than running
-  both at once.
+- Keep `LaneBattleScene.ts` edits small and focused on your track's call
+  sites (animation triggers / core logic / audio triggers) so any merge
+  conflict is easy to resolve by hand.
+- Commit and push your branch promptly after finishing a change to this
+  file rather than sitting on a large uncommitted diff.
+- Merge tracks into `master` one at a time, resolving any
+  `LaneBattleScene.ts` conflict by hand at merge time (it's the only file
+  likely to conflict — everything else is disjoint by ownership).
+- Before merging, pull `master` into your branch first
+  (`git fetch origin && git merge origin/master`) so conflicts, if any,
+  surface locally before you push.
 
 All other owned-file lists above are already disjoint, so the three tracks
-can run fully in parallel as long as `LaneBattleScene.ts` follows this rule.
+can run fully in parallel with no coordination needed except this file.
 
 ## How to hand off work
 
