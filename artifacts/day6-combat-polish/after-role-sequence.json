@@ -23,19 +23,19 @@
     {
       "label": "windup",
       "phase": 0.2,
-      "pose": "stone-slinger-ne-attack",
+      "pose": "stone-slinger-e-attack",
       "attackAnimTime": 0.46399999999999997
     },
     {
       "label": "event",
       "phase": 0.42,
-      "pose": "stone-slinger-ne-attack",
+      "pose": "stone-slinger-e-attack",
       "attackAnimTime": 0.33640000000000003
     },
     {
       "label": "recover",
       "phase": 0.84,
-      "pose": "stone-slinger-ne-attack",
+      "pose": "stone-slinger-e-attack",
       "attackAnimTime": 0.09280000000000001
     }
   ],

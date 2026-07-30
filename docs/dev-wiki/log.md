@@ -3620,3 +3620,29 @@ Use consistent headings so entries are easy to grep.
   어느 트랙 작업인지 명확히 하기로 했다. 이번 사용자 지적("아까 3개로
   갈라달라고 했는데 프롬프트에 어느 세션용인지 안 적었다")을 반영한
   조치다.
+
+## [2026-07-30] fix | "Deploy GitHub Pages" 워크플로 실패 원인 확인 후 비활성화
+
+- 상담 세션(`stock_predict_rev` harness, `game_project1`-only, 소스
+  미수정)이 GitHub Actions API로 직접 확인. `master` push마다
+  "Deploy GitHub Pages"(`deploy-pages.yml`)가 `Configure Pages` 단계에서
+  실패 중이었다(`npm run build`는 매번 성공, 실패는 순수 배포 설정
+  문제): `Get Pages site failed ... Error: Not Found`.
+- 원인: 이 저장소가 **private**이고 GitHub Free 플랜이라 GitHub Pages를
+  쓸 수 없음(private 저장소 Pages는 Pro/Team/Enterprise 플랜 전용).
+  `POST /repos/.../pages`로 직접 활성화 시도 시 "Your current plan does
+  not support GitHub Pages for this repository" 확인.
+- 사용자 결정: 저장소를 지금 public으로 바꾸지 않고, Pages 배포는
+  보류. `PUT /repos/.../actions/workflows/deploy-pages.yml/disable`로
+  워크플로만 비활성화했다(`state: disabled_manually`). 파일은 삭제하지
+  않아 나중에 GitHub UI에서 바로 재활성화 가능. public 전환 여부는
+  사용자가 나중에 직접 결정한다.
+
+## [2026-07-30] feat | 맵 트랙: Three Fronts archive 표시 + 두-레인 맵 기본 승격 + Playwright 타임아웃 정리
+
+- 담당: 맵 및 게임 전반 트랙 (`docs/dev-wiki/codex-prompt-log.md` 2026-07-30 (28) 프롬프트 수행).
+- `src/data/battlefieldMaps.ts`: `warcrest-day3-three-fronts-v1`에 archive 주석 추가(삭제하지 않음, `?map=`으로 여전히 전환 가능). `DEFAULT_BATTLEFIELD_MAP_SPEC`을 `warcrest-two-lane-v1`로 전환해 `getBattlefieldMapSpec()` 기본값을 승격. 기존 `warcrest-full-lane-hybrid-v1`은 `?map=`으로 계속 선택 가능.
+- `tools/validation/b2-two-lane-map.spec.ts`를 승격 이후 계약에 맞게 갱신(기본 맵이 이제 두-레인임을 검증, 레거시 맵은 `?map=`으로만 접근).
+- `docs/dev-wiki/map-redesign-brief.md`, `day3-second-cycle-validation.md`에 archive/승격 결정을 반영한 최소 정정 각주 추가.
+- 전체 Playwright 회귀 중 일부 스펙(`audio-integration`, `day7-5-unit-art`, `day8-regression`, `golden-reference`, `six-issue-followup`, `support-mana`, `terrain-full-lane`)이 파일 단위 기본 타임아웃(45초)을 그대로 써서 긴 오디오 통합 케이스에서 중간에 끊기는 문제를 발견 — 실제 동작 회귀가 아니라 테스트 타임아웃 예산 부족이었다. 해당 7개 파일의 타임아웃을 개별로 올려 재발을 막았다.
+- 검증: `npm run build` 통과, `npm test` 통과(`29` files / `121` tests). 전체 Playwright 회귀는 개발 세션에서 실행/디버그를 마쳤고, 상담 세션이 build/test를 독립적으로 재확인했다.

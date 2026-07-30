@@ -103,6 +103,10 @@ No map layout or proprietary asset from these games is copied.
 
 ## 4. Proposed map: Three Fronts
 
+> Update on July 30, 2026: this candidate remains available as an archived
+> single-lane comparison map, but it was superseded as the production direction
+> once the user approved the later two-lane redesign.
+
 ### 4.1 Lane form
 
 Use a soft S-shaped lane with nine control nodes instead of five nearly

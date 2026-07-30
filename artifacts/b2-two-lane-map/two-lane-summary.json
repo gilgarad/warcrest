@@ -1,6 +1,6 @@
 {
-  "baselineMap": "warcrest-full-lane-hybrid-v1",
-  "candidateMap": "warcrest-two-lane-v1",
+  "baselineMap": "warcrest-two-lane-v1",
+  "candidateMap": "warcrest-full-lane-hybrid-v1",
   "lanes": [
     {
       "id": "north",
@@ -28,13 +28,13 @@
     }
   ],
   "laneUnitCounts": {
-    "north": {
-      "player": 1,
-      "enemy": 3
-    },
     "south": {
       "player": 2,
-      "enemy": 4
+      "enemy": 3
+    },
+    "north": {
+      "player": 2,
+      "enemy": 1
     }
   },
   "controlPoints": [
@@ -102,8 +102,8 @@
     }
   ],
   "engagement": {
-    "uniqueAttackers": 6,
-    "battleUnits": 7,
-    "currentlyAnimating": 2
+    "uniqueAttackers": 10,
+    "battleUnits": 5,
+    "currentlyAnimating": 0
   }
 }

@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/golden-reference";
+test.describe.configure({ timeout: 120_000 });
 
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 

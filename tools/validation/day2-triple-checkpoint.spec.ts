@@ -5,6 +5,7 @@ import type { OfflineArrangementMeasurement } from "../../src/systems/audio/back
 const ARTIFACT_DIR = "artifacts/day2-triple-checkpoint";
 const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-day2-triple&audioDebug=1";
 const MAP_CANDIDATE_ID = "warcrest-day2-player-front-v1";
+const LEGACY_MAP_ID = "warcrest-full-lane-hybrid-v1";
 
 interface GoldenDirectionProbe {
   currentDirection: string;
@@ -183,7 +184,7 @@ test("measures the layered battle-low arrangement and captures preparation -> ba
 test("captures the player-front map candidate as a switchable data-only alternative", async ({ browser }) => {
   const capture = async (mapId: string | null, name: string): Promise<TerrainSnapshot> => {
     const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
-    const url = mapId ? `${GAME_URL}&map=${mapId}` : GAME_URL;
+    const url = mapId ? `${GAME_URL}&map=${mapId}` : `${GAME_URL}&map=${LEGACY_MAP_ID}`;
     await page.goto(url);
     await startBattle(page);
     await page.evaluate(() => {
@@ -207,7 +208,7 @@ test("captures the player-front map candidate as a switchable data-only alternat
 
   const baseline = await capture(null, "existing-player-front");
   const candidate = await capture(MAP_CANDIDATE_ID, "candidate-player-front");
-  expect(baseline.verification.terrain.mapSpecId).toBe("warcrest-full-lane-hybrid-v1");
+  expect(baseline.verification.terrain.mapSpecId).toBe(LEGACY_MAP_ID);
   expect(candidate.verification.terrain.mapSpecId).toBe(MAP_CANDIDATE_ID);
   expect(candidate.battlefield.controlPoints.map((point) => point.progress)).toEqual([0.17, 0.84]);
   expect(candidate.battlefield.defenseTowers.map((tower) => tower.progress)).toEqual([0.37, 0.64]);

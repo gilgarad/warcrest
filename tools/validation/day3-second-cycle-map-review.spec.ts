@@ -4,6 +4,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 const ARTIFACT_DIR = "artifacts/day3-second-cycle-map-review";
 const BASE_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&seed=warcrest-second-cycle-map-review";
 const CANDIDATE_MAP_ID = "warcrest-day3-three-fronts-v1";
+const LEGACY_MAP_ID = "warcrest-full-lane-hybrid-v1";
 
 test.beforeAll(() => {
   mkdirSync(ARTIFACT_DIR, { recursive: true });
@@ -40,7 +41,7 @@ async function clickLogical(page: Page, x: number, y: number): Promise<void> {
 }
 
 async function openGame(page: Page, mapId: string | null): Promise<void> {
-  const url = mapId ? `${BASE_URL}&map=${mapId}` : BASE_URL;
+  const url = mapId ? `${BASE_URL}&map=${mapId}` : `${BASE_URL}&map=${LEGACY_MAP_ID}`;
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(url);
   await page.waitForTimeout(1_000);
@@ -105,7 +106,7 @@ test("captures baseline and three-fronts candidate during an actual first-wave b
   const candidateEnd = await captureLiveReview(candidatePage, "candidate");
   await candidatePage.close();
 
-  expect(baselineStart.verification.terrain.mapSpecId).toBe("warcrest-full-lane-hybrid-v1");
+  expect(baselineStart.verification.terrain.mapSpecId).toBe(LEGACY_MAP_ID);
   expect(candidateStart.verification.terrain.mapSpecId).toBe(CANDIDATE_MAP_ID);
   expect(candidateStart.verification.terrain.propGrounding.length).toBeGreaterThan(
     baselineStart.verification.terrain.propGrounding.length,

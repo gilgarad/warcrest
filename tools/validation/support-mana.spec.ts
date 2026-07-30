@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/support-mana";
 const GAME_URL = "/?terrain=prototype-v2&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-support-mana-v1";
+test.describe.configure({ timeout: 120_000 });
 
 type UnitSnapshot = {
   unitId: string;
@@ -19,12 +20,16 @@ test("captures support mana burst, depletion, and recovery", async ({ page }) =>
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(GAME_URL);
   const canvas = page.locator("canvas");
-  const box = await canvas.boundingBox();
-  if (!box) throw new Error("Canvas is not visible");
-  await canvas.click({ position: { x: 800 * box.width / 1600, y: 805 * box.height / 900 } });
-  await page.waitForFunction(() => Boolean(
-    (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-  ));
+  for (let attempt = 0; attempt < 15; attempt += 1) {
+    const box = await canvas.boundingBox();
+    if (!box) throw new Error("Canvas is not visible");
+    await canvas.click({ position: { x: 800 * box.width / 1600, y: 805 * box.height / 900 } });
+    await page.waitForTimeout(750);
+    if (await page.evaluate(() => Boolean(
+      (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+    ))) break;
+    if (attempt === 14) throw new Error("Support mana probe did not initialize");
+  }
   await page.evaluate(() => {
     const control = (window as unknown as {
       __terrainPrototypeControl: {

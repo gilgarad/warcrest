@@ -3,7 +3,8 @@ import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/terrain-full-lane";
 const CAPTURE_PHASE = process.env.TERRAIN_CAPTURE_PHASE === "before" ? "before" : "after";
-const GAME_URL = "/?terrain=prototype-v2&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-central-v1";
+const GAME_URL = "/?terrain=prototype-v2&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-central-v1&map=warcrest-full-lane-hybrid-v1";
+test.describe.configure({ timeout: 120_000 });
 
 async function clickCanvasLogical(page: Page, x: number, y: number): Promise<void> {
   const canvas = page.locator("canvas");

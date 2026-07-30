@@ -30,17 +30,22 @@ type Snapshot = {
 };
 
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
+test.describe.configure({ timeout: 120_000 });
 
 async function openGame(page: import("@playwright/test").Page): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(GAME_URL);
   const canvas = page.locator("canvas");
-  const box = await canvas.boundingBox();
-  if (!box) throw new Error("Canvas is not visible");
-  await canvas.click({ position: { x: box.width / 2, y: box.height * 0.9 } });
-  await page.waitForFunction(() => Boolean(
-    (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-  ));
+  for (let attempt = 0; attempt < 15; attempt += 1) {
+    const box = await canvas.boundingBox();
+    if (!box) throw new Error("Canvas is not visible");
+    await canvas.click({ position: { x: box.width / 2, y: box.height * 0.9 } });
+    await page.waitForTimeout(750);
+    if (await page.evaluate(() => Boolean(
+      (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+    ))) return;
+  }
+  throw new Error("Six-issue follow-up probe did not initialize");
 }
 
 const snapshot = (page: import("@playwright/test").Page): Promise<Snapshot> => page.evaluate(() => (

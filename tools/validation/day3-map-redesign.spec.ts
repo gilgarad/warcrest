@@ -4,6 +4,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 const ARTIFACT_DIR = "artifacts/day3-map";
 const BASE_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-day3-map";
 const CANDIDATE_MAP_ID = "warcrest-day3-three-fronts-v1";
+const LEGACY_MAP_ID = "warcrest-full-lane-hybrid-v1";
 
 test.setTimeout(90_000);
 
@@ -54,7 +55,7 @@ async function captureProgress(page: Page, progress: number, screenshotPath: str
 test("captures full-map redesign candidate against the legacy production map", async ({ browser }) => {
   const captureMap = async (mapId: string | null, prefix: string) => {
     const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
-    const url = mapId ? `${BASE_URL}&map=${mapId}` : BASE_URL;
+    const url = mapId ? `${BASE_URL}&map=${mapId}` : `${BASE_URL}&map=${LEGACY_MAP_ID}`;
     await page.goto(url);
     await startBattle(page);
     await captureProgress(page, 0.18, `${ARTIFACT_DIR}/${prefix}-player-front.png`);
@@ -70,7 +71,7 @@ test("captures full-map redesign candidate against the legacy production map", a
   const baseline = await captureMap(null, "baseline");
   const candidate = await captureMap(CANDIDATE_MAP_ID, "candidate");
 
-  expect(baseline.verification.terrain.mapSpecId).toBe("warcrest-full-lane-hybrid-v1");
+  expect(baseline.verification.terrain.mapSpecId).toBe(LEGACY_MAP_ID);
   expect(candidate.verification.terrain.mapSpecId).toBe(CANDIDATE_MAP_ID);
   expect(candidate.verification.terrain.patchCount).toBe(8);
   expect(candidate.verification.terrain.propGrounding).toHaveLength(20);

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/capture-point-distinction";
-const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-capture-layout-v2";
+const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-capture-layout-v2&map=warcrest-full-lane-hybrid-v1";
 
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 

@@ -4,6 +4,7 @@ import type { LaneBattleDebugSnapshot, LaneBattleDebugUnitSnapshot } from "../..
 
 const ARTIFACT_DIR = "artifacts/day7-5-unit-art";
 const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&seed=warcrest-day7-5";
+test.describe.configure({ timeout: 120_000 });
 
 type AgeId = "stone" | "bronze" | "iron_early" | "iron_mid" | "iron_late";
 

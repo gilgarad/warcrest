@@ -5,7 +5,7 @@
       "team": "player",
       "unitId": "bronze_spearman",
       "role": "battle",
-      "laneId": "main",
+      "laneId": "north",
       "progress": 0.5,
       "laneRow": 3,
       "hp": 38,
@@ -30,8 +30,8 @@
       "healManaCost": 0,
       "healPower": 0,
       "presentation": {
-        "x": 3762.391304347826,
-        "y": 2127.219073137778,
+        "x": 3740.1217391304344,
+        "y": 1472.6655821836719,
         "rotationRad": 0
       },
       "overlay": {

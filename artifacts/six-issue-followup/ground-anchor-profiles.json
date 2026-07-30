@@ -1,20 +1,7 @@
 [
   {
-    "id": "rock-west-ridge",
-    "textureKey": "field-boulder",
-    "groundOriginY": 0.875,
-    "shadow": {
-      "offsetX": 4,
-      "offsetY": 2,
-      "widthScale": 0.92,
-      "heightScale": 0.5,
-      "rotationRad": -0.08,
-      "alpha": 0.3
-    }
-  },
-  {
-    "id": "trees-west-south",
-    "textureKey": "field-oak",
+    "id": "two-lane-north-west-pines",
+    "textureKey": "field-pine",
     "groundOriginY": 0.875,
     "shadow": {
       "offsetX": 7,
@@ -26,7 +13,7 @@
     }
   },
   {
-    "id": "rock-central-north",
+    "id": "two-lane-north-west-rock",
     "textureKey": "rock-cluster",
     "groundOriginY": 0.875,
     "shadow": {
@@ -39,8 +26,8 @@
     }
   },
   {
-    "id": "trees-central-south",
-    "textureKey": "fallen-log",
+    "id": "two-lane-center-divider-oak",
+    "textureKey": "field-oak",
     "groundOriginY": 0.875,
     "shadow": {
       "offsetX": 7,
@@ -52,7 +39,7 @@
     }
   },
   {
-    "id": "rock-east-south",
+    "id": "two-lane-center-divider-boulder",
     "textureKey": "field-boulder",
     "groundOriginY": 0.875,
     "shadow": {
@@ -65,7 +52,46 @@
     }
   },
   {
-    "id": "trees-east-ridge",
+    "id": "two-lane-south-west-log",
+    "textureKey": "fallen-log",
+    "groundOriginY": 0.875,
+    "shadow": {
+      "offsetX": 7,
+      "offsetY": 3,
+      "widthScale": 0.84,
+      "heightScale": 0.52,
+      "rotationRad": -0.1,
+      "alpha": 0.34
+    }
+  },
+  {
+    "id": "two-lane-south-west-oaks",
+    "textureKey": "field-oak",
+    "groundOriginY": 0.875,
+    "shadow": {
+      "offsetX": 7,
+      "offsetY": 3,
+      "widthScale": 0.84,
+      "heightScale": 0.52,
+      "rotationRad": -0.1,
+      "alpha": 0.34
+    }
+  },
+  {
+    "id": "two-lane-north-east-boulder",
+    "textureKey": "field-boulder",
+    "groundOriginY": 0.875,
+    "shadow": {
+      "offsetX": 4,
+      "offsetY": 2,
+      "widthScale": 0.92,
+      "heightScale": 0.5,
+      "rotationRad": -0.08,
+      "alpha": 0.3
+    }
+  },
+  {
+    "id": "two-lane-south-east-pines",
     "textureKey": "field-pine",
     "groundOriginY": 0.875,
     "shadow": {

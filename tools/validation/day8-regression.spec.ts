@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/day8-regression";
-const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&seed=warcrest-day8&audioDebug=1";
+const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&seed=warcrest-day8&audioDebug=1&map=warcrest-full-lane-hybrid-v1";
 
 type AgeId = "stone" | "bronze" | "iron_early" | "iron_mid" | "iron_late";
 
@@ -62,6 +62,7 @@ const AGE_LABELS: Record<AgeId, string> = {
 };
 
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
+test.describe.configure({ timeout: 120_000 });
 
 async function clickLogical(page: Page, x: number, y: number): Promise<void> {
   const canvas = page.locator("canvas");

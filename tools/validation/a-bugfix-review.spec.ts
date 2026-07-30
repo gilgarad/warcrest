@@ -66,7 +66,7 @@ test("captures bugfix evidence for split-sprite cleanup, tower alignment, and to
   await candidatePage.close();
 
   const baselinePage = await browser.newPage();
-  await openGame(baselinePage, "&camera=central");
+  await openGame(baselinePage, "&camera=central&map=warcrest-full-lane-hybrid-v1");
   const initial = await snapshot(baselinePage);
   const playerTower = initial.battlefield.defenseTowers.find((tower) => tower.owner === "player");
   const enemyTower = initial.battlefield.defenseTowers.find((tower) => tower.owner === "enemy");

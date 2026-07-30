@@ -1,13 +1,13 @@
 {
   "current": {
     "phase": "lane-siege",
-    "elapsedSec": 5.064826666666667,
+    "elapsedSec": 9.144409999999995,
     "player": {
       "ageId": "stone",
       "resources": {
-        "gold": 9993,
+        "gold": 9992,
         "wood": 9989,
-        "food": 10002.386589999996,
+        "food": 10001.789820000016,
         "metal": 9999,
         "gunpowder": 9999,
         "fuel": 9999
@@ -21,14 +21,14 @@
         "idle": 0
       },
       "baseHp": 400,
-      "nextWaveInSec": 24.935173333333353
+      "nextWaveInSec": 20.85558999999991
     },
     "enemy": {
       "ageId": "stone",
       "resources": {
-        "gold": 52,
+        "gold": 54,
         "wood": 20,
-        "food": 24.064826666666647,
+        "food": 28.14441000000009,
         "metal": 10,
         "gunpowder": 0,
         "fuel": 0
@@ -42,7 +42,7 @@
         "idle": 0
       },
       "baseHp": 400,
-      "nextWaveInSec": 24.935173333333353
+      "nextWaveInSec": 20.85558999999991
     },
     "units": [
       {
@@ -76,7 +76,7 @@
         "healPower": 0,
         "presentation": {
           "x": 2075.031884057971,
-          "y": 2745.926710917294,
+          "y": 2745.560977623813,
           "rotationRad": 0
         },
         "overlay": {
@@ -127,7 +127,7 @@
           "labelWorldY": 2497.855072463768,
           "markerTexture": "capture-marker",
           "buildingId": "mint",
-          "buildingLevel": 3,
+          "buildingLevel": 2,
           "availableActions": [
             "dismantle"
           ]
@@ -551,7 +551,7 @@
       "currentBgmId": "bgm.battle.low",
       "bgmState": "battle-low",
       "activeBgmVoices": 1,
-      "activeSfxVoices": 1,
+      "activeSfxVoices": 0,
       "settings": {
         "version": 2,
         "masterVolume": 0.8,
@@ -566,37 +566,42 @@
         {
           "id": "sfx.ui.confirm",
           "result": "played",
-          "atMs": 23
+          "atMs": 35
         },
         {
           "id": "sfx.ui.buildSelect",
           "result": "played",
-          "atMs": 8766
+          "atMs": 59838
         },
         {
           "id": "sfx.wave.start",
           "result": "played",
-          "atMs": 8812
+          "atMs": 60151
+        },
+        {
+          "id": "sfx.capture.complete",
+          "result": "played",
+          "atMs": 63843
         },
         {
           "id": "sfx.ui.buildSelect",
           "result": "played",
-          "atMs": 9369
+          "atMs": 65295
         },
         {
           "id": "sfx.ui.hover",
           "result": "played",
-          "atMs": 11053
+          "atMs": 72086
         },
         {
           "id": "sfx.construction.start",
           "result": "played",
-          "atMs": 11053
+          "atMs": 72110
         },
         {
           "id": "sfx.construction.complete",
           "result": "played",
-          "atMs": 11320
+          "atMs": 72722
         }
       ],
       "skippedEventCount": 0,
@@ -627,37 +632,42 @@
         {
           "id": "sfx.ui.confirm",
           "result": "played",
-          "atMs": 23
+          "atMs": 35
         },
         {
           "id": "sfx.ui.buildSelect",
           "result": "played",
-          "atMs": 8766
+          "atMs": 59838
         },
         {
           "id": "sfx.wave.start",
           "result": "played",
-          "atMs": 8812
+          "atMs": 60151
+        },
+        {
+          "id": "sfx.capture.complete",
+          "result": "played",
+          "atMs": 63843
         },
         {
           "id": "sfx.ui.buildSelect",
           "result": "played",
-          "atMs": 9369
+          "atMs": 65295
         },
         {
           "id": "sfx.ui.hover",
           "result": "played",
-          "atMs": 11053
+          "atMs": 72086
         },
         {
           "id": "sfx.construction.start",
           "result": "played",
-          "atMs": 11053
+          "atMs": 72110
         },
         {
           "id": "sfx.construction.complete",
           "result": "played",
-          "atMs": 11320
+          "atMs": 72722
         }
       ],
       "skippedEventCount": 0,
@@ -670,10 +680,10 @@
       "initialized": true,
       "unlocked": true,
       "contextState": "running",
-      "currentBgmId": "bgm.battle.low",
-      "bgmState": "battle-low",
+      "currentBgmId": "bgm.preparation",
+      "bgmState": "preparation",
       "activeBgmVoices": 1,
-      "activeSfxVoices": 2,
+      "activeSfxVoices": 0,
       "settings": {
         "version": 2,
         "masterVolume": 0.8,
@@ -688,62 +698,62 @@
         {
           "id": "sfx.ui.buildSelect",
           "result": "played",
-          "atMs": 9369
+          "atMs": 65295
         },
         {
           "id": "sfx.ui.hover",
           "result": "played",
-          "atMs": 11053
+          "atMs": 72086
         },
         {
           "id": "sfx.construction.start",
           "result": "played",
-          "atMs": 11053
+          "atMs": 72110
         },
         {
           "id": "sfx.construction.complete",
           "result": "played",
-          "atMs": 11320
+          "atMs": 72722
         },
         {
           "id": "sfx.ui.hover",
           "result": "played",
-          "atMs": 13375
+          "atMs": 81154
         },
         {
           "id": "sfx.ui.confirm",
           "result": "played",
-          "atMs": 13375
+          "atMs": 81154
         },
         {
           "id": "sfx.ui.buildSelect",
           "result": "played",
-          "atMs": 13781
+          "atMs": 82826
         },
         {
           "id": "sfx.fortress.warning",
           "result": "played",
-          "atMs": 14060
+          "atMs": 83453
         },
         {
           "id": "sfx.ui.hover",
           "result": "played",
-          "atMs": 15372
+          "atMs": 89908
         },
         {
           "id": "sfx.construction.start",
           "result": "played",
-          "atMs": 15372
+          "atMs": 89919
         },
         {
           "id": "sfx.construction.complete",
           "result": "played",
-          "atMs": 15790
+          "atMs": 91800
         },
         {
           "id": "sfx.fortress.rebuilt",
           "result": "played",
-          "atMs": 15790
+          "atMs": 91800
         }
       ],
       "skippedEventCount": 0,
@@ -756,10 +766,10 @@
       "initialized": true,
       "unlocked": true,
       "contextState": "running",
-      "currentBgmId": "bgm.battle.low",
-      "bgmState": "battle-low",
+      "currentBgmId": "bgm.preparation",
+      "bgmState": "preparation",
       "activeBgmVoices": 1,
-      "activeSfxVoices": 1,
+      "activeSfxVoices": 0,
       "settings": {
         "version": 2,
         "masterVolume": 0.8,
@@ -774,62 +784,62 @@
         {
           "id": "sfx.construction.start",
           "result": "played",
-          "atMs": 11053
+          "atMs": 72110
         },
         {
           "id": "sfx.construction.complete",
           "result": "played",
-          "atMs": 11320
+          "atMs": 72722
         },
         {
           "id": "sfx.ui.hover",
           "result": "played",
-          "atMs": 13375
+          "atMs": 81154
         },
         {
           "id": "sfx.ui.confirm",
           "result": "played",
-          "atMs": 13375
+          "atMs": 81154
         },
         {
           "id": "sfx.ui.buildSelect",
           "result": "played",
-          "atMs": 13781
+          "atMs": 82826
         },
         {
           "id": "sfx.fortress.warning",
           "result": "played",
-          "atMs": 14060
+          "atMs": 83453
         },
         {
           "id": "sfx.ui.hover",
           "result": "played",
-          "atMs": 15372
+          "atMs": 89908
         },
         {
           "id": "sfx.construction.start",
           "result": "played",
-          "atMs": 15372
+          "atMs": 89919
         },
         {
           "id": "sfx.construction.complete",
           "result": "played",
-          "atMs": 15790
+          "atMs": 91800
         },
         {
           "id": "sfx.fortress.rebuilt",
           "result": "played",
-          "atMs": 15790
+          "atMs": 91800
         },
         {
           "id": "sfx.ui.buildSelect",
           "result": "played",
-          "atMs": 16196
+          "atMs": 93437
         },
         {
           "id": "sfx.capture.complete",
           "result": "played",
-          "atMs": 16231
+          "atMs": 93542
         }
       ],
       "skippedEventCount": 0,

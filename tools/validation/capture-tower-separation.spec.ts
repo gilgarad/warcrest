@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import type { LaneBattleDebugSnapshot } from "../../src/scenes/laneBattleDebugSnapshot";
 
 const ARTIFACT_DIR = "artifacts/capture-tower-separation";
-const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&seed=capture-tower-separation-v1";
+const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&seed=capture-tower-separation-v1&map=warcrest-full-lane-hybrid-v1";
 
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 

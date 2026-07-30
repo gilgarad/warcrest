@@ -582,6 +582,8 @@ export const DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC: BattlefieldMapSpec = {
 
 export const DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC: BattlefieldMapSpec = {
   schemaVersion: 2,
+  // Archived on July 30, 2026 after the user approved the two-lane redesign
+  // as the production default. Keep this switchable for historical comparison.
   id: "warcrest-day3-three-fronts-v1",
   lanes: [{ id: MAIN_LANE_ID, role: "center", path: DAY3_THREE_FRONTS_LANE_PATH_NODES }],
   terrainPatches: createLaneTerrainPatchesForPath(
@@ -629,6 +631,8 @@ export const BATTLEFIELD_MAP_SPECS: readonly BattlefieldMapSpec[] = [
   TWO_LANE_MAP_CANDIDATE_SPEC,
 ];
 
+export const DEFAULT_BATTLEFIELD_MAP_SPEC = TWO_LANE_MAP_CANDIDATE_SPEC;
+
 export function getBattlefieldMapSpec(mapId?: string | null): BattlefieldMapSpec {
-  return BATTLEFIELD_MAP_SPECS.find((spec) => spec.id === mapId) ?? LANE_BATTLEFIELD_MAP_SPEC;
+  return BATTLEFIELD_MAP_SPECS.find((spec) => spec.id === mapId) ?? DEFAULT_BATTLEFIELD_MAP_SPEC;
 }

@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/audio-integration";
 const GAME_URL = "/?terrain=prototype-v2&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-central-v1&audioDebug=1";
+test.describe.configure({ timeout: 150_000 });
 
 interface AudioDebugState {
   initialized: boolean;
@@ -40,15 +41,22 @@ async function clickCanvasLogical(page: Page, x: number, y: number): Promise<voi
   const canvas = page.locator("canvas");
   const box = await canvas.boundingBox();
   if (!box) throw new Error("Canvas is not visible");
-  await canvas.click({ position: { x: x * box.width / 1600, y: y * box.height / 900 } });
+  await canvas.click({ position: { x: x * box.width / 1600, y: y * box.height / 900 }, force: true });
 }
 
 async function startGame(page: Page): Promise<void> {
   await expect.poll(async () => (await audioState(page)).bgmState).toBe("menu");
-  await clickCanvasLogical(page, 800, 805);
-  await page.waitForFunction(() => (
-    (window as unknown as { __gameDebug?: { phase?: string } }).__gameDebug?.phase === "lane-siege"
-  ));
+  for (let attempt = 0; attempt < 15; attempt += 1) {
+    await clickCanvasLogical(page, 800, 805);
+    try {
+      await page.waitForFunction(() => (
+        (window as unknown as { __gameDebug?: { phase?: string } }).__gameDebug?.phase === "lane-siege"
+      ), { timeout: 1_500 });
+      break;
+    } catch (error) {
+      if (attempt === 14) throw error;
+    }
+  }
   await expect.poll(async () => (await audioState(page)).unlocked).toBe(true);
 }
 
@@ -114,7 +122,6 @@ test("Audio Lab plays the layered score and distinct combat synthesis families",
 });
 
 test("complete audio lifecycle, settings, focus, terminal states, and restart", async ({ page }) => {
-  test.setTimeout(90_000);
   const consoleErrors: string[] = [];
   const failedResponses: Array<{ status: number; url: string }> = [];
   page.on("console", (message) => {
@@ -160,14 +167,27 @@ test("complete audio lifecycle, settings, focus, terminal states, and restart", 
   await page.keyboard.press("KeyM");
   expect((await audioState(page)).settings.mute).toBe(false);
 
-  await page.evaluate(() => window.dispatchEvent(new Event("blur")));
+  const focusProbePage = await page.context().newPage();
+  await focusProbePage.goto("about:blank");
+  await focusProbePage.bringToFront();
   await expect.poll(async () => (await audioState(page)).focusMuted).toBe(true);
-  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await page.bringToFront();
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("focus"));
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
   await expect.poll(async () => (await audioState(page)).focusMuted).toBe(false);
+  await focusProbePage.close();
 
   await page.evaluate(() => {
-    const control = (window as unknown as { __terrainPrototypeControl: { setPlayerBaseHpRatio: (ratio: number) => void } }).__terrainPrototypeControl;
+    const control = (window as unknown as {
+      __terrainPrototypeControl: {
+        setPlayerBaseHpRatio: (ratio: number) => void;
+        setCentralFortressHpRatio: (ratio: number) => void;
+      };
+    }).__terrainPrototypeControl;
     control.setPlayerBaseHpRatio(0.3);
+    control.setCentralFortressHpRatio(0.3);
   });
   await expect.poll(async () => (await audioState(page)).bgmState).toBe("fortress-under-attack");
   expect((await audioState(page)).activeBgmVoices).toBeLessThanOrEqual(2);

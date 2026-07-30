@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/day5-structures";
-const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&scenario=visual-validation&seed=warcrest-day5-structures";
+const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&scenario=visual-validation&seed=warcrest-day5-structures&map=warcrest-full-lane-hybrid-v1";
 
 type TowerState = "full" | "damaged" | "critical" | "ruins" | "construction";
 

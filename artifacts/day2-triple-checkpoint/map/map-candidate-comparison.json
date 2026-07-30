@@ -1,13 +1,13 @@
 {
   "baseline": {
     "phase": "lane-siege",
-    "elapsedSec": 0.016659999999999946,
+    "elapsedSec": 0.016653333333333405,
     "player": {
       "ageId": "stone",
       "resources": {
         "gold": 60,
         "wood": 40,
-        "food": 18.01666,
+        "food": 18.016653333333334,
         "metal": 18,
         "gunpowder": 0,
         "fuel": 0
@@ -21,14 +21,14 @@
         "idle": 0
       },
       "baseHp": 400,
-      "nextWaveInSec": 29.98334
+      "nextWaveInSec": 29.983346666666666
     },
     "enemy": {
       "ageId": "stone",
       "resources": {
         "gold": 44,
         "wood": 30,
-        "food": 18.01666,
+        "food": 18.016653333333334,
         "metal": 10,
         "gunpowder": 0,
         "fuel": 0
@@ -42,7 +42,7 @@
         "idle": 0
       },
       "baseHp": 400,
-      "nextWaveInSec": 29.98334
+      "nextWaveInSec": 29.983346666666666
     },
     "units": [
       {
@@ -51,7 +51,7 @@
         "unitId": "stone_axeman",
         "role": "battle",
         "laneId": "main",
-        "progress": 0.57236652,
+        "progress": 0.5723663733333333,
         "laneRow": -3,
         "hp": 34,
         "maxHp": 34,
@@ -63,8 +63,8 @@
           "x": 21.73913043478251,
           "y": 13.043478260869506
         },
-        "pose": "stone-axeman-ne-walk-b",
-        "renderTexture": "stone-axeman-ne-walk-b",
+        "pose": "stone-axeman-ne-walk-a",
+        "renderTexture": "stone-axeman-ne-walk-a",
         "attackAnimTime": 0,
         "attackFacingLockSec": 0,
         "combatFacingHoldSec": 0,
@@ -76,7 +76,7 @@
         "healPower": 0,
         "presentation": {
           "x": 3838.478260869565,
-          "y": 1551.1210898388638,
+          "y": 1550.2413695057573,
           "rotationRad": 0
         },
         "overlay": {
@@ -111,8 +111,8 @@
           "x": 2.1739130434784784,
           "y": -28.26086956521749
         },
-        "pose": "stone-axeman-n-walk-a",
-        "renderTexture": "stone-axeman-n-walk-a",
+        "pose": "stone-axeman-n-walk-b",
+        "renderTexture": "stone-axeman-n-walk-b",
         "attackAnimTime": 0,
         "attackFacingLockSec": 0,
         "combatFacingHoldSec": 0.2,
@@ -124,7 +124,7 @@
         "healPower": 0,
         "presentation": {
           "x": 4036.304347826087,
-          "y": 1897.7498497755694,
+          "y": 1899.5275296860186,
           "rotationRad": 0
         },
         "overlay": {
@@ -147,7 +147,7 @@
         "unitId": "stone_axeman",
         "role": "battle",
         "laneId": "main",
-        "progress": 0.57136652,
+        "progress": 0.5713663733333333,
         "laneRow": 3,
         "hp": 34,
         "maxHp": 34,
@@ -172,7 +172,7 @@
         "healPower": 0,
         "presentation": {
           "x": 4092.826086956522,
-          "y": 1824.1652598104715,
+          "y": 1823.76850575409,
           "rotationRad": 0
         },
         "overlay": {
@@ -207,8 +207,8 @@
           "x": -23.913043478260988,
           "y": -15.217391304347757
         },
-        "pose": "stone-slinger-ne-walk-b",
-        "renderTexture": "stone-slinger-ne-walk-b",
+        "pose": "stone-slinger-ne-walk-a",
+        "renderTexture": "stone-slinger-ne-walk-a",
         "attackAnimTime": 0,
         "attackFacingLockSec": 0,
         "combatFacingHoldSec": 0.2,
@@ -220,7 +220,7 @@
         "healPower": 0,
         "presentation": {
           "x": 3871.086956521739,
-          "y": 1706.2544306349128,
+          "y": 1704.3797546300332,
           "rotationRad": 0
         },
         "overlay": {
@@ -268,7 +268,7 @@
         "healPower": 0,
         "presentation": {
           "x": 4021.086956521739,
-          "y": 2059.239010777103,
+          "y": 2059.702312684612,
           "rotationRad": 0
         },
         "overlay": {
@@ -316,7 +316,7 @@
         "healPower": 4,
         "presentation": {
           "x": 3827.608695652174,
-          "y": 1881.190691897575,
+          "y": 1880.9704596018457,
           "rotationRad": 0
         },
         "overlay": {
@@ -339,7 +339,7 @@
         "unitId": "stone_axeman",
         "role": "battle",
         "laneId": "main",
-        "progress": 0.5936334799999999,
+        "progress": 0.5936336266666666,
         "laneRow": -3,
         "hp": 34,
         "maxHp": 34,
@@ -364,7 +364,7 @@
         "healPower": 0,
         "presentation": {
           "x": 4040.6521739130435,
-          "y": 1559.7543170483596,
+          "y": 1559.5043775735985,
           "rotationRad": 0
         },
         "overlay": {
@@ -412,7 +412,7 @@
         "healPower": 0,
         "presentation": {
           "x": 4114.565217391304,
-          "y": 1731.6112324974167,
+          "y": 1731.585428601533,
           "rotationRad": 0
         },
         "overlay": {
@@ -435,7 +435,7 @@
         "unitId": "stone_axeman",
         "role": "battle",
         "laneId": "main",
-        "progress": 0.5946334799999999,
+        "progress": 0.5946336266666666,
         "laneRow": 3,
         "hp": 34,
         "maxHp": 34,
@@ -460,7 +460,7 @@
         "healPower": 0,
         "presentation": {
           "x": 4212.391304347826,
-          "y": 1890.3392224876843,
+          "y": 1890.008549825513,
           "rotationRad": 0
         },
         "overlay": {
@@ -508,7 +508,7 @@
         "healPower": 0,
         "presentation": {
           "x": 4142.826086956522,
-          "y": 1438.043609761779,
+          "y": 1438.084935484115,
           "rotationRad": 0
         },
         "overlay": {
@@ -556,7 +556,7 @@
         "healPower": 0,
         "presentation": {
           "x": 4351.521739130435,
-          "y": 1887.5612161872461,
+          "y": 1888.1744240844694,
           "rotationRad": 0
         },
         "overlay": {
@@ -604,7 +604,7 @@
         "healPower": 4,
         "presentation": {
           "x": 4308.04347826087,
-          "y": 1633.827179201262,
+          "y": 1633.2917281609723,
           "rotationRad": 0
         },
         "overlay": {
@@ -931,7 +931,7 @@
           {
             "id": 9,
             "unitId": "stone_axeman",
-            "pose": "stone-axeman-ne-walk-b",
+            "pose": "stone-axeman-ne-walk-a",
             "worldWidth": 321.54589371980677,
             "worldHeight": 321.54589371980677,
             "canvasScreenWidth": 147.91111111111113,
@@ -963,7 +963,7 @@
           {
             "id": 10,
             "unitId": "stone_axeman",
-            "pose": "stone-axeman-n-walk-a",
+            "pose": "stone-axeman-n-walk-b",
             "worldWidth": 321.54589371980677,
             "worldHeight": 321.54589371980677,
             "canvasScreenWidth": 147.91111111111113,
@@ -1027,7 +1027,7 @@
           {
             "id": 12,
             "unitId": "stone_slinger",
-            "pose": "stone-slinger-ne-walk-b",
+            "pose": "stone-slinger-ne-walk-a",
             "worldWidth": 296.81159420289856,
             "worldHeight": 296.81159420289856,
             "canvasScreenWidth": 136.53333333333333,
@@ -1321,13 +1321,13 @@
   },
   "candidate": {
     "phase": "lane-siege",
-    "elapsedSec": 0.016666666666666663,
+    "elapsedSec": 0.016659999999999946,
     "player": {
       "ageId": "stone",
       "resources": {
         "gold": 60,
         "wood": 40,
-        "food": 18.016666666666666,
+        "food": 18.01666,
         "metal": 18,
         "gunpowder": 0,
         "fuel": 0
@@ -1341,14 +1341,14 @@
         "idle": 0
       },
       "baseHp": 400,
-      "nextWaveInSec": 29.983333333333334
+      "nextWaveInSec": 29.98334
     },
     "enemy": {
       "ageId": "stone",
       "resources": {
         "gold": 44,
         "wood": 30,
-        "food": 18.016666666666666,
+        "food": 18.01666,
         "metal": 10,
         "gunpowder": 0,
         "fuel": 0
@@ -1362,7 +1362,7 @@
         "idle": 0
       },
       "baseHp": 400,
-      "nextWaveInSec": 29.983333333333334
+      "nextWaveInSec": 29.98334
     },
     "units": [
       {
@@ -1371,7 +1371,7 @@
         "unitId": "stone_axeman",
         "role": "battle",
         "laneId": "main",
-        "progress": 0.5723666666666666,
+        "progress": 0.57236652,
         "laneRow": -3,
         "hp": 34,
         "maxHp": 34,
@@ -1383,8 +1383,8 @@
           "x": 21.73913043478251,
           "y": 13.043478260869506
         },
-        "pose": "stone-axeman-ne-walk-a",
-        "renderTexture": "stone-axeman-ne-walk-a",
+        "pose": "stone-axeman-ne-walk-b",
+        "renderTexture": "stone-axeman-ne-walk-b",
         "attackAnimTime": 0,
         "attackFacingLockSec": 0,
         "combatFacingHoldSec": 0,
@@ -1396,7 +1396,7 @@
         "healPower": 0,
         "presentation": {
           "x": 3889.0956521739126,
-          "y": 1518.8664971226267,
+          "y": 1520.245565654557,
           "rotationRad": 0
         },
         "overlay": {
@@ -1431,8 +1431,8 @@
           "x": 2.1739130434780236,
           "y": -28.26086956521749
         },
-        "pose": "stone-axeman-ne-walk-b",
-        "renderTexture": "stone-axeman-ne-walk-b",
+        "pose": "stone-axeman-ne-walk-a",
+        "renderTexture": "stone-axeman-ne-walk-a",
         "attackAnimTime": 0,
         "attackFacingLockSec": 0,
         "combatFacingHoldSec": 0.2,
@@ -1444,7 +1444,7 @@
         "healPower": 0,
         "presentation": {
           "x": 4069.530434782608,
-          "y": 1876.8508511749533,
+          "y": 1875.462275809135,
           "rotationRad": 0
         },
         "overlay": {
@@ -1467,7 +1467,7 @@
         "unitId": "stone_axeman",
         "role": "battle",
         "laneId": "main",
-        "progress": 0.5713666666666666,
+        "progress": 0.57136652,
         "laneRow": 3,
         "hp": 34,
         "maxHp": 34,
@@ -1492,7 +1492,7 @@
         "healPower": 0,
         "presentation": {
           "x": 4130.4,
-          "y": 1805.2745849287187,
+          "y": 1805.306077171362,
           "rotationRad": 0
         },
         "overlay": {
@@ -1527,8 +1527,8 @@
           "x": -21.739130434782965,
           "y": -15.217391304347757
         },
-        "pose": "stone-slinger-ne-walk-b",
-        "renderTexture": "stone-slinger-ne-walk-b",
+        "pose": "stone-slinger-ne-walk-a",
+        "renderTexture": "stone-slinger-ne-walk-a",
         "attackAnimTime": 0,
         "attackFacingLockSec": 0,
         "combatFacingHoldSec": 0.2,
@@ -1540,7 +1540,7 @@
         "healPower": 0,
         "presentation": {
           "x": 3915.1826086956517,
-          "y": 1676.3534882936738,
+          "y": 1674.9373472666737,
           "rotationRad": 0
         },
         "overlay": {
@@ -1588,7 +1588,7 @@
         "healPower": 0,
         "presentation": {
           "x": 4049.965217391304,
-          "y": 2036.9912382668278,
+          "y": 2036.8717309551257,
           "rotationRad": 0
         },
         "overlay": {
@@ -1636,7 +1636,7 @@
         "healPower": 4,
         "presentation": {
           "x": 3865.1826086956517,
-          "y": 1850.1683003497508,
+          "y": 1849.6038227804215,
           "rotationRad": 0
         },
         "overlay": {
@@ -1659,7 +1659,7 @@
         "unitId": "stone_axeman",
         "role": "battle",
         "laneId": "main",
-        "progress": 0.5936333333333333,
+        "progress": 0.5936334799999999,
         "laneRow": -3,
         "hp": 34,
         "maxHp": 34,
@@ -1684,7 +1684,7 @@
         "healPower": 0,
         "presentation": {
           "x": 4071.7043478260866,
-          "y": 1543.1169874188045,
+          "y": 1543.067662548832,
           "rotationRad": 0
         },
         "overlay": {
@@ -1732,7 +1732,7 @@
         "healPower": 0,
         "presentation": {
           "x": 4147.791304347826,
-          "y": 1713.1934638946796,
+          "y": 1712.9261618317391,
           "rotationRad": 0
         },
         "overlay": {
@@ -1755,7 +1755,7 @@
         "unitId": "stone_axeman",
         "role": "battle",
         "laneId": "main",
-        "progress": 0.5946333333333333,
+        "progress": 0.5946334799999999,
         "laneRow": 3,
         "hp": 34,
         "maxHp": 34,
@@ -1780,7 +1780,7 @@
         "healPower": 0,
         "presentation": {
           "x": 4247.791304347826,
-          "y": 1871.4536576889927,
+          "y": 1871.931448806615,
           "rotationRad": 0
         },
         "overlay": {
@@ -1828,7 +1828,7 @@
         "healPower": 0,
         "presentation": {
           "x": 4163.008695652174,
-          "y": 1426.253211837734,
+          "y": 1425.9422360416504,
           "rotationRad": 0
         },
         "overlay": {
@@ -1876,7 +1876,7 @@
         "healPower": 0,
         "presentation": {
           "x": 4378.226086956522,
-          "y": 1871.9437587877208,
+          "y": 1871.4483206483521,
           "rotationRad": 0
         },
         "overlay": {
@@ -1924,7 +1924,7 @@
         "healPower": 4,
         "presentation": {
           "x": 4326.052173913043,
-          "y": 1619.5486624998564,
+          "y": 1619.6202987773036,
           "rotationRad": 0
         },
         "overlay": {
@@ -2277,7 +2277,7 @@
           {
             "id": 9,
             "unitId": "stone_axeman",
-            "pose": "stone-axeman-ne-walk-a",
+            "pose": "stone-axeman-ne-walk-b",
             "worldWidth": 321.54589371980677,
             "worldHeight": 321.54589371980677,
             "canvasScreenWidth": 147.91111111111113,
@@ -2309,7 +2309,7 @@
           {
             "id": 10,
             "unitId": "stone_axeman",
-            "pose": "stone-axeman-ne-walk-b",
+            "pose": "stone-axeman-ne-walk-a",
             "worldWidth": 321.54589371980677,
             "worldHeight": 321.54589371980677,
             "canvasScreenWidth": 147.91111111111113,
@@ -2373,7 +2373,7 @@
           {
             "id": 12,
             "unitId": "stone_slinger",
-            "pose": "stone-slinger-ne-walk-b",
+            "pose": "stone-slinger-ne-walk-a",
             "worldWidth": 296.81159420289856,
             "worldHeight": 296.81159420289856,
             "canvasScreenWidth": 136.53333333333333,

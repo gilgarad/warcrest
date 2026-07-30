@@ -106,6 +106,8 @@ The redesign was extended from the Day 2 player-front slice to a complete full
 candidate map:
 
 - Candidate id: `warcrest-day3-three-fronts-v1`
+- Status as of July 30, 2026: archived candidate kept switchable for
+  comparison after the user promoted `warcrest-two-lane-v1` instead.
 
 The engine and renderer were not rewritten. The candidate only replaces map
 data:
@@ -143,7 +145,8 @@ Reason:
 - `warcrest-full-lane-hybrid-v1` remained the verified production baseline.
 - `warcrest-day3-three-fronts-v1` was intentionally left switchable so a human
   play/readability pass could decide promotion explicitly instead of the Day 3
-  build changing live behavior by default.
+  build changing live behavior by default. On July 30, 2026, that follow-up
+  decision archived this candidate in favor of the later two-lane map.
 
 ## Verification summary
 

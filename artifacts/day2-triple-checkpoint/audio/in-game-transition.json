@@ -21,50 +21,50 @@
       {
         "id": "sfx.ui.confirm",
         "result": "played",
-        "atMs": 12
+        "atMs": 23
       },
       {
         "id": "sfx.ui.buildSelect",
         "result": "played",
-        "atMs": 6304
+        "atMs": 32589
       },
       {
         "id": "sfx.wave.start",
         "result": "played",
-        "atMs": 6339
+        "atMs": 32682
       },
       {
         "id": "sfx.ui.buildSelect",
-        "result": "cooldown",
-        "atMs": 6374
+        "result": "played",
+        "atMs": 32763
       },
       {
         "id": "sfx.combat.towerAttack",
         "result": "played",
-        "atMs": 6420
-      },
-      {
-        "id": "sfx.combat.meleeAttack",
-        "result": "played",
-        "atMs": 7094
-      },
-      {
-        "id": "sfx.combat.rangedFire",
-        "result": "played",
-        "atMs": 7094
+        "atMs": 32879
       },
       {
         "id": "sfx.combat.projectileHit",
         "result": "played",
-        "atMs": 7268
+        "atMs": 34064
       },
       {
         "id": "sfx.combat.projectileHit",
         "result": "duplicate",
-        "atMs": 7268
+        "atMs": 34075
+      },
+      {
+        "id": "sfx.combat.meleeAttack",
+        "result": "played",
+        "atMs": 34078
+      },
+      {
+        "id": "sfx.combat.rangedFire",
+        "result": "played",
+        "atMs": 34087
       }
     ],
-    "skippedEventCount": 2,
+    "skippedEventCount": 1,
     "unlockAttemptCount": 1,
     "missingAssetFallback": true,
     "focusMuted": false,
@@ -92,50 +92,50 @@
       {
         "id": "sfx.ui.confirm",
         "result": "played",
-        "atMs": 12
+        "atMs": 23
       },
       {
         "id": "sfx.ui.buildSelect",
         "result": "played",
-        "atMs": 6304
+        "atMs": 32589
       },
       {
         "id": "sfx.wave.start",
         "result": "played",
-        "atMs": 6339
+        "atMs": 32682
       },
       {
         "id": "sfx.ui.buildSelect",
-        "result": "cooldown",
-        "atMs": 6374
+        "result": "played",
+        "atMs": 32763
       },
       {
         "id": "sfx.combat.towerAttack",
         "result": "played",
-        "atMs": 6420
-      },
-      {
-        "id": "sfx.combat.meleeAttack",
-        "result": "played",
-        "atMs": 7094
-      },
-      {
-        "id": "sfx.combat.rangedFire",
-        "result": "played",
-        "atMs": 7094
+        "atMs": 32879
       },
       {
         "id": "sfx.combat.projectileHit",
         "result": "played",
-        "atMs": 7268
+        "atMs": 34064
       },
       {
         "id": "sfx.combat.projectileHit",
         "result": "duplicate",
-        "atMs": 7268
+        "atMs": 34075
+      },
+      {
+        "id": "sfx.combat.meleeAttack",
+        "result": "played",
+        "atMs": 34078
+      },
+      {
+        "id": "sfx.combat.rangedFire",
+        "result": "played",
+        "atMs": 34087
       }
     ],
-    "skippedEventCount": 2,
+    "skippedEventCount": 1,
     "unlockAttemptCount": 1,
     "missingAssetFallback": true,
     "focusMuted": false,
