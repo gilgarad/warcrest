@@ -3948,3 +3948,85 @@ Use consistent headings so entries are easy to grep.
   - `npm test`
   - `npx playwright test tools/validation/audio-signal.spec.ts --workers=1`
   - `npx playwright test tools/validation/audio-integration.spec.ts --grep "Audio Lab plays the layered score and distinct combat synthesis families" --workers=1`
+
+## [2026-07-30] feat | 임시 오디오 파일 브라우저 추가
+
+- 사용자 요구를 다시 좁혔다. 기존 `game_project1` 화면이나 Audio Lab 카드형 UI가
+  아니라, "사이트의 폴더 구조처럼 보이고 파일을 하나씩 눌러 재생하는"
+  별도 임시 페이지가 필요했다.
+- `tools/audio-browser/`를 새로 추가했다.
+  - `index.html`: 좌측에 가상 폴더 트리, 우측에 선택한 항목 정보와 재생 로그를
+    보여주는 독립 페이지.
+  - `main.ts`: `assetManifest.ts`의 `filePath`를 기준으로 가상 디렉터리 트리를
+    만들고, 각 항목 클릭 시 `AudioSystem`의 기존 합성 fallback을 이용해 바로
+    재생한다.
+- 이 페이지는 게임 장면과 무관하고, `tools/` 아래 별도 경로로만 열린다.
+  실파일 mp3가 아직 없는 상태라 다운로드 대신 "경로 + 합성 재생" 구조를
+  명시했다.
+
+## [2026-07-30] chore | Audio Lab HTML 엔트리 제거
+
+- 사용자 요청으로 `tools/audio-lab/index.html`를 삭제했다.
+- 별도 청취용 임시 페이지는 `tools/audio-browser/`를 사용하도록 정리했다.
+
+## [2026-07-30] feat | 오디오 자연화 가이드 적용으로 전투 SFX/BGM 질감 보강
+
+- 사용자 피드백:
+  - 이전 전투 SFX 분화 이후에도 "음악 안 바꿨네?"라고 다시 지적했고,
+    핵심 문제를 pure oscillator 기반의 기계적 질감으로 특정했다.
+- 사전 진단:
+  - `src/systems/audio/backend.ts`의 `blade`, `impact`, `pluck`, `grunt`,
+    `chime`, `noiseHit`, `sweepUp`, `sweepDown`을
+    `audio-synthesis-naturalization-guide.md`의 6개 기법 기준으로 대조했다.
+  - 수정 전에는 일부 noise layering과 랜덤화는 있었지만,
+    detuned stack, filter-envelope motion, compressor glue,
+    vocal formant movement가 전반적으로 빠져 있었다.
+- 적용 내용:
+  - `scheduleTone()` / `scheduleNoise()`:
+    BGM note와 noise 이벤트에 미세 디튠, cutoff 이동, 다단 decay를 추가했다.
+  - `playSynthOneShot()`:
+    one-shot 마스터 경로에 가벼운 compressor를 추가하고,
+    각 레이어를 multi-stage gain/filter envelope로 재구성했다.
+  - `blade` / `impact`:
+    짧은 필터드 노이즈 어택 버스트 + detuned oscillator stack으로
+    transient/body를 분리했다.
+  - `grunt`:
+    움직이는 3-formant bandpass peak + rasp 보조층으로 attack shout /
+    hit reaction이 "삑"이 아니라 발성처럼 들리도록 바꿨다.
+  - `pluck`, `sweepUp`, `sweepDown`, `chime`, `noiseHit`도 같은 공통
+    naturalization 파이프라인을 타게 정리했다.
+- 문서:
+  - `audio-synthesis-naturalization-guide.md`에 kind별 진단표와 적용 현황을
+    추가했다.
+  - `ver1-upgrade-plan.md` item 4에 후속 자연화 완료를 반영했다.
+- 검증:
+  - `npm run build`
+  - `npm test`
+  - `npx playwright test tools/validation/day3-music-expansion.spec.ts --workers=1`
+
+## [2026-07-30] fix | Round 2 전투 SFX 정정 (attackShout, bluntAttack, bowFire)
+
+- 사용자가 `tools/audio-browser/` 직접 청취 후 세 가지를 다시 지적했다:
+  `attackShout` 무음처럼 들림, `bluntAttack`가 얇음, `bowFire`가 UI 클릭처럼
+  들림.
+- `src/systems/audio/audioSystem.ts`
+  - `recordEvent()`가 실제 skip 사유(`cooldown`, `limit`, `missing`,
+    `mode-off`)를 콘솔 경고로 남기게 했다. 별도 브라우저 청취 중 "왜 안
+    들리는지"가 무음처럼 묻히지 않게 하려는 목적이다.
+- `src/systems/audio/backend.ts`
+  - `playSfxVoice()`에 invalid/inaudible/exception 경고 경로를 추가했다.
+  - `heavyImpact`를 추가해 `bluntAttack`에 crack + delayed low bloom
+    구조를 줬다.
+  - `bowTwang`를 추가해 `bowFire`를 UI `pluck`와 분리하고,
+    string twang + swept whoosh 조합으로 바꿨다.
+- `src/systems/audio/assetManifest.ts`
+  - `sfx.combat.bluntAttack`를 `heavyImpact`로, `sfx.combat.bowFire`를
+    `bowTwang`으로 분리했다.
+  - `sfx.combat.attackShout`는 `grunt`를 유지하되 `125ms -> 240ms`,
+    base volume `0.34 -> 0.42`로 조정했다.
+- 검증:
+  - `npm run build`
+  - `npm test`
+  - `npx playwright test tools/validation/audio-browser-round2.spec.ts --workers=1`
+  - 별도 headless browser 계측에서 `bluntAttack` RMS가 `bowFire`보다
+    훨씬 크게 나오는 것을 재확인했다.

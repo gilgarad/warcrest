@@ -205,6 +205,44 @@ whoosh, timed to start at or just after the twang and last longer than it.
 Do not reuse the UI `pluck` kind for this — that's exactly why it currently
 sounds like a menu click.
 
+## Round 2 applied status (2026-07-30)
+
+- `sfx.combat.attackShout`
+  - The browser-only workflow could previously fail quietly: `playSfx()` would
+    report state internally, but skipped cases left no explicit browser-console
+    breadcrumb.
+  - The shout profile itself was also the shortest vocal event in the combat
+    set (`125ms`), which made it a poor fit for the newer vocal path.
+  - Applied changes:
+    `AudioSystem.recordEvent()` now warns on real skip reasons, and
+    `WebAudioBackend.playSfxVoice()` now warns on invalid/inaudible scheduling
+    or thrown scheduling failures.
+  - `attackShout` stays on the `grunt` family, but was retuned from `125ms` to
+    `240ms` and from base volume `0.34` to `0.42` so it is no longer the
+    shortest/weakest combat vocal.
+- `sfx.combat.bluntAttack`
+  - Moved off generic `impact` to dedicated `heavyImpact`.
+  - The new path keeps the crack transient, then adds a delayed low-frequency
+    bloom (`~24ms` late, darker low-pass, slower decay) so the sound reads as a
+    heavier thud instead of a single thin sweep.
+- `sfx.combat.bowFire`
+  - Moved off UI-style `pluck` to dedicated `bowTwang`.
+  - The new path layers a tight string twang with a longer swept-noise whoosh,
+    so it no longer shares the menu-click synth family.
+
+### Round 2 verification note
+
+- `tools/audio-browser/` now exposes `bowTwang` and `heavyImpact` as clearly
+  separate synth families in the selected-asset metadata.
+- Headless browser output measurement was stable for `bluntAttack` and
+  `bowFire`, and showed `bluntAttack` carrying much larger energy than
+  `bowFire`, which matches the intended heavier-vs-lighter contrast.
+- Very short live `grunt` cues remain harder to capture consistently through
+  headless output-bus measurement, so `attackShout` regression checking now
+  relies on:
+  `grunt` family retention, longer shout parameters, successful browser-page
+  playback state, and the new explicit warning path for skipped scheduling.
+
 ## Sources
 
 - [Procedural Audio On the Web: Part One — Medium/Nemisindo](https://medium.com/@nemisindo/procedural-audio-on-the-web-part-one-77c6d464378e)

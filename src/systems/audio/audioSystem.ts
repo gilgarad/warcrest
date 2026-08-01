@@ -280,6 +280,9 @@ export class AudioSystem {
 
   private recordEvent(assetId: string, result: string, skipped: boolean): AudioPlayResult {
     if (skipped) this.skippedEventCount += 1;
+    if (skipped && result !== "duplicate" && result !== "sampled") {
+      console.warn(`[audio] SFX ${assetId} skipped: ${result}`);
+    }
     this.recentEvents.push({ id: assetId, result, atMs: Math.round(this.backend.nowMs) });
     if (this.recentEvents.length > 12) this.recentEvents.shift();
     return result as AudioPlayResult;

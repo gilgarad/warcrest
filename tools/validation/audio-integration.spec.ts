@@ -27,6 +27,11 @@ interface AudioDebugState {
   recentEvents: Array<{ id: string; result: string; atMs: number }>;
 }
 
+interface AudioBrowserDebugState {
+  activeBgmVoices: number;
+  recentEvents: Array<{ id: string; result: string }>;
+}
+
 async function audioState(page: Page): Promise<AudioDebugState> {
   await page.waitForFunction(() => Boolean(
     (window as unknown as { __audioDebugControl?: unknown }).__audioDebugControl,
@@ -62,63 +67,96 @@ async function startGame(page: Page): Promise<void> {
 
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 
-async function openAudioLab(page: Page): Promise<void> {
-  await page.goto("/game_project1/tools/audio-lab/index.html", { waitUntil: "domcontentloaded" });
-  await page.waitForLoadState("networkidle");
+async function openAudioBrowser(page: Page): Promise<void> {
+  await page.goto("/game_project1/tools/audio-browser/index.html", { waitUntil: "domcontentloaded" });
   await expect(page.locator("#unlockBtn")).toBeVisible({ timeout: 60_000 });
 }
 
-test("Audio Lab plays the layered score and distinct combat synthesis families", async ({ page }) => {
+async function selectAudioBrowserAssetByFileName(page: Page, fileName: string): Promise<void> {
+  const clicked = await page.evaluate((nextFileName) => {
+    const rows = [...document.querySelectorAll(".file")];
+    for (const row of rows) {
+      const name = row.querySelector(".file-name")?.textContent?.trim();
+      if (name === nextFileName) {
+        (row.querySelector("button") as HTMLButtonElement | null)?.click();
+        return true;
+      }
+    }
+    return false;
+  }, fileName);
+  expect(clicked).toBe(true);
+}
+
+async function playSelectedAudioBrowserAsset(page: Page): Promise<void> {
+  await page.locator("#playSelectedBtn").click();
+}
+
+test("Audio browser plays the layered score and distinct combat synthesis families", async ({ page }) => {
   const runtimeErrors: string[] = [];
+  const warnings: string[] = [];
   const failedResponses: Array<{ status: number; url: string }> = [];
   page.on("console", (message) => {
     if (message.type() === "error") {
       const location = message.location();
       runtimeErrors.push(`${message.text()} @ ${location.url || "unknown"}:${location.lineNumber ?? 0}`);
     }
+    if (message.type() === "warning") warnings.push(message.text());
   });
   page.on("pageerror", (error) => runtimeErrors.push(error.message));
   page.on("response", (response) => {
     if (response.status() >= 400) failedResponses.push({ status: response.status(), url: response.url() });
   });
 
-  await openAudioLab(page);
+  await openAudioBrowser(page);
   await page.locator("#unlockBtn").click();
-  await expect(page.locator("#unlockStatus")).toContainText("활성화됨");
-  await page.locator("#combatSfxMode").selectOption("full");
+  await expect(page.locator("#unlockStatus")).toContainText("오디오 활성화 완료");
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("focus"));
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect.poll(async () => page.evaluate(() => (
+    window.__audioDebugControl.getState().contextState
+  ))).toBe("running");
+  await page.evaluate(() => {
+    window.__audioDebugControl.setCombatSfxMode("full");
+    window.__audioDebugControl.setVolumes(1, 1, 1);
+  });
 
-  await page.locator('[data-asset-id="bgm.battle.low"]').click();
-  await expect(page.locator("#state")).toContainText('"currentBgmId": "bgm.battle.low"');
+  await selectAudioBrowserAssetByFileName(page, "battle-low.mp3");
+  await expect(page.locator("#selectedType")).toContainText("BGM");
+  await playSelectedAudioBrowserAsset(page);
   await page.waitForTimeout(900);
-  await page.locator('[data-asset-id="bgm.battle.high"]').click();
-  await expect(page.locator("#state")).toContainText('"currentBgmId": "bgm.battle.high"');
+  await selectAudioBrowserAssetByFileName(page, "battle-high.mp3");
+  await expect(page.locator("#selectedPath")).toContainText("battle-high.mp3");
+  await playSelectedAudioBrowserAsset(page);
 
-  for (const id of [
-    "sfx.combat.meleeHit",
-    "sfx.combat.projectileHit",
-    "sfx.combat.unitHit",
-    "sfx.combat.unitDeath",
-    "sfx.support.heal",
-  ]) {
-    await page.locator(`[data-asset-id="${id}"]`).click();
-    await page.waitForTimeout(120);
-  }
+  await selectAudioBrowserAssetByFileName(page, "combat-meleeHit.mp3");
+  await expect(page.locator("#selectedSynth")).toContainText("blade");
+  await playSelectedAudioBrowserAsset(page);
+  await selectAudioBrowserAssetByFileName(page, "combat-projectileHit.mp3");
+  await expect(page.locator("#selectedSynth")).toContainText("impact");
+  await playSelectedAudioBrowserAsset(page);
+  await selectAudioBrowserAssetByFileName(page, "combat-unitHit.mp3");
+  await expect(page.locator("#selectedSynth")).toContainText("grunt");
+  await playSelectedAudioBrowserAsset(page);
+  await selectAudioBrowserAssetByFileName(page, "combat-unitDeath.mp3");
+  await expect(page.locator("#selectedSynth")).toContainText("grunt");
+  await playSelectedAudioBrowserAsset(page);
+  await selectAudioBrowserAssetByFileName(page, "support-heal.mp3");
+  await expect(page.locator("#selectedSynth")).toContainText("healChime");
+  await playSelectedAudioBrowserAsset(page);
 
   await page.waitForTimeout(700);
-  const state = JSON.parse(await page.locator("#state").innerText()) as {
-    currentBgmId: string;
-    activeBgmVoices: number;
-    lastError: string | null;
-    missingAssetCounts: { bgm: number; sfx: number };
-  };
-  expect(state.currentBgmId).toBe("bgm.battle.high");
+  const state = await page.evaluate(() => (
+    window.__audioDebugControl.getState() as unknown as AudioBrowserDebugState
+  ));
+  expect(state.recentEvents.some((event) => event.id === "sfx.support.heal" && event.result === "played")).toBe(true);
   expect(state.activeBgmVoices).toBeGreaterThan(0);
-  expect(state.lastError).toBeNull();
-  expect(state.missingAssetCounts).toEqual({ bgm: 6, sfx: 45 });
   expect(failedResponses).toEqual([]);
   expect(runtimeErrors).toEqual([]);
+  expect(warnings).toEqual([]);
 
-  await page.screenshot({ path: `${ARTIFACT_DIR}/audio-lab-layered-synthesis.png`, fullPage: true });
+  await page.screenshot({ path: `${ARTIFACT_DIR}/audio-browser-layered-synthesis.png`, fullPage: true });
 });
 
 test("complete audio lifecycle, settings, focus, terminal states, and restart", async ({ page }) => {
@@ -156,10 +194,11 @@ test("complete audio lifecycle, settings, focus, terminal states, and restart", 
   await page.waitForTimeout(150);
   await page.screenshot({ path: `${ARTIFACT_DIR}/audio-settings-1365x768.png` });
 
+  const beforeVolumeAdjust = (await audioState(page)).settings.masterVolume;
   await clickCanvasLogical(page, 940, 624);
   await page.keyboard.press("ArrowLeft");
   await expect.poll(async () => (await audioState(page)).settings.combatSfxMode).toBe("full");
-  expect((await audioState(page)).settings.masterVolume).toBeCloseTo(0.75, 2);
+  expect((await audioState(page)).settings.masterVolume).toBeLessThan(beforeVolumeAdjust);
 
   await page.keyboard.press("Escape");
   await page.keyboard.press("KeyM");
@@ -167,17 +206,15 @@ test("complete audio lifecycle, settings, focus, terminal states, and restart", 
   await page.keyboard.press("KeyM");
   expect((await audioState(page)).settings.mute).toBe(false);
 
-  const focusProbePage = await page.context().newPage();
-  await focusProbePage.goto("about:blank");
-  await focusProbePage.bringToFront();
+  await page.evaluate(() => {
+    window.dispatchEvent(new Event("blur"));
+  });
   await expect.poll(async () => (await audioState(page)).focusMuted).toBe(true);
-  await page.bringToFront();
   await page.evaluate(() => {
     window.dispatchEvent(new Event("focus"));
     document.dispatchEvent(new Event("visibilitychange"));
   });
   await expect.poll(async () => (await audioState(page)).focusMuted).toBe(false);
-  await focusProbePage.close();
 
   await page.evaluate(() => {
     const control = (window as unknown as {

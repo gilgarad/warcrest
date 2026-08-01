@@ -112,6 +112,14 @@ and correctable rather than acted on blind.
   - A new `sfx.combat.attackShout` grunt layer was added for attack-start
     effort vocalization, throttled by both asset cooldown and scene-level
     probability/min-interval gating so it does not fire on every swing.
+  - Follow-up naturalization pass also upgraded `backend.ts` so both combat
+    SFX and BGM texture use detuned layering, moving filter envelopes,
+    randomized noise transients, compressor glue, and formant-style vocal
+    filtering rather than mostly flat oscillator tones.
+  - Round 2 listening corrections then split `bluntAttack` to a dedicated
+    heavy-thud path, split `bowFire` off the UI `pluck` family into a dedicated
+    twang/whoosh path, and added explicit warning logs for skipped SFX
+    scheduling in the standalone browser workflow.
 - **Open question for user**: none blocking — complete for the current pass.
 
 ## Sequencing recommendation
@@ -130,6 +138,6 @@ target:
 ## Status
 
 Items 1-4 all have user-confirmed direction as of 2026-07-30. Item 4
-(combat SFX variety + attack vocalizations) is now implemented on the audio
-track. Remaining next steps are the visual/map items and any later polish
-follow-up after user listening feedback.
+(combat SFX variety + attack vocalizations) is implemented, and its synthesis
+quality follow-up also landed on the audio track. Remaining next steps are the
+visual/map items and any later polish follow-up after user listening feedback.

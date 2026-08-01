@@ -25,8 +25,8 @@ describe("audio asset manifest", () => {
 
   it.each([
     ["sfx.combat.slashAttack", "blade"],
-    ["sfx.combat.bluntAttack", "impact"],
-    ["sfx.combat.bowFire", "pluck"],
+    ["sfx.combat.bluntAttack", "heavyImpact"],
+    ["sfx.combat.bowFire", "bowTwang"],
     ["sfx.combat.thrownFire", "sweepDown"],
     ["sfx.combat.shotFire", "impact"],
     ["sfx.combat.attackShout", "grunt"],

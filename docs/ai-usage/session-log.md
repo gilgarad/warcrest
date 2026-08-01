@@ -3949,3 +3949,81 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - `npm test`
   - `npx playwright test tools/validation/audio-signal.spec.ts --workers=1`
   - `npx playwright test tools/validation/audio-integration.spec.ts --grep "Audio Lab plays the layered score and distinct combat synthesis families" --workers=1`
+
+## 2026-07-30 (167) — 별도 임시 오디오 파일 브라우저 추가
+
+- **사용 도구**: Codex (GPT-5), `apply_patch`, `npm run build`
+- **사용자 지시 원문(핵심)**:
+  - "게임에다가 그 지랄 하지 말고 지금 별도로 볼 수 있는 구조를 임시로 짜달라니까"
+  - "어떤 사이트의 폴더 구조로 제공하고, 하나씩 폴더 하위에 있는 파일을 선택하면 플레이가 가능하게"
+- **AI 산출물 요약**:
+  - 기존 Audio Lab이 카드형 테스트 UI라 사용자 요구와 다르다는 점을 인정하고,
+    `tools/audio-browser/`라는 완전 별도 임시 페이지를 추가했다.
+  - 이 페이지는 `assetManifest.ts`의 `filePath`를 기준으로 가상 폴더 트리를 만들고,
+    각 "파일" 항목에 대해 선택/재생 버튼을 제공한다.
+  - 현재 저장소에는 실 mp3 파일이 없으므로, 페이지는 파일 경로를 브라우저처럼
+    보여주되 재생은 기존 Web Audio 합성 fallback으로 수행하도록 했다.
+- **검증**:
+  - `npm run build`
+
+## 2026-07-30 (168) — Audio Lab HTML 엔트리 삭제
+
+- **사용 도구**: Codex (GPT-5), `apply_patch`
+- **사용자 지시 원문(핵심)**:
+  - "`game_project1/tools/audio-lab/index.html` 이건 뭐야? 이건 삭제해줘"
+- **AI 산출물 요약**:
+  - `tools/audio-lab/index.html`를 삭제했다.
+  - 사용자가 원한 별도 청취 경로는 직전에 만든 `tools/audio-browser/`로
+    유지하고, dev-wiki 로그에도 그 방향으로 정리했다.
+
+## 2026-07-30 (169) — 오디오 자연화 가이드 적용으로 SFX/BGM 질감 수정
+
+- **사용 도구**: Codex (GPT-5), `git log`, `git status`, `sed`, `rg`,
+  `apply_patch`, `npm run build`, `npm test`, Playwright
+- **사용자 지시 원문(핵심)**:
+  - "`docs/dev-wiki/audio-synthesis-naturalization-guide.md`를 반드시 먼저
+    전부 읽어라."
+  - "타격/충돌류는 노이즈 버스트 + 디튠, 발성류는 포먼트 필터링,
+    모든 SFX 공통은 multi-stage envelope + 랜덤화 + 컴프레션,
+    BGM은 질감만 다듬어라."
+  - "지금 보니까 음악 안 바꿨네? 음악 바꾸라니까?"
+- **AI 산출물 요약**:
+  - `backend.ts`의 각 synth `kind`를 가이드의 6개 기법 기준으로 다시
+    진단했고, 빠져 있던 항목이 detune stack, filter-envelope motion,
+    compressor glue, vocal formants에 집중돼 있음을 문서화했다.
+  - `scheduleTone()`과 `scheduleNoise()`에 미세 디튠, cutoff 이동,
+    다단 감쇠를 넣어 BGM 이벤트 자체의 질감을 덜 정적이게 바꿨다.
+  - `playSynthOneShot()` 공통 경로에 compressor와 richer envelope를 넣고,
+    `blade`/`impact`는 transient + body 분리, `grunt`는 moving formant
+    vocalization + rasp layer 구조로 재작성했다.
+  - `audio-synthesis-naturalization-guide.md`에 kind별 진단표와
+    적용 현황을 추가했고, `ver1-upgrade-plan.md` item 4 및
+    `docs/dev-wiki/log.md`에도 후속 자연화 완료를 남겼다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+  - `npx playwright test tools/validation/day3-music-expansion.spec.ts --workers=1`
+
+## 2026-07-30 (170) — Round 2 per-SFX correction 적용
+
+- **사용 도구**: Codex (GPT-5), `git log`, `git status`, `sed`, `rg`,
+  `apply_patch`, headless browser script, `npm run build`, `npm test`,
+  Playwright
+- **사용자 지시 원문(핵심)**:
+  - "`audio-synthesis-naturalization-guide.md`의 Round 2 절을 반드시 먼저 읽어라"
+  - "`attackShout` 무음 버그 수정"
+  - "`bluntAttack`를 더 묵직하게"
+  - "`bowFire`를 활 소리답게"
+- **AI 산출물 요약**:
+  - `AudioSystem.recordEvent()`와 `WebAudioBackend.playSfxVoice()`에 경고
+    경로를 추가해 standalone browser에서 skip/invalid scheduling이
+    조용히 묻히지 않게 했다.
+  - `bluntAttack`는 `heavyImpact`, `bowFire`는 `bowTwang`으로 분리했고,
+    각각 low bloom / twang+whoosh 구조를 전용 합성 경로로 넣었다.
+  - `attackShout`는 `grunt`를 유지하되 shout profile을
+    `125ms -> 240ms`, base volume `0.34 -> 0.42`로 조정했다.
+  - 좁은 브라우저 검증 스펙 `audio-browser-round2.spec.ts`를 추가했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+  - `npx playwright test tools/validation/audio-browser-round2.spec.ts --workers=1`
