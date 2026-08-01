@@ -8,10 +8,10 @@
     "activeBgmVoices": 1,
     "activeSfxVoices": 0,
     "settings": {
-      "version": 2,
-      "masterVolume": 0.8,
-      "bgmVolume": 0.8,
-      "sfxVolume": 0.9,
+      "version": 3,
+      "masterVolume": 0.92,
+      "bgmVolume": 0.96,
+      "sfxVolume": 0.95,
       "mute": false,
       "muteWhenUnfocused": true,
       "combatSfxMode": "reduced",
@@ -21,30 +21,30 @@
       {
         "id": "sfx.ui.confirm",
         "result": "played",
-        "atMs": 12
+        "atMs": 11622
       },
       {
         "id": "sfx.ui.buildSelect",
         "result": "played",
-        "atMs": 13630
+        "atMs": 12318
       },
       {
         "id": "sfx.wave.start",
         "result": "played",
-        "atMs": 13677
+        "atMs": 12399
       },
       {
         "id": "sfx.ui.buildSelect",
-        "result": "cooldown",
-        "atMs": 13711
+        "result": "played",
+        "atMs": 12446
       },
       {
         "id": "sfx.combat.towerAttack",
         "result": "played",
-        "atMs": 13781
+        "atMs": 12524
       }
     ],
-    "skippedEventCount": 1,
+    "skippedEventCount": 0,
     "unlockAttemptCount": 1,
     "missingAssetFallback": true,
     "focusMuted": false,
@@ -59,10 +59,10 @@
     "activeBgmVoices": 1,
     "activeSfxVoices": 0,
     "settings": {
-      "version": 2,
-      "masterVolume": 0.8,
-      "bgmVolume": 0.8,
-      "sfxVolume": 0.9,
+      "version": 3,
+      "masterVolume": 0.92,
+      "bgmVolume": 0.96,
+      "sfxVolume": 0.95,
       "mute": false,
       "muteWhenUnfocused": true,
       "combatSfxMode": "reduced",
@@ -72,30 +72,30 @@
       {
         "id": "sfx.ui.confirm",
         "result": "played",
-        "atMs": 12
+        "atMs": 11622
       },
       {
         "id": "sfx.ui.buildSelect",
         "result": "played",
-        "atMs": 13630
+        "atMs": 12318
       },
       {
         "id": "sfx.wave.start",
         "result": "played",
-        "atMs": 13677
+        "atMs": 12399
       },
       {
         "id": "sfx.ui.buildSelect",
-        "result": "cooldown",
-        "atMs": 13711
+        "result": "played",
+        "atMs": 12446
       },
       {
         "id": "sfx.combat.towerAttack",
         "result": "played",
-        "atMs": 13781
+        "atMs": 12524
       }
     ],
-    "skippedEventCount": 1,
+    "skippedEventCount": 0,
     "unlockAttemptCount": 1,
     "missingAssetFallback": true,
     "focusMuted": false,
@@ -110,10 +110,10 @@
     "activeBgmVoices": 1,
     "activeSfxVoices": 0,
     "settings": {
-      "version": 2,
-      "masterVolume": 0.8,
-      "bgmVolume": 0.8,
-      "sfxVolume": 0.9,
+      "version": 3,
+      "masterVolume": 0.92,
+      "bgmVolume": 0.96,
+      "sfxVolume": 0.95,
       "mute": false,
       "muteWhenUnfocused": true,
       "combatSfxMode": "reduced",
@@ -123,30 +123,30 @@
       {
         "id": "sfx.ui.confirm",
         "result": "played",
-        "atMs": 12
+        "atMs": 11622
       },
       {
         "id": "sfx.ui.buildSelect",
         "result": "played",
-        "atMs": 13630
+        "atMs": 12318
       },
       {
         "id": "sfx.wave.start",
         "result": "played",
-        "atMs": 13677
+        "atMs": 12399
       },
       {
         "id": "sfx.ui.buildSelect",
-        "result": "cooldown",
-        "atMs": 13711
+        "result": "played",
+        "atMs": 12446
       },
       {
         "id": "sfx.combat.towerAttack",
         "result": "played",
-        "atMs": 13781
+        "atMs": 12524
       }
     ],
-    "skippedEventCount": 1,
+    "skippedEventCount": 0,
     "unlockAttemptCount": 1,
     "missingAssetFallback": true,
     "focusMuted": false,
@@ -161,10 +161,10 @@
     "activeBgmVoices": 1,
     "activeSfxVoices": 0,
     "settings": {
-      "version": 2,
-      "masterVolume": 0.8,
-      "bgmVolume": 0.8,
-      "sfxVolume": 0.9,
+      "version": 3,
+      "masterVolume": 0.92,
+      "bgmVolume": 0.96,
+      "sfxVolume": 0.95,
       "mute": false,
       "muteWhenUnfocused": true,
       "combatSfxMode": "reduced",
@@ -174,30 +174,30 @@
       {
         "id": "sfx.ui.confirm",
         "result": "played",
-        "atMs": 12
+        "atMs": 11622
       },
       {
         "id": "sfx.ui.buildSelect",
         "result": "played",
-        "atMs": 13630
+        "atMs": 12318
       },
       {
         "id": "sfx.wave.start",
         "result": "played",
-        "atMs": 13677
+        "atMs": 12399
       },
       {
         "id": "sfx.ui.buildSelect",
-        "result": "cooldown",
-        "atMs": 13711
+        "result": "played",
+        "atMs": 12446
       },
       {
         "id": "sfx.combat.towerAttack",
         "result": "played",
-        "atMs": 13781
+        "atMs": 12524
       }
     ],
-    "skippedEventCount": 1,
+    "skippedEventCount": 0,
     "unlockAttemptCount": 1,
     "missingAssetFallback": true,
     "focusMuted": false,
@@ -212,10 +212,10 @@
     "activeBgmVoices": 1,
     "activeSfxVoices": 0,
     "settings": {
-      "version": 2,
-      "masterVolume": 0.8,
-      "bgmVolume": 0.8,
-      "sfxVolume": 0.9,
+      "version": 3,
+      "masterVolume": 0.92,
+      "bgmVolume": 0.96,
+      "sfxVolume": 0.95,
       "mute": false,
       "muteWhenUnfocused": true,
       "combatSfxMode": "reduced",
@@ -225,30 +225,30 @@
       {
         "id": "sfx.ui.confirm",
         "result": "played",
-        "atMs": 12
+        "atMs": 11622
       },
       {
         "id": "sfx.ui.buildSelect",
         "result": "played",
-        "atMs": 13630
+        "atMs": 12318
       },
       {
         "id": "sfx.wave.start",
         "result": "played",
-        "atMs": 13677
+        "atMs": 12399
       },
       {
         "id": "sfx.ui.buildSelect",
-        "result": "cooldown",
-        "atMs": 13711
+        "result": "played",
+        "atMs": 12446
       },
       {
         "id": "sfx.combat.towerAttack",
         "result": "played",
-        "atMs": 13781
+        "atMs": 12524
       }
     ],
-    "skippedEventCount": 1,
+    "skippedEventCount": 0,
     "unlockAttemptCount": 1,
     "missingAssetFallback": true,
     "focusMuted": false,

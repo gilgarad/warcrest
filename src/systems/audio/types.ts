@@ -14,6 +14,7 @@ export interface SynthProfile {
   kind:
     | "pad"
     | "pluck"
+    | "bowTwang"
     | "pulse"
     | "noiseHit"
     | "sweepUp"
@@ -21,6 +22,7 @@ export interface SynthProfile {
     | "chime"
     | "blade"
     | "impact"
+    | "heavyImpact"
     | "grunt"
     | "healChime";
   /** Root frequency in Hz. For BGM pads this is the tonic; for SFX it's the pitch center. */

@@ -221,11 +221,24 @@ export class WebAudioBackend implements AudioBackend {
   }
 
   playSfxVoice(asset: SfxAssetDef, volume: number, pitchMultiplier: number, pan = 0): VoiceHandle {
-    const ctx = this.requireCtx();
-    if (!asset.missingAsset) {
-      return this.playFileOneShot(asset.filePath, volume, pan);
+    try {
+      const ctx = this.requireCtx();
+      if (volume <= 0.0001) {
+        console.warn(`[audio] skipped inaudible SFX ${asset.id}: effective volume ${volume.toFixed(4)}`);
+        return this.createSilentVoiceHandle();
+      }
+      if (asset.synth.durationMs <= 0) {
+        console.warn(`[audio] skipped invalid SFX ${asset.id}: durationMs=${asset.synth.durationMs}`);
+        return this.createSilentVoiceHandle();
+      }
+      if (!asset.missingAsset) {
+        return this.playFileOneShot(asset.filePath, volume, pan);
+      }
+      return this.playSynthOneShot(ctx, asset, volume, pitchMultiplier, pan);
+    } catch (error) {
+      console.warn(`[audio] failed to schedule SFX ${asset.id}`, error);
+      return this.createSilentVoiceHandle();
     }
-    return this.playSynthOneShot(ctx, asset.synth, volume, pitchMultiplier, pan);
   }
 
   destroy(): void {
@@ -602,50 +615,29 @@ export class WebAudioBackend implements AudioBackend {
       type: OscillatorType,
       attack = 0.025,
       endFrequency?: number,
-    ) => {
-      const oscillator = ctx.createOscillator();
-      const gain = ctx.createGain();
-      oscillator.type = type;
-      oscillator.frequency.setValueAtTime(frequency, time);
-      if (endFrequency) {
-        oscillator.frequency.exponentialRampToValueAtTime(endFrequency, time + duration);
-      }
-      gain.gain.setValueAtTime(0.0001, time);
-      gain.gain.exponentialRampToValueAtTime(Math.max(0.001, gainValue * orchestrationGain), time + attack);
-      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-      oscillator.connect(gain);
-      gain.connect(destination);
-      oscillator.onended = () => sources.delete(oscillator);
-      oscillator.start(time);
-      oscillator.stop(time + duration + 0.02);
-      sources.add(oscillator);
-    };
+    ) => this.scheduleTone(
+      ctx,
+      destination,
+      sources,
+      time,
+      frequency,
+      duration,
+      gainValue * orchestrationGain,
+      type,
+      attack,
+      endFrequency,
+    );
     const scheduleNoise = (duration: number, gainValue: number, cutoff: number) => {
-      const frameCount = Math.max(1, Math.floor(ctx.sampleRate * duration));
-      const buffer = ctx.createBuffer(1, frameCount, ctx.sampleRate);
-      const samples = buffer.getChannelData(0);
-      let seed = (step + 1) * 2654435761;
-      for (let index = 0; index < samples.length; index += 1) {
-        seed = (seed * 1664525 + 1013904223) >>> 0;
-        samples[index] = ((seed / 0xffffffff) * 2 - 1) * (1 - index / samples.length);
-      }
-      const source = ctx.createBufferSource();
-      const filter = ctx.createBiquadFilter();
-      const gain = ctx.createGain();
-      source.buffer = buffer;
-      filter.type = "bandpass";
-      filter.frequency.value = cutoff;
-      filter.Q.value = 0.7;
-      gain.gain.setValueAtTime(0.0001, time);
-      gain.gain.exponentialRampToValueAtTime(Math.max(0.001, gainValue), time + 0.004);
-      gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-      source.connect(filter);
-      filter.connect(gain);
-      gain.connect(destination);
-      source.onended = () => sources.delete(source);
-      source.start(time);
-      source.stop(time + duration + 0.01);
-      sources.add(source);
+      this.scheduleNoise(
+        ctx,
+        destination,
+        sources,
+        time,
+        step,
+        duration,
+        gainValue * Math.min(1.4, orchestrationGain * 0.92),
+        cutoff,
+      );
     };
 
     const phraseStep = step % profile.phraseSteps;
@@ -703,22 +695,49 @@ export class WebAudioBackend implements AudioBackend {
     attack = 0.025,
     endFrequency?: number,
   ): void {
-    const oscillator = ctx.createOscillator();
-    const gain = ctx.createGain();
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(frequency, time);
-    if (endFrequency) {
-      oscillator.frequency.exponentialRampToValueAtTime(endFrequency, time + duration);
-    }
-    gain.gain.setValueAtTime(0.0001, time);
-    gain.gain.exponentialRampToValueAtTime(Math.max(0.001, gainValue), time + attack);
-    gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
-    oscillator.connect(gain);
-    gain.connect(destination);
-    oscillator.onended = () => sources.delete(oscillator);
-    oscillator.start(time);
-    oscillator.stop(time + duration + 0.02);
-    sources.add(oscillator);
+    const seed = Math.round(time * 1000) + Math.round(frequency * 10) + Math.round(gainValue * 1000);
+    const layerGain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    const stopAt = time + duration;
+    const peakGain = Math.max(0.001, gainValue);
+    const sustainGain = Math.max(0.0001, peakGain * (type === "sawtooth" ? 0.38 : 0.46));
+    const attackTime = Math.max(0.003, attack * (1 + this.seededSigned(seed + 1, 0.18)));
+    const decayTime = Math.min(duration * 0.35, Math.max(0.03, duration * 0.22));
+    const filterBase = Math.max(120, frequency * (type === "sine" ? 4.8 : 6.4));
+    const filterPeak = filterBase * (type === "sawtooth" ? 1.6 : 1.35);
+    filter.type = "lowpass";
+    filter.Q.value = 0.7 + Math.abs(this.seededSigned(seed + 2, 0.18));
+    filter.frequency.setValueAtTime(Math.max(60, filterBase * 0.72), time);
+    filter.frequency.exponentialRampToValueAtTime(Math.max(90, filterPeak), time + attackTime);
+    filter.frequency.exponentialRampToValueAtTime(Math.max(60, filterBase * 0.84), Math.min(stopAt, time + attackTime + decayTime));
+    filter.frequency.exponentialRampToValueAtTime(Math.max(50, filterBase * 0.64), stopAt);
+    layerGain.gain.setValueAtTime(0.0001, time);
+    layerGain.gain.exponentialRampToValueAtTime(peakGain, time + attackTime);
+    layerGain.gain.exponentialRampToValueAtTime(sustainGain, Math.min(stopAt, time + attackTime + decayTime));
+    layerGain.gain.exponentialRampToValueAtTime(0.0001, stopAt);
+    filter.connect(layerGain);
+    layerGain.connect(destination);
+
+    const startOscillator = (oscType: OscillatorType, cents: number, gainScale: number) => {
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = oscType;
+      oscillator.detune.setValueAtTime(cents, time);
+      oscillator.frequency.setValueAtTime(Math.max(20, frequency), time);
+      if (endFrequency) {
+        oscillator.frequency.exponentialRampToValueAtTime(Math.max(20, endFrequency), stopAt);
+      }
+      gain.gain.value = gainScale;
+      oscillator.connect(gain);
+      gain.connect(filter);
+      oscillator.onended = () => sources.delete(oscillator);
+      oscillator.start(time);
+      oscillator.stop(stopAt + 0.02);
+      sources.add(oscillator);
+    };
+
+    startOscillator(type, this.seededSigned(seed + 3, 7), 1);
+    startOscillator(type === "sine" ? "triangle" : type, this.seededSigned(seed + 4, 11), 0.32);
   }
 
   private scheduleNoise(
@@ -731,23 +750,23 @@ export class WebAudioBackend implements AudioBackend {
     gainValue: number,
     cutoff: number,
   ): void {
-    const frameCount = Math.max(1, Math.floor(ctx.sampleRate * duration));
-    const buffer = ctx.createBuffer(1, frameCount, ctx.sampleRate);
-    const samples = buffer.getChannelData(0);
-    let seed = (step + 1) * 2654435761;
-    for (let index = 0; index < samples.length; index += 1) {
-      seed = (seed * 1664525 + 1013904223) >>> 0;
-      samples[index] = ((seed / 0xffffffff) * 2 - 1) * (1 - index / samples.length);
-    }
+    const seed = (step + 1) * 2654435761;
+    const buffer = this.createNoiseBuffer(ctx, duration, seed, 0.78);
     const source = ctx.createBufferSource();
     const filter = ctx.createBiquadFilter();
     const gain = ctx.createGain();
     source.buffer = buffer;
     filter.type = "bandpass";
-    filter.frequency.value = cutoff;
-    filter.Q.value = 0.7;
+    filter.Q.value = 0.7 + Math.abs(this.seededSigned(seed + 1, 0.3));
+    const startCutoff = Math.max(120, cutoff * (1 + this.seededSigned(seed + 2, 0.1)));
+    const peakCutoff = Math.max(160, cutoff * (1.22 + this.seededSigned(seed + 3, 0.08)));
+    const endCutoff = Math.max(80, cutoff * (0.78 + this.seededSigned(seed + 4, 0.06)));
+    filter.frequency.setValueAtTime(startCutoff, time);
+    filter.frequency.exponentialRampToValueAtTime(peakCutoff, time + Math.min(0.012, duration * 0.22));
+    filter.frequency.exponentialRampToValueAtTime(endCutoff, time + duration);
     gain.gain.setValueAtTime(0.0001, time);
-    gain.gain.exponentialRampToValueAtTime(Math.max(0.001, gainValue), time + 0.004);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.001, gainValue), time + Math.min(0.006, duration * 0.18));
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, gainValue * 0.28), time + Math.min(duration, 0.02 + duration * 0.2));
     gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
     source.connect(filter);
     filter.connect(gain);
@@ -756,6 +775,58 @@ export class WebAudioBackend implements AudioBackend {
     source.start(time);
     source.stop(time + duration + 0.01);
     sources.add(source);
+  }
+
+  private seededUnit(seed: number): number {
+    const x = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+    return x - Math.floor(x);
+  }
+
+  private seededSigned(seed: number, amount: number): number {
+    return (this.seededUnit(seed) * 2 - 1) * amount;
+  }
+
+  private createNoiseBuffer(
+    ctx: BaseAudioContext,
+    duration: number,
+    seed: number,
+    decayAmount: number,
+  ): AudioBuffer {
+    const frameCount = Math.max(1, Math.floor(ctx.sampleRate * duration));
+    const buffer = ctx.createBuffer(1, frameCount, ctx.sampleRate);
+    const samples = buffer.getChannelData(0);
+    let state = seed >>> 0;
+    for (let index = 0; index < samples.length; index += 1) {
+      state = (state * 1664525 + 1013904223) >>> 0;
+      const progress = index / samples.length;
+      const contour = Math.max(0, 1 - progress * decayAmount);
+      samples[index] = ((state / 0xffffffff) * 2 - 1) * contour;
+    }
+    return buffer;
+  }
+
+  private createDriveCurve(size: number, amount: number): Float32Array<ArrayBuffer> {
+    const curve = new Float32Array(new ArrayBuffer(size * Float32Array.BYTES_PER_ELEMENT));
+    const k = Math.max(0.01, amount * 24);
+    for (let index = 0; index < size; index += 1) {
+      const x = index * 2 / (size - 1) - 1;
+      curve[index] = (1 + k) * x / (1 + k * Math.abs(x));
+    }
+    return curve;
+  }
+
+  private createSilentVoiceHandle(): VoiceHandle {
+    return {
+      get isPlaying() {
+        return false;
+      },
+      setVolume() {
+        // no-op
+      },
+      stop() {
+        // no-op
+      },
+    };
   }
 
   private scheduleArrangementStep(
@@ -942,22 +1013,32 @@ export class WebAudioBackend implements AudioBackend {
 
   private playSynthOneShot(
     ctx: AudioContext,
-    profile: SfxAssetDef["synth"],
+    asset: SfxAssetDef,
     volume: number,
     pitchMultiplier: number,
     pan: number,
   ): VoiceHandle {
+    const profile = asset.synth;
     const durationS = Math.max(0.05, profile.durationMs / 1000);
     const master = ctx.createGain();
+    const compressor = ctx.createDynamicsCompressor();
     const panner = ctx.createStereoPanner();
     panner.pan.value = pan;
     master.gain.value = Math.max(0, volume * (profile.gain ?? 1));
-    master.connect(panner);
+    compressor.threshold.value = -26;
+    compressor.knee.value = 18;
+    compressor.ratio.value = 2.4;
+    compressor.attack.value = 0.003;
+    compressor.release.value = 0.11;
+    master.connect(compressor);
+    compressor.connect(panner);
     panner.connect(this.getOutputDestination(ctx));
     const baseFreq = profile.frequency * pitchMultiplier;
     const t0 = ctx.currentTime;
     const sources = new Set<AudioScheduledSourceNode>();
     let endAt = t0 + durationS;
+    const driveCurve = this.createDriveCurve(256, 0.62);
+    const randomSigned = (amount: number) => (Math.random() * 2 - 1) * amount;
 
     const connectLayer = (
       source: AudioScheduledSourceNode,
@@ -965,21 +1046,51 @@ export class WebAudioBackend implements AudioBackend {
       startAt: number,
       stopAt: number,
       attackS: number,
-      filter?: { type: BiquadFilterType; frequency: number; q?: number },
+      filter?: {
+        type: BiquadFilterType;
+        frequency: number;
+        q?: number;
+        peakMultiplier?: number;
+        endMultiplier?: number;
+      },
+      distortionAmount = 0,
     ): void => {
+      const duration = Math.max(0.01, stopAt - startAt);
       const layerGain = ctx.createGain();
+      const peakGain = Math.max(0.001, gainValue);
+      const sustainGain = Math.max(0.0001, peakGain * (0.32 + Math.random() * 0.16));
+      const decayAt = Math.min(stopAt, startAt + Math.max(0.01, duration * (0.18 + Math.random() * 0.12)));
       layerGain.gain.setValueAtTime(0.0001, startAt);
-      layerGain.gain.exponentialRampToValueAtTime(Math.max(0.001, gainValue), startAt + attackS);
+      layerGain.gain.exponentialRampToValueAtTime(peakGain, startAt + Math.min(attackS, duration * 0.4));
+      layerGain.gain.exponentialRampToValueAtTime(sustainGain, decayAt);
       layerGain.gain.exponentialRampToValueAtTime(0.0001, stopAt);
+      let chainInput: AudioNode = source;
+      if (distortionAmount > 0) {
+        const shaper = ctx.createWaveShaper();
+        const wetGain = ctx.createGain();
+        shaper.curve = this.createDriveCurve(256, distortionAmount);
+        shaper.oversample = "2x";
+        wetGain.gain.value = 0.68;
+        chainInput.connect(shaper);
+        shaper.connect(wetGain);
+        chainInput = wetGain;
+      }
       if (filter) {
         const node = ctx.createBiquadFilter();
         node.type = filter.type;
-        node.frequency.value = filter.frequency;
         node.Q.value = filter.q ?? 0.7;
-        source.connect(node);
+        const peakMultiplier = filter.peakMultiplier ?? 1.45;
+        const endMultiplier = filter.endMultiplier ?? 0.72;
+        const startFreq = Math.max(40, filter.frequency * (0.72 + randomSigned(0.08)));
+        const peakFreq = Math.max(50, filter.frequency * (peakMultiplier + randomSigned(0.12)));
+        const endFreq = Math.max(35, filter.frequency * (endMultiplier + randomSigned(0.08)));
+        node.frequency.setValueAtTime(startFreq, startAt);
+        node.frequency.exponentialRampToValueAtTime(peakFreq, startAt + Math.min(duration * 0.16, 0.018));
+        node.frequency.exponentialRampToValueAtTime(endFreq, stopAt);
+        chainInput.connect(node);
         node.connect(layerGain);
       } else {
-        source.connect(layerGain);
+        chainInput.connect(layerGain);
       }
       layerGain.connect(master);
       source.onended = () => sources.delete(source);
@@ -997,7 +1108,53 @@ export class WebAudioBackend implements AudioBackend {
       startOffsetS = 0,
       layerDurationS = durationS,
       attackS = 0.008,
-      filter?: { type: BiquadFilterType; frequency: number; q?: number },
+      filter?: {
+        type: BiquadFilterType;
+        frequency: number;
+        q?: number;
+        peakMultiplier?: number;
+        endMultiplier?: number;
+      },
+      distortionAmount = 0,
+    ): void => {
+      const detunes = [0, randomSigned(9), randomSigned(15)];
+      const gains = [1, 0.38, 0.22];
+      detunes.forEach((detune, index) => {
+        const osc = ctx.createOscillator();
+        const startAt = t0 + startOffsetS + index * 0.0015;
+        const stopAt = startAt + layerDurationS;
+        osc.type = index === 0 ? type : type === "sine" ? "triangle" : type;
+        osc.detune.setValueAtTime(detune, startAt);
+        osc.frequency.setValueAtTime(Math.max(20, frequency * (1 + randomSigned(0.012))), startAt);
+        osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFrequency * (1 + randomSigned(0.01))), stopAt);
+        connectLayer(
+          osc,
+          gainValue * gains[index],
+          startAt,
+          stopAt,
+          Math.min(attackS, layerDurationS * 0.4),
+          filter,
+          distortionAmount,
+        );
+      });
+    };
+
+    const scheduleSingleOsc = (
+      type: OscillatorType,
+      frequency: number,
+      endFrequency: number,
+      gainValue: number,
+      startOffsetS = 0,
+      layerDurationS = durationS,
+      attackS = 0.008,
+      filter?: {
+        type: BiquadFilterType;
+        frequency: number;
+        q?: number;
+        peakMultiplier?: number;
+        endMultiplier?: number;
+      },
+      distortionAmount = 0,
     ): void => {
       const osc = ctx.createOscillator();
       const startAt = t0 + startOffsetS;
@@ -1005,7 +1162,15 @@ export class WebAudioBackend implements AudioBackend {
       osc.type = type;
       osc.frequency.setValueAtTime(Math.max(20, frequency), startAt);
       osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFrequency), stopAt);
-      connectLayer(osc, gainValue, startAt, stopAt, Math.min(attackS, layerDurationS * 0.4), filter);
+      connectLayer(
+        osc,
+        gainValue,
+        startAt,
+        stopAt,
+        Math.min(attackS, layerDurationS * 0.4),
+        filter,
+        distortionAmount,
+      );
     };
 
     const scheduleNoise = (
@@ -1017,38 +1182,258 @@ export class WebAudioBackend implements AudioBackend {
         frequency: baseFreq,
       },
     ): void => {
-      const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * layerDurationS));
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i += 1) {
-        const progress = i / bufferSize;
-        data[i] = (Math.random() * 2 - 1) * (1 - progress * 0.72);
-      }
+      const buffer = this.createNoiseBuffer(
+        ctx,
+        layerDurationS,
+        Math.floor((t0 + startOffsetS) * 1000000) ^ Math.floor(baseFreq * 32),
+        0.72 + Math.random() * 0.18,
+      );
       const noise = ctx.createBufferSource();
       noise.buffer = buffer;
       const startAt = t0 + startOffsetS;
-      connectLayer(noise, gainValue, startAt, startAt + layerDurationS, 0.003, filter);
+      connectLayer(
+        noise,
+        gainValue,
+        startAt,
+        startAt + layerDurationS,
+        0.003,
+        {
+          ...filter,
+          peakMultiplier: filter.type === "highpass" ? 1.18 : 1.52,
+          endMultiplier: filter.type === "lowpass" ? 0.58 : 0.72,
+        },
+      );
+    };
+
+    const scheduleSweptNoise = (
+      gainValue: number,
+      startFrequency: number,
+      endFrequency: number,
+      startOffsetS = 0,
+      layerDurationS = durationS,
+      q = 1.4,
+    ): void => {
+      const buffer = this.createNoiseBuffer(
+        ctx,
+        layerDurationS,
+        Math.floor((t0 + startOffsetS) * 1000000) ^ Math.floor(startFrequency * 16),
+        0.76 + Math.random() * 0.12,
+      );
+      const noise = ctx.createBufferSource();
+      const filter = ctx.createBiquadFilter();
+      const gain = ctx.createGain();
+      const startAt = t0 + startOffsetS;
+      const stopAt = startAt + layerDurationS;
+      noise.buffer = buffer;
+      filter.type = "bandpass";
+      filter.Q.value = q;
+      gain.gain.setValueAtTime(0.0001, startAt);
+      gain.gain.exponentialRampToValueAtTime(Math.max(0.001, gainValue), startAt + Math.min(0.008, layerDurationS * 0.18));
+      gain.gain.exponentialRampToValueAtTime(Math.max(0.0001, gainValue * 0.34), startAt + Math.min(layerDurationS * 0.48, 0.05));
+      gain.gain.exponentialRampToValueAtTime(0.0001, stopAt);
+      filter.frequency.setValueAtTime(Math.max(120, startFrequency), startAt);
+      filter.frequency.exponentialRampToValueAtTime(Math.max(90, startFrequency * 1.08), startAt + Math.min(0.01, layerDurationS * 0.2));
+      filter.frequency.exponentialRampToValueAtTime(Math.max(80, endFrequency), stopAt);
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(master);
+      noise.onended = () => sources.delete(noise);
+      noise.start(startAt);
+      noise.stop(stopAt + 0.02);
+      sources.add(noise);
+      endAt = Math.max(endAt, stopAt + 0.02);
+    };
+
+    const scheduleFormantVoice = (
+      frequency: number,
+      endFrequency: number,
+      gainValue: number,
+      startOffsetS = 0,
+      layerDurationS = durationS,
+      noiseGain = 0,
+      raspAmount = 0.52,
+    ): void => {
+      const isShortVoice = layerDurationS <= 0.22;
+      const osc = ctx.createOscillator();
+      const inputGain = ctx.createGain();
+      const shaper = ctx.createWaveShaper();
+      const startAt = t0 + startOffsetS;
+      const stopAt = startAt + layerDurationS;
+      const formants = isShortVoice
+        ? [
+            { frequency: 340 * pitchMultiplier, gain: 0.92, q: 2.4, drift: 0.08 },
+            { frequency: 720 * pitchMultiplier, gain: 0.58, q: 3.1, drift: 0.07 },
+            { frequency: 1320 * pitchMultiplier, gain: 0.24, q: 2.8, drift: 0.06 },
+          ]
+        : [
+            { frequency: 520 * pitchMultiplier, gain: 0.48, q: 4.8, drift: 0.12 },
+            { frequency: 980 * pitchMultiplier, gain: 0.32, q: 5.3, drift: 0.09 },
+            { frequency: 1780 * pitchMultiplier, gain: 0.18, q: 4.1, drift: 0.07 },
+          ];
+      osc.type = "sawtooth";
+      osc.detune.setValueAtTime(randomSigned(18), startAt);
+      osc.frequency.setValueAtTime(Math.max(50, frequency), startAt);
+      osc.frequency.exponentialRampToValueAtTime(Math.max(40, endFrequency), stopAt);
+      inputGain.gain.setValueAtTime(0.0001, startAt);
+      inputGain.gain.exponentialRampToValueAtTime(
+        Math.max(0.001, gainValue * (isShortVoice ? 1.35 : 1)),
+        startAt + Math.min(isShortVoice ? 0.008 : 0.02, layerDurationS * 0.24),
+      );
+      inputGain.gain.exponentialRampToValueAtTime(
+        Math.max(0.0001, gainValue * (isShortVoice ? 0.62 : 0.42)),
+        startAt + Math.min(layerDurationS * (isShortVoice ? 0.24 : 0.38), isShortVoice ? 0.032 : 0.07),
+      );
+      inputGain.gain.exponentialRampToValueAtTime(0.0001, stopAt);
+      shaper.curve = driveCurve;
+      shaper.oversample = "2x";
+      osc.connect(shaper);
+      shaper.connect(inputGain);
+      formants.forEach((formant, index) => {
+        const band = ctx.createBiquadFilter();
+        const bandGain = ctx.createGain();
+        band.type = "bandpass";
+        band.Q.value = formant.q;
+        const startFreq = formant.frequency * (0.92 + randomSigned(formant.drift));
+        const midFreq = formant.frequency * (1.08 + randomSigned(formant.drift));
+        const endFreq = formant.frequency * (0.96 + randomSigned(formant.drift));
+        band.frequency.setValueAtTime(Math.max(120, startFreq), startAt);
+        band.frequency.linearRampToValueAtTime(
+          Math.max(140, midFreq),
+          startAt + layerDurationS * (isShortVoice ? 0.16 + index * 0.05 : 0.35 + index * 0.08),
+        );
+        band.frequency.linearRampToValueAtTime(Math.max(120, endFreq), stopAt);
+        bandGain.gain.value = formant.gain;
+        inputGain.connect(band);
+        band.connect(bandGain);
+        bandGain.connect(master);
+      });
+      const bodyFilter = ctx.createBiquadFilter();
+      const bodyGain = ctx.createGain();
+      bodyFilter.type = "lowpass";
+      bodyFilter.Q.value = 0.9;
+      bodyFilter.frequency.setValueAtTime(isShortVoice ? 900 : 1500, startAt);
+      bodyFilter.frequency.exponentialRampToValueAtTime(isShortVoice ? 620 : 900, stopAt);
+      bodyGain.gain.value = isShortVoice ? 0.34 : 0.16;
+      inputGain.connect(bodyFilter);
+      bodyFilter.connect(bodyGain);
+      bodyGain.connect(master);
+      osc.onended = () => sources.delete(osc);
+      osc.start(startAt);
+      osc.stop(stopAt + 0.02);
+      sources.add(osc);
+      endAt = Math.max(endAt, stopAt + 0.02);
+      if (noiseGain > 0) {
+        scheduleNoise(noiseGain * (isShortVoice ? 1.25 : 1), startOffsetS + (isShortVoice ? 0.002 : 0.01), layerDurationS * (isShortVoice ? 0.42 : 0.55), {
+          type: "bandpass",
+          frequency: (isShortVoice ? 860 : 1200) * (1 + randomSigned(0.08)),
+          q: isShortVoice ? 1.2 : 1.6,
+        });
+      }
+      if (isShortVoice) {
+        scheduleSingleOsc("triangle", frequency * 0.92, endFrequency * 0.82, gainValue * 0.22, startOffsetS, layerDurationS * 0.78, 0.004, {
+          type: "lowpass",
+          frequency: 520 * (1 + randomSigned(0.06)),
+          q: 0.8,
+          peakMultiplier: 1.06,
+          endMultiplier: 0.72,
+        }, 0.22);
+      }
+      if (raspAmount > 0) {
+        scheduleSingleOsc("triangle", frequency * 0.5, endFrequency * 0.48, gainValue * 0.12, startOffsetS, layerDurationS * 0.82, 0.012, {
+          type: "bandpass",
+          frequency: 360 * (1 + randomSigned(0.1)),
+          q: 2.1,
+          peakMultiplier: 1.18,
+          endMultiplier: 0.92,
+        }, raspAmount);
+      }
     };
 
     switch (profile.kind) {
       case "blade":
-        scheduleNoise(0.62, 0, durationS * 0.72, { type: "highpass", frequency: baseFreq * 2.4, q: 0.5 });
-        scheduleNoise(0.34, 0.018, durationS * 0.9, { type: "bandpass", frequency: baseFreq * 4.6, q: 2.4 });
-        scheduleOsc("triangle", baseFreq * 2.1, baseFreq * 0.62, 0.26, 0, durationS * 0.64, 0.003);
+        scheduleNoise(0.72, 0, durationS * 0.18, { type: "highpass", frequency: baseFreq * 4.2, q: 0.9 });
+        scheduleNoise(0.3, 0.016, durationS * 0.55, { type: "bandpass", frequency: baseFreq * 5.1, q: 2.9 });
+        scheduleOsc("triangle", baseFreq * 2.2, baseFreq * 0.66, 0.22, 0, durationS * 0.68, 0.002, {
+          type: "highpass",
+          frequency: baseFreq * 1.8,
+          q: 0.8,
+          peakMultiplier: 1.24,
+          endMultiplier: 0.94,
+        });
+        scheduleSingleOsc("sine", baseFreq * 3.4, baseFreq * 0.84, 0.08, 0.005, durationS * 0.3, 0.002, {
+          type: "bandpass",
+          frequency: baseFreq * 3.1,
+          q: 2.2,
+        });
         break;
       case "impact":
-        scheduleNoise(0.46, 0, durationS * 0.7, { type: "lowpass", frequency: baseFreq * 5.4, q: 0.8 });
-        scheduleOsc("sine", baseFreq * 1.5, baseFreq * 0.42, 0.78, 0, durationS, 0.002);
-        scheduleOsc("triangle", baseFreq * 2.6, baseFreq * 0.7, 0.2, 0.008, durationS * 0.52, 0.002);
+        scheduleNoise(0.54, 0, durationS * 0.16, { type: "lowpass", frequency: baseFreq * 7.2, q: 0.7 });
+        scheduleNoise(0.2, 0.012, durationS * 0.45, { type: "bandpass", frequency: baseFreq * 2.1, q: 1.4 });
+        scheduleOsc("sine", baseFreq * 1.45, baseFreq * 0.46, 0.58, 0, durationS, 0.002, {
+          type: "lowpass",
+          frequency: baseFreq * 4.8,
+          q: 0.8,
+          peakMultiplier: 1.18,
+          endMultiplier: 0.54,
+        });
+        scheduleOsc("triangle", baseFreq * 2.3, baseFreq * 0.64, 0.16, 0.006, durationS * 0.62, 0.002, {
+          type: "bandpass",
+          frequency: baseFreq * 1.7,
+          q: 1.6,
+        });
         break;
+      case "heavyImpact": {
+        const bloomDuration = Math.max(durationS * 1.45, 0.18);
+        scheduleNoise(0.62, 0, durationS * 0.14, { type: "lowpass", frequency: baseFreq * 7.6, q: 0.75 });
+        scheduleNoise(0.18, 0.01, durationS * 0.3, { type: "bandpass", frequency: baseFreq * 1.8, q: 1.3 });
+        scheduleOsc("sine", baseFreq * 1.32, baseFreq * 0.56, 0.34, 0, durationS * 0.62, 0.002, {
+          type: "lowpass",
+          frequency: baseFreq * 3.2,
+          q: 0.7,
+          peakMultiplier: 1.08,
+          endMultiplier: 0.46,
+        });
+        scheduleSingleOsc("sine", baseFreq * 0.42, baseFreq * 0.26, 0.48, 0.024, bloomDuration, 0.01, {
+          type: "lowpass",
+          frequency: baseFreq * 1.18,
+          q: 0.6,
+          peakMultiplier: 0.96,
+          endMultiplier: 0.38,
+        });
+        scheduleSingleOsc("triangle", baseFreq * 0.84, baseFreq * 0.4, 0.12, 0.028, bloomDuration * 0.82, 0.012, {
+          type: "lowpass",
+          frequency: baseFreq * 1.34,
+          q: 0.7,
+          peakMultiplier: 0.94,
+          endMultiplier: 0.34,
+        });
+        break;
+      }
       case "grunt":
-        scheduleOsc("sawtooth", baseFreq * 1.16, baseFreq * 0.64, 0.42, 0, durationS, 0.018, {
-          type: "bandpass", frequency: 520 * pitchMultiplier, q: 3.2,
-        });
-        scheduleOsc("triangle", baseFreq * 0.92, baseFreq * 0.52, 0.46, 0.012, durationS * 0.92, 0.012, {
-          type: "bandpass", frequency: 920 * pitchMultiplier, q: 4.1,
-        });
-        scheduleNoise(0.1, 0.03, durationS * 0.6, { type: "bandpass", frequency: 680, q: 1.8 });
+        if (durationS <= 0.22) {
+          scheduleSingleOsc("triangle", baseFreq * 1.42, baseFreq * 0.94, 0.42, 0, durationS * 0.92, 0.001, {
+            type: "lowpass",
+            frequency: 1400,
+            q: 0.65,
+            peakMultiplier: 1.08,
+            endMultiplier: 0.52,
+          }, 0.28);
+          scheduleSingleOsc("sawtooth", baseFreq * 2.06, baseFreq * 1.26, 0.14, 0.003, durationS * 0.52, 0.001, {
+            type: "lowpass",
+            frequency: 2200,
+            q: 0.72,
+            peakMultiplier: 1.04,
+            endMultiplier: 0.68,
+          }, 0.18);
+          scheduleNoise(0.14, 0, durationS * 0.28, {
+            type: "bandpass",
+            frequency: 1100 * (1 + randomSigned(0.08)),
+            q: 1.1,
+          });
+          break;
+        }
+        scheduleFormantVoice(baseFreq * 1.08, baseFreq * 0.62, 0.34, 0, durationS, 0.09, 0.6);
+        scheduleFormantVoice(baseFreq * 0.82, baseFreq * 0.52, 0.16, 0.01, durationS * 0.85, 0.04, 0.44);
         break;
       case "healChime": {
         const notes = [1, 1.25, 1.5, 2];
@@ -1066,18 +1451,67 @@ export class WebAudioBackend implements AudioBackend {
         break;
       case "chime":
         [1, 1.5, 2].forEach((ratio, index) => {
-          scheduleOsc("sine", baseFreq * ratio, baseFreq * ratio, 0.52 / (index + 1), index * 0.026, durationS * 1.2, 0.006);
+          scheduleOsc("sine", baseFreq * ratio, baseFreq * ratio * (0.998 + randomSigned(0.003)), 0.42 / (index + 1), index * 0.026, durationS * 1.2, 0.006, {
+            type: "lowpass",
+            frequency: baseFreq * ratio * 6.4,
+            q: 0.7,
+            peakMultiplier: 1.22,
+            endMultiplier: 0.82,
+          });
         });
         break;
       case "pluck":
-        scheduleOsc("triangle", baseFreq, baseFreq * 0.96, 0.82, 0, durationS, 0.004);
-        scheduleOsc("sine", baseFreq * 2, baseFreq * 1.92, 0.18, 0, durationS * 0.62, 0.003);
+        scheduleNoise(0.08, 0, durationS * 0.08, { type: "highpass", frequency: baseFreq * 7.2, q: 0.6 });
+        scheduleOsc("triangle", baseFreq, baseFreq * 0.96, 0.58, 0, durationS, 0.004, {
+          type: "lowpass",
+          frequency: baseFreq * 4.8,
+          q: 0.9,
+          peakMultiplier: 1.16,
+          endMultiplier: 0.7,
+        });
+        scheduleSingleOsc("sine", baseFreq * 2, baseFreq * 1.92, 0.12, 0, durationS * 0.62, 0.003, {
+          type: "bandpass",
+          frequency: baseFreq * 2.1,
+          q: 1.7,
+        });
+        break;
+      case "bowTwang":
+        scheduleSingleOsc("sawtooth", baseFreq * 1.04, baseFreq * 0.98, 0.18, 0, Math.max(0.045, durationS * 0.48), 0.002, {
+          type: "bandpass",
+          frequency: baseFreq * 1.02,
+          q: 7.2,
+          peakMultiplier: 1.02,
+          endMultiplier: 0.9,
+        }, 0.18);
+        scheduleSingleOsc("triangle", baseFreq * 2.04, baseFreq * 1.88, 0.08, 0.004, Math.max(0.038, durationS * 0.42), 0.002, {
+          type: "bandpass",
+          frequency: baseFreq * 2.1,
+          q: 6.1,
+          peakMultiplier: 1.04,
+          endMultiplier: 0.92,
+        });
+        scheduleSweptNoise(0.16, 4200 * (1 + randomSigned(0.06)), 980 * (1 + randomSigned(0.08)), 0.006, Math.max(0.11, durationS * 1.22), 1.8);
+        scheduleSweptNoise(0.06, 2600 * (1 + randomSigned(0.05)), 720 * (1 + randomSigned(0.06)), 0.014, Math.max(0.09, durationS), 1.3);
         break;
       case "sweepUp":
-        scheduleOsc("sawtooth", baseFreq, baseFreq * 2.2, 0.62, 0, durationS, 0.012, { type: "lowpass", frequency: baseFreq * 5 });
+        scheduleNoise(0.09, 0, durationS * 0.18, { type: "highpass", frequency: baseFreq * 4.6, q: 0.5 });
+        scheduleOsc("sawtooth", baseFreq, baseFreq * 2.2, 0.48, 0, durationS, 0.012, {
+          type: "lowpass",
+          frequency: baseFreq * 5,
+          q: 0.7,
+          peakMultiplier: 1.4,
+          endMultiplier: 1.08,
+        });
         break;
       case "sweepDown":
-        scheduleOsc("sawtooth", baseFreq, baseFreq * 0.5, 0.62, 0, durationS, 0.012, { type: "lowpass", frequency: baseFreq * 5 });
+        scheduleNoise(0.08, 0, durationS * 0.16, { type: "bandpass", frequency: baseFreq * 3.2, q: 1.1 });
+        scheduleOsc("sawtooth", baseFreq, baseFreq * 0.5, 0.5, 0, durationS, 0.012, {
+          type: "lowpass",
+          frequency: baseFreq * 5,
+          q: 0.7,
+          peakMultiplier: 1.26,
+          endMultiplier: 0.54,
+        });
         break;
       case "pulse":
         scheduleOsc("square", baseFreq, baseFreq * 0.82, 0.5, 0, durationS, 0.004, { type: "lowpass", frequency: baseFreq * 4 });
@@ -1088,6 +1522,11 @@ export class WebAudioBackend implements AudioBackend {
         scheduleOsc("sine", baseFreq, baseFreq, 0.48, 0, durationS, 0.04);
         scheduleOsc("triangle", baseFreq * 1.5, baseFreq * 1.5, 0.22, 0, durationS, 0.05);
         break;
+    }
+
+    if (sources.size === 0) {
+      console.warn(`[audio] no sources scheduled for SFX ${asset.id} (${profile.kind})`);
+      return this.createSilentVoiceHandle();
     }
 
     let playing = true;

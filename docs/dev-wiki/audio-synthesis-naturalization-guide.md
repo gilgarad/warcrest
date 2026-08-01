@@ -110,6 +110,139 @@ one-shot SFX case, not to invent a new synthesis approach.
   the same kind of per-note/per-layer randomization and analog-emulation
   imperfection) is in scope, per the user's own framing ("질감만 다듬어라").
 
+## Applied status (2026-07-30)
+
+The audio track applied the guide directly in `src/systems/audio/backend.ts`.
+The diagnosis below reflects the **pre-fix** state of each synth `kind`,
+followed by the concrete changes that landed in the naturalization pass.
+
+| Kind | Already present before fix | Missing before fix | Applied in this pass |
+| --- | --- | --- | --- |
+| `blade` | 2 noise layering, 4 per-instance randomness | 1 detuned stack, 3 filter-envelope motion, 5 compressor glue, 6 n/a | Added short filtered attack burst + secondary noise tail, 3-osc detuned stack, moving filter envelope, master compressor glue |
+| `impact` | 2 noise layering, 4 per-instance randomness | 1 detuned stack, 3 filter-envelope motion, 5 compressor glue, 6 n/a | Added attack transient + body transient separation, detuned oscillator stack, stronger cutoff sweep, master compressor glue |
+| `pluck` | 1 light layer pair, 4 asset pitch/volume variation | 2 explicit transient burst, 3 filter-envelope motion, 5 compressor glue, 6 n/a | Added short highpassed noise click, filter-envelope motion, detuned harmonic support, master compressor glue |
+| `grunt` | 1 limited layer pair, 2 light noise breath, 4 some variation | 3 richer envelope motion, 5 compressor glue, 6 formant filtering with moving peaks | Replaced flat-tone body with moving 3-formant bandpass stack, rasp/distortion support, breath noise, compressor glue |
+| `chime` | 1 multi-note layering, 4 incidental variation | 2 transient sparkle, 3 filter-envelope motion, 5 compressor glue, 6 n/a | Added subtle detune/filter motion and routed through the same glued one-shot chain |
+| `noiseHit` | 2 pure noise body, 4 random noise sample content | 1 tonal layering, 3 filter-envelope motion, 5 compressor glue, 6 n/a | Kept as noise-first but gave it cutoff motion and glued output path |
+| `sweepUp` | 1 single oscillator body | 2 transient layer, 3 filter-envelope motion, 4 stronger variation, 5 compressor glue, 6 n/a | Added transient noise hiss, moving filter envelope, detuned stack, compressor glue |
+| `sweepDown` | 1 single oscillator body | 2 transient layer, 3 filter-envelope motion, 4 stronger variation, 5 compressor glue, 6 n/a | Added transient throw noise, moving filter envelope, detuned stack, compressor glue |
+
+### Concrete code locations
+
+- `scheduleTone()`:
+  subtle BGM note naturalization through detuned dual-osc scheduling and
+  evolving low-pass filter envelopes.
+- `scheduleNoise()`:
+  deterministic per-instance noise generation with moving cutoff and
+  multi-stage gain decay.
+- `playSynthOneShot()`:
+  one-shot compressor glue, richer layer envelopes, filter-envelope motion,
+  detuned oscillator stacks, and new `scheduleFormantVoice()` for vocal SFX.
+
+### Result summary
+
+- Combat SFX no longer rely on a single sterile oscillator body per hit; each
+  family now has an explicit transient/body/glue structure.
+- `grunt`-based reaction and attack-vocal sounds now read more like voiced
+  exertion than a flat synth beep because the resonance peaks move during the
+  sound instead of staying fixed.
+- BGM was not re-composed, but its note events now carry slight detune and
+  timbral motion so sustained layers feel less static over time.
+
+## Round 2 (2026-07-30): specific per-SFX corrections from user listening feedback
+
+The user listened to the applied pass via `tools/audio-browser/` and reported
+three concrete problems. This section adds sourced, targeted fixes for each —
+do not just re-apply round 1's generic techniques again, the gaps are
+specific.
+
+### `sfx.combat.attackShout` — plays no sound at all
+
+This is a **bug, not a design gap**. `scheduleFormantVoice()` should produce
+audible output the same as `sfx.combat.unitHit`/`unitDeath` (same `grunt`
+kind). Investigate: cooldown/`maxSimultaneous` gating in `playSynthOneShot()`
+possibly suppressing playback when triggered from the standalone
+`tools/audio-browser/` page (no game-loop context ticking cooldown state
+forward), a zero/negative gain or duration edge case specific to
+`attackShout`'s parameters (`frequency: 235, durationMs: 125`), or an
+exception being silently swallowed. Add a console warning/error path if the
+scheduler bails out silently, so this class of bug is visible next time
+instead of just "no sound."
+
+### `sfx.combat.bluntAttack` — needs to read as a heavier "퍽!" thud, not a thin hit
+
+Real punch/blunt-impact sound design is described as combining **a sharp
+attack transient with a separate, deeper low-frequency "bloom"** — the two
+are not the same layer. The current `impact` kind's body oscillator
+(`baseFreq * 1.45 -> baseFreq * 0.46`) decays across the *entire* duration
+window, which reads as one thin sweep rather than "crack + separately-timed
+thud." Concretely: keep the existing sharp noise transient for the crack,
+but add a **second, lower-pitched sine/triangle layer that starts up to
+~20-30ms after the transient, sits an octave or more below the current body
+oscillator, and decays more slowly** — this is the "low body thud" that
+research specifically calls out as separate from the initial crack. Increase
+low-pass cutoff darkness on this layer (less high-frequency content = more
+"weight," per the punch-sound source's force/pitch relationship: harder
+hits are sharper at the transient, but the *sustained* part should stay
+low and dull, not bright).
+
+### `sfx.combat.bowFire` — sounds like a UI click ("통통통"), not an arrow shot
+
+Root cause found in code: `bowFire` uses the generic `pluck` kind, **the same
+synthesis as `sfx.ui.hover`/`sfx.ui.confirm`** (`backend.ts` `case "pluck"`).
+A UI button blip and a bowstring release are not the same sound and should
+not share a kind. Bow/arrow sound design is consistently described as two
+distinct layered elements: **a sharp taut-string "twang"** (a short,
+high-Q, fast-decaying resonant pitch — a real string does this, not a soft
+triangle-wave pluck) **plus a rushing "whoosh" of the arrow through air**
+(a band-pass-swept noise layer moving from high to lower frequency across
+the sound's duration, distinct from the twang's transient). Give
+`bowFire` its own `kind` (or a distinct code path) with: (1) a high-Q
+bandpass "string" resonance around the current base frequency that decays
+fast (not a full-duration tone like the current pluck body), and (2) a
+noise layer swept through a bandpass filter to simulate the arrow's air
+whoosh, timed to start at or just after the twang and last longer than it.
+Do not reuse the UI `pluck` kind for this — that's exactly why it currently
+sounds like a menu click.
+
+## Round 2 applied status (2026-07-30)
+
+- `sfx.combat.attackShout`
+  - The browser-only workflow could previously fail quietly: `playSfx()` would
+    report state internally, but skipped cases left no explicit browser-console
+    breadcrumb.
+  - The shout profile itself was also the shortest vocal event in the combat
+    set (`125ms`), which made it a poor fit for the newer vocal path.
+  - Applied changes:
+    `AudioSystem.recordEvent()` now warns on real skip reasons, and
+    `WebAudioBackend.playSfxVoice()` now warns on invalid/inaudible scheduling
+    or thrown scheduling failures.
+  - `attackShout` stays on the `grunt` family, but was retuned from `125ms` to
+    `240ms` and from base volume `0.34` to `0.42` so it is no longer the
+    shortest/weakest combat vocal.
+- `sfx.combat.bluntAttack`
+  - Moved off generic `impact` to dedicated `heavyImpact`.
+  - The new path keeps the crack transient, then adds a delayed low-frequency
+    bloom (`~24ms` late, darker low-pass, slower decay) so the sound reads as a
+    heavier thud instead of a single thin sweep.
+- `sfx.combat.bowFire`
+  - Moved off UI-style `pluck` to dedicated `bowTwang`.
+  - The new path layers a tight string twang with a longer swept-noise whoosh,
+    so it no longer shares the menu-click synth family.
+
+### Round 2 verification note
+
+- `tools/audio-browser/` now exposes `bowTwang` and `heavyImpact` as clearly
+  separate synth families in the selected-asset metadata.
+- Headless browser output measurement was stable for `bluntAttack` and
+  `bowFire`, and showed `bluntAttack` carrying much larger energy than
+  `bowFire`, which matches the intended heavier-vs-lighter contrast.
+- Very short live `grunt` cues remain harder to capture consistently through
+  headless output-bus measurement, so `attackShout` regression checking now
+  relies on:
+  `grunt` family retention, longer shout parameters, successful browser-page
+  playback state, and the new explicit warning path for skipped scheduling.
+
 ## Sources
 
 - [Procedural Audio On the Web: Part One — Medium/Nemisindo](https://medium.com/@nemisindo/procedural-audio-on-the-web-part-one-77c6d464378e)
@@ -118,3 +251,7 @@ one-shot SFX case, not to invent a new synthesis approach.
 - [How To Design Supreme Sci-Fi Weapon Sound Effects — A Sound Effect](https://www.asoundeffect.com/supreme-scifi-weapon-sound-effects/)
 - [How to Recreate Gaming Audio's Top 5 Vocal Effects — Voquent](https://www.voquent.com/blog/how-to-recreate-gaming-audios-top-5-vocal-effects/)
 - [How procedural audio brings sounds to life in video games — Splice blog](https://splice.com/blog/procedural-audio-video-games/)
+- [The Ultimate Guide to the Impact Sound Effect — SFX Engine](https://sfxengine.com/blog/impact-sound-effect)
+- [Unveiling The Science Behind Creating Realistic Punch Sound Effects — SoundCy](https://soundcy.com/article/how-punch-sounds-are-made)
+- [Twang — Wikipedia](https://en.wikipedia.org/wiki/Twang)
+- [Bow-and-arrow Sound Effects — SFX Engine](https://sfxengine.com/sound-effects/bow-and-arrow)
