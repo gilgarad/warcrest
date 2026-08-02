@@ -125,3 +125,26 @@ All four items have user-confirmed direction as of 2026-07-30. No item is
 blocked on further discussion. Next step: user reviews this document, then
 the consulting session writes one handoff prompt per track in sequencing
 order above.
+
+## 5. Post-Iron age expansion + base research panel (new, 2026-08-01)
+
+- **Track**: 맵 및 게임 전반.
+- **User direction**:
+  - extend the age ladder after `iron_late` to
+    `renaissance -> industrial_early -> industrial_late -> modern_early ->
+    modern_mid -> modern_late`,
+  - make research workers generate a visible beaker-style research-point
+    resource,
+  - move research spending into a base-selection panel,
+  - allow producing older-age rosters after age-up by browsing backward in the
+    base panel,
+  - expose per-unit attack/defense `+/-` drafting and apply-confirmed
+    permanent levels.
+- **Current gap**:
+  - `src/data/ages.ts` ends at `iron_late`,
+  - `workers.research` currently has no point-output economy or spend path,
+  - roster production is tied directly to current age,
+  - no base-only research panel exists.
+- **Planning record**:
+  - see `docs/dev-wiki/research-era-expansion-plan.md` for the implementation
+    design, data model split, UI layout, and validation targets.

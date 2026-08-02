@@ -1581,8 +1581,6 @@ export class LaneBattleScene extends Phaser.Scene {
       if ((unit.team === "player" && unit.progress < desired) || (unit.team === "enemy" && unit.progress > desired)) {
         this.advanceUnit(unit, deltaSec);
       }
-    } else {
-      this.advanceUnit(unit, deltaSec);
     }
   }
 
@@ -2666,10 +2664,12 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private rollKillResourceReward(ageId: AgeId): { gold: number; wood: number; food: number } {
     const total = Math.round(getAgeBalance(ageId).killGoldBase);
-    const gold = Phaser.Math.Between(1, total - 2);
-    const wood = Phaser.Math.Between(1, total - gold - 1);
-    const food = total - gold - wood;
-    return { gold, wood, food };
+    const reward = { gold: 1, wood: 1, food: 1 };
+    for (let remaining = Math.max(0, total - 3); remaining > 0; remaining -= 1) {
+      const nextKey = Phaser.Utils.Array.GetRandom(["gold", "wood", "food"] as const);
+      reward[nextKey] += 1;
+    }
+    return reward;
   }
 
   private applyKillResourceReward(
@@ -3174,11 +3174,16 @@ export class LaneBattleScene extends Phaser.Scene {
       .setSize(ringWidth, ringHeight)
       .setDepth(this.getGroundDepth(pos.y, -2))
       .setVisible(this.isPrototypeV2() && (unit.selected || unit.hovered));
+    const baseFlipX = shouldFlipUnitFrame(unit.unitId, unit.facingX, unit.facingDirection);
+    const flipX = unit.unitId === "musketeer" && attackProgress > 0
+      ? !baseFlipX
+      : baseFlipX;
+
     unit.sprite
       .setPosition(pos.x + attackOffsetX, pos.y - bob - attackLift)
       .setOrigin(originX, originY)
       .setRotation(unit.visualRotationRad + walkMotion.rotationRad)
-      .setFlipX(shouldFlipUnitFrame(unit.unitId, unit.facingX, unit.facingDirection))
+      .setFlipX(flipX)
       .setDisplaySize(unit.visualSpriteWidth, unit.visualSpriteHeight)
       .setDepth(this.getGroundDepth(pos.y));
     unit.hpBg

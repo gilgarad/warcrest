@@ -3919,3 +3919,56 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - `npm run build`
   - `npm test`
   - `npx playwright test tools/validation/world-surface.spec.ts --workers=1`
+
+## 2026-08-01 (167) — 총병 공격 방향/자원 분배/보급대 전진 규칙 점검 및 정정
+
+- **사용 도구**: Codex (GPT-5), `rg`, `sed`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "버그 있음 1. 총병이 총 쏠 때 반대 방향을 바라봄"
+  - "2. 적을 죽일 때 총량에서 랜덤으로 자원이 생겨야 하는데 뭔가 금이 좀 압도적으로 생겨나고 있음"
+  - "3. 적은 적 병력이 없으면 보급이 안 움직이고 대기하는데 내 것은 그냥 내 병력이 없어도 보급만 남아있으면 적을 향해 돌진해감"
+  - "연구 일꾼의 역할이 지금 구현된 상으로는 무엇이고 개발 계획서 상으로는 무엇인지 확인하고 알려줘야해"
+- **AI 산출물 요약**:
+  - `LaneBattleScene.tickSupport()`를 확인해 보급대가 아군 전열이 없을 때도 `else { advanceUnit(...) }`로 계속 전진하는 것을 원인으로 특정했고, 이 분기를 제거해 전열 부재 시 대기하도록 정정했다.
+  - 적 처치 자원 보상은 이미 기존 gold-only 지급은 제거된 상태였지만, `gold = random(1..n-2)` 후 남은 값을 `wood`, `food`에 나누는 방식이라 평균적으로 gold가 더 많이 나오도록 편향되어 있었다. 총량은 유지한 채 `gold/wood/food` 각각 1 보장 후 잔여치를 균등 랜덤 분배하는 방식으로 바꿨다.
+  - 총병 반대 방향 문제는 현재 생산 유닛 렌더링 계약이 "동쪽 원본 프레임 + 좌우 미러"를 전제로 하고 있음을 테스트로 재확인한 뒤, 전역 계약을 뒤집지 않고 `musketeer` 공격 포즈에서만 flip을 반대로 적용하는 국소 수정으로 정리했다.
+  - 설계 확인 결과 현재 시대 정의는 `stone`, `bronze`, `iron_early`, `iron_mid`, `iron_late` 5단계뿐이며, 르네상스/근대 이후 시대와 신규 병종은 아직 없다. 연구 일꾼도 현재는 시대별 비용 직접 고용만 구현돼 있고, 연구 포인트 누적/공방 업그레이드/구시대 병력 유지 선택지는 아직 구현 전이다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-01 (168) — 후기 철기 이후 시대 확장 및 본진 연구 패널 설계 문서화
+
+- **사용 도구**: Codex (GPT-5), `rg`, `sed`
+- **사용자 지시 원문(핵심)**:
+  - "르네상스 -> 근대 초기 -> 근대 후기 -> 현대 초기 -> 현대 중기 -> 현대 후기"
+  - "연구 일꾼은 연구 포인트 ... 본진 클릭 -> 해당 시대의 병력 모양 보임 -> 공격 또는 방어력 +/-"
+  - "이전 시대명 병력으로 < 방향 클릭하면 시대가 업데이트 되어도 이전 병력으로 생산됨"
+  - "일단 이 상태로 개발 가능하도록 설계를 짜고 문서화 해봐"
+- **AI 산출물 요약**:
+  - 현재 구현을 다시 확인한 뒤, 후기 철기 이후 6개 시대를 포함한 11단계 전체 age ladder와 이를 수용하기 위한 데이터 모델 확장 방향을 설계 문서로 정리했다.
+  - 연구 일꾼은 기존처럼 단순 카운트만 올리는 것이 아니라, 새 `research` 자원을 10초당 1씩 생산하는 구조로 바꾸고 HUD에는 비커 계열 아이콘으로 표시하는 방향을 명시했다.
+  - 본진 선택 시 열리는 연구 패널 안에서 현재 시대/생산 시대를 구분하고, `<` / `>`로 이전 시대 roster를 다시 선택해 생산할 수 있게 하는 `selectedProductionAgeId` 개념을 정의했다.
+  - 공격/방어 연구는 "applied baseline + uncommitted draft" 2계층으로 설계해, Apply 전에는 `+/-`로 고민하다가 되돌릴 수 있고, Apply 후에는 이미 적용된 baseline 아래로 내려가지 않도록 규칙을 분리했다.
+  - 표처럼 보이되 경계선은 없는 레이아웃, 좌측 세로 유닛 아이콘, 상단의 swords / shield header, 각 셀의 현재 레벨과 `- / +` 버튼, 10% 단위 능력치 증가 공식을 문서화했다.
+- **문서 반영**:
+  - `docs/dev-wiki/research-era-expansion-plan.md`
+  - `docs/index.md`
+  - `docs/dev-wiki/ver1-upgrade-plan.md`
+  - `docs/dev-wiki/log.md`
+
+## 2026-08-02 (169) — 연구/시대 확장 설계를 구현 안전한 상세 구조로 재정리
+
+- **사용 도구**: Codex (GPT-5), `rg`, `sed`
+- **사용자 지시 원문(핵심)**:
+  - "설계 구조대로 개발하려면 무엇을 어떻게 개선하고 개발해야 할지를 상세로 정해줘"
+  - "지금 설계는 아마 구현하라고 하면 뭔가 빠지거나 엉성하거나 서로 연계가 안 될 수 있으니"
+  - "전체 틀에서 바꾸어야 하는 것들도 다 고려하고 상세 설계 후 다시 한 번 전면 재검토"
+- **AI 산출물 요약**:
+  - 현재 코드 구조를 다시 대조한 결과, 기존 설계는 방향은 맞지만 구현 관점에서 몇 가지 핵심 공백이 있었다. 특히 `LaneBattleScene`에는 본진 선택 모델이 없고, 웨이브 생산은 `team.ageId`에 직결되어 있으며, `research` 자원/전용 stat resolver/패널 생명주기 분리가 부재했다.
+  - 이를 반영해 설계 문서에 선행 리팩터 항목을 추가했다: unified selection type, `selectedProductionAgeId`, `research` 자원 편입, spawn-time stat resolver 분리.
+  - 또한 상태 소유권을 `scene / economy rules / research state / panel view`로 분리하고, 권장 신규 모듈(`researchState.ts`, `researchRules.ts`, `unitStatResolver.ts`, `baseResearchPanelModel.ts`, `BaseResearchPanel.ts`)과 각 책임을 명시했다.
+  - 본진 패널 상태머신, draft/apply 원자성, 이전 시대 생산 semantics, 기존 필드 유닛의 비소급 업그레이드 정책, debug snapshot 확장, 테스트/Playwright 검증 흐름, 단계별 delivery phase, 최종 re-review checklist를 추가해 구현 안전성을 높였다.
+- **문서 반영**:
+  - `docs/dev-wiki/research-era-expansion-plan.md`
+  - `docs/dev-wiki/log.md`

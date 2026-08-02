@@ -3919,3 +3919,59 @@ Use consistent headings so entries are easy to grep.
   - `npm run build`
   - `npm test`
   - `npx playwright test tools/validation/world-surface.spec.ts --workers=1`
+
+## [2026-08-01] fix | 총병 공격 방향, 처치 자원 분배 편향, 보급대 단독 돌진 정정
+
+- `src/scenes/LaneBattleScene.ts`
+  - `musketeer`는 기존 전역 미러 계약을 유지하되, 공격 포즈 중에는 flip을 반대로 적용해 발사 순간 반대 방향을 보던 현상을 국소 보정했다.
+  - 적 처치 보상은 여전히 시대별 총량(`6/9/12/18/27`)을 유지하지만, 기존의 `gold -> wood -> food` 순차 샘플링이 구조적으로 금 편향을 만들고 있어, 세 자원에 대칭적으로 1씩 보장 후 잔여치를 균등 난수 분배하도록 바꿨다.
+  - 보급대는 같은 레인에 아군 전열이 없을 때 더 이상 단독으로 전진하지 않고 제자리 대기하도록 바꿨다. 적 보급대와 같은 규칙으로 맞춘 것이다.
+- 설계 재확인:
+  - 현재 구현된 시대는 `석기 / 청동기 / 초기 철기 / 중기 철기 / 후기 철기` 5단계뿐이며, `르네상스`, `근대` 이후 단계와 해당 병종/자원은 아직 정의돼 있지 않다.
+  - 연구 일꾼은 현재 "시대별 고정 자원 비용으로 직접 고용"만 구현되어 있고, 연구 포인트 축적/공방 업그레이드 트리/구시대 병력 유지 선택지는 아직 미구현이다.
+- 검증:
+  - `npm run build`
+  - `npm test`
+
+## [2026-08-01] docs | 후기 철기 이후 시대 확장 + 본진 연구 패널 설계 문서화
+
+- `docs/dev-wiki/research-era-expansion-plan.md` 신설.
+  - 시대를 `renaissance -> industrial_early -> industrial_late -> modern_early -> modern_mid -> modern_late`까지 확장하는 전제,
+  - 연구 일꾼을 10초당 연구 포인트 1 생산으로 바꾸는 경제 규칙,
+  - 본진 선택 시 열리는 연구 패널 UX,
+  - 이전 시대 roster를 다시 선택해 생산할 수 있게 하는 `selectedProductionAgeId` 개념,
+  - per-age / per-unit 공격력·방어력 연구의 applied/draft 2계층 모델,
+  - swords / shield column 기반의 무테이블형 패널 레이아웃,
+  - 구현 순서와 검증 타깃을 정리했다.
+- `docs/index.md`
+  - 새 설계 문서를 dev-wiki 목록에 추가했다.
+- `docs/dev-wiki/ver1-upgrade-plan.md`
+  - ver1 이후 고도화 항목 5로 "post-iron age expansion + base research panel"을 연결했다.
+- 참고:
+  - 이번 턴은 사용자가 "일단 구현 가능하도록 설계를 짜고 문서화"를 요청했기 때문에 코드 구현은 진행하지 않았다.
+
+## [2026-08-02] docs | 연구/시대 확장 설계의 구현 세분화 및 전면 재검토
+
+- `docs/dev-wiki/research-era-expansion-plan.md`
+  - 기존 고수준 계획만으로는 실제 구현 시 빠질 수 있는 연결부가 남아 있다고 판단해, 구조 상세를 대폭 보강했다.
+  - 확인된 현재 구조 공백을 명시했다:
+    - 본진 선택 모델 부재,
+    - wave production이 `team.ageId`에 하드고정,
+    - `research` 자원 부재,
+    - 연구 적용 전용 stat resolver 부재,
+    - 항상 보이는 HUD와 본진 패널의 생명주기 혼재 위험.
+  - 구현 전 선행해야 할 리팩터를 정의했다:
+    - unified selection type,
+    - `selectedProductionAgeId`,
+    - `research`를 자원 계약에 편입,
+    - spawn-time stat resolver 분리.
+  - 상태 소유권을 `LaneBattleScene` / economy rules / research state /
+    base panel view로 나눠서, 어떤 레이어가 무엇을 책임지는지 고정했다.
+  - `researchState.ts`, `researchRules.ts`, `unitStatResolver.ts`,
+    `baseResearchPanelModel.ts`, `BaseResearchPanel.ts` 등 권장 신규 모듈과
+    역할을 구체화했다.
+  - 본진 패널 상태머신, draft/apply 원자성, 이전 시대 생산 semantics,
+    기존 필드 유닛 비소급 적용, debug snapshot 확장, Playwright 검증 시나리오,
+    6단계 delivery phase와 12개 re-review checklist를 추가했다.
+- 참고:
+  - 이번 턴도 설계/문서화만 수행했고, 기존 더티 워크트리의 코드 변경은 건드리지 않았다.
