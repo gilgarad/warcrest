@@ -3972,3 +3972,890 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
 - **문서 반영**:
   - `docs/dev-wiki/research-era-expansion-plan.md`
   - `docs/dev-wiki/log.md`
+
+## 2026-08-02 (170) — 연구 자원 / 생산 시대 / 연구 규칙 레이어의 foundations 구현
+
+- **사용 도구**: Codex (GPT-5), `rg`, `sed`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "지금 커밋 기준으로 시작해줘. 진행해"
+- **AI 산출물 요약**:
+  - 먼저 foundation 단계로 `research`를 정식 자원에 편입하고, age ladder를 `modern_late`까지 11단계로 확장했다. 각 시대에 placeholder balance, `researchPointTier`, `productionGroup` 메타를 추가했다.
+  - `TeamState`에 `selectedProductionAgeId`를 도입하고, 웨이브 roster/식량 비용이 현재 시대가 아니라 선택된 생산 시대를 기준으로 계산되게 바꿨다. 시대 업 시 선택 생산 시대는 새 시대로 자동 스냅된다.
+  - 연구 일꾼은 이제 10초마다 `research` 포인트를 생산한다. 이 값은 HUD 상단 자원 바에 새 연구 자원으로 표시된다.
+  - 설계에서 정의한 순수 규칙 레이어도 함께 추가했다:
+    - `researchState.ts`: applied/draft 연구 상태 저장
+    - `researchRules.ts`: draft 조정, baseline clamp, research cost 계산, atomic apply
+    - `unitStatResolver.ts`: age/unit별 연구 수준을 반영한 spawn-time attack/defense 계산
+  - foundation 단계에서 이미 다음 단계와 연결될 수 있도록 debug snapshot에도 `selectedProductionAgeId`를 추가했다.
+  - placeholder 새 시대 roster는 support balance 회귀를 깨지 않도록 모두 battleline 3명 기준으로 맞췄다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-02 (171) — 본진 연구 패널과 연구 반영 스폰 경로를 연결
+
+- **사용 도구**: Codex (GPT-5), `rg`, `sed`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "어 진행해"
+- **AI 산출물 요약**:
+  - foundation 단계 위에 실제 본진 UI 연결을 추가했다. 아군 본진을 선택하면
+    별도 연구/생산 패널이 열리고, 이전 시대 생산 탐색과 병력별 공격/방어
+    연구 draft `+/-` 조정이 가능해졌다.
+  - 패널은 순수 모델(`baseResearchPanelModel.ts`)과 Phaser 뷰
+    (`BaseResearchPanel.ts`)로 분리해 이후 확장 시 rules/view coupling이
+    커지지 않도록 정리했다.
+  - `LaneBattleScene`은 이제 팀별 연구 상태를 보유하며, 본진 선택,
+    생산 시대 탐색, 연구 draft 적용/취소를 직접 관리한다.
+  - 가장 중요한 연결로, 유닛 스폰이 더 이상 `UNIT_STATS` 고정 복사에
+    의존하지 않고 `resolveSpawnUnitStats`를 통해 생산 시대별 연구 attack /
+    defense를 반영하게 바뀌었다.
+  - support wagon의 자원 프로필도 production age 기준으로 계산되도록
+    맞춰, 이전 시대 생산 선택과 실제 웨이브 성능이 엇갈리지 않게 했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-03 (172) — DEV 치트 토글과 이동/스폰 체감 이슈 보정
+
+- **사용 도구**: Codex (GPT-5), `rg`, `sed`, `curl`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "dev 아이콘을 화면 좌측 하단 아무데나 좀 두어줘"
+  - "on상태가 되면 돈과 관계 없이 시대를 업하거나 연구 점수 등을 높일 수 있도록"
+  - "미니언 걷는 속도가 매우 느려짐"
+  - "처음에 미니언들이 본진 근처에서 나올 때 작은 크기에서 커지더니"
+- **AI 산출물 요약**:
+  - HUD 좌하단에 `DEV OFF/ON` 토글과 DEV 전용 `연구 +25` 버튼을 추가했다.
+  - DEV 모드가 켜지면 시대 업, 연구 일꾼 고용, 연구 draft 적용이 자원
+    부족을 무시하고 동작한다.
+  - 연구 패널의 적용 문구도 DEV 무료 적용 상태를 반영하도록 바꿨다.
+  - 미니언 이동 체감 저하에 대해 서버 상태와 코드를 함께 확인한 결과,
+    preview 서버는 정상 응답 중이었다. 따라서 서버 다운이 아니라 게임 쪽
+    체감 속도 문제로 보고, 전역 이동 계수를 상향해 보정했다.
+  - 본진 근처 스폰 직후 작은 크기에서 커지는 현상은 의도된 연출이 아니라,
+    spawn 시점 초기 `displaySize`가 실제 idle frame 목표 크기와 달라서
+    첫 몇 프레임 동안 lerp가 보이던 문제였다. 초기 표시 크기를 목표값으로
+    맞춰 해결했다.
+- **검증**:
+  - `curl -I http://127.0.0.1:4173`
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-03 (173) — 느린 걸음/전투 체감 원인 비교 후 템포 및 UI 보정
+
+- **사용 도구**: Codex (GPT-5), `git log`, `git show`, `rg`, `sed`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "걷는 게 여전히 느리고 조금 끊기듯 걷는다고 해야하나?"
+  - "현대 시대 기획 전이랑 뭐가 달라진 건지 봐줘"
+  - "공격 속도도 엄청 느려졌네"
+  - "본진 열었을 때 보이는 테크 같은 것들의 UI가 부자연스러워"
+  - "금/목재 등 자원 아이콘과 이를 둘러싸고 있는 박스가 ... 자연스럽게 녹아들지 않는다"
+- **AI 산출물 요약**:
+  - 최근 코드와 `2026-07-30` 이전 커밋을 비교한 결과, 현대 시대 설계 작업
+    자체가 이동/공격 속도를 직접 바꾼 것은 아니었다.
+  - 체감 변화를 만든 주요 차이는 두 가지였다:
+    1. `2026-07-30`의 걷기 폴리시 커밋(`5ca9a82`)이 보이는 모션 리듬을 바꾼 점
+    2. 현재 미커밋 작업 트리에서 support 유닛의 전진 fallback이 빠져 있던 점
+  - 이를 바탕으로 support 전진 fallback을 복구했고, 화면상 이동 보간 속도와
+    걷기 주기/밥 강도를 다시 조정해 실제보다 느리고 끊기는 듯 보이는 현상을
+    완화했다.
+  - 공격 템포도 `attackTiming.ts`에서 melee / ranged / support 연출 시간을
+    줄여 답답하게 느껴지던 지연을 보정했다.
+  - 본진 연구 패널은 헤더 버튼 정렬을 다시 잡고, 병력 아이콘/수치/`+/-` 버튼을
+    키워 가독성을 높였다.
+  - 상단 자원 HUD는 기존의 진한 독립 박스 느낌을 줄이고, war-table 상단 배경
+    안에 더 자연스럽게 붙는 톤과 배치로 재조정했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-03 (174) — 연구 비용/최대치 규칙 재정의와 렌더 끊김 원인 추가 보정
+
+- **사용 도구**: Codex (GPT-5), `git log`, `git show`, `rg`, `sed`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "이동과 전투 모션 등이 여전히 뭔가 어색함"
+  - "좀 더 이전 코드까지 살펴보고 뭐가 달라진 건지"
+  - "투석/도끼 다음에 캐릭터는 있는데 캐릭터 명이 없음"
+  - "연구 포인트 20당 공격 또는 방어가 1개"
+  - "시대에 따라서 연구 포인트 요구 조건이 2배씩"
+- **AI 산출물 요약**:
+  - 더 이전 커밋과 대조한 결과, 철기 후기 이후의 “버벅거림”은 시대 데이터
+    변화보다 렌더 단계의 픽셀 스냅과 글로벌 시간 기반 보행 리듬 조합 영향이
+    더 크다고 판단했다.
+  - 유닛 렌더에서 `snapWorldPointToCanvasPixel()`를 제거해 저속 전진 시
+    1px 단위로 끊겨 보이던 체감을 줄였다.
+  - 연구 패널은 병종 중복을 1행으로 정리했고, 동일 병종은 여러 레인/여러
+    스폰에도 같은 연구 수치가 공통 적용되는 기존 모델을 유지했다.
+  - 연구 비용/최대치도 사용자 규칙대로 재정의했다:
+    - 석기/청동기 `20R`, 최대 `10`
+    - 철기 `40R`, 최대 `20`
+    - 르네상스/근대 `80R`, 최대 `30`
+    - 현대 `160R`, 최대 `40`
+  - 패널에 이 규칙을 직접 보여주는 안내 문구도 추가했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-03 (175) — 이동 속도 baseline 원복과 후기 시대 병력 placeholder 상태 확인
+
+- **사용 도구**: Codex (GPT-5), `sed`, `rg`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "아까 속도를 높인 문제 때문에 ... 높인 속도로 적용되서 이동속도가 높아졌어"
+  - "지금 르네상스부터 병력이 기존 병력 그냥 돌려쓰는 거 같은데 맞지?"
+- **AI 산출물 요약**:
+  - 보행 리듬 복구 이후 남아 있던 과속 체감은 이전 턴에 올렸던
+    `UNIT_PROGRESS_SPEED = 0.024` 영향으로 보고, baseline인 `0.02`로
+    원복했다.
+  - 르네상스 이후 병력은 실제로 신규 병종이 아니라 기존 병종 재사용
+    placeholder 상태임을 코드 기준으로 확인했다.
+  - 현재 roster는 `musketeer / knight / iron_spearman / supply_wagon`
+    조합을 시대별로 조금씩 배치만 바꾸는 수준이며, 공격/방어력도 같은
+    기존 `UNIT_STATS`를 그대로 사용 중이다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-03 (176) — 후기 시대 병종 실체화와 밸런스 기준 문서 분리
+
+- **사용 도구**: Codex (GPT-5), `sed`, `rg`, `apply_patch`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "shock trooper로 하자."
+  - "heavy gunner로 하자."
+  - "유닛 기본 공격력/방어력 같은 거 표 형식으로 정리"
+  - "현재 이동속도를 같도록 하되 현재 기준을 1로 해서 정해놔줘"
+- **AI 산출물 요약**:
+  - 르네상스~현대 후기 병종을 실제 `BattleUnitId`와 age roster에 추가했다.
+    기존에는 `musketeer / knight / iron_spearman` 재사용 placeholder가
+    대부분이었는데, 이제 시대별 병종 구성이 코드상 분리된다.
+  - 현재는 전용 아트가 없는 후기 병종이 많아, animation registry에서
+    기존 8방향 생산 유닛 자산을 임시 alias로 재사용하도록 연결했다.
+    즉, 로스터/스탯/연구 구조는 새 병종 기준으로 진행하되 시각 자산은
+    추후 교체 가능한 상태로 열어 둔 것이다.
+  - 새 병종의 기본 HP/공격/방어/사거리/공격 주기를 추가했고, 이동 속도는
+    전 유닛 공통 정규화값 `1`로 통일했다. 이후 차등 이동 속도를 넣을 때의
+    기준 baseline도 이 값으로 명시했다.
+  - 총기 계열 방향 반전 예외도 `musketeer` 하드코딩에서
+    `projectile-shot` 계열 일반 처리로 바꿔, 새 소총/기관총 계열이 같은
+    반전 버그를 반복하지 않도록 했다.
+  - 본진 연구 패널은 현대 중기/후기 5병종까지 보여줄 수 있도록 5행으로
+    확장했다.
+  - `docs/dev-wiki/unit-balance-reference.md`를 새로 만들어 병종 기본 수치
+    표와 실제 구현식(연구 배율, 병력 간 피해, 타워 피해, 본진 피해,
+    보급 치유, 처치 자원 보상)을 코드 기준으로 정리했다.
+  - 테스트 중 `supportBalance` 스펙이 “모든 시대 전투 유닛 수는 3”이라고
+    고정 가정하고 있어 실패했는데, 실제 회귀가 아니라 구식 기대값이었고
+    시대별 3/4/5 유닛 수에 맞는 heal/mana profile 검증으로 갱신했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-03 (177) — 이동 속도 `1`의 의미를 배율 기준값으로 명확화
+
+- **사용 도구**: Codex (GPT-5), `rg`, `sed`, `apply_patch`
+- **사용자 지시 원문(핵심)**:
+  - "그걸 기준 속도 1로 통일하라는 의미지 그거 자체를 1로 바꾸라는 의미가 아니야"
+  - "좀 명확히 명시해 놔야해"
+- **AI 산출물 요약**:
+  - 실제 코드 경로를 다시 확인했고, 현재 이동은
+    `unit.speed * UNIT_PROGRESS_SPEED * deltaSec` 구조로 동작함을 재확인했다.
+  - 따라서 이번에 통일한 `speed = 1`은 절대 이동 속도값이 아니라,
+    baseline 상수 `UNIT_PROGRESS_SPEED = 0.02`에 곱하는 배율값이라는 점이
+    구현상 맞다.
+  - 이 의미가 다시 헷갈리지 않도록 `unitStats.ts`, `LaneBattleScene.ts`,
+    `unit-balance-reference.md`에 각각 주석/설명 문구를 추가했다.
+
+## 2026-08-03 (178) — 사거리 배율 구조, 타워 사거리 연령화, 연구 패널 row 잔상 버그 수정
+
+- **사용 도구**: Codex (GPT-5), `sed`, `rg`, `apply_patch`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "공격 범위도 추가되는 게 좋을 거 같음"
+  - "원거리 공격 범위는 모든 병종 원거리 공격 범위는 1로 셋팅"
+  - "타워도 시대 업그레이드에 따라 공격 범위 변경"
+  - "도끼병이 그대로 남아있음 ... 버그"
+  - "위쪽 부분도 현재 자원 표시하는 부분이 전혀 자연스럽지 않음"
+- **AI 산출물 요약**:
+  - 사거리 규칙을 `rangeRules.ts`로 분리해, 유닛 사거리도 이동 속도와
+    같은 철학의 baseline/profile + multiplier 구조로 정리했다.
+  - 현재 원거리 병종은 모두 `rangeMultiplier = 1`로 맞췄고, 이후에는
+    sling 기준 `1`, 활/총병 `1.5` 같은 식으로 숫자만 조정하면 된다.
+  - 타워도 더 이상 고정 사거리가 아니라, 시대별 배율 테이블을 타도록
+    바꿨다. 즉 석기~현대 후기까지 사거리가 단계적으로 증가한다.
+  - 연구 패널의 빈 row/잔상 버그는 데이터 문제가 아니라 UI 순서 문제였다.
+    `applySnapshot()` 마지막의 `setVisible(true)`가 숨긴 row까지 다시 켜고
+    있었고, 이 순서를 바꿔서 후기 철기에서 도끼병 2줄이 남는 문제를
+    정리했다.
+  - 상단 HUD는 기존 화려한 장식 프레임을 약하게 남기고, 실제 정보는
+    더 차분한 전장 오버레이 카드 위에 읽히게 재배치했다. 자원 아이콘,
+    자원명, 숫자 위치도 카드 중앙에 맞게 다시 정렬했다.
+  - 회귀 방지를 위해 “원거리 baseline 통일”과 “타워 사거리 상승” 테스트도
+    추가했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-03 (179) — 초기 철기 기본 웨이브 로스터 교정
+
+- **사용 도구**: Codex (GPT-5), `rg`, `sed`, `apply_patch`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "초기 철기 병력이 잘못되었다"
+  - "초기 철기 현재 병력 구성: 투석/활/철검 -> 활/청동창/철검"
+- **AI 산출물 요약**:
+  - 실제 코드 기준 `iron_early` 로스터가 여전히
+    `stone_slinger + archer + iron_swordsman`으로 남아 있음을 확인했다.
+  - 이를 사용자 지정대로 `archer + bronze_spearman + iron_swordsman`으로
+    교정했다.
+  - 과거 회귀 검증 문서 중 초기 철기 로스터 표기 하나도 함께 실제 코드와
+    맞게 정정했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-03 (180) — 후기 시대 병종 placeholder alias를 전용 prefix 자산으로 교체
+
+- **사용 도구**: Codex (GPT-5), `rg`, `sed`, `apply_patch`, `python3`, `npm run build`, `npm test`
+- **사용자 지시 원문(핵심)**:
+  - "다음 것도 바로 진행하라니까"
+  - "신규 후기 시대 병종은 아직 전용 아트 생산까지는 안 갔고 ..."
+  - "신규 캐릭터는 ... 방향과 크기만 잘 맞도록 대충 만들어서 진행"
+- **AI 산출물 요약**:
+  - 기존에는 후기 병종 24종이 `unitAnimationRegistry.ts`에서
+    `musketeer/knight/supply-wagon/iron-spearman/iron-swordsman` alias를
+    그대로 재사용하고 있었다.
+  - 이를 줄이기 위해 `generate_late_era_unit_variants.py`를 추가했고,
+    기존 8방향 프레임을 베이스로 색조 변경, 실루엣 스케일 조정,
+    무기/장비 오버레이를 얹어 후기 병종 전용 prefix 자산 세트를 생성했다.
+  - 이 방식은 최종 일러스트 작업은 아니지만, 사용자가 요청한 수준인
+    "방향과 크기 안정성을 우선한 대충 만든 신규 캐릭터"에는 맞는 접근이다.
+  - 이후 적군 팔레트 variant도 생성해, 후기 병종 24종 전부에 대해
+    `8방향 x 4포즈 x enemy` 세트를 실제 파일로 갖추었다.
+  - `unitAnimationRegistry.ts`와 `unitStats.ts`를 갱신해, 후기 병종이 더
+    이상 원본 유닛 prefix를 가리키지 않고 자기 prefix 자산을 직접 사용하게
+    전환했다.
+- **검증**:
+  - 자산 존재 확인: 후기 병종 24종의 8방향 x 4포즈 x enemy variant 누락 0
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-03 - Codex
+
+- **요청/목표**:
+  - 원거리 병종 사거리 정리 전, 타워 연구 규칙 분리 / 게임오버 후 재시작
+    불능 버그 / 본진 연구 패널 빈 행 `+/-` 잔상 버그를 먼저 수정.
+- **작업 내용**:
+  - 연구 주체를 유닛 전용에서 `watchtower` 포함 구조로 확장해 타워도
+    본진 연구 패널에서 공격/방어 연구를 받도록 연결했다.
+  - 타워 공격은 시대별 무기 종류는 유지하되, 전용 연구 공격 레벨이
+    `perProjectileDamage`에 반영되도록 변경했다.
+  - 타워 방어 연구는 현재 구조상 실제 방어감산 대신 내구도(`maxHp`)
+    multiplier로 반영되게 정리했고, 시대 업 직후 이전 시대 타워 연구가
+    더 우세하면 새 시대 타워 연구 레벨을 최소 `+1`로 carry-over 하도록
+    추가했다.
+  - `BaseResearchPanel`의 stat 버튼을 `rect + text`로 같이 관리하도록
+    고쳐, 빈 행이 숨겨질 때 `+/-` 글자 잔상이 남지 않게 수정했다.
+  - `BootScene` shutdown cleanup과 `GameOverScene` retry 씬 정리를 넣어,
+    한 판 종료 후 다시 시작할 때 음악만 나오고 진행이 멈추는 현상
+    원인 후보를 정리했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-03 - Codex
+
+- **요청/목표**:
+  - 사용자가 지적한 기존 후기 시대 유닛이 “색 변화 + 장비 오버레이”로만
+    보인다는 문제를 반영해, 르네상스 이후 신규 병종과 시대별 보급대의
+    **새 시안 보드**를 만들고 실제 유닛 ID 기준 매핑 기록을 남김.
+- **작업 내용**:
+  - 기존 `musketeer`, `rifleman`, `supply_wagon`, `tank` 등 현행 생산
+    자산의 비율/시점을 확인한 뒤, 그 규모를 크게 벗어나지 않는 조건으로
+    시안 보드를 `imagegen`으로 생성했다.
+  - 생성 결과를 `docs/dev-wiki/visual-drafts/`로 복사했다.
+    - `support-wagon-age-drafts-2026-08-03.png`
+    - `renaissance-industrial-early-drafts-2026-08-03.png`
+    - `industrial-late-modern-early-drafts-2026-08-03.png`
+    - `modern-early-mid-infantry-drafts-2026-08-03.png`
+    - `modern-heavy-drafts-2026-08-03.png`
+  - `docs/dev-wiki/post-renaissance-unit-visual-draft-mapping.md`를 추가해
+    보드 컬럼과 실제 유닛 ID를 대응시켰다.
+  - `src/presentation/units/unitDraftMapping.ts`를 추가해 같은 매핑을 코드
+    상수로도 남겼다.
+  - 보급대 시안 단계에서 임의로 넣었던 `displaySize` 연동은 사용자가
+    명시적으로 거부해 즉시 제거했고, 최종 상태는 **스탯 분기만 적용 /
+    외형 크기 자동 변경 없음**이다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+  - 연구/타워 관련 집중 스펙:
+    `baseResearchPanelModel`, `towerAttack`, `defenseTowerRules`,
+    `researchRules`, `unitStatResolver`
+
+## 2026-08-03 - Codex
+
+- **요청/목표**:
+  - 사용자가 지정한 새 원거리 병종 공격/방어/사거리 수치를 반영하고,
+    타워도 시대별 참조 병종과 `사거리 = 참조 병종의 1.2배` 규칙으로
+    재정렬.
+- **작업 내용**:
+  - `UNIT_STATS`의 원거리 병종 수치를 사용자가 지정한 값으로 갱신했다.
+    `소총병/척탄병`은 근대 초기 `I`, 근대 후기 `II`로 라벨도 분리했다.
+  - ranged 사거리는 전부 동일 baseline을 쓰던 구조에서, 병종별 실제
+    사거리 값을 가지도록 바꿨다.
+  - 타워는 더 이상 age multiplier 테이블로 사거리를 계산하지 않고,
+    시대별 참조 병종(`stone_slinger`, `archer`, `musketeer`, `cannon_i`,
+    `cannon_ii`, `artillery_i`, `artillery_ii`, `mobile_artillery`) 기준으로
+    발사체/피해/쿨다운/사거리를 결정하도록 변경했다.
+  - 타워 방어는 HP 배수가 아니라 실제 `defense` 수치 감산으로 수정했고,
+    연구 방어 레벨은 이 `defense` 수치에 적용되게 정리했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+  - 집중 스펙:
+    `rangeRules`, `towerAttack`, `defenseTowerRules`,
+    `researchRules`, `unitStatResolver`
+
+## 2026-08-03 - Codex
+
+- **요청/목표**:
+  - 현대 중기 3종(`automatic_rifleman`, `support_gunner`,
+    `mobile_infantry`) 누락 수치를 채우고, 전투 피해식을 사용자가 제시한
+    `공격 - 방어` 구조로 교체. 공격속도는 지금은 전 유닛 공통 `1`로 명시.
+- **작업 내용**:
+  - `UNIT_STATS`에 `attackSpeed` 정규화 필드를 추가하고, 전 유닛 공통값
+    `1`로 채웠다.
+  - `automatic_rifleman 34/20/6.5`, `support_gunner 30/24/4`,
+    `mobile_infantry 38/30/5`로 갱신했다.
+  - 병력 대 병력 피해식을
+    `max(1, round(attack * (1 - attrition) * buff - defense))`로 변경했다.
+  - 병력 대 타워 피해도 동일하게 `towerDefense`를 직접 감산하도록 바꿨다.
+  - `unit-balance-reference.md` 표와 공식 설명을 새 값/새 식 기준으로
+    갱신했다.
+- **비고**:
+  - 이번 턴에서는 HP 실수치 자체는 바꾸지 않았다. 사용자가 “남은 건
+    hp/공격속도/이동속도”라고 남겨둔 문맥과, 제시한 HP 문장이 실제 예시
+    데미지 계산(`13 - 6 = 7`)과 충돌해 우선 전투식/공속 필드만 확정했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-03 - Codex
+
+- **요청/목표**:
+  - `iron spearman` 공격 시 순간 확대처럼 보이는 문제와, 후기 시대 신규
+    시안/placeholder 중 피부톤이 초록으로 무너진 문제를 먼저 고친 뒤,
+    후대 병종/보급대용 `idle / walk / attack` 기준 포즈 보드를 추가로
+    제작한다.
+- **작업 내용**:
+  - `src/scenes/LaneBattleScene.ts`에서 공격 포즈 크기 캡을 더 타이트하게
+    줄였다. idle 대비 폭/높이 허용치를 각각 `1.03 / 1.01`로 조정해,
+    `iron spearman`류의 순간 확대 인상을 전 유닛 공통으로 더 억제했다.
+  - `tools/asset-qa/generate_late_era_unit_variants.py`에 피부톤 보존 규칙과
+    `--unit` 필터 인자를 추가했다.
+  - 이미 생성돼 있던 후기 시대 placeholder 자산 중
+    `musketeer` 파생 보병 계열(`rifleman_late`, `infantry`,
+    `support_gunner`, `heavy_gunner` 등)에 대해, 원본 병종의 피부 픽셀을
+    되씌워 초록 얼굴이 보이지 않게 정리했다.
+  - 새 포즈 보드 3종을 생성해 `docs/dev-wiki/visual-drafts/`에 저장했다.
+    - `late-era-human-pose-board-2026-08-03.png`
+    - `late-era-heavy-pose-board-2026-08-03.png`
+    - `support-evolution-pose-board-2026-08-03.png`
+  - `docs/dev-wiki/post-renaissance-unit-visual-draft-mapping.md`에
+    시안 컬럼 보드와 별도로 포즈 마스터 보드 섹션을 추가했다.
+- **검증 예정**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-04 - Codex
+
+- **요청/목표**:
+  - 보급대 포즈 보드의 support-action이 사람에게 물건을 건네는 2인 장면으로
+    읽히는 문제를 수정하고, 보급대 힐/지원 모션은 반드시 단일 유닛 장면으로
+    고정한다.
+- **작업 내용**:
+  - `support-evolution-pose-board-2026-08-03.png` 기준을 다시 확인했다.
+    현재 보드는 대상 병사를 같이 넣지 않고, 보급대 자신의 장비를 전개하는
+    단일 유닛 support/heal 포즈 기준으로 정리한 상태다.
+  - `docs/dev-wiki/post-renaissance-unit-visual-draft-mapping.md`에
+    보급대 포즈 보드 주의사항을 추가해, `2인 상호작용 장면 금지`,
+    `보급대 단독 heal/support 모션` 원칙을 명시했다.
+- **비고**:
+  - 이번 턴은 시안 해석 기준 고정과 문서 보정이 핵심이며, production png
+    교체는 다음 단계다.
+
+## 2026-08-04 - Codex
+
+- **요청/목표**:
+  - 이전에 남겨둔 “포즈 보드를 실제 게임용 `8방향 x 4포즈 png`로 분해해
+    placeholder를 교체한다”는 후속 작업을 실제로 수행한다.
+- **작업 내용**:
+  - 현대 보병 계열과 기계화 계열의 production 기준이 부족해
+    `modern-combat-pose-board-2026-08-04.png`,
+    `mechanized-pose-board-2026-08-04.png`를 추가 생성했다.
+  - `tools/asset-qa/generate_pose_board_production_assets.py`를 추가했다.
+    이 스크립트는 포즈 보드 셀을 잘라 배경을 제거하고, 방향별 약회전/반전
+    변형을 적용한 뒤, `384x384` 또는 `512x384` 캔버스로 정규화해 실제
+    `public/assets/production/units/` 자산을 생성한다.
+  - 총 29개 family에 대해 player용 `8방향 x 4포즈` 세트를 생성했다.
+    후기 보병/기병/포병/전차 계열과 시대별 보급대 prefix가 포함된다.
+  - 보급대는 런타임에서 시대 그룹별 prefix를 실제로 사용할 수 있도록
+    `supply-wagon-ancient`, `-iron`, `-renaissance`, `-industrial`,
+    `-modern` texture key를 배선했다.
+  - `LaneBattleScene`는 이제 unit의 `currentTextureKey`에서 파생한
+    animation prefix로 방향별 프레임을 선택할 수 있어, 같은 unit id라도
+    다른 authored prefix를 쓸 수 있다.
+  - 새 자산 family들에 대해서는 적군용 `-enemy` 변형도 함께 생성했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-04 - Codex
+
+- **요청/목표**:
+  - 활/총병 계열은 공격 시 오히려 작아지고, 반대로 다른 유닛은 커지는 등
+    공격 포즈 크기 보정이 일관되지 않은 문제를 전 유닛 기준으로 다시 정리한다.
+- **작업 내용**:
+  - 원인은 공격 프레임 bbox 폭을 기준으로 전체 스프라이트를 균일 축소하던
+    현재 로직이었다. 이 방식은 총/활처럼 “몸 크기는 같고 무기만 옆으로
+    길어지는” 프레임까지 함께 줄여 버렸다.
+  - `LaneBattleScene.ts`에서 공격 포즈 크기 캡을 `근접`과 `원거리/보급`
+    로직으로 분리했다.
+    - 근접: 폭/높이를 같이 보는 균일 축소 유지
+    - 원거리/보급: 높이는 유지하고, 폭만 별도로 제한
+  - 허용 폭은 근접 `1.03`, 보급 `1.12`, 일반 원거리 `1.18` 기준으로 두고,
+    높이는 공통 `1.01`로 유지했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-04 - Codex
+
+- **요청/목표**:
+  - 시대별 보급대가 런타임에서 검은 박스 대각선 placeholder로 보이는 버그를
+    수정한다.
+- **작업 내용**:
+  - 원인은 자산 생성 자체가 아니라 preload 누락이었다.
+  - 런타임은 `supply-wagon-ancient-*`, `-iron-*`, `-renaissance-*`,
+    `-industrial-*`, `-modern-*` texture key를 요청하도록 이미 바뀌어
+    있었는데, `UNIT_ANIMATION_ASSETS`는 기존 `supply-wagon-*` 한 세트만
+    로드하고 있었다.
+  - `unitAnimationRegistry.ts`에 extra prefix 목록을 추가해, 위 5개 보급대
+    family의 `8방향 x 4포즈` 키를 preload 자산 목록에도 포함시켰다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-04 - Codex
+
+- **요청/목표**:
+  - 보급대가 거꾸로 걷는 문제, 대각선 이동 시 몸 전체가 같이 회전하는 문제,
+    치료 포즈가 가방을 내리는 컨셉인 문제, 그리고 도끼병 공격 시 작아지는
+    문제를 함께 정리한다.
+- **작업 내용**:
+  - `unitAnimationRegistry.ts`의 옛 방향 접기/미러링 경로를 제거했다.
+    이제 authored 8방향을 그대로 사용하고, direction 기반 강제 flip은 하지
+    않는다.
+  - `LaneBattleScene.ts`에서 보급대는 walk/attack presentation 중
+    `rotationRad`를 0으로 고정해, 대각선 이동 때 몸 전체가 기울지 않게 했다.
+  - 공격 포즈 크기 보정은 다시 정리했다. 폭만 제한하고 높이는 유지하는 쪽으로
+    바꿔, 도끼병처럼 공격 시 작아지던 문제를 줄였다.
+  - 보급대 힐 포즈는 새 `support-evolution-pose-board-2026-08-03.png`로
+    교체했다. 이제 가방을 내려놓는 장면이 아니라, 시대가 달라져도 공통적으로
+    `손/도구를 들어 빛을 내는 heal-cast` 모션을 기준으로 쓴다.
+  - 위 새 보드 기준으로 보급대 5개 family를 다시 생성했고, 대응 enemy 변형도
+    다시 만들었다.
+  - `unitAnimationRegistry.test.ts`도 새 8방향 직접 사용 계약에 맞춰 갱신했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-04 - Codex
+
+- **요청/목표**:
+  - 아군 보급대가 거꾸로 걷고 발이 잘린 것처럼 보이는 문제를 바로잡는다.
+- **작업 내용**:
+  - `LaneBattleScene.ts`에서 보급대는 생성 시점부터 대각선 초기 방향(`ne/sw`)이
+    아니라 팀 기준 수평 방향(`e/w`)으로 시작하게 바꿨다.
+  - 런타임 프레젠테이션도 보급대만 별도 처리해, 실제 이동 방향 판정은 유지하되
+    sprite 선택은 `facingX` 기준 `e/w` 프레임만 쓰도록 바꿨다. 이로써
+    역방향 보행처럼 보이던 문제와 대각선 몸 각도 체감을 함께 줄인다.
+  - 기존에 설정만 있고 실제로 사용하지 않던
+    `scaleVisualConfig.supportUnitCssHeight`를 보급대 렌더 높이에 연결했다.
+    보급대가 일반 병사와 같은 높이 기준으로 그려지던 문제를 분리해, 발이 잠기거나
+    잘린 것처럼 보이던 배치 오차를 줄이도록 정리했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+  - `ss -ltnp | rg ':5173\\b'`
+
+## 2026-08-04 - Codex
+
+- **요청/목표**:
+  - 방향 표시 문제를 땜질이 아니라 구조적으로 고친다.
+- **작업 내용**:
+  - 근본 원인은 `facingX/facingDirection` 한 쌍이 이동 방향, 전투/치료 조준 방향,
+    실제 렌더 프레임 선택을 동시에 맡고 있던 구조였다.
+  - 이 때문에 한 상태에서 잡힌 방향이 다음 상태로 새어 나가면서, 보급대처럼
+    이동 중인데도 이전 조준 방향을 들고 있거나, 반대로 이동 방향 보정이 공격
+    모션까지 오염시키는 문제가 반복됐다.
+  - `LaneBattleScene.ts`의 `LaneUnit` 방향 상태를
+    `travelFacingX/travelFacingDirection`과
+    `combatFacingX/combatFacingDirection`으로 분리했다.
+  - `setUnitTravelFacing()`은 이동 방향만 갱신하고,
+    `holdUnitCombatFacing()`은 전투/치료 조준 방향만 갱신하게 바꿨다.
+  - `syncUnitPresentation()`은 표시 시점에 어느 방향을 써야 하는지 명시적으로
+    고르도록 바꿨다.
+    - 이동 보행/보행 sway는 항상 `travelFacing*`
+    - 공격/치료 조준은 `combatFacing*`
+    - 보급대 sprite 선택은 대각선 임시 덮어쓰기가 아니라, locomotion 기준의
+      수평 `e/w` 방향만 따르도록 정리
+  - 기존 검증 스냅샷 계약을 깨지 않도록, debug snapshot에는 예전
+    `facingX/facingDirection` 호환 필드도 유지하면서 새 travel/combat 필드를
+    함께 노출했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-04 - Codex
+
+- **요청/목표**:
+  - 이동 방향 오류와 공격 시 크기 변형을 추측 없이 전수 검수 가능한 방식으로
+    다시 잡는다.
+- **작업 내용**:
+  - 병종별 `e/w` 및 8방향 production 프레임을 시트로 뽑아 직접 대조했다.
+  - 확인 결과, 초기 코어 병종 자산은 예전 `mirrored authored east`
+    규약(논리 `w/nw/sw`가 실제로는 `e/ne/se` 원본 + 좌우반전 기반) 흔적이
+    남아 있고, 시대별 보급대 및 후기 직접 생성 자산은 `direct 8-dir` 규약을
+    쓰는 혼합 상태였다.
+  - `unitAnimationRegistry.ts`에 병종별 `directionMode`를 추가하고,
+    초기 코어 병종(`stone_*`, `bronze_*`, `archer`, `iron_*`,
+    `musketeer`, `knight`)은 `legacy-mirrored`, 나머지는 `direct`로
+    분기하도록 복구했다.
+  - `LaneBattleScene.ts`의 prefix 기반 텍스처 선택도 unitId를 넘겨
+    위 방향 규약을 따르도록 수정했다.
+  - 방향/공격 크기 전수 검수용으로
+    `prepareDirectionalAuditProbe()`와 per-unit presentation size snapshot
+    필드를 추가했다.
+  - 다만 Playwright 기준으로는 현재 `Battlefield control did not initialize`
+    회귀가 재현되어, 스크린샷 기반 전수 검수는 부트->전장 진입 경로를 다시
+    열어야 이어갈 수 있는 상태까지 확인했다.
+  - 검수용 우회 경로로 `BootScene.ts`에 `autostart=1` 파라미터도 추가했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+  - `npx playwright test tools/validation/day7-ui-composition.spec.ts --workers=1`
+    - 실패: `Battlefield control did not initialize`
+
+## 2026-08-04 - Codex
+
+- **요청/목표**:
+  - 사용자가 "캐릭터들 동작을 별도의 임의의 작은 공간에서 플레이 할 수 있도록 구축하고(이건 게임 자체 컨텐츠 아님. 디버그/개발용임) 거기서 각 방향 걷는 거 테스트, 공격 모션 테스트 같은 걸 할 수 있도록 하는 걸 나는 권장"한다고 명시했고, 이후 "응 그게 맞는 거 같아. 그렇게 해줘"라고 승인했다.
+- **작업 내용**:
+  - 메인 전장과 분리된 개발용 `UnitSandboxScene`을 추가했다.
+  - `?sandbox=1`로 진입하면 부트 메뉴 대신 샌드박스가 열리도록 연결했다.
+  - 샌드박스에서 병종, 팀(아군/적군), 시대, 8방향, idle/walk/attack 포즈, 자동재생, 수동 phase를 즉시 바꿔 보면서 실제 렌더 텍스처 키, 방향 규약(`direct`/`legacy-mirrored`), `flipX`, 표시 크기를 바로 확인할 수 있게 했다.
+  - 보급대는 시대별 외형이 달라지는 현재 구조를 반영해, 같은 샌드박스 안에서 시대 전환으로 외형과 크기를 바로 점검할 수 있게 했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-04 - Codex
+
+- **요청/목표**:
+  - 사용자가 샌드박스에서 캐릭터가 화면 양끝으로 오가는 동작을 보고 "내가 원한 건 캐릭터가 실제로 움직이는 것과 같은 애니메이션이 제대로 되고 있는지임"이라고 수정 방향을 명확히 했다.
+- **작업 내용**:
+  - `UnitSandboxScene`의 walk 모드에서 넣어둔 실제 위치 이동 오프셋을 제거했다.
+  - 이제 샌드박스는 방향/포즈/크기 검수용으로만 동작하며, 걷기 모드도 제자리에서 프레임 전환과 가벼운 상하 bob만 보인다.
+  - 화면 정보에도 `샌드박스 위치 이동: 없음 (제자리 프레임 검수)` 문구를 추가해 의도를 명시했다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-04 - Codex
+
+- **요청/목표**:
+  - 샌드박스에서 "버튼들이 좀 잘 안 맞는지", "좌측에 유닛을 리스트로 늘어놓은 박스", "공격 모션도 움직이도록", "박스 삐져나옴이나 글자 ... 위치 등을 상세히 검토"하라는 UI/UX 정리 요청이 들어왔다.
+- **작업 내용**:
+  - `UnitSandboxScene`를 다시 구성해 좌측 `유닛 목록 + 현재 상태`, 중앙 프리뷰, 우측 컨트롤 패널의 3열 구조로 정리했다.
+  - 버튼은 전부 실제 배경 사각형 전체 hit area가 클릭되도록 다시 만들었다.
+  - 좌측에는 전 병종 선택 리스트를 추가해 클릭만으로 중앙 프리뷰 유닛을 바꿀 수 있게 했다.
+  - `attack` 모드에서는 정적 포즈 고정이 아니라, 방향 벡터를 따라 소폭 전진/리코일과 회전이 보이게 해 실제 공격 모션 검수에 맞췄다.
+  - 정보 텍스트, 도움말, phase 표시 위치도 패널 안으로 다시 정렬해 overflow와 어색한 배치를 줄였다.
+- **검증**:
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-04 - Codex
+
+- **요청/목표**:
+  - 사용자가 "게임이 끝나고 다시 게임 시작해서 메인 화면 들어가서 게임 시작하면 메인 화면에서 게임 화면으로 전환이 안 됨", "병력의 방향이 엉뚱한 방향", "보급이 발목 ... 잘려보여", "`?sandbox`에서도 허리/발목이 잘린 캐릭터가 있다"고 지적했다.
+- **작업 내용**:
+  - 게임오버 후 재출정 경로는 Phaser 씬만 재조합하는 방식 대신 `window.location.assign(window.location.href)`로 hard reload 되게 바꿨다. 사용자가 보는 흐름은 그대로 메인 화면 복귀 후 재시작이지만, 내부 상태는 완전히 초기화된다.
+  - 방향 규약은 더 단순하게 가기 위해, 구 코어 병종 9종(`stone-*`, `bronze-*`, `archer`, `iron_*`, `musketeer`, `knight`)을 `legacy-mirrored` 런타임 해석에 의존하지 않고 direct 파일명 체계로 정규화했다.
+    - `tools/asset-qa/normalize_legacy_direction_assets.py`를 추가해 기존 동/북동/남동 기준 자산을 직접 좌우 반전해 `w/e`, `nw/ne`, `sw/se`를 일관된 direct 이름으로 다시 저장한다.
+    - 그 뒤 `unitAnimationRegistry.ts`도 해당 코어 병종 전부 `directionMode: "direct"`로 전환했다.
+  - 후기/보급대 자산 절단 문제는 pose board 분해 스크립트가 원인이었다.
+    - `generate_pose_board_production_assets.py`에서 3열 보드의 셀 경계를 `//`로 자르던 부분을 `round(index/cols)` 기반 경계로 고쳤다.
+    - 배경 제거 후 "가장 큰 연결 컴포넌트만 남기기" 때문에 하반신이 떨어져 나가던 문제를 없애고, 대신 주요 몸통 bbox 근처 컴포넌트만 유지하는 방식으로 바꿨다.
+    - 이 변경 후 generated 29 family 전체를 다시 만들고, 이어서 legacy 9 family direct 정규화도 다시 적용했다.
+  - 샘플 직접 확인:
+    - `special-forces-w-idle.png`: 상반신만 남던 상태에서 전체 인체 실루엣이 보이는 쪽으로 회복
+    - `stone-slinger-e-idle.png`: direct 기준 동측 프레임으로 재생성 확인
+    - `supply-wagon-ancient-ne-attack.png`: 보급대 대각/치료 포즈 샘플 확인
+- **검증**:
+  - `python3 tools/asset-qa/generate_pose_board_production_assets.py`
+  - `python3 tools/asset-qa/normalize_legacy_direction_assets.py`
+  - `npm run build`
+  - `npm test`
+
+## 2026-08-04 - Codex (asset sandbox follow-up)
+
+- **요청/목표**:
+  - 사용자가 "`?sandbox` 기준으로도 개선이 거의 안 보인다, 멈추지 말고 계속 고쳐라"고 지시했고, 실제 렌더 기준으로 남아 있는 기병 상단 잔상, 현대 보병 바닥 줄, 포/전차 하단 먼지형 잔상을 계속 줄이는 작업을 진행했다.
+- **작업 내용**:
+  - `tools/asset-qa/generate_pose_board_production_assets.py`를 추가 보정했다.
+    - `walk_b_mode`를 도입해 문제 병종군(`heavy/light cavalry`, `cavalry`, `mobile/heavy modern infantry`, `cannon/artillery/tank` 계열)의 `walk-b`를 회전 합성 대신 shift 합성으로 생성하게 바꿨다.
+    - `keep-nearby` 모드에서 하단 넓은 선분형 컴포넌트(짧고 매우 넓은 연결요소)를 제거하도록 규칙을 강화했다.
+    - sprite bbox 기준으로 `clear_top_rows`, `clear_bottom_rows`, `trim_wide_top_rows`, `trim_wide_bottom_rows`를 적용하도록 바꿔, 캔버스 전체가 아니라 실제 스프라이트의 위/아래 잔상만 자르도록 수정했다.
+    - 문제 병종군별로 top/bottom clear 강도를 달리 주어 `heavy_gunner` 바닥 줄, `cannon_i` 하단 잔상을 줄였고, `heavy_cavalry` 상단 얇은 잔상도 축소했다.
+  - 실제 브라우저 확인은 `http://127.0.0.1:5173/game_project1/?sandbox=1`의 `window.__unitSandboxControl` API를 통해 병종/phase를 직접 지정하고 스크린샷을 반복 촬영하는 방식으로 계속 검수했다.
+- **검증**:
+  - `python3 tools/asset-qa/generate_pose_board_production_assets.py --prefix ...`
+  - headless Playwright sandbox capture:
+    - `artifacts/heavy_cavalry-postfix*.png`
+    - `artifacts/heavy_gunner-postfix2.png`
+    - `artifacts/cannon_i-postfix*.png`
+    - `artifacts/tank-postfix*.png`
+
+## 2026-08-04 - Codex (asset sandbox follow-up, checklist pass 2)
+
+- **요청/목표**:
+  - 사용자가 남은 체크리스트 11개를 빠짐없이 처리하라고 요구했고, 특히 `다리 잘림`, `철창병 체급`, `중기병/포병/차량 비율`, `소총병/보병 idle-walk 방향 일관성`, `척탄병 grenade 프레임`, `포/차량 하단 잘림`을 실제 `?sandbox` 캡처로 검증하라고 지시했다.
+- **작업 내용**:
+  - `tools/asset-qa/generate_pose_board_production_assets.py`
+    - 스케일 기준을 `cleanup` 이후 포즈로 다시 잡도록 바꿔, 창/기병/포 계열이 무기 끝이나 잔상 때문에 실제 본체가 작아지던 구조를 제거했다.
+    - `heavy-cavalry`, `light-cavalry`, `cavalry`, `cannon-i/ii`, `artillery-i/ii`, `tank`, `mobile-artillery`, `modern-tank`를 `keep-nearby`로 돌려 승무원/바퀴/창 끝이 분리 컴포넌트로 사라지지 않게 수정했다.
+    - 포/차량 계열의 과도한 `clear_bottom_rows`를 제거하고, 하단은 약한 brown cleanup만 남겨 바퀴 반쪽 잘림을 줄였다.
+    - `rifleman`, `rifleman-late`, `infantry`는 idle을 walk 포즈 기반으로 바꿔 idle/walk 총구 및 얼굴 방향을 맞췄다.
+    - `grenadier`, `grenadier-late`는 idle/walk를 attack 포즈 기반으로 돌려 grenade가 보이게 바꿨다.
+  - `src/presentation/units/unitPresentation.ts`
+    - 정의만 있고 실제 표시 계산에는 먹지 않던 `scaleFactor`를 sprite height 계산에 연결했다.
+  - `src/presentation/units/unitAnimationRegistry.ts`
+    - `iron_spearman`, `heavy_cavalry`, `automatic_rifleman`, `mobile_infantry`, 포/차량 계열 scaleFactor를 재조정했다.
+- **검증**:
+  - `python3 tools/asset-qa/generate_pose_board_production_assets.py --prefix ...`
+  - headless Playwright sandbox recapture:
+    - `artifacts/unit-audit/iron_spearman-idle.png`
+    - `artifacts/unit-audit/heavy_cavalry-idle.png`
+    - `artifacts/unit-audit/grenadier-idle.png`
+    - `artifacts/unit-audit/cannon_ii-idle.png`
+    - `artifacts/unit-audit/artillery_i-idle.png`
+    - `artifacts/unit-audit/automatic_rifleman-walk.png`
+    - `artifacts/unit-audit/mobile_infantry-walk.png`
+
+## 2026-08-04 - Codex (asset sandbox follow-up, final verification)
+
+- **요청/목표**:
+  - 사용자가 “최종 적용 확인까지 다시 하면서 진행”하라고 지시해, 남은 핵심 병종(`iron_spearman`, `heavy_cavalry`, `grenadier I/II`) 재확인과 전체 idle 전수 검수를 수행했다.
+- **작업 내용**:
+  - `?sandbox=1` 기준으로 핵심 병종의 idle/walk 최신 캡처를 다시 저장했다.
+  - 전체 유닛 idle 전수 캡처를 새로 찍고, 모아보기 시트까지 생성했다.
+  - 추가 코드 변경 없이 현재 적용본을 기준으로 최종 검수/회귀 확인을 수행했다.
+- **검증**:
+  - 핵심 검수 캡처:
+    - `artifacts/unit-audit/final-pass/iron_spearman-idle.png`
+    - `artifacts/unit-audit/final-pass/heavy_cavalry-idle.png`
+    - `artifacts/unit-audit/final-pass/grenadier-idle.png`
+    - `artifacts/unit-audit/final-pass/grenadier_late-walk.png`
+  - 전수 idle 시트:
+    - `artifacts/unit-audit/final-all/_final-all-sheet.png`
+  - 회귀:
+    - `npm run build`
+    - `npm test`
+
+## 2026-08-05 - Codex (breakthrough trooper ground-line correction)
+
+- **요청/목표**:
+  - 사용자가 `breakthrough_trooper`는 여전히 다리가 없다고 지적했고, 샌드박스 캡처 기준으로 직접 확인하며 수정하라고 요구했다.
+- **작업 내용**:
+  - `public/assets/production/units/breakthrough-trooper-*.png`의 alpha bbox를 확인해 자산 자체는 바닥까지 살아 있음을 확인했다.
+  - `?sandbox=1` 실제 렌더와 원본 포즈 보드를 대조해, 문제 원인이 자산 잘림이 아니라 `groundOriginY` / `referenceVisibleHeightRatio` 기준선 계산임을 확인했다.
+  - `src/presentation/units/unitAnimationRegistry.ts`의 production animation helper에 per-unit override 옵션을 추가하고, `breakthrough_trooper`에 별도 기준선 오버라이드를 적용했다.
+- **검증**:
+  - `artifacts/breakthrough-idle-current.png`
+  - `artifacts/breakthrough-idle-fixed.png`
+  - `artifacts/breakthrough-walk-current.png`
+  - `artifacts/breakthrough-walk-fixed.png`
+
+## 2026-08-05 - Codex (sandbox scale reset and late-era asset cleanup)
+
+- **요청/목표**:
+  - 사용자가 “계속 안 고쳐진 것들을 전부 다시 확인하고 고치라”고 요구해, modern infantry 축소/하체 가시성 문제와 후기 기병/포병 자산의 분리 조각 문제를 다시 분리 진단했다.
+- **작업 내용**:
+  - `src/presentation/units/unitAnimationRegistry.ts`에서 modern infantry / support wagon 계열에 임시로 넣어 두었던 `groundOriginY` / `referenceVisibleHeightRatio` override를 제거하고 기본 production 기준으로 되돌렸다.
+  - `?sandbox=1` 실제 렌더를 다시 캡처해 `infantry`, `machine_gunner`, `automatic_rifleman`, `support_gunner`, `special_forces`, `breakthrough_trooper`, `supply_wagon`, `heavy_cavalry`의 표시 크기와 하체 노출 상태를 재검수했다.
+  - `tools/asset-qa/generate_pose_board_production_assets.py`의 cavalry / artillery cleanup 파라미터를 조정하고, 문제 군만 다시 생성했다.
+  - `heavy-cavalry` walk 프레임에서 메인 몸체와 분리돼 떠 있던 창끝 조각을 후처리로 직접 제거했다.
+  - 변경된 생산 자산에 맞춰 선택 prefix들의 `-enemy` 변형도 다시 생성했다.
+- **검증**:
+  - 샌드박스 캡처:
+    - `artifacts/render-audit-2026-08-05/`
+    - `artifacts/render-audit-2026-08-05-after-registry-reset/`
+  - 자산 시트:
+    - `artifacts/modern-problem-sheet.png`
+    - `artifacts/cavalry-problem-after3.png`
+    - `artifacts/heavy-cavalry-walks-after4.png`
+
+## 2026-08-05 - Codex (south-direction legacy audit and alias fix)
+
+- `iron_swordsman` 분리 스크린샷을 기준으로 `?sandbox=1`과 production PNG를 대조했고, 문제 원인이 sandbox 전용이 아니라 `iron-swordsman-s-*` production asset 자체의 분리 상태임을 확인했다.
+- legacy south 계열 전수 시트(`artifacts/legacy-south-audit-sheet.png`)를 만들어 `stone_axeman`, `bronze_swordsman`, `bronze_spearman`, `archer`, `iron_swordsman`, `iron_spearman`, `musketeer`, `knight`를 비교했고, 큰 구조 파손은 `iron_swordsman-s-*`와 `knight-s-idle/walk-a`로 좁혀졌다.
+- `src/presentation/units/unitAnimationRegistry.ts`
+  - direction alias 옵션을 helper에 추가했다.
+  - `iron_swordsman`, `knight`의 `s` 방향은 깨진 south PNG 대신 `sw` 방향 production 자산을 공통으로 참조하도록 매핑했다.
+  - `resolveAnimationTextureFromPrefix()`가 alias를 실제 프레임 선택에도 반영하도록 `getUnitDirectionalPoses()` 기반으로 수정했다.
+- 검증:
+  - `artifacts/iron-swordsman-production-sheet.png`
+  - `artifacts/iron-swordsman-audit-2026-08-05/`
+  - `artifacts/knight-south-compare.png`
+  - `artifacts/south-alias-verify-2026-08-05-b/`
+
+## 2026-08-05 - Codex (production pose generator overflow/fragment correction)
+
+- 요청/목표:
+  - 사용자가 “임시 조치가 아니라 끝까지 다 고치라”고 요구해, 후기 시대 production unit PNG의 상단 잘림/분리 파편/크기 편차를 생성기 단계에서 다시 정리했다.
+- 작업 내용:
+  - `tools/asset-qa/generate_pose_board_production_assets.py`
+    - 회전 프레임이 북향/대각선에서 캔버스 상단에 닿지 않도록 `normalize_to_canvas()`에 세로 최대 높이 클램프를 추가했다.
+    - 본체와 분리된 작은 조각을 제거하는 `prune_secondary_fragments()`를 추가했다.
+    - `heavy-cavalry`, `light-cavalry`, `cavalry`는 `largest-only` cleanup으로 바꿔 walk 중 떠 있는 창끝 조각이 다시 생기지 않도록 정리했다.
+  - 위 생성기로 후기 기병/포병/보병/차량/보급대 계열 production 자산을 선택 재생성했다.
+  - `src/presentation/units/unitAnimationRegistry.ts`
+    - `iron_spearman`은 약간 키우고, `automatic_rifleman` / `mobile_infantry`는 샌드박스 실캡처 기준으로 축소해 사람 크기 편차를 줄였다.
+  - 5173에서 개발 서버를 다시 띄운 뒤 `?sandbox=1`을 Playwright로 재캡처해 실제 렌더를 다시 확인했다.
+- 검증:
+  - `npm run build`
+  - `npm test`
+  - 자산 시트:
+    - `artifacts/unit-audit-sheets-2026-08-05-postfix/`
+    - `artifacts/unit-audit-sheets-2026-08-05-postfix2/`
+  - 샌드박스 재캡처:
+    - `artifacts/sandbox-recheck-2026-08-05/`
+
+## 2026-08-05 - Codex (late-era pose source split and bottom-residue audit)
+
+- 요청/목표:
+  - 사용자가 `rifleman`/`grenadier` 계열은 idle과 walk가 사실상 같은 포즈라고 지적했고, `heavy_gunner`/`cannon` 계열은 하단 갈색선/흙 찌꺼기 잔존물을 전수 확인해 고치라고 요구했다.
+- 작업 내용:
+  - `tools/asset-qa/generate_pose_board_production_assets.py`
+    - `rifleman`, `rifleman-late`, `infantry`의 잘못된 `idle_from_walk` 설정을 제거해 idle과 walk 소스 셀이 분리되게 수정했다.
+    - `grenadier`, `grenadier-late`의 `idle_from_attack` / `walk_from_attack` 설정을 제거해 idle/walk가 실제 걷기 소스를 쓰도록 수정했다.
+    - `cannon-i`, `cannon-ii`, `artillery-i`, `artillery-ii`, `tank`, `mobile-artillery`, `modern-tank`의 하단 cleanup 규칙을 분리 조정했다.
+    - `heavy-gunner`에는 병종 전용 하단 warm-strip 제거 후처리를, 포병/차량에는 하단 low-alpha debris 제거 후처리를 추가했다.
+  - 관련 prefix만 선택 재생성해 production unit PNG를 다시 출력했다.
+  - `?sandbox=1` Playwright 재캡처를 다시 돌려 실제 렌더가 같은 자산을 쓰는지 대조했다.
+- 검수 산출물:
+  - 자산 시트:
+    - `artifacts/fix-audit-2026-08-05/`
+  - 원본 포즈 시트 분해:
+    - `artifacts/fix-audit-2026-08-05/raw-cells-correct/`
+    - `artifacts/fix-audit-2026-08-05/raw-cells-correct-mech/`
+    - `artifacts/fix-audit-2026-08-05/raw-cells-correct-heavy/`
+  - 샌드박스 실캡처:
+    - `artifacts/sandbox-fix-check-2026-08-05-phase/`
+    - `artifacts/sandbox-fix-check-2026-08-05-phase2/`
+    - `artifacts/sandbox-fix-check-2026-08-05-phase3/`
+    - `artifacts/sandbox-fix-check-2026-08-05-phase4/`
+  - 검증 명령:
+    - `npm run build`
+    - `npm test`
+
+## 2026-08-05 - Codex (unit asset audit checklist and geometry baseline)
+
+- **사용자 지시 요약**:
+  - 더 이상 부분 땜질이 아니라, 검수 항목을 먼저 고정하고
+    `검사 -> 수정 -> 재검사`를 체계적으로 반복하라고 요구.
+  - 사람형 / 기병형 / 포병·차량형 / 보급형을 전수 검사하면서
+    `잘림`, `크기 일관성`, `총구/시선 방향`, `걷기 포즈 자연스러움`,
+    `포병·전차류 하단 잘림`을 빠짐없이 검수하라고 지시.
+- **AI 산출물 요약**:
+  - `docs/dev-wiki/unit-asset-audit-checklist.md`를 추가해 샌드박스와 실제
+    전장이 같은 production 자산을 쓴다는 전제, 분류별 pass/fail 기준,
+    완료 기준을 문서로 고정했다.
+  - `tools/asset-qa/audit_unit_asset_geometry.py`를 추가해
+    `public/assets/production/units/`의 전 프레임(8방향 x 4포즈)을 읽고
+    bbox / 여백 / 표시 높이 편차를 자동 감사하도록 했다.
+  - 감사 산출물:
+    - `artifacts/unit-geometry-audit-2026-08-05/report.md`
+    - `artifacts/unit-geometry-audit-2026-08-05/report.json`
+  - 첫 감사 결과:
+    - 총 1216프레임 검사
+    - 실패 239건
+    - 실패 유형은 `pose-size-jump` 144건, `group-size-outlier` 95건
+    - 집중군은 `support_gunner`, `machine_gunner`, `infantry`,
+      `heavy_gunner`, `cannon_i`, `cannon_ii`, `artillery_i`,
+      `artillery_ii`, `supply_wagon_*`
+  - 이 단계에서 `npm run build`, `npm test`를 다시 실행했고 둘 다 통과했다.
+
+## 2026-08-05 - Codex (geometry audit reduction pass to zero)
+
+- **사용자 지시 요약**:
+  - 체크리스트를 만든 뒤에도 "계속 반복해서 모든 게 완벽할 때까지
+    검사 -> 수정 -> 검사 -> 수정"하라고 요구.
+  - 특히 사람형 / 기병형 / 포병형의 크기 일관성과 잘림을 빼놓지 말고
+    전수 검사하라고 재강조.
+- **AI 산출물 요약**:
+  - `tools/asset-qa/generate_pose_board_production_assets.py`
+    - `idle` 기준 스케일을 포즈 전체에 재사용하던 규칙을 제거하고,
+      먼저 포즈별, 그 다음 포즈+방향별로 정규화하도록 수정.
+    - `heavy-gunner`는 표준 384폭에 눌리던 문제를 줄이기 위해 `wide_all`
+      생성 대상으로 전환.
+  - `src/presentation/units/unitAnimationRegistry.ts`
+    - `iron_spearman` scale을 `1.18 -> 1.06`으로 정상화.
+    - `cannon_i`, `cannon_ii`, `artillery_i`, `artillery_ii`,
+      `heavy_cavalry`, `light_cavalry`, `cavalry`, `support_gunner`,
+      `supply_wagon`(industrial/modern extra prefix), `tank`에
+      pose-level / exact-frame `frameVisibleHeightRatio` override를 추가해
+      방향별 남은 표시 높이 점프를 정리.
+  - `tools/asset-qa/audit_unit_asset_geometry.py`
+    - registry와 같은 scale / visible-height 규칙을 이해하도록 확장.
+    - pose-level / exact-frame visible-height override를 같은 값으로 반영해
+      자동 감사 수치가 실제 런타임 표시와 일치하도록 맞춤.
+  - geometry 감사 수치 변화:
+    - 1차: 239 failures
+    - 2차: 142 failures
+    - 3차: 82 failures
+    - 최종: 0 failures
+    - 최종 산출물: `artifacts/unit-geometry-audit-2026-08-05/report.md`,
+      `artifacts/unit-geometry-audit-2026-08-05/report.json`
+  - 회귀:
+    - `npm run build` 통과
+    - `npm test` 통과 (33 files / 139 tests)
+
+## 2026-08-05 - Codex (phase1 asset audit follow-up before commit)
+
+- **사용자 지시 요약**:
+  - 1차로 "여전히 조건에 맞지 않는 그림"을 다시 전수 검사하고,
+    예시로 남아 있던 `지원화기병`/`돌파병` 하반신 누락과
+    `자주포`/`포병` 하단 debris를 우선 정리한 뒤 커밋 & 푸시하라고 요청.
+- **AI 산출물 요약**:
+  - `tools/asset-qa/generate_pose_board_production_assets.py`
+    - modern 사람형 일부(`infantry`, `machine-gunner`, `shock-trooper`,
+      `automatic-rifleman`, `support-gunner`, `special-forces`,
+      `breakthrough-trooper`)가 `largest-only` cleanup 때문에 하반신
+      분리 컴포넌트를 버리던 문제를 확인하고 `keep-nearby` 계열로 교체했다.
+    - 포병/차량형 하단에 남는 sparse debris를 줄이기 위해
+      `erase_bottom_sparse_debris()` 후처리를 추가했다.
+  - `src/presentation/units/unitAnimationRegistry.ts`
+    - `cannon_i`, `cannon_ii`, `artillery_ii`, `heavy_cavalry`, `pikeman`
+      일부 프레임의 exact visible-height ratio를 재조정해 pose-size jump를
+      추가로 정리했다.
+  - `tools/asset-qa/audit_unit_asset_geometry.py`
+    - 같은 exact-frame ratio를 반영해 자동 geometry 감사 기준과 런타임 표시
+      기준을 다시 일치시켰다.
+  - 실캡처 확인:
+    - `artifacts/phase1-visual-audit-2026-08-05-f/`
+    - 확인 대상: `support_gunner`, `breakthrough_trooper`,
+      `automatic_rifleman`, `artillery_i`, `artillery_ii`,
+      `mobile_artillery`
+  - geometry 감사:
+    - 최종 `failure_count: 0`
+    - 산출물: `artifacts/unit-geometry-audit-2026-08-05/report.md`,
+      `artifacts/unit-geometry-audit-2026-08-05/report.json`

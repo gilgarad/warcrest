@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "assetCount": 360,
+  "assetCount": 864,
   "results": [
     {
       "key": "archer-attack",
@@ -132,7 +132,7 @@
     },
     {
       "key": "archer-w-walk-a",
-      "changedPixels": 519
+      "changedPixels": 771
     },
     {
       "key": "archer-w-walk-b",
@@ -145,6 +145,262 @@
     {
       "key": "archer-walk-b",
       "changedPixels": 1151
+    },
+    {
+      "key": "artillery-i-e-attack",
+      "changedPixels": 451
+    },
+    {
+      "key": "artillery-i-e-idle",
+      "changedPixels": 490
+    },
+    {
+      "key": "artillery-i-e-walk-a",
+      "changedPixels": 534
+    },
+    {
+      "key": "artillery-i-e-walk-b",
+      "changedPixels": 500
+    },
+    {
+      "key": "artillery-i-n-attack",
+      "changedPixels": 529
+    },
+    {
+      "key": "artillery-i-n-idle",
+      "changedPixels": 253
+    },
+    {
+      "key": "artillery-i-n-walk-a",
+      "changedPixels": 296
+    },
+    {
+      "key": "artillery-i-n-walk-b",
+      "changedPixels": 278
+    },
+    {
+      "key": "artillery-i-ne-attack",
+      "changedPixels": 530
+    },
+    {
+      "key": "artillery-i-ne-idle",
+      "changedPixels": 564
+    },
+    {
+      "key": "artillery-i-ne-walk-a",
+      "changedPixels": 633
+    },
+    {
+      "key": "artillery-i-ne-walk-b",
+      "changedPixels": 620
+    },
+    {
+      "key": "artillery-i-nw-attack",
+      "changedPixels": 540
+    },
+    {
+      "key": "artillery-i-nw-idle",
+      "changedPixels": 128
+    },
+    {
+      "key": "artillery-i-nw-walk-a",
+      "changedPixels": 99
+    },
+    {
+      "key": "artillery-i-nw-walk-b",
+      "changedPixels": 148
+    },
+    {
+      "key": "artillery-i-s-attack",
+      "changedPixels": 442
+    },
+    {
+      "key": "artillery-i-s-idle",
+      "changedPixels": 258
+    },
+    {
+      "key": "artillery-i-s-walk-a",
+      "changedPixels": 183
+    },
+    {
+      "key": "artillery-i-s-walk-b",
+      "changedPixels": 273
+    },
+    {
+      "key": "artillery-i-se-attack",
+      "changedPixels": 583
+    },
+    {
+      "key": "artillery-i-se-idle",
+      "changedPixels": 501
+    },
+    {
+      "key": "artillery-i-se-walk-a",
+      "changedPixels": 533
+    },
+    {
+      "key": "artillery-i-se-walk-b",
+      "changedPixels": 533
+    },
+    {
+      "key": "artillery-i-sw-attack",
+      "changedPixels": 489
+    },
+    {
+      "key": "artillery-i-sw-idle",
+      "changedPixels": 468
+    },
+    {
+      "key": "artillery-i-sw-walk-a",
+      "changedPixels": 550
+    },
+    {
+      "key": "artillery-i-sw-walk-b",
+      "changedPixels": 569
+    },
+    {
+      "key": "artillery-i-w-attack",
+      "changedPixels": 536
+    },
+    {
+      "key": "artillery-i-w-idle",
+      "changedPixels": 392
+    },
+    {
+      "key": "artillery-i-w-walk-a",
+      "changedPixels": 353
+    },
+    {
+      "key": "artillery-i-w-walk-b",
+      "changedPixels": 434
+    },
+    {
+      "key": "automatic-rifleman-e-attack",
+      "changedPixels": 9746
+    },
+    {
+      "key": "automatic-rifleman-e-idle",
+      "changedPixels": 6893
+    },
+    {
+      "key": "automatic-rifleman-e-walk-a",
+      "changedPixels": 7520
+    },
+    {
+      "key": "automatic-rifleman-e-walk-b",
+      "changedPixels": 8008
+    },
+    {
+      "key": "automatic-rifleman-n-attack",
+      "changedPixels": 9981
+    },
+    {
+      "key": "automatic-rifleman-n-idle",
+      "changedPixels": 8126
+    },
+    {
+      "key": "automatic-rifleman-n-walk-a",
+      "changedPixels": 7505
+    },
+    {
+      "key": "automatic-rifleman-n-walk-b",
+      "changedPixels": 7401
+    },
+    {
+      "key": "automatic-rifleman-ne-attack",
+      "changedPixels": 9600
+    },
+    {
+      "key": "automatic-rifleman-ne-idle",
+      "changedPixels": 7469
+    },
+    {
+      "key": "automatic-rifleman-ne-walk-a",
+      "changedPixels": 8234
+    },
+    {
+      "key": "automatic-rifleman-ne-walk-b",
+      "changedPixels": 7950
+    },
+    {
+      "key": "automatic-rifleman-nw-attack",
+      "changedPixels": 22407
+    },
+    {
+      "key": "automatic-rifleman-nw-idle",
+      "changedPixels": 16486
+    },
+    {
+      "key": "automatic-rifleman-nw-walk-a",
+      "changedPixels": 17847
+    },
+    {
+      "key": "automatic-rifleman-nw-walk-b",
+      "changedPixels": 17034
+    },
+    {
+      "key": "automatic-rifleman-s-attack",
+      "changedPixels": 10268
+    },
+    {
+      "key": "automatic-rifleman-s-idle",
+      "changedPixels": 9292
+    },
+    {
+      "key": "automatic-rifleman-s-walk-a",
+      "changedPixels": 8033
+    },
+    {
+      "key": "automatic-rifleman-s-walk-b",
+      "changedPixels": 8324
+    },
+    {
+      "key": "automatic-rifleman-se-attack",
+      "changedPixels": 9959
+    },
+    {
+      "key": "automatic-rifleman-se-idle",
+      "changedPixels": 7907
+    },
+    {
+      "key": "automatic-rifleman-se-walk-a",
+      "changedPixels": 7285
+    },
+    {
+      "key": "automatic-rifleman-se-walk-b",
+      "changedPixels": 8239
+    },
+    {
+      "key": "automatic-rifleman-sw-attack",
+      "changedPixels": 10103
+    },
+    {
+      "key": "automatic-rifleman-sw-idle",
+      "changedPixels": 7519
+    },
+    {
+      "key": "automatic-rifleman-sw-walk-a",
+      "changedPixels": 8025
+    },
+    {
+      "key": "automatic-rifleman-sw-walk-b",
+      "changedPixels": 8486
+    },
+    {
+      "key": "automatic-rifleman-w-attack",
+      "changedPixels": 10149
+    },
+    {
+      "key": "automatic-rifleman-w-idle",
+      "changedPixels": 6764
+    },
+    {
+      "key": "automatic-rifleman-w-walk-a",
+      "changedPixels": 7188
+    },
+    {
+      "key": "automatic-rifleman-w-walk-b",
+      "changedPixels": 7632
     },
     {
       "key": "bronze-spearman-attack",
@@ -433,6 +689,902 @@
     {
       "key": "bronze-swordsman-walk-b",
       "changedPixels": 674
+    },
+    {
+      "key": "cannon-i-e-attack",
+      "changedPixels": 457
+    },
+    {
+      "key": "cannon-i-e-idle",
+      "changedPixels": 478
+    },
+    {
+      "key": "cannon-i-e-walk-a",
+      "changedPixels": 494
+    },
+    {
+      "key": "cannon-i-e-walk-b",
+      "changedPixels": 465
+    },
+    {
+      "key": "cannon-i-n-attack",
+      "changedPixels": 526
+    },
+    {
+      "key": "cannon-i-n-idle",
+      "changedPixels": 486
+    },
+    {
+      "key": "cannon-i-n-walk-a",
+      "changedPixels": 494
+    },
+    {
+      "key": "cannon-i-n-walk-b",
+      "changedPixels": 488
+    },
+    {
+      "key": "cannon-i-ne-attack",
+      "changedPixels": 484
+    },
+    {
+      "key": "cannon-i-ne-idle",
+      "changedPixels": 525
+    },
+    {
+      "key": "cannon-i-ne-walk-a",
+      "changedPixels": 578
+    },
+    {
+      "key": "cannon-i-ne-walk-b",
+      "changedPixels": 554
+    },
+    {
+      "key": "cannon-i-nw-attack",
+      "changedPixels": 607
+    },
+    {
+      "key": "cannon-i-nw-idle",
+      "changedPixels": 113
+    },
+    {
+      "key": "cannon-i-nw-walk-a",
+      "changedPixels": 58
+    },
+    {
+      "key": "cannon-i-nw-walk-b",
+      "changedPixels": 165
+    },
+    {
+      "key": "cannon-i-s-attack",
+      "changedPixels": 381
+    },
+    {
+      "key": "cannon-i-s-idle",
+      "changedPixels": 240
+    },
+    {
+      "key": "cannon-i-s-walk-a",
+      "changedPixels": 173
+    },
+    {
+      "key": "cannon-i-s-walk-b",
+      "changedPixels": 263
+    },
+    {
+      "key": "cannon-i-se-attack",
+      "changedPixels": 554
+    },
+    {
+      "key": "cannon-i-se-idle",
+      "changedPixels": 476
+    },
+    {
+      "key": "cannon-i-se-walk-a",
+      "changedPixels": 539
+    },
+    {
+      "key": "cannon-i-se-walk-b",
+      "changedPixels": 518
+    },
+    {
+      "key": "cannon-i-sw-attack",
+      "changedPixels": 476
+    },
+    {
+      "key": "cannon-i-sw-idle",
+      "changedPixels": 423
+    },
+    {
+      "key": "cannon-i-sw-walk-a",
+      "changedPixels": 510
+    },
+    {
+      "key": "cannon-i-sw-walk-b",
+      "changedPixels": 532
+    },
+    {
+      "key": "cannon-i-w-attack",
+      "changedPixels": 497
+    },
+    {
+      "key": "cannon-i-w-idle",
+      "changedPixels": 376
+    },
+    {
+      "key": "cannon-i-w-walk-a",
+      "changedPixels": 345
+    },
+    {
+      "key": "cannon-i-w-walk-b",
+      "changedPixels": 392
+    },
+    {
+      "key": "cannon-ii-e-attack",
+      "changedPixels": 12366
+    },
+    {
+      "key": "cannon-ii-e-idle",
+      "changedPixels": 9637
+    },
+    {
+      "key": "cannon-ii-e-walk-a",
+      "changedPixels": 10245
+    },
+    {
+      "key": "cannon-ii-e-walk-b",
+      "changedPixels": 9756
+    },
+    {
+      "key": "cannon-ii-n-attack",
+      "changedPixels": 12634
+    },
+    {
+      "key": "cannon-ii-n-idle",
+      "changedPixels": 9442
+    },
+    {
+      "key": "cannon-ii-n-walk-a",
+      "changedPixels": 7463
+    },
+    {
+      "key": "cannon-ii-n-walk-b",
+      "changedPixels": 7615
+    },
+    {
+      "key": "cannon-ii-ne-attack",
+      "changedPixels": 12377
+    },
+    {
+      "key": "cannon-ii-ne-idle",
+      "changedPixels": 10944
+    },
+    {
+      "key": "cannon-ii-ne-walk-a",
+      "changedPixels": 10736
+    },
+    {
+      "key": "cannon-ii-ne-walk-b",
+      "changedPixels": 9755
+    },
+    {
+      "key": "cannon-ii-nw-attack",
+      "changedPixels": 26194
+    },
+    {
+      "key": "cannon-ii-nw-idle",
+      "changedPixels": 29706
+    },
+    {
+      "key": "cannon-ii-nw-walk-a",
+      "changedPixels": 25209
+    },
+    {
+      "key": "cannon-ii-nw-walk-b",
+      "changedPixels": 26503
+    },
+    {
+      "key": "cannon-ii-s-attack",
+      "changedPixels": 10882
+    },
+    {
+      "key": "cannon-ii-s-idle",
+      "changedPixels": 9011
+    },
+    {
+      "key": "cannon-ii-s-walk-a",
+      "changedPixels": 8168
+    },
+    {
+      "key": "cannon-ii-s-walk-b",
+      "changedPixels": 8184
+    },
+    {
+      "key": "cannon-ii-se-attack",
+      "changedPixels": 13223
+    },
+    {
+      "key": "cannon-ii-se-idle",
+      "changedPixels": 10403
+    },
+    {
+      "key": "cannon-ii-se-walk-a",
+      "changedPixels": 10485
+    },
+    {
+      "key": "cannon-ii-se-walk-b",
+      "changedPixels": 10606
+    },
+    {
+      "key": "cannon-ii-sw-attack",
+      "changedPixels": 13934
+    },
+    {
+      "key": "cannon-ii-sw-idle",
+      "changedPixels": 9943
+    },
+    {
+      "key": "cannon-ii-sw-walk-a",
+      "changedPixels": 10466
+    },
+    {
+      "key": "cannon-ii-sw-walk-b",
+      "changedPixels": 10344
+    },
+    {
+      "key": "cannon-ii-w-attack",
+      "changedPixels": 13120
+    },
+    {
+      "key": "cannon-ii-w-idle",
+      "changedPixels": 10372
+    },
+    {
+      "key": "cannon-ii-w-walk-a",
+      "changedPixels": 9915
+    },
+    {
+      "key": "cannon-ii-w-walk-b",
+      "changedPixels": 10515
+    },
+    {
+      "key": "cavalry-e-attack",
+      "changedPixels": 338
+    },
+    {
+      "key": "cavalry-e-idle",
+      "changedPixels": 391
+    },
+    {
+      "key": "cavalry-e-walk-a",
+      "changedPixels": 362
+    },
+    {
+      "key": "cavalry-e-walk-b",
+      "changedPixels": 538
+    },
+    {
+      "key": "cavalry-n-attack",
+      "changedPixels": 367
+    },
+    {
+      "key": "cavalry-n-idle",
+      "changedPixels": 297
+    },
+    {
+      "key": "cavalry-n-walk-a",
+      "changedPixels": 296
+    },
+    {
+      "key": "cavalry-n-walk-b",
+      "changedPixels": 537
+    },
+    {
+      "key": "cavalry-ne-attack",
+      "changedPixels": 391
+    },
+    {
+      "key": "cavalry-ne-idle",
+      "changedPixels": 343
+    },
+    {
+      "key": "cavalry-ne-walk-a",
+      "changedPixels": 353
+    },
+    {
+      "key": "cavalry-ne-walk-b",
+      "changedPixels": 349
+    },
+    {
+      "key": "cavalry-nw-attack",
+      "changedPixels": 459
+    },
+    {
+      "key": "cavalry-nw-idle",
+      "changedPixels": 354
+    },
+    {
+      "key": "cavalry-nw-walk-a",
+      "changedPixels": 347
+    },
+    {
+      "key": "cavalry-nw-walk-b",
+      "changedPixels": 401
+    },
+    {
+      "key": "cavalry-s-attack",
+      "changedPixels": 384
+    },
+    {
+      "key": "cavalry-s-idle",
+      "changedPixels": 223
+    },
+    {
+      "key": "cavalry-s-walk-a",
+      "changedPixels": 172
+    },
+    {
+      "key": "cavalry-s-walk-b",
+      "changedPixels": 325
+    },
+    {
+      "key": "cavalry-se-attack",
+      "changedPixels": 89
+    },
+    {
+      "key": "cavalry-se-idle",
+      "changedPixels": 308
+    },
+    {
+      "key": "cavalry-se-walk-a",
+      "changedPixels": 177
+    },
+    {
+      "key": "cavalry-se-walk-b",
+      "changedPixels": 195
+    },
+    {
+      "key": "cavalry-sw-attack",
+      "changedPixels": 239
+    },
+    {
+      "key": "cavalry-sw-idle",
+      "changedPixels": 316
+    },
+    {
+      "key": "cavalry-sw-walk-a",
+      "changedPixels": 279
+    },
+    {
+      "key": "cavalry-sw-walk-b",
+      "changedPixels": 238
+    },
+    {
+      "key": "cavalry-w-attack",
+      "changedPixels": 573
+    },
+    {
+      "key": "cavalry-w-idle",
+      "changedPixels": 361
+    },
+    {
+      "key": "cavalry-w-walk-a",
+      "changedPixels": 481
+    },
+    {
+      "key": "cavalry-w-walk-b",
+      "changedPixels": 402
+    },
+    {
+      "key": "grenadier-e-attack",
+      "changedPixels": 656
+    },
+    {
+      "key": "grenadier-e-idle",
+      "changedPixels": 458
+    },
+    {
+      "key": "grenadier-e-walk-a",
+      "changedPixels": 374
+    },
+    {
+      "key": "grenadier-e-walk-b",
+      "changedPixels": 458
+    },
+    {
+      "key": "grenadier-late-e-attack",
+      "changedPixels": 614
+    },
+    {
+      "key": "grenadier-late-e-idle",
+      "changedPixels": 438
+    },
+    {
+      "key": "grenadier-late-e-walk-a",
+      "changedPixels": 347
+    },
+    {
+      "key": "grenadier-late-e-walk-b",
+      "changedPixels": 394
+    },
+    {
+      "key": "grenadier-late-n-attack",
+      "changedPixels": 578
+    },
+    {
+      "key": "grenadier-late-n-idle",
+      "changedPixels": 1137
+    },
+    {
+      "key": "grenadier-late-n-walk-a",
+      "changedPixels": 667
+    },
+    {
+      "key": "grenadier-late-n-walk-b",
+      "changedPixels": 700
+    },
+    {
+      "key": "grenadier-late-ne-attack",
+      "changedPixels": 604
+    },
+    {
+      "key": "grenadier-late-ne-idle",
+      "changedPixels": 719
+    },
+    {
+      "key": "grenadier-late-ne-walk-a",
+      "changedPixels": 593
+    },
+    {
+      "key": "grenadier-late-ne-walk-b",
+      "changedPixels": 555
+    },
+    {
+      "key": "grenadier-late-nw-attack",
+      "changedPixels": 1670
+    },
+    {
+      "key": "grenadier-late-nw-idle",
+      "changedPixels": 176
+    },
+    {
+      "key": "grenadier-late-nw-walk-a",
+      "changedPixels": 138
+    },
+    {
+      "key": "grenadier-late-nw-walk-b",
+      "changedPixels": 153
+    },
+    {
+      "key": "grenadier-late-s-attack",
+      "changedPixels": 593
+    },
+    {
+      "key": "grenadier-late-s-idle",
+      "changedPixels": 233
+    },
+    {
+      "key": "grenadier-late-s-walk-a",
+      "changedPixels": 257
+    },
+    {
+      "key": "grenadier-late-s-walk-b",
+      "changedPixels": 280
+    },
+    {
+      "key": "grenadier-late-se-attack",
+      "changedPixels": 676
+    },
+    {
+      "key": "grenadier-late-se-idle",
+      "changedPixels": 568
+    },
+    {
+      "key": "grenadier-late-se-walk-a",
+      "changedPixels": 446
+    },
+    {
+      "key": "grenadier-late-se-walk-b",
+      "changedPixels": 448
+    },
+    {
+      "key": "grenadier-late-sw-attack",
+      "changedPixels": 443
+    },
+    {
+      "key": "grenadier-late-sw-idle",
+      "changedPixels": 60
+    },
+    {
+      "key": "grenadier-late-sw-walk-a",
+      "changedPixels": 106
+    },
+    {
+      "key": "grenadier-late-sw-walk-b",
+      "changedPixels": 174
+    },
+    {
+      "key": "grenadier-late-w-attack",
+      "changedPixels": 631
+    },
+    {
+      "key": "grenadier-late-w-idle",
+      "changedPixels": 559
+    },
+    {
+      "key": "grenadier-late-w-walk-a",
+      "changedPixels": 510
+    },
+    {
+      "key": "grenadier-late-w-walk-b",
+      "changedPixels": 556
+    },
+    {
+      "key": "grenadier-n-attack",
+      "changedPixels": 611
+    },
+    {
+      "key": "grenadier-n-idle",
+      "changedPixels": 1114
+    },
+    {
+      "key": "grenadier-n-walk-a",
+      "changedPixels": 688
+    },
+    {
+      "key": "grenadier-n-walk-b",
+      "changedPixels": 694
+    },
+    {
+      "key": "grenadier-ne-attack",
+      "changedPixels": 631
+    },
+    {
+      "key": "grenadier-ne-idle",
+      "changedPixels": 671
+    },
+    {
+      "key": "grenadier-ne-walk-a",
+      "changedPixels": 583
+    },
+    {
+      "key": "grenadier-ne-walk-b",
+      "changedPixels": 544
+    },
+    {
+      "key": "grenadier-nw-attack",
+      "changedPixels": 1629
+    },
+    {
+      "key": "grenadier-nw-idle",
+      "changedPixels": 134
+    },
+    {
+      "key": "grenadier-nw-walk-a",
+      "changedPixels": 107
+    },
+    {
+      "key": "grenadier-nw-walk-b",
+      "changedPixels": 156
+    },
+    {
+      "key": "grenadier-s-attack",
+      "changedPixels": 652
+    },
+    {
+      "key": "grenadier-s-idle",
+      "changedPixels": 213
+    },
+    {
+      "key": "grenadier-s-walk-a",
+      "changedPixels": 289
+    },
+    {
+      "key": "grenadier-s-walk-b",
+      "changedPixels": 281
+    },
+    {
+      "key": "grenadier-se-attack",
+      "changedPixels": 755
+    },
+    {
+      "key": "grenadier-se-idle",
+      "changedPixels": 588
+    },
+    {
+      "key": "grenadier-se-walk-a",
+      "changedPixels": 460
+    },
+    {
+      "key": "grenadier-se-walk-b",
+      "changedPixels": 448
+    },
+    {
+      "key": "grenadier-sw-attack",
+      "changedPixels": 447
+    },
+    {
+      "key": "grenadier-sw-idle",
+      "changedPixels": 68
+    },
+    {
+      "key": "grenadier-sw-walk-a",
+      "changedPixels": 145
+    },
+    {
+      "key": "grenadier-sw-walk-b",
+      "changedPixels": 167
+    },
+    {
+      "key": "grenadier-w-attack",
+      "changedPixels": 673
+    },
+    {
+      "key": "grenadier-w-idle",
+      "changedPixels": 553
+    },
+    {
+      "key": "grenadier-w-walk-a",
+      "changedPixels": 504
+    },
+    {
+      "key": "grenadier-w-walk-b",
+      "changedPixels": 569
+    },
+    {
+      "key": "heavy-cavalry-e-attack",
+      "changedPixels": 2892
+    },
+    {
+      "key": "heavy-cavalry-e-idle",
+      "changedPixels": 3092
+    },
+    {
+      "key": "heavy-cavalry-e-walk-a",
+      "changedPixels": 3167
+    },
+    {
+      "key": "heavy-cavalry-e-walk-b",
+      "changedPixels": 3461
+    },
+    {
+      "key": "heavy-cavalry-n-attack",
+      "changedPixels": 3303
+    },
+    {
+      "key": "heavy-cavalry-n-idle",
+      "changedPixels": 2589
+    },
+    {
+      "key": "heavy-cavalry-n-walk-a",
+      "changedPixels": 3086
+    },
+    {
+      "key": "heavy-cavalry-n-walk-b",
+      "changedPixels": 3415
+    },
+    {
+      "key": "heavy-cavalry-ne-attack",
+      "changedPixels": 3236
+    },
+    {
+      "key": "heavy-cavalry-ne-idle",
+      "changedPixels": 3943
+    },
+    {
+      "key": "heavy-cavalry-ne-walk-a",
+      "changedPixels": 3650
+    },
+    {
+      "key": "heavy-cavalry-ne-walk-b",
+      "changedPixels": 3421
+    },
+    {
+      "key": "heavy-cavalry-nw-attack",
+      "changedPixels": 3497
+    },
+    {
+      "key": "heavy-cavalry-nw-idle",
+      "changedPixels": 3211
+    },
+    {
+      "key": "heavy-cavalry-nw-walk-a",
+      "changedPixels": 2988
+    },
+    {
+      "key": "heavy-cavalry-nw-walk-b",
+      "changedPixels": 3197
+    },
+    {
+      "key": "heavy-cavalry-s-attack",
+      "changedPixels": 3033
+    },
+    {
+      "key": "heavy-cavalry-s-idle",
+      "changedPixels": 1261
+    },
+    {
+      "key": "heavy-cavalry-s-walk-a",
+      "changedPixels": 1311
+    },
+    {
+      "key": "heavy-cavalry-s-walk-b",
+      "changedPixels": 3085
+    },
+    {
+      "key": "heavy-cavalry-se-attack",
+      "changedPixels": 990
+    },
+    {
+      "key": "heavy-cavalry-se-idle",
+      "changedPixels": 953
+    },
+    {
+      "key": "heavy-cavalry-se-walk-a",
+      "changedPixels": 884
+    },
+    {
+      "key": "heavy-cavalry-se-walk-b",
+      "changedPixels": 815
+    },
+    {
+      "key": "heavy-cavalry-sw-attack",
+      "changedPixels": 1639
+    },
+    {
+      "key": "heavy-cavalry-sw-idle",
+      "changedPixels": 2972
+    },
+    {
+      "key": "heavy-cavalry-sw-walk-a",
+      "changedPixels": 3237
+    },
+    {
+      "key": "heavy-cavalry-sw-walk-b",
+      "changedPixels": 1933
+    },
+    {
+      "key": "heavy-cavalry-w-attack",
+      "changedPixels": 3771
+    },
+    {
+      "key": "heavy-cavalry-w-idle",
+      "changedPixels": 3049
+    },
+    {
+      "key": "heavy-cavalry-w-walk-a",
+      "changedPixels": 3331
+    },
+    {
+      "key": "heavy-cavalry-w-walk-b",
+      "changedPixels": 3194
+    },
+    {
+      "key": "infantry-e-attack",
+      "changedPixels": 34
+    },
+    {
+      "key": "infantry-e-idle",
+      "changedPixels": 16
+    },
+    {
+      "key": "infantry-e-walk-a",
+      "changedPixels": 36
+    },
+    {
+      "key": "infantry-e-walk-b",
+      "changedPixels": 39
+    },
+    {
+      "key": "infantry-n-attack",
+      "changedPixels": 42
+    },
+    {
+      "key": "infantry-n-idle",
+      "changedPixels": 34
+    },
+    {
+      "key": "infantry-n-walk-a",
+      "changedPixels": 28
+    },
+    {
+      "key": "infantry-n-walk-b",
+      "changedPixels": 45
+    },
+    {
+      "key": "infantry-ne-attack",
+      "changedPixels": 36
+    },
+    {
+      "key": "infantry-ne-idle",
+      "changedPixels": 31
+    },
+    {
+      "key": "infantry-ne-walk-a",
+      "changedPixels": 22
+    },
+    {
+      "key": "infantry-ne-walk-b",
+      "changedPixels": 29
+    },
+    {
+      "key": "infantry-nw-attack",
+      "changedPixels": 45
+    },
+    {
+      "key": "infantry-nw-idle",
+      "changedPixels": 48
+    },
+    {
+      "key": "infantry-nw-walk-a",
+      "changedPixels": 52
+    },
+    {
+      "key": "infantry-nw-walk-b",
+      "changedPixels": 54
+    },
+    {
+      "key": "infantry-s-attack",
+      "changedPixels": 60
+    },
+    {
+      "key": "infantry-s-idle",
+      "changedPixels": 26
+    },
+    {
+      "key": "infantry-s-walk-a",
+      "changedPixels": 9
+    },
+    {
+      "key": "infantry-s-walk-b",
+      "changedPixels": 21
+    },
+    {
+      "key": "infantry-se-attack",
+      "changedPixels": 75
+    },
+    {
+      "key": "infantry-se-idle",
+      "changedPixels": 23
+    },
+    {
+      "key": "infantry-se-walk-a",
+      "changedPixels": 20
+    },
+    {
+      "key": "infantry-se-walk-b",
+      "changedPixels": 23
+    },
+    {
+      "key": "infantry-sw-attack",
+      "changedPixels": 40
+    },
+    {
+      "key": "infantry-sw-idle",
+      "changedPixels": 26
+    },
+    {
+      "key": "infantry-sw-walk-a",
+      "changedPixels": 14
+    },
+    {
+      "key": "infantry-sw-walk-b",
+      "changedPixels": 27
+    },
+    {
+      "key": "infantry-w-attack",
+      "changedPixels": 30
+    },
+    {
+      "key": "infantry-w-idle",
+      "changedPixels": 36
+    },
+    {
+      "key": "infantry-w-walk-a",
+      "changedPixels": 40
+    },
+    {
+      "key": "infantry-w-walk-b",
+      "changedPixels": 30
     },
     {
       "key": "iron-spearman-attack",
@@ -867,6 +2019,262 @@
       "changedPixels": 2705
     },
     {
+      "key": "light-cavalry-e-attack",
+      "changedPixels": 2458
+    },
+    {
+      "key": "light-cavalry-e-idle",
+      "changedPixels": 2663
+    },
+    {
+      "key": "light-cavalry-e-walk-a",
+      "changedPixels": 2697
+    },
+    {
+      "key": "light-cavalry-e-walk-b",
+      "changedPixels": 3012
+    },
+    {
+      "key": "light-cavalry-n-attack",
+      "changedPixels": 2712
+    },
+    {
+      "key": "light-cavalry-n-idle",
+      "changedPixels": 1913
+    },
+    {
+      "key": "light-cavalry-n-walk-a",
+      "changedPixels": 2380
+    },
+    {
+      "key": "light-cavalry-n-walk-b",
+      "changedPixels": 2620
+    },
+    {
+      "key": "light-cavalry-ne-attack",
+      "changedPixels": 2895
+    },
+    {
+      "key": "light-cavalry-ne-idle",
+      "changedPixels": 3273
+    },
+    {
+      "key": "light-cavalry-ne-walk-a",
+      "changedPixels": 3088
+    },
+    {
+      "key": "light-cavalry-ne-walk-b",
+      "changedPixels": 2900
+    },
+    {
+      "key": "light-cavalry-nw-attack",
+      "changedPixels": 3014
+    },
+    {
+      "key": "light-cavalry-nw-idle",
+      "changedPixels": 2775
+    },
+    {
+      "key": "light-cavalry-nw-walk-a",
+      "changedPixels": 2608
+    },
+    {
+      "key": "light-cavalry-nw-walk-b",
+      "changedPixels": 2780
+    },
+    {
+      "key": "light-cavalry-s-attack",
+      "changedPixels": 2612
+    },
+    {
+      "key": "light-cavalry-s-idle",
+      "changedPixels": 1057
+    },
+    {
+      "key": "light-cavalry-s-walk-a",
+      "changedPixels": 1125
+    },
+    {
+      "key": "light-cavalry-s-walk-b",
+      "changedPixels": 2387
+    },
+    {
+      "key": "light-cavalry-se-attack",
+      "changedPixels": 839
+    },
+    {
+      "key": "light-cavalry-se-idle",
+      "changedPixels": 706
+    },
+    {
+      "key": "light-cavalry-se-walk-a",
+      "changedPixels": 624
+    },
+    {
+      "key": "light-cavalry-se-walk-b",
+      "changedPixels": 626
+    },
+    {
+      "key": "light-cavalry-sw-attack",
+      "changedPixels": 1387
+    },
+    {
+      "key": "light-cavalry-sw-idle",
+      "changedPixels": 2525
+    },
+    {
+      "key": "light-cavalry-sw-walk-a",
+      "changedPixels": 2743
+    },
+    {
+      "key": "light-cavalry-sw-walk-b",
+      "changedPixels": 1601
+    },
+    {
+      "key": "light-cavalry-w-attack",
+      "changedPixels": 3177
+    },
+    {
+      "key": "light-cavalry-w-idle",
+      "changedPixels": 2523
+    },
+    {
+      "key": "light-cavalry-w-walk-a",
+      "changedPixels": 2822
+    },
+    {
+      "key": "light-cavalry-w-walk-b",
+      "changedPixels": 2672
+    },
+    {
+      "key": "machine-gunner-e-attack",
+      "changedPixels": 175
+    },
+    {
+      "key": "machine-gunner-e-idle",
+      "changedPixels": 133
+    },
+    {
+      "key": "machine-gunner-e-walk-a",
+      "changedPixels": 104
+    },
+    {
+      "key": "machine-gunner-e-walk-b",
+      "changedPixels": 165
+    },
+    {
+      "key": "machine-gunner-n-attack",
+      "changedPixels": 241
+    },
+    {
+      "key": "machine-gunner-n-idle",
+      "changedPixels": 192
+    },
+    {
+      "key": "machine-gunner-n-walk-a",
+      "changedPixels": 157
+    },
+    {
+      "key": "machine-gunner-n-walk-b",
+      "changedPixels": 187
+    },
+    {
+      "key": "machine-gunner-ne-attack",
+      "changedPixels": 202
+    },
+    {
+      "key": "machine-gunner-ne-idle",
+      "changedPixels": 170
+    },
+    {
+      "key": "machine-gunner-ne-walk-a",
+      "changedPixels": 157
+    },
+    {
+      "key": "machine-gunner-ne-walk-b",
+      "changedPixels": 176
+    },
+    {
+      "key": "machine-gunner-nw-attack",
+      "changedPixels": 373
+    },
+    {
+      "key": "machine-gunner-nw-idle",
+      "changedPixels": 361
+    },
+    {
+      "key": "machine-gunner-nw-walk-a",
+      "changedPixels": 341
+    },
+    {
+      "key": "machine-gunner-nw-walk-b",
+      "changedPixels": 433
+    },
+    {
+      "key": "machine-gunner-s-attack",
+      "changedPixels": 228
+    },
+    {
+      "key": "machine-gunner-s-idle",
+      "changedPixels": 195
+    },
+    {
+      "key": "machine-gunner-s-walk-a",
+      "changedPixels": 100
+    },
+    {
+      "key": "machine-gunner-s-walk-b",
+      "changedPixels": 125
+    },
+    {
+      "key": "machine-gunner-se-attack",
+      "changedPixels": 223
+    },
+    {
+      "key": "machine-gunner-se-idle",
+      "changedPixels": 143
+    },
+    {
+      "key": "machine-gunner-se-walk-a",
+      "changedPixels": 96
+    },
+    {
+      "key": "machine-gunner-se-walk-b",
+      "changedPixels": 151
+    },
+    {
+      "key": "machine-gunner-sw-attack",
+      "changedPixels": 200
+    },
+    {
+      "key": "machine-gunner-sw-idle",
+      "changedPixels": 129
+    },
+    {
+      "key": "machine-gunner-sw-walk-a",
+      "changedPixels": 139
+    },
+    {
+      "key": "machine-gunner-sw-walk-b",
+      "changedPixels": 158
+    },
+    {
+      "key": "machine-gunner-w-attack",
+      "changedPixels": 171
+    },
+    {
+      "key": "machine-gunner-w-idle",
+      "changedPixels": 127
+    },
+    {
+      "key": "machine-gunner-w-walk-a",
+      "changedPixels": 115
+    },
+    {
+      "key": "machine-gunner-w-walk-b",
+      "changedPixels": 181
+    },
+    {
       "key": "musketeer-attack",
       "changedPixels": 718
     },
@@ -1009,6 +2417,518 @@
     {
       "key": "musketeer-walk-b",
       "changedPixels": 414
+    },
+    {
+      "key": "pikeman-e-attack",
+      "changedPixels": 1896
+    },
+    {
+      "key": "pikeman-e-idle",
+      "changedPixels": 714
+    },
+    {
+      "key": "pikeman-e-walk-a",
+      "changedPixels": 571
+    },
+    {
+      "key": "pikeman-e-walk-b",
+      "changedPixels": 860
+    },
+    {
+      "key": "pikeman-n-attack",
+      "changedPixels": 1534
+    },
+    {
+      "key": "pikeman-n-idle",
+      "changedPixels": 608
+    },
+    {
+      "key": "pikeman-n-walk-a",
+      "changedPixels": 655
+    },
+    {
+      "key": "pikeman-n-walk-b",
+      "changedPixels": 354
+    },
+    {
+      "key": "pikeman-ne-attack",
+      "changedPixels": 1930
+    },
+    {
+      "key": "pikeman-ne-idle",
+      "changedPixels": 954
+    },
+    {
+      "key": "pikeman-ne-walk-a",
+      "changedPixels": 434
+    },
+    {
+      "key": "pikeman-ne-walk-b",
+      "changedPixels": 746
+    },
+    {
+      "key": "pikeman-nw-attack",
+      "changedPixels": 2496
+    },
+    {
+      "key": "pikeman-nw-idle",
+      "changedPixels": 688
+    },
+    {
+      "key": "pikeman-nw-walk-a",
+      "changedPixels": 639
+    },
+    {
+      "key": "pikeman-nw-walk-b",
+      "changedPixels": 678
+    },
+    {
+      "key": "pikeman-s-attack",
+      "changedPixels": 1621
+    },
+    {
+      "key": "pikeman-s-idle",
+      "changedPixels": 743
+    },
+    {
+      "key": "pikeman-s-walk-a",
+      "changedPixels": 648
+    },
+    {
+      "key": "pikeman-s-walk-b",
+      "changedPixels": 669
+    },
+    {
+      "key": "pikeman-se-attack",
+      "changedPixels": 1732
+    },
+    {
+      "key": "pikeman-se-idle",
+      "changedPixels": 808
+    },
+    {
+      "key": "pikeman-se-walk-a",
+      "changedPixels": 569
+    },
+    {
+      "key": "pikeman-se-walk-b",
+      "changedPixels": 686
+    },
+    {
+      "key": "pikeman-sw-attack",
+      "changedPixels": 1912
+    },
+    {
+      "key": "pikeman-sw-idle",
+      "changedPixels": 976
+    },
+    {
+      "key": "pikeman-sw-walk-a",
+      "changedPixels": 683
+    },
+    {
+      "key": "pikeman-sw-walk-b",
+      "changedPixels": 718
+    },
+    {
+      "key": "pikeman-w-attack",
+      "changedPixels": 1785
+    },
+    {
+      "key": "pikeman-w-idle",
+      "changedPixels": 692
+    },
+    {
+      "key": "pikeman-w-walk-a",
+      "changedPixels": 632
+    },
+    {
+      "key": "pikeman-w-walk-b",
+      "changedPixels": 741
+    },
+    {
+      "key": "rifleman-e-attack",
+      "changedPixels": 552
+    },
+    {
+      "key": "rifleman-e-idle",
+      "changedPixels": 342
+    },
+    {
+      "key": "rifleman-e-walk-a",
+      "changedPixels": 297
+    },
+    {
+      "key": "rifleman-e-walk-b",
+      "changedPixels": 390
+    },
+    {
+      "key": "rifleman-late-e-attack",
+      "changedPixels": 205
+    },
+    {
+      "key": "rifleman-late-e-idle",
+      "changedPixels": 146
+    },
+    {
+      "key": "rifleman-late-e-walk-a",
+      "changedPixels": 109
+    },
+    {
+      "key": "rifleman-late-e-walk-b",
+      "changedPixels": 208
+    },
+    {
+      "key": "rifleman-late-n-attack",
+      "changedPixels": 146
+    },
+    {
+      "key": "rifleman-late-n-idle",
+      "changedPixels": 222
+    },
+    {
+      "key": "rifleman-late-n-walk-a",
+      "changedPixels": 213
+    },
+    {
+      "key": "rifleman-late-n-walk-b",
+      "changedPixels": 193
+    },
+    {
+      "key": "rifleman-late-ne-attack",
+      "changedPixels": 188
+    },
+    {
+      "key": "rifleman-late-ne-idle",
+      "changedPixels": 93
+    },
+    {
+      "key": "rifleman-late-ne-walk-a",
+      "changedPixels": 183
+    },
+    {
+      "key": "rifleman-late-ne-walk-b",
+      "changedPixels": 81
+    },
+    {
+      "key": "rifleman-late-nw-attack",
+      "changedPixels": 251
+    },
+    {
+      "key": "rifleman-late-nw-idle",
+      "changedPixels": 7
+    },
+    {
+      "key": "rifleman-late-nw-walk-a",
+      "changedPixels": 11
+    },
+    {
+      "key": "rifleman-late-nw-walk-b",
+      "changedPixels": 22
+    },
+    {
+      "key": "rifleman-late-s-attack",
+      "changedPixels": 171
+    },
+    {
+      "key": "rifleman-late-s-idle",
+      "changedPixels": 49
+    },
+    {
+      "key": "rifleman-late-s-walk-a",
+      "changedPixels": 103
+    },
+    {
+      "key": "rifleman-late-s-walk-b",
+      "changedPixels": 116
+    },
+    {
+      "key": "rifleman-late-se-attack",
+      "changedPixels": 300
+    },
+    {
+      "key": "rifleman-late-se-idle",
+      "changedPixels": 142
+    },
+    {
+      "key": "rifleman-late-se-walk-a",
+      "changedPixels": 131
+    },
+    {
+      "key": "rifleman-late-se-walk-b",
+      "changedPixels": 166
+    },
+    {
+      "key": "rifleman-late-sw-attack",
+      "changedPixels": 108
+    },
+    {
+      "key": "rifleman-late-sw-idle",
+      "changedPixels": 12
+    },
+    {
+      "key": "rifleman-late-sw-walk-a",
+      "changedPixels": 39
+    },
+    {
+      "key": "rifleman-late-sw-walk-b",
+      "changedPixels": 14
+    },
+    {
+      "key": "rifleman-late-w-attack",
+      "changedPixels": 169
+    },
+    {
+      "key": "rifleman-late-w-idle",
+      "changedPixels": 102
+    },
+    {
+      "key": "rifleman-late-w-walk-a",
+      "changedPixels": 119
+    },
+    {
+      "key": "rifleman-late-w-walk-b",
+      "changedPixels": 122
+    },
+    {
+      "key": "rifleman-n-attack",
+      "changedPixels": 474
+    },
+    {
+      "key": "rifleman-n-idle",
+      "changedPixels": 851
+    },
+    {
+      "key": "rifleman-n-walk-a",
+      "changedPixels": 544
+    },
+    {
+      "key": "rifleman-n-walk-b",
+      "changedPixels": 594
+    },
+    {
+      "key": "rifleman-ne-attack",
+      "changedPixels": 508
+    },
+    {
+      "key": "rifleman-ne-idle",
+      "changedPixels": 467
+    },
+    {
+      "key": "rifleman-ne-walk-a",
+      "changedPixels": 461
+    },
+    {
+      "key": "rifleman-ne-walk-b",
+      "changedPixels": 396
+    },
+    {
+      "key": "rifleman-nw-attack",
+      "changedPixels": 1247
+    },
+    {
+      "key": "rifleman-nw-idle",
+      "changedPixels": 86
+    },
+    {
+      "key": "rifleman-nw-walk-a",
+      "changedPixels": 72
+    },
+    {
+      "key": "rifleman-nw-walk-b",
+      "changedPixels": 88
+    },
+    {
+      "key": "rifleman-s-attack",
+      "changedPixels": 511
+    },
+    {
+      "key": "rifleman-s-idle",
+      "changedPixels": 159
+    },
+    {
+      "key": "rifleman-s-walk-a",
+      "changedPixels": 230
+    },
+    {
+      "key": "rifleman-s-walk-b",
+      "changedPixels": 249
+    },
+    {
+      "key": "rifleman-se-attack",
+      "changedPixels": 631
+    },
+    {
+      "key": "rifleman-se-idle",
+      "changedPixels": 485
+    },
+    {
+      "key": "rifleman-se-walk-a",
+      "changedPixels": 369
+    },
+    {
+      "key": "rifleman-se-walk-b",
+      "changedPixels": 373
+    },
+    {
+      "key": "rifleman-sw-attack",
+      "changedPixels": 578
+    },
+    {
+      "key": "rifleman-sw-idle",
+      "changedPixels": 62
+    },
+    {
+      "key": "rifleman-sw-walk-a",
+      "changedPixels": 74
+    },
+    {
+      "key": "rifleman-sw-walk-b",
+      "changedPixels": 110
+    },
+    {
+      "key": "rifleman-w-attack",
+      "changedPixels": 557
+    },
+    {
+      "key": "rifleman-w-idle",
+      "changedPixels": 447
+    },
+    {
+      "key": "rifleman-w-walk-a",
+      "changedPixels": 402
+    },
+    {
+      "key": "rifleman-w-walk-b",
+      "changedPixels": 435
+    },
+    {
+      "key": "shock-trooper-e-attack",
+      "changedPixels": 2439
+    },
+    {
+      "key": "shock-trooper-e-idle",
+      "changedPixels": 1934
+    },
+    {
+      "key": "shock-trooper-e-walk-a",
+      "changedPixels": 1939
+    },
+    {
+      "key": "shock-trooper-e-walk-b",
+      "changedPixels": 1911
+    },
+    {
+      "key": "shock-trooper-n-attack",
+      "changedPixels": 2122
+    },
+    {
+      "key": "shock-trooper-n-idle",
+      "changedPixels": 1982
+    },
+    {
+      "key": "shock-trooper-n-walk-a",
+      "changedPixels": 2052
+    },
+    {
+      "key": "shock-trooper-n-walk-b",
+      "changedPixels": 1823
+    },
+    {
+      "key": "shock-trooper-ne-attack",
+      "changedPixels": 2164
+    },
+    {
+      "key": "shock-trooper-ne-idle",
+      "changedPixels": 2121
+    },
+    {
+      "key": "shock-trooper-ne-walk-a",
+      "changedPixels": 1825
+    },
+    {
+      "key": "shock-trooper-ne-walk-b",
+      "changedPixels": 1753
+    },
+    {
+      "key": "shock-trooper-nw-attack",
+      "changedPixels": 2309
+    },
+    {
+      "key": "shock-trooper-nw-idle",
+      "changedPixels": 1856
+    },
+    {
+      "key": "shock-trooper-nw-walk-a",
+      "changedPixels": 1885
+    },
+    {
+      "key": "shock-trooper-nw-walk-b",
+      "changedPixels": 1959
+    },
+    {
+      "key": "shock-trooper-s-attack",
+      "changedPixels": 1416
+    },
+    {
+      "key": "shock-trooper-s-idle",
+      "changedPixels": 1237
+    },
+    {
+      "key": "shock-trooper-s-walk-a",
+      "changedPixels": 1144
+    },
+    {
+      "key": "shock-trooper-s-walk-b",
+      "changedPixels": 1139
+    },
+    {
+      "key": "shock-trooper-se-attack",
+      "changedPixels": 2028
+    },
+    {
+      "key": "shock-trooper-se-idle",
+      "changedPixels": 1891
+    },
+    {
+      "key": "shock-trooper-se-walk-a",
+      "changedPixels": 1618
+    },
+    {
+      "key": "shock-trooper-se-walk-b",
+      "changedPixels": 1572
+    },
+    {
+      "key": "shock-trooper-sw-attack",
+      "changedPixels": 2158
+    },
+    {
+      "key": "shock-trooper-sw-idle",
+      "changedPixels": 1641
+    },
+    {
+      "key": "shock-trooper-sw-walk-a",
+      "changedPixels": 1925
+    },
+    {
+      "key": "shock-trooper-sw-walk-b",
+      "changedPixels": 1717
+    },
+    {
+      "key": "shock-trooper-w-attack",
+      "changedPixels": 2380
+    },
+    {
+      "key": "shock-trooper-w-idle",
+      "changedPixels": 1798
+    },
+    {
+      "key": "shock-trooper-w-walk-a",
+      "changedPixels": 2163
+    },
+    {
+      "key": "shock-trooper-w-walk-b",
+      "changedPixels": 2082
     },
     {
       "key": "stone-axeman-attack",
@@ -1288,7 +3208,7 @@
     },
     {
       "key": "stone-slinger-w-walk-b",
-      "changedPixels": 608
+      "changedPixels": 954
     },
     {
       "key": "stone-slinger-walk-a",
@@ -1441,6 +3361,102 @@
     {
       "key": "supply-wagon-walk-b",
       "changedPixels": 457
+    },
+    {
+      "key": "support-gunner-e-attack",
+      "changedPixels": 7827
+    },
+    {
+      "key": "support-gunner-e-idle",
+      "changedPixels": 5888
+    },
+    {
+      "key": "support-gunner-e-walk-a",
+      "changedPixels": 6318
+    },
+    {
+      "key": "support-gunner-e-walk-b",
+      "changedPixels": 6275
+    },
+    {
+      "key": "support-gunner-n-attack",
+      "changedPixels": 7642
+    },
+    {
+      "key": "support-gunner-n-idle",
+      "changedPixels": 6222
+    },
+    {
+      "key": "support-gunner-n-walk-a",
+      "changedPixels": 5829
+    },
+    {
+      "key": "support-gunner-n-walk-b",
+      "changedPixels": 5612
+    },
+    {
+      "key": "support-gunner-ne-attack",
+      "changedPixels": 7654
+    },
+    {
+      "key": "support-gunner-ne-idle",
+      "changedPixels": 6033
+    },
+    {
+      "key": "support-gunner-ne-walk-a",
+      "changedPixels": 6781
+    },
+    {
+      "key": "support-gunner-ne-walk-b",
+      "changedPixels": 6202
+    },
+    {
+      "key": "support-gunner-s-attack",
+      "changedPixels": 8135
+    },
+    {
+      "key": "support-gunner-s-idle",
+      "changedPixels": 7869
+    },
+    {
+      "key": "support-gunner-s-walk-a",
+      "changedPixels": 6560
+    },
+    {
+      "key": "support-gunner-s-walk-b",
+      "changedPixels": 7025
+    },
+    {
+      "key": "support-gunner-se-attack",
+      "changedPixels": 7861
+    },
+    {
+      "key": "support-gunner-se-idle",
+      "changedPixels": 6539
+    },
+    {
+      "key": "support-gunner-se-walk-a",
+      "changedPixels": 5903
+    },
+    {
+      "key": "support-gunner-se-walk-b",
+      "changedPixels": 6438
+    },
+    {
+      "key": "support-gunner-sw-attack",
+      "changedPixels": 8079
+    },
+    {
+      "key": "support-gunner-sw-idle",
+      "changedPixels": 6217
+    },
+    {
+      "key": "support-gunner-sw-walk-a",
+      "changedPixels": 6467
+    },
+    {
+      "key": "support-gunner-sw-walk-b",
+      "changedPixels": 6520
     }
   ]
 }
