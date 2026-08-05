@@ -218,6 +218,28 @@ Use consistent headings so entries are easy to grep.
   슬롯은 누르면 짧은 가드 윈도우가 열림. 가드 중이 아닐 때 적의 공격
   타이머가 돌면 대열이 하나 줄어듦. `commands.ts`에 `role`
   (offense/defense)과 `cooldownMs`를 추가해 여전히 레지스트리 기반으로
+
+## [2026-08-05] polish | 3프레임 보행 규약 확장(phase2)
+
+- `walk-a / walk-b / attack` 기준이던 late-era/modern 생산 자산 흐름을
+  `walk-a / walk-b / walk-c / attack`으로 확장했다.
+- 런타임 해석기도 sandbox와 실제 게임이 동일한 cycle progress를 쓰도록
+  정리했다. 이제 `?sandbox`에서 보는 보행 프레임 순환이 그대로
+  게임 본편과 같은 규약으로 적용된다.
+- `tools/asset-qa/generate_pose_board_production_assets.py`
+  - 사람형/기병/포병/차량별 `walk-c` 합성 로직 추가
+  - 같은 병종 안에서 pose마다 scale이 튀지 않도록 방향별 공통 scale을
+    계산하도록 변경
+  - 포병/차량 하단 debris 제거 후처리 강화
+- geometry 감사 결과 `walk-c` 미보유 legacy 병종 10개를 확인했고, 실제
+  런타임 누락을 막기 위해 해당 병종들의 `walk-c` fallback 파일을 모두
+  채웠다.
+- 대표 검수 대상은 `rifleman`, `heavy-cavalry`, `artillery-i`,
+  `mobile-artillery`였고, 대표 PNG를 직접 보며 합성 강도와 하단 정리
+  파라미터를 반복 조정했다.
+- 현재 geometry 감사는 `failure_count 233`까지 낮아졌고, 남은 항목은
+  주로 legacy attack/wide-unit pose-size jump 계열이라 후속 교정 대상이
+  명확해진 상태다.
   확장 가능하게 유지.
 - **캐릭터/톤**: `src/gfx/chibi.ts`를 더 통통하고 채도 높은 팔레트,
   두꺼운 아웃라인, 강한 글로시 하이라이트로 재작성. 병사/적/포로 팔레트를

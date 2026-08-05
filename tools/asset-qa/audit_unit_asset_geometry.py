@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 ASSET_DIR = ROOT / "public/assets/production/units"
 OUTPUT_DIR = ROOT / "artifacts" / "unit-geometry-audit-2026-08-05"
 DIRECTIONS = ("n", "ne", "e", "se", "s", "sw", "w", "nw")
-POSES = ("idle", "walk-a", "walk-b", "attack")
+POSES = ("idle", "walk-a", "walk-b", "walk-c", "attack")
 DEFAULT_VISIBLE_HEIGHT_RATIO = 270 / 384
 
 
@@ -325,9 +325,12 @@ def main() -> None:
                 }
                 if stats.get("exists") and stats.get("opaque"):
                     texture_key = f"{config.prefix}-{direction}-{pose}"
+                    pose_ratio = (config.pose_visible_height_ratios or {}).get(pose)
+                    if pose == "walk-c" and pose_ratio is None:
+                        pose_ratio = (config.pose_visible_height_ratios or {}).get("walk-a")
                     frame_ratio = (
                         (config.exact_frame_visible_height_ratios or {}).get(texture_key)
-                        or (config.pose_visible_height_ratios or {}).get(pose)
+                        or pose_ratio
                         or config.reference_visible_height_ratio
                     )
                     normalization_factor = DEFAULT_VISIBLE_HEIGHT_RATIO / frame_ratio

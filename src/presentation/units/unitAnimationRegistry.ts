@@ -1,7 +1,7 @@
 import { assetUrl } from "../../config/assetUrl";
 import type { LaneUnitId } from "../../systems/lane-units/unitStats";
 
-export type UnitLocomotionPose = "idle" | "walk-a" | "walk-b";
+export type UnitLocomotionPose = "idle" | "walk-a" | "walk-b" | "walk-c";
 export const UNIT_FACING_DIRECTIONS = [
   "n", "ne", "e", "se", "s", "sw", "w", "nw",
 ] as const;
@@ -11,6 +11,7 @@ export interface UnitDirectionalPoseSet {
   idle: string;
   walkA: string;
   walkB: string;
+  walkC: string;
   attack: readonly string[];
 }
 
@@ -27,7 +28,7 @@ export interface UnitAnimationDefinition {
   scaleFactor: number;
 }
 
-type FramePoseKey = "idle" | "walk-a" | "walk-b" | "attack";
+type FramePoseKey = "idle" | "walk-a" | "walk-b" | "walk-c" | "attack";
 
 interface ProductionAnimationOptions {
   groundOriginY?: number;
@@ -92,6 +93,7 @@ function directionalProductionAnimation(
     idle: `${prefix}-${direction}-idle`,
     walkA: `${prefix}-${direction}-walk-a`,
     walkB: `${prefix}-${direction}-walk-b`,
+    walkC: `${prefix}-${direction}-walk-c`,
     attack: [`${prefix}-${direction}-attack`],
   });
   const directions = Object.fromEntries(
@@ -102,7 +104,7 @@ function directionalProductionAnimation(
   ) as Readonly<Record<UnitFacingDirection, UnitDirectionalPoseSet>>;
   const allFrames = UNIT_FACING_DIRECTIONS.flatMap((direction) => {
     const poses = directions[direction];
-    return [poses.idle, poses.walkA, poses.walkB, ...poses.attack];
+    return [poses.idle, poses.walkA, poses.walkB, poses.walkC, ...poses.attack];
   });
   const standardFrames = allFrames.filter((key) => !key.endsWith("-attack") || wideAllFrames);
   const wideFrames = wideAllFrames
@@ -117,8 +119,13 @@ function directionalProductionAnimation(
           ? "walk-a"
           : key.endsWith("-walk-b")
             ? "walk-b"
-            : "attack";
-      return [key, options.poseVisibleHeightRatios?.[pose] ?? defaultHeightRatio];
+            : key.endsWith("-walk-c")
+              ? "walk-c"
+              : "attack";
+      const poseRatio = options.poseVisibleHeightRatios?.[pose]
+        ?? (pose === "walk-c" ? options.poseVisibleHeightRatios?.["walk-a"] : undefined)
+        ?? defaultHeightRatio;
+      return [key, poseRatio];
     }),
   ) as Record<string, number>;
   Object.entries(options.extraPrefixPoseVisibleHeightRatios ?? {}).forEach(([extraPrefix, ratios]) => {
@@ -126,6 +133,7 @@ function directionalProductionAnimation(
       frameVisibleHeightRatios[`${extraPrefix}-${direction}-idle`] = ratios.idle ?? defaultHeightRatio;
       frameVisibleHeightRatios[`${extraPrefix}-${direction}-walk-a`] = ratios["walk-a"] ?? defaultHeightRatio;
       frameVisibleHeightRatios[`${extraPrefix}-${direction}-walk-b`] = ratios["walk-b"] ?? defaultHeightRatio;
+      frameVisibleHeightRatios[`${extraPrefix}-${direction}-walk-c`] = ratios["walk-c"] ?? ratios["walk-a"] ?? defaultHeightRatio;
       frameVisibleHeightRatios[`${extraPrefix}-${direction}-attack`] = ratios.attack ?? defaultHeightRatio;
     });
   });
@@ -333,6 +341,7 @@ function listAnimationKeysForPrefix(prefix: string): string[] {
     `${prefix}-${direction}-idle`,
     `${prefix}-${direction}-walk-a`,
     `${prefix}-${direction}-walk-b`,
+    `${prefix}-${direction}-walk-c`,
     `${prefix}-${direction}-attack`,
   ]);
 }
@@ -340,7 +349,7 @@ function listAnimationKeysForPrefix(prefix: string): string[] {
 export const UNIT_ANIMATION_ASSETS = Object.values(UNIT_ANIMATION_REGISTRY)
   .flatMap((definition) => definition
     ? Object.values(definition.directions).flatMap((poses) => poses
-      ? [poses.idle, poses.walkA, poses.walkB, ...poses.attack]
+      ? [poses.idle, poses.walkA, poses.walkB, poses.walkC, ...poses.attack]
       : [])
     : [])
   .concat(EXTRA_UNIT_ANIMATION_PREFIXES.flatMap((prefix) => listAnimationKeysForPrefix(prefix)))
@@ -404,14 +413,19 @@ export function getFrameCanvasAspect(unitId: LaneUnitId, textureKey?: string): n
 }
 
 export function deriveAnimationPrefix(textureKey: string): string {
-  return textureKey.replace(/-(n|ne|e|se|s|sw|w|nw)-(idle|walk-a|walk-b|attack)$/, "");
+  return textureKey.replace(/-(n|ne|e|se|s|sw|w|nw)-(idle|walk-a|walk-b|walk-c|attack)$/, "");
+}
+
+function resolveWalkFrameIndex(walkCycleProgress: number, frameCount: number): number {
+  const normalized = ((walkCycleProgress % 1) + 1) % 1;
+  return Math.min(frameCount - 1, Math.floor(normalized * frameCount));
 }
 
 export function resolveAnimationTextureFromPrefix(
   unitId: LaneUnitId,
   prefix: string,
   moving: boolean,
-  walkPhase: number,
+  walkCycleProgress: number,
   attackProgress: number,
   direction: UnitFacingDirection = "w",
 ): string {
@@ -419,7 +433,8 @@ export function resolveAnimationTextureFromPrefix(
   if (directional) {
     if (attackProgress > 0) return directional.attack[0];
     if (!moving) return directional.idle;
-    return walkPhase >= 0 ? directional.walkA : directional.walkB;
+    const walkFrames = [directional.walkA, directional.walkB, directional.walkC] as const;
+    return walkFrames[resolveWalkFrameIndex(walkCycleProgress, walkFrames.length)];
   }
   const definition = getUnitAnimationDefinition(unitId);
   const authoredDirection = resolveAuthoredDirection(
@@ -428,7 +443,8 @@ export function resolveAnimationTextureFromPrefix(
   );
   if (attackProgress > 0) return `${prefix}-${authoredDirection}-attack`;
   if (!moving) return `${prefix}-${authoredDirection}-idle`;
-  return walkPhase >= 0 ? `${prefix}-${authoredDirection}-walk-a` : `${prefix}-${authoredDirection}-walk-b`;
+  const walkSuffixes = ["walk-a", "walk-b", "walk-c"] as const;
+  return `${prefix}-${authoredDirection}-${walkSuffixes[resolveWalkFrameIndex(walkCycleProgress, walkSuffixes.length)]}`;
 }
 
 export function resolveTeamUnitTextureKey(textureKey: string, team: "player" | "enemy"): string {
@@ -448,7 +464,7 @@ export function shouldFlipUnitFrame(
 export function resolveUnitAnimationTexture(
   unitId: LaneUnitId,
   moving: boolean,
-  walkPhase: number,
+  walkCycleProgress: number,
   attackProgress: number,
   direction: UnitFacingDirection = "w",
 ): string | undefined {
@@ -462,5 +478,6 @@ export function resolveUnitAnimationTexture(
     return poses.attack[frameIndex];
   }
   if (!moving) return poses.idle;
-  return walkPhase >= 0 ? poses.walkA : poses.walkB;
+  const walkFrames = [poses.walkA, poses.walkB, poses.walkC] as const;
+  return walkFrames[resolveWalkFrameIndex(walkCycleProgress, walkFrames.length)];
 }

@@ -4859,3 +4859,41 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
     - 최종 `failure_count: 0`
     - 산출물: `artifacts/unit-geometry-audit-2026-08-05/report.md`,
       `artifacts/unit-geometry-audit-2026-08-05/report.json`
+
+## 2026-08-05 - Codex (phase2 3-frame locomotion rollout)
+
+- **사용자 지시 요약**:
+  - 1차 자산 교정을 커밋/푸시한 뒤, 사람 캐릭터는 다리가 교차하며 걷는
+    것처럼, 기병은 기병 보행처럼, 포병/차량은 바퀴가 굴러가는 것처럼
+    보이도록 최소 3프레임 이상 보행 체계를 넣고, 만들기 전에 조건과
+    검수 기준을 명확히 세운 뒤 결과를 다시 검증하라고 지시.
+- **AI 산출물 요약**:
+  - `src/presentation/units/unitAnimationRegistry.ts`
+    - 보행 pose 규약을 `walk-a`/`walk-b`에서
+      `walk-a`/`walk-b`/`walk-c`로 확장.
+    - 실제 게임과 sandbox가 동일한 cycle progress 기반 프레임 선택을
+      쓰도록 정리해, 두 화면이 같은 자산/같은 규약으로 보이게 맞춤.
+  - `src/scenes/LaneBattleScene.ts`, `src/scenes/UnitSandboxScene.ts`
+    - `Math.sin()` 신호 대신 실제 0..1 cycle progress를 넘기도록 변경해
+      3프레임 순환이 가능하게 함.
+  - `tools/asset-qa/generate_pose_board_production_assets.py`
+    - 사람형/기병/포병/차량 role별 `walk-c` 합성 로직 추가.
+    - 프레임별로 따로 scale을 잡아 크기가 흔들리던 문제를 줄이기 위해,
+      방향별 공통 scale을 계산해서 같은 병종 안에서는 pose 간 크기가
+      최대한 유지되도록 교정.
+    - 대표 병종 PNG를 직접 검수해 보행 강도와 하단 debris 정리 파라미터를
+      반복 조정.
+  - 레거시 병종 보강:
+    - `stone_slinger`, `stone_axeman`, `bronze_swordsman`,
+      `bronze_spearman`, `archer`, `iron_swordsman`, `iron_spearman`,
+      `musketeer`, `knight`, `supply_wagon`은 기존에 `walk-c` 파일이 전혀
+      없어 3프레임 체계에서 빈 텍스처가 날 수 있음을 감사에서 확인.
+    - 우선 `walk-a` 기반 fallback `walk-c` 파일을 생성해 실제 런타임 누락은
+      제거.
+  - 검증:
+    - 대표 병종 검수: `rifleman`, `heavy-cavalry`, `artillery-i`,
+      `mobile-artillery`
+    - geometry 감사 결과: fallback 보강 전 `failure_count 305`,
+      보강 후 `failure_count 233`까지 감소. 남은 실패는 주로 legacy/attack
+      ratio와 일부 wide-unit pose-size jump 계열로, 다음 교정 대상이
+      분명히 드러나는 상태까지 좁혀 둠.

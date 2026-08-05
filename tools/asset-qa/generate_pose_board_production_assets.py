@@ -18,7 +18,7 @@ TARGET_ANCHOR_Y = 336
 STANDARD_CANVAS = (384, 384)
 WIDE_CANVAS = (512, 384)
 DIRECTIONS = ("w", "nw", "n", "ne", "e", "se", "s", "sw")
-POSES = ("idle", "walk-a", "walk-b", "attack")
+POSES = ("idle", "walk-a", "walk-b", "walk-c", "attack")
 
 
 @dataclass(frozen=True)
@@ -880,6 +880,115 @@ def synth_walk_b_shift(image: Image.Image) -> Image.Image:
     return shifted.crop(bbox) if bbox else shifted
 
 
+def crop_to_alpha(image: Image.Image) -> Image.Image:
+    bbox = image.getchannel("A").getbbox()
+    return image.crop(bbox) if bbox else image
+
+
+def centered_on_canvas(image: Image.Image, size: tuple[int, int]) -> Image.Image:
+    canvas = Image.new("RGBA", size, (0, 0, 0, 0))
+    x = (size[0] - image.width) // 2
+    y = (size[1] - image.height) // 2
+    canvas.alpha_composite(image, (x, y))
+    return canvas
+
+
+def blend_centered(a: Image.Image, b: Image.Image, alpha: float) -> Image.Image:
+    size = (max(a.width, b.width), max(a.height, b.height))
+    out = Image.blend(centered_on_canvas(a, size), centered_on_canvas(b, size), alpha)
+    return crop_to_alpha(threshold_alpha(out))
+
+
+def split_shift_recompose(
+    image: Image.Image,
+    split_ratio: float,
+    upper_dx: int,
+    lower_dx: int,
+    upper_dy: int = 0,
+    lower_dy: int = 0,
+    rotate_deg: float = 0,
+    lower_scale_x: float = 1.0,
+) -> Image.Image:
+    content = crop_to_alpha(image)
+    if rotate_deg:
+        content = threshold_alpha(content.rotate(
+            rotate_deg,
+            resample=Image.Resampling.BICUBIC,
+            expand=True,
+            fillcolor=(0, 0, 0, 0),
+        ))
+    width, height = content.size
+    overlap = max(4, round(height * 0.035))
+    split_y = max(overlap + 1, min(height - overlap - 1, round(height * split_ratio)))
+    upper = content.crop((0, 0, width, min(height, split_y + overlap)))
+    lower = content.crop((0, max(0, split_y - overlap), width, height))
+    if lower_scale_x != 1:
+        lower = affine_scale_x(lower, lower_scale_x)
+    pad_left = 20 + max(0, -min(upper_dx, lower_dx))
+    pad_right = 20 + max(0, max(upper_dx, lower_dx))
+    pad_top = 12 + max(0, -min(upper_dy, lower_dy))
+    pad_bottom = 12 + max(0, max(upper_dy, lower_dy))
+    canvas = Image.new(
+        "RGBA",
+        (width + pad_left + pad_right, height + pad_top + pad_bottom),
+        (0, 0, 0, 0),
+    )
+    canvas.alpha_composite(upper, (pad_left + upper_dx, pad_top + upper_dy))
+    lower_x = pad_left + lower_dx + (width - lower.width) // 2
+    lower_y = pad_top + split_y - overlap + lower_dy
+    canvas.alpha_composite(lower, (lower_x, lower_y))
+    return crop_to_alpha(threshold_alpha(canvas))
+
+
+def gait_params(role: str, phase: str) -> tuple[float, int, int, int, int, float, float]:
+    table = {
+        "infantry": {
+            "walk-b": (0.56, 2, 9, 0, 3, 0.0, 0.98),
+            "walk-c": (0.56, -3, -11, 0, 2, 0.0, 1.02),
+        },
+        "support": {
+            "walk-b": (0.56, 2, 9, 0, 3, 0.0, 0.98),
+            "walk-c": (0.56, -3, -11, 0, 2, 0.0, 1.02),
+        },
+        "cavalry": {
+            "walk-b": (0.68, 2, 13, 0, 3, 0.0, 0.99),
+            "walk-c": (0.68, -2, -13, 0, 2, 0.0, 1.01),
+        },
+        "artillery": {
+            "walk-b": (0.66, 0, 14, 0, 1, 0.0, 1.0),
+            "walk-c": (0.66, 0, -14, 0, 1, 0.0, 1.0),
+        },
+        "vehicle": {
+            "walk-b": (0.72, 0, 12, 0, 0, 0.0, 1.0),
+            "walk-c": (0.72, 0, -12, 0, 0, 0.0, 1.0),
+        },
+    }
+    return table.get(role, table["infantry"])[phase]
+
+
+def synth_walk_frame(idle_image: Image.Image, walk_image: Image.Image, role: str, phase: str) -> Image.Image:
+    split_ratio, upper_dx, lower_dx, upper_dy, lower_dy, rotate_deg, lower_scale_x = gait_params(role, phase)
+    if role in {"artillery", "vehicle", "cavalry"}:
+        base = walk_image.copy()
+    elif phase == "walk-b":
+        base = blend_centered(idle_image, walk_image, 0.22)
+    else:
+        base = walk_image.copy()
+    framed = split_shift_recompose(
+        base,
+        split_ratio=split_ratio,
+        upper_dx=upper_dx,
+        lower_dx=lower_dx,
+        upper_dy=upper_dy,
+        lower_dy=lower_dy,
+        rotate_deg=rotate_deg,
+        lower_scale_x=lower_scale_x,
+    )
+    if phase == "walk-c" and role in {"artillery", "vehicle"}:
+        framed = affine_scale_x(framed, 0.99)
+    return crop_to_alpha(threshold_alpha(framed))
+
+
 def affine_scale_x(image: Image.Image, scale_x: float) -> Image.Image:
     width = max(1, round(image.width * scale_x))
     resized = image.resize((width, image.height), Image.Resampling.LANCZOS)
@@ -1007,32 +1116,30 @@ def cleanup_content_image(image: Image.Image, spec: UnitSpec) -> Image.Image:
     if spec.prefix in {"heavy-gunner", "mobile-infantry"}:
         cleaned = erase_bottom_warm_strip(cleaned, 8)
     if spec.prefix in {"cannon-i", "cannon-ii", "artillery-i", "artillery-ii", "tank", "mobile-artillery", "modern-tank"}:
-        cleaned = erase_bottom_low_alpha_debris(cleaned, 18)
-        cleaned = erase_bottom_warm_strip(cleaned, 72, 40, 20, 140)
-        cleaned = erase_bottom_sparse_debris(cleaned)
+        cleaned = erase_bottom_low_alpha_debris(cleaned, 42, alpha_cutoff=235, brightness_cutoff=165)
+        cleaned = erase_bottom_warm_strip(cleaned, 92, 42, 20, 150)
+        cleaned = erase_bottom_sparse_debris(cleaned, start_ratio=0.6, alpha_cutoff=40, radius=3, min_neighbors=18)
     cleaned = prune_secondary_fragments(cleaned)
     return cleaned
 
 
 def pose_image(cells: list[list[Image.Image]], spec: UnitSpec, pose: str) -> Image.Image:
+    idle_source = remove_background(cells[spec.row][2]) if spec.idle_from_attack else remove_background(cells[spec.row][0])
+    walk_source = remove_background(cells[spec.row][2]) if spec.walk_from_attack else remove_background(cells[spec.row][1])
     if pose == "idle" and spec.idle_from_attack:
-        return remove_background(cells[spec.row][2])
+        return idle_source
     if pose == "idle" and spec.idle_from_walk:
-        return remove_background(cells[spec.row][1])
+        return walk_source
     if pose == "idle":
-        return remove_background(cells[spec.row][0])
+        return idle_source
     if pose == "walk-a" and spec.walk_from_attack:
-        return remove_background(cells[spec.row][2])
+        return walk_source
     if pose == "walk-a":
-        return remove_background(cells[spec.row][1])
+        return walk_source
     if pose == "walk-b":
-        if spec.walk_from_attack:
-            walk_a = remove_background(cells[spec.row][2])
-        else:
-            walk_a = remove_background(cells[spec.row][1])
-        if spec.walk_b_mode == "shift":
-            return synth_walk_b_shift(walk_a)
-        return synth_walk_b(walk_a)
+        return synth_walk_frame(idle_source, walk_source, spec.role, "walk-b")
+    if pose == "walk-c":
+        return synth_walk_frame(idle_source, walk_source, spec.role, "walk-c")
     return remove_background(cells[spec.row][2])
 
 
@@ -1044,12 +1151,34 @@ def canvas_for_pose(spec: UnitSpec, pose: str) -> tuple[int, int]:
 
 def save_unit_assets(spec: UnitSpec, board_cells_cache: dict[str, list[list[Image.Image]]]) -> None:
     rows = board_cells_cache[spec.board]
-    for pose in POSES:
-        base_pose = cleanup_content_image(recolor(pose_image(rows, spec, pose), spec), spec)
-        for direction in DIRECTIONS:
-            directional = transform_for_direction(base_pose, direction)
-            direction_scale = compute_reference_scale(directional, canvas_for_pose(spec, pose))
-            canvas = normalize_to_canvas(directional, canvas_for_pose(spec, pose), direction_scale)
+    base_poses = {
+        pose: cleanup_content_image(recolor(pose_image(rows, spec, pose), spec), spec)
+        for pose in POSES
+    }
+    directional_poses = {
+        direction: {
+            pose: transform_for_direction(base_poses[pose], direction)
+            for pose in POSES
+        }
+        for direction in DIRECTIONS
+    }
+    for direction in DIRECTIONS:
+        standard_poses = [pose for pose in POSES if canvas_for_pose(spec, pose) == STANDARD_CANVAS]
+        wide_poses = [pose for pose in POSES if canvas_for_pose(spec, pose) == WIDE_CANVAS]
+        standard_scale = (
+            min(compute_reference_scale(directional_poses[direction][pose], STANDARD_CANVAS) for pose in standard_poses)
+            if standard_poses
+            else 1.0
+        )
+        wide_scale = (
+            min(compute_reference_scale(directional_poses[direction][pose], WIDE_CANVAS) for pose in wide_poses)
+            if wide_poses
+            else 1.0
+        )
+        for pose in POSES:
+            canvas_size = canvas_for_pose(spec, pose)
+            scale = wide_scale if canvas_size == WIDE_CANVAS else standard_scale
+            canvas = normalize_to_canvas(directional_poses[direction][pose], canvas_size, scale)
             final = add_team_accent(canvas, spec.role)
             final.save(ASSET_DIR / f"{spec.prefix}-{direction}-{pose}.png")
             if direction == "w":

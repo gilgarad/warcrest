@@ -65,8 +65,12 @@ import { getAudioSystem } from "../systems/audio";
 import { LaneBattleAudioWiring } from "../systems/audio/laneBattleAudioWiring";
 import { LaneBattleHudView } from "../ui/LaneBattleHudView";
 import { createLaneBattleHudSnapshot } from "../ui/laneBattleHudModel";
+import { BaseResearchPanel } from "../ui/BaseResearchPanel";
+import { createBaseResearchPanelSnapshot, getBrowsableAgeIds } from "../ui/baseResearchPanelModel";
 import { areLaneBattleAssetsReady, queueLaneBattleAssets } from "./laneBattleAssetPreload";
 import {
+  deriveAnimationPrefix,
+  resolveAnimationTextureFromPrefix,
   getUnitAnimationDefinition,
   getUnitDirectionalPoses,
   resolveUnitAnimationTexture,
@@ -89,6 +93,7 @@ import {
   UNIT_STATS,
   getProjectileKeyForUnit,
 } from "../systems/lane-units/unitStats";
+import { RANGE_TO_PROGRESS } from "../systems/lane-units/rangeRules";
 import { createTowerAttackPattern } from "../systems/lane-combat/towerAttack";
 import {
   getAttackTimingProfile,
@@ -128,6 +133,19 @@ import {
   type WorkerRole,
 } from "../systems/lane-economy/laneEconomy";
 import {
+  adjustDraftResearchLevel,
+  applyResearchDraft,
+  getDraftResearchApplyCost,
+  type ResearchStatKey,
+} from "../systems/lane-economy/researchRules";
+import {
+  createTeamResearchState,
+  discardResearchDraftForAge,
+  getAppliedResearchLevels,
+  type TeamResearchState,
+} from "../systems/lane-economy/researchState";
+import { TOWER_RESEARCH_SUBJECT_ID, type ResearchSubjectId } from "../systems/lane-economy/researchSubjects";
+import {
   commitWaveDeployment,
   createWaveDeploymentPlan,
   getInstantWaveEligibility,
@@ -147,9 +165,12 @@ import {
 import {
   DEFENSE_TOWER_BUILD_DURATION_SEC,
   getDefenseTowerBuildCost,
+  getDefenseTowerDefense,
   getDefenseTowerMaxHp,
+  shouldGrantTowerResearchCarryover,
 } from "../systems/lane-capture/defenseTowerRules";
 import type { LaneBattleDebugSnapshot } from "./laneBattleDebugSnapshot";
+import { resolveSpawnUnitStats } from "../systems/lane-units/unitStatResolver";
 
 const CANVAS_W = 1600;
 const CANVAS_H = 900;
@@ -163,8 +184,8 @@ const PLAYER_OPPONENT_COUNT: 1 = 1;
 const PLAYER_BASE_HP = 400;
 const ENEMY_BASE_HP = 400;
 const LANE_ROW_SPACING = 62;
+// Baseline lane progress per second before per-unit speed multipliers are applied.
 const UNIT_PROGRESS_SPEED = 0.02;
-const RANGE_TO_PROGRESS = 0.013;
 const FRIENDLY_GAP = 0.011;
 const ENGAGE_GAP = 0.022;
 const FIELD_CAMERA_ZOOM = 0.46;
@@ -209,14 +230,18 @@ interface LaneUnit {
   attrition: number;
   displaySize: number;
   bobPhase: number;
+  animationPrefix: string;
   currentTextureKey: string;
   presentationOverrideTexture?: string;
-  facingX: -1 | 1;
-  facingDirection: UnitFacingDirection;
+  travelFacingX: -1 | 1;
+  travelFacingDirection: UnitFacingDirection;
+  combatFacingX: -1 | 1;
+  combatFacingDirection: UnitFacingDirection;
   lastPresentationX: number;
   lastPresentationY: number;
   motionX: number;
   motionY: number;
+  walkCyclePhase: number;
   visualOffsetX: number;
   visualLift: number;
   visualRotationRad: number;
@@ -291,6 +316,7 @@ interface DefenseTowerState {
   built: boolean;
   maxHp: number;
   hp: number;
+  defense: number;
   sprite: Phaser.GameObjects.Image;
   selectionHitZone: Phaser.GameObjects.Zone;
   hpBg: Phaser.GameObjects.Rectangle;
@@ -321,10 +347,14 @@ export class LaneBattleScene extends Phaser.Scene {
   private units: LaneUnit[] = [];
   private capturePoints: CapturePointState[] = [];
   private defenseTowers: DefenseTowerState[] = [];
+  private selectedMainBaseTeam: TeamId | null = null;
   private selectedCapturePointId: number | null = null;
   private selectedDefenseTowerId: number | null = null;
   private player!: TeamState;
   private enemy!: TeamState;
+  private playerResearchState: TeamResearchState = createTeamResearchState();
+  private enemyResearchState: TeamResearchState = createTeamResearchState();
+  private devModeEnabled = false;
   private elapsedSec = 0;
   private workerAccumulator = new Map<string, number>();
   private terrainPrototype!: BattlefieldPrototypeRenderer;
@@ -362,6 +392,7 @@ export class LaneBattleScene extends Phaser.Scene {
   private readonly audio = getAudioSystem();
   private readonly audioWiring = new LaneBattleAudioWiring(this.audio);
   private hud!: LaneBattleHudView;
+  private baseResearchPanel!: BaseResearchPanel;
   private audioSettingsOpen = false;
   private readonly laneObstacles: LaneObstacle[] = [
     { textureKey: "rock-cluster", progress: 0.20, laneRow: -10.2, radiusProgress: 0.03, radiusRows: 1.2, width: 176, height: 132 },
@@ -595,6 +626,7 @@ export class LaneBattleScene extends Phaser.Scene {
       this.units.forEach((unit) => this.destroyUnitPresentation(unit));
       this.units = [];
       this.player.ageId = ageId;
+      this.player.selectedProductionAgeId = ageId;
       this.spawnWaveUnits(this.player, getWaveRoster(ageId), 0.5);
       this.units.forEach((unit) => {
         unit.attackTimerSec = 10;
@@ -759,6 +791,7 @@ export class LaneBattleScene extends Phaser.Scene {
           poses.idle,
           poses.walkA,
           poses.walkB,
+          poses.walkC,
           poses.attack[poses.attack.length - 1] ?? poses.idle,
         ];
         textures.forEach((texture, index) => {
@@ -766,8 +799,8 @@ export class LaneBattleScene extends Phaser.Scene {
             "player",
             unitId === "supply_wagon" ? "support" : "battle",
             unitId,
-            0.46 + index * 0.027,
-            (index - 1.5) * 1.8,
+            0.445 + index * 0.022,
+            (index - 2) * 1.6,
           );
           const unit = this.units[this.units.length - 1];
           if (!unit) return;
@@ -987,7 +1020,10 @@ export class LaneBattleScene extends Phaser.Scene {
         unit.visualProgress = 0.5;
         unit.laneRow = 0;
         unit.visualLaneRow = 0;
-        unit.facingX = direction === 1 ? -1 : 1;
+        unit.travelFacingX = direction === 1 ? -1 : 1;
+        unit.travelFacingDirection = direction === 1 ? "w" : "e";
+        unit.combatFacingX = unit.travelFacingX;
+        unit.combatFacingDirection = unit.travelFacingDirection;
         const start = this.progressToScreen(unit.visualProgress, unit.visualLaneRow, unit.laneId);
         unit.lastPresentationX = start.x;
         unit.lastPresentationY = start.y;
@@ -996,10 +1032,41 @@ export class LaneBattleScene extends Phaser.Scene {
         this.syncUnitPresentation(unit);
         this.publishDebug();
       },
-      stepDirectionProbe: () => {
-        const unit = this.units.find((entry) => entry.unitId === "stone_axeman" && entry.team === "player" && entry.sprite.visible);
+      prepareDirectionalAuditProbe: (
+        unitId: BattleUnitId | SupportUnitId,
+        team: TeamId,
+        direction: -1 | 1,
+      ) => {
+        this.units.forEach((unit) => this.destroyUnitPresentation(unit));
+        this.units = [];
+        const role = unitId === "supply_wagon" ? "support" : "battle";
+        this.spawnLaneUnit(team, role, unitId, 0.5 + direction * 0.045, 0);
+        const unit = this.units[0];
         if (!unit) return;
-        this.syncUnitVisual(unit);
+        unit.attackAnimTime = 0;
+        unit.attackFacingLockSec = 0;
+        unit.attackTimerSec = 10;
+        unit.progress = 0.5 + direction * 0.045;
+        unit.visualProgress = 0.5;
+        unit.laneRow = 0;
+        unit.visualLaneRow = 0;
+        unit.travelFacingX = direction === 1 ? -1 : 1;
+        unit.travelFacingDirection = direction === 1 ? "w" : "e";
+        unit.combatFacingX = unit.travelFacingX;
+        unit.combatFacingDirection = unit.travelFacingDirection;
+        const start = this.progressToScreen(unit.visualProgress, unit.visualLaneRow, unit.laneId);
+        unit.lastPresentationX = start.x;
+        unit.lastPresentationY = start.y;
+        this.units.forEach((entry) => this.setUnitPresentationVisible(entry, entry === unit));
+        const focus = this.progressToScreen(0.5, 0);
+        this.cameras.main.centerOn(focus.x, focus.y);
+        this.syncUnitPresentation(unit);
+        this.publishDebug();
+      },
+      stepDirectionProbe: () => {
+        const unit = this.units.find((entry) => entry.sprite.visible);
+        if (!unit) return;
+        this.syncUnitVisual(unit, 1 / 60);
         this.publishDebug();
       },
       setUnitsVisible: (visible: boolean) => {
@@ -1283,6 +1350,7 @@ export class LaneBattleScene extends Phaser.Scene {
       selectionHitZone.on("pointerdown", () => this.selectDefenseTower(definition.id));
       label.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectDefenseTower(definition.id));
       const maxHp = getDefenseTowerMaxHp("stone");
+      const defense = getDefenseTowerDefense("stone");
       return {
         id: definition.id,
         definition,
@@ -1295,6 +1363,7 @@ export class LaneBattleScene extends Phaser.Scene {
         built: true,
         maxHp,
         hp: maxHp,
+        defense,
         sprite,
         selectionHitZone,
         hpBg,
@@ -1317,31 +1386,43 @@ export class LaneBattleScene extends Phaser.Scene {
     this.add.ellipse(playerBase.x + 8, playerBase.y + 3, 250, 82, 0x111918, 0.34)
       .setRotation(-0.08)
       .setDepth(this.getGroundDepth(playerBase.y, -1));
-    this.add.image(playerBase.x, playerBase.y, getMainBaseTexture("player"))
+    const playerBaseSprite = this.add.image(playerBase.x, playerBase.y, getMainBaseTexture("player"))
       .setDisplaySize(baseDisplaySize, baseDisplaySize)
       .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
       .setDepth(this.getGroundDepth(playerBase.y));
     this.add.ellipse(enemyBase.x + 8, enemyBase.y + 3, 250, 82, 0x111918, 0.34)
       .setRotation(-0.08)
       .setDepth(this.getGroundDepth(enemyBase.y, -1));
-    this.add.image(enemyBase.x, enemyBase.y, getMainBaseTexture("enemy"))
+    const enemyBaseSprite = this.add.image(enemyBase.x, enemyBase.y, getMainBaseTexture("enemy"))
       .setDisplaySize(baseDisplaySize, baseDisplaySize)
       .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
       .setDepth(this.getGroundDepth(enemyBase.y));
-    this.add.text(playerBase.x - 8, playerBase.y - baseVisibleWorldHeight - this.cssPxToWorld(20), "아군 본진", {
+    const playerBaseLabel = this.add.text(playerBase.x - 8, playerBase.y - baseVisibleWorldHeight - this.cssPxToWorld(20), "아군 본진", {
       fontFamily: "Georgia, serif",
       fontSize: "24px",
       color: "#dceeff",
       stroke: "#16202a",
       strokeThickness: 4,
     }).setOrigin(0.5).setDepth(this.getGroundDepth(playerBase.y, 4));
-    this.add.text(enemyBase.x + 4, enemyBase.y - baseVisibleWorldHeight - this.cssPxToWorld(20), "적 본진", {
+    const enemyBaseLabel = this.add.text(enemyBase.x + 4, enemyBase.y - baseVisibleWorldHeight - this.cssPxToWorld(20), "적 본진", {
       fontFamily: "Georgia, serif",
       fontSize: "24px",
       color: "#ffe1e1",
       stroke: "#2a1616",
       strokeThickness: 4,
     }).setOrigin(0.5).setDepth(this.getGroundDepth(enemyBase.y, 4));
+    const playerBaseHitZone = this.add.zone(playerBase.x, playerBase.y, baseDisplaySize * 0.82, baseDisplaySize * 0.82)
+      .setDepth(this.getGroundDepth(playerBase.y, 3))
+      .setInteractive({ useHandCursor: true });
+    const enemyBaseHitZone = this.add.zone(enemyBase.x, enemyBase.y, baseDisplaySize * 0.82, baseDisplaySize * 0.82)
+      .setDepth(this.getGroundDepth(enemyBase.y, 3))
+      .setInteractive({ useHandCursor: true });
+    playerBaseSprite.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectMainBase("player"));
+    playerBaseLabel.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectMainBase("player"));
+    playerBaseHitZone.on("pointerdown", () => this.selectMainBase("player"));
+    enemyBaseSprite.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectMainBase("enemy"));
+    enemyBaseLabel.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectMainBase("enemy"));
+    enemyBaseHitZone.on("pointerdown", () => this.selectMainBase("enemy"));
   }
 
   private createUi(): void {
@@ -1359,6 +1440,8 @@ export class LaneBattleScene extends Phaser.Scene {
         buildSupplyDepot: () => this.tryBuildAtSelectedPoint("supply_depot"),
         buildMint: () => this.tryBuildAtSelectedPoint("mint"),
         dismantle: () => this.tryDismantleSelectedPoint(),
+        toggleDevMode: () => this.toggleDevMode(),
+        grantDevResearch: () => this.grantDevResearchPoints(),
         onAudioSettingsVisibilityChange: (visible) => {
           this.audioSettingsOpen = visible;
         },
@@ -1368,6 +1451,13 @@ export class LaneBattleScene extends Phaser.Scene {
       DEPTH_UI,
       QUERY_PARAMS.get("audioDebug") === "1",
     );
+    this.baseResearchPanel = new BaseResearchPanel(this, {
+      close: () => this.closeMainBasePanel(),
+      browseAge: (delta) => this.browsePlayerProductionAge(delta),
+      adjustStat: (unitId, stat, delta) => this.adjustPlayerResearchDraft(unitId, stat, delta),
+      apply: () => this.applyPlayerResearchDraft(),
+      cancel: () => this.cancelPlayerResearchDraft(),
+    }, DEPTH_UI + 80);
   }
 
   private getSelectedCaptureActions(): (CapturePointAction | DefenseTowerAction)[] {
@@ -1529,7 +1619,7 @@ export class LaneBattleScene extends Phaser.Scene {
           `attack:${unit.id}:unit:${nearest.id}:${Math.round(this.elapsedSec * 1000)}`,
         );
         const damageBase = unit.attack * (1 - unit.attrition);
-        const damage = Math.max(1, Math.round(damageBase * this.getAttackBuffMultiplier(unit) - nearest.defense * 0.35));
+        const damage = Math.max(1, Math.round(damageBase * this.getAttackBuffMultiplier(unit) - nearest.defense));
         if (this.isRangedUnit(unit)) {
           const start = this.getUnitProjectileAnchor(unit);
           const end = this.getUnitProjectileAnchor(nearest);
@@ -1555,7 +1645,7 @@ export class LaneBattleScene extends Phaser.Scene {
       }
     });
 
-    this.units.forEach((unit) => this.syncUnitVisual(unit));
+    this.units.forEach((unit) => this.syncUnitVisual(unit, deltaSec));
     this.checkBasePressure(deltaSec);
   }
 
@@ -1581,6 +1671,8 @@ export class LaneBattleScene extends Phaser.Scene {
       if ((unit.team === "player" && unit.progress < desired) || (unit.team === "enemy" && unit.progress > desired)) {
         this.advanceUnit(unit, deltaSec);
       }
+    } else {
+      this.advanceUnit(unit, deltaSec);
     }
   }
 
@@ -1689,8 +1781,8 @@ export class LaneBattleScene extends Phaser.Scene {
       Math.abs(deltaX) <= FACING_DEAD_ZONE_WORLD_PX
       && Math.abs(deltaY) <= FACING_DEAD_ZONE_WORLD_PX
     ) return;
-    unit.facingDirection = resolveUnitFacingDirection(deltaX, deltaY, unit.facingDirection);
-    if (Math.abs(deltaX) > HORIZONTAL_FACING_FLIP_DEAD_ZONE_WORLD_PX) unit.facingX = deltaX >= 0 ? 1 : -1;
+    unit.combatFacingDirection = resolveUnitFacingDirection(deltaX, deltaY, unit.combatFacingDirection);
+    if (Math.abs(deltaX) > HORIZONTAL_FACING_FLIP_DEAD_ZONE_WORLD_PX) unit.combatFacingX = deltaX >= 0 ? 1 : -1;
     unit.combatFacingHoldSec = Math.max(unit.combatFacingHoldSec, holdSec);
   }
 
@@ -1855,9 +1947,9 @@ export class LaneBattleScene extends Phaser.Scene {
       Math.abs(deltaX) <= FACING_DEAD_ZONE_WORLD_PX
       && Math.abs(deltaY) <= FACING_DEAD_ZONE_WORLD_PX
     ) return;
-    unit.facingDirection = resolveUnitFacingDirection(deltaX, deltaY, unit.facingDirection);
+    unit.travelFacingDirection = resolveUnitFacingDirection(deltaX, deltaY, unit.travelFacingDirection);
     if (Math.abs(deltaX) > HORIZONTAL_FACING_FLIP_DEAD_ZONE_WORLD_PX) {
-      unit.facingX = deltaX >= 0 ? 1 : -1;
+      unit.travelFacingX = deltaX >= 0 ? 1 : -1;
     }
   }
 
@@ -1937,7 +2029,14 @@ export class LaneBattleScene extends Phaser.Scene {
       tower.buildRemainingSec = Math.max(0, tower.buildRemainingSec - deltaSec);
       if (tower.buildRemainingSec === 0) {
         tower.built = true;
-        tower.maxHp = getDefenseTowerMaxHp(tower.owner === "enemy" ? this.enemy.ageId : this.player.ageId);
+        tower.maxHp = getDefenseTowerMaxHp(
+          tower.owner === "enemy" ? this.enemy.ageId : this.player.ageId,
+          this.getTowerResearchState(tower.owner),
+        );
+        tower.defense = getDefenseTowerDefense(
+          tower.owner === "enemy" ? this.enemy.ageId : this.player.ageId,
+          this.getTowerResearchState(tower.owner),
+        );
         tower.hp = tower.maxHp;
         tower.attackTimerSec = 0.3;
         if (tower.owner === "player") this.hud.setInfo("타워 재건축 완료");
@@ -1953,14 +2052,25 @@ export class LaneBattleScene extends Phaser.Scene {
       return;
     }
     if (tower.owner === "neutral") return;
-    const expectedMaxHp = getDefenseTowerMaxHp(tower.owner === "enemy" ? this.enemy.ageId : this.player.ageId);
+    const expectedMaxHp = getDefenseTowerMaxHp(
+      tower.owner === "enemy" ? this.enemy.ageId : this.player.ageId,
+      this.getTowerResearchState(tower.owner),
+    );
+    const expectedDefense = getDefenseTowerDefense(
+      tower.owner === "enemy" ? this.enemy.ageId : this.player.ageId,
+      this.getTowerResearchState(tower.owner),
+    );
     if (tower.maxHp !== expectedMaxHp && tower.maxHp > 0) {
       tower.hp = Math.max(1, tower.hp * (expectedMaxHp / tower.maxHp));
       tower.maxHp = expectedMaxHp;
     }
+    tower.defense = expectedDefense;
     tower.attackTimerSec -= deltaSec;
     if (tower.attackTimerSec > 0) return;
-    const spec = createTowerAttackPattern(tower.owner === "player" ? this.player.ageId : this.enemy.ageId);
+    const spec = createTowerAttackPattern(
+      tower.owner === "player" ? this.player.ageId : this.enemy.ageId,
+      this.getTowerResearchState(tower.owner),
+    );
     const target = this.units
       .filter((unit) => unit.team !== tower.owner && unit.laneId === tower.laneId && progressBetween(unit.progress, tower.progress) <= spec.rangeProgress)
       .sort((a, b) => a.hp - b.hp)[0];
@@ -2082,17 +2192,93 @@ export class LaneBattleScene extends Phaser.Scene {
   private selectCapturePoint(id: number): void {
     this.selectedCapturePointId = id;
     this.selectedDefenseTowerId = null;
+    this.selectedMainBaseTeam = null;
     this.audio.playSfx("sfx.ui.buildSelect", { eventKey: `capture:select:${id}` });
     this.refreshCapturePointVisuals();
+    this.baseResearchPanel.setVisible(false);
     this.refreshUi();
   }
 
   private selectDefenseTower(id: number): void {
     this.selectedDefenseTowerId = id;
     this.selectedCapturePointId = null;
+    this.selectedMainBaseTeam = null;
     this.audio.playSfx("sfx.ui.buildSelect", { eventKey: `tower:select:${id}` });
     this.refreshCapturePointVisuals();
     this.refreshDefenseTowerVisuals();
+    this.baseResearchPanel.setVisible(false);
+    this.refreshUi();
+  }
+
+  private selectMainBase(team: TeamId): void {
+    this.selectedMainBaseTeam = team;
+    this.selectedCapturePointId = null;
+    this.selectedDefenseTowerId = null;
+    this.refreshCapturePointVisuals();
+    this.refreshDefenseTowerVisuals();
+    if (team === "player") {
+      this.audio.playSfx("sfx.ui.buildSelect", { eventKey: "base:select:player" });
+    }
+    this.refreshUi();
+  }
+
+  private closeMainBasePanel(): void {
+    this.cancelPlayerResearchDraft();
+    this.selectedMainBaseTeam = null;
+    this.baseResearchPanel.setVisible(false);
+    this.refreshUi();
+  }
+
+  private browsePlayerProductionAge(delta: 1 | -1): void {
+    const browsable = getBrowsableAgeIds(this.player.ageId);
+    const currentIndex = browsable.indexOf(this.player.selectedProductionAgeId);
+    const nextAgeId = browsable[Phaser.Math.Clamp(currentIndex + delta, 0, browsable.length - 1)];
+    if (!nextAgeId || nextAgeId === this.player.selectedProductionAgeId) return;
+    this.player.selectedProductionAgeId = nextAgeId;
+    this.audio.playSfx("sfx.ui.hover", { eventKey: `base:browse:${nextAgeId}` });
+    this.refreshUi();
+  }
+
+  private adjustPlayerResearchDraft(unitId: ResearchSubjectId, stat: ResearchStatKey, delta: 1 | -1): void {
+    adjustDraftResearchLevel(this.playerResearchState, this.player.selectedProductionAgeId, unitId, stat, delta);
+    this.audio.playSfx(delta > 0 ? "sfx.ui.confirm" : "sfx.ui.hover", {
+      eventKey: `base:research:${this.player.selectedProductionAgeId}:${unitId}:${stat}:${delta}`,
+    });
+    this.refreshUi();
+  }
+
+  private applyPlayerResearchDraft(): void {
+    const draftCost = getDraftResearchApplyCost(this.playerResearchState, this.player.selectedProductionAgeId);
+    if (draftCost <= 0) {
+      this.hud.setInfo("연구 포인트가 부족하거나 적용할 변경이 없습니다");
+      this.audio.playSfx("sfx.ui.hireFail", { eventKey: "base:research:apply:fail" });
+      return;
+    }
+    if (this.devModeEnabled) {
+      const originalResearch = this.player.resources.research;
+      if (originalResearch < draftCost) this.player.resources.research = draftCost;
+      const applied = applyResearchDraft(this.player.resources, this.playerResearchState, this.player.selectedProductionAgeId);
+      this.player.resources.research = originalResearch;
+      if (!applied) {
+        this.hud.setInfo("DEV 연구 적용에 실패했습니다");
+        this.audio.playSfx("sfx.ui.hireFail", { eventKey: "base:research:apply:dev-fail" });
+        return;
+      }
+    } else if (!applyResearchDraft(this.player.resources, this.playerResearchState, this.player.selectedProductionAgeId)) {
+      this.hud.setInfo("연구 포인트가 부족하거나 적용할 변경이 없습니다");
+      this.audio.playSfx("sfx.ui.hireFail", { eventKey: "base:research:apply:fail" });
+      return;
+    }
+    this.hud.setInfo(`${getAge(this.player.selectedProductionAgeId).label} 병력 연구를 적용했습니다`);
+    this.audio.playSfx("sfx.ui.confirm", { eventKey: `base:research:apply:${this.player.selectedProductionAgeId}` });
+    this.refreshUi();
+  }
+
+  private cancelPlayerResearchDraft(): void {
+    getBrowsableAgeIds(this.player.ageId).forEach((ageId) => {
+      discardResearchDraftForAge(this.playerResearchState, ageId);
+    });
+    this.audio.playSfx("sfx.ui.cancel", { eventKey: "base:research:cancel" });
     this.refreshUi();
   }
 
@@ -2579,7 +2765,8 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private applyDamageToTower(point: DefenseTowerState, damage: number, attackerTeam: TeamId): void {
     if (!point.built) return;
-    point.hp = Math.max(0, point.hp - damage);
+    const mitigatedDamage = Math.max(1, Math.round(damage - point.defense));
+    point.hp = Math.max(0, point.hp - mitigatedDamage);
     this.playWorldSfx(
       "sfx.combat.towerHit",
       point.sprite.x,
@@ -2592,7 +2779,7 @@ export class LaneBattleScene extends Phaser.Scene {
       duration: 70,
       yoyo: true,
     });
-    this.spawnToast(`${damage}`, point.sprite.x, point.sprite.y - 58, attackerTeam === "player" ? "#ffd67a" : "#ff8f8f");
+    this.spawnToast(`${mitigatedDamage}`, point.sprite.x, point.sprite.y - 58, attackerTeam === "player" ? "#ffd67a" : "#ff8f8f");
     if (point.hp <= 0) {
       point.built = false;
       point.owner = "neutral";
@@ -2804,6 +2991,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private spawnWaveUnits(team: TeamState, roster = getWaveRoster(team.ageId), overrideSpawnProgress?: number): void {
+    const productionAgeId = team.selectedProductionAgeId;
     const battleRows = [-3, 0, 3];
     const laneIds = this.mapSpec.lanes.map((lane) => lane.id);
     const spawnProgress = overrideSpawnProgress ?? (team.id === "player" ? 0.06 : 0.94);
@@ -2818,6 +3006,7 @@ export class LaneBattleScene extends Phaser.Scene {
             spawnProgress,
             battleRows[laneIndex % battleRows.length],
             laneId,
+            productionAgeId,
           );
           laneIndex += 1;
         }
@@ -2831,6 +3020,7 @@ export class LaneBattleScene extends Phaser.Scene {
             team.id === "player" ? spawnProgress - 0.02 : spawnProgress + 0.02,
             0,
             laneId,
+            productionAgeId,
           );
         }
       });
@@ -2844,13 +3034,19 @@ export class LaneBattleScene extends Phaser.Scene {
     progress: number,
     laneRow: number,
     laneId = this.primaryLaneSpec.id,
+    productionAgeId = team === "player" ? this.player.selectedProductionAgeId : this.enemy.selectedProductionAgeId,
   ): void {
-    const stats = UNIT_STATS[unitId];
-    const teamAgeId = team === "player" ? this.player.ageId : this.enemy.ageId;
+    const researchState = team === "player" ? this.playerResearchState : this.enemyResearchState;
+    const stats = resolveSpawnUnitStats(unitId, productionAgeId, researchState);
     const pos = this.progressToScreen(progress, laneRow, laneId);
     const displaySize = role === "support" ? 86 : 76;
-    const initialFacingDirection: UnitFacingDirection = team === "player" ? "ne" : "sw";
-    const initialTextureKey = resolveUnitAnimationTexture(unitId, false, 0, 0, initialFacingDirection) ?? stats.textureKey;
+    const initialFacingDirection: UnitFacingDirection = role === "support"
+      ? (team === "player" ? "e" : "w")
+      : (team === "player" ? "ne" : "sw");
+    const animationPrefix = deriveAnimationPrefix(stats.textureKey);
+    const initialTextureKey = resolveAnimationTextureFromPrefix(unitId, animationPrefix, false, 0, 0, initialFacingDirection)
+      ?? resolveUnitAnimationTexture(unitId, false, 0, 0, initialFacingDirection)
+      ?? stats.textureKey;
     const shadow = this.add.ellipse(pos.x, pos.y + 22, role === "support" ? 56 : 46, role === "support" ? 20 : 16, 0x000000, 0.2)
       .setDepth(this.getGroundDepth(pos.y, -1));
     const selectionRing = this.add.ellipse(pos.x, pos.y, 48, 18, 0x72c8ff, 0.12)
@@ -2862,7 +3058,19 @@ export class LaneBattleScene extends Phaser.Scene {
       pos.y,
       resolveTeamUnitTextureKey(initialTextureKey, team),
     ).setDepth(this.getGroundDepth(pos.y));
-    sprite.setDisplaySize(displaySize, displaySize);
+    const frameAspect = sprite.frame.realHeight > 0
+      ? sprite.frame.realWidth / sprite.frame.realHeight
+      : 1;
+    const targetVisibleWorldHeight = this.isPrototypeV2()
+      ? this.cssPxToWorld(role === "support" ? this.scaleVisualConfig.supportUnitCssHeight : this.scaleVisualConfig.normalUnitCssHeight)
+      : role === "support" ? 118 : 112;
+    const idleFramePresentation = resolveUnitFramePresentation(
+      unitId,
+      targetVisibleWorldHeight,
+      frameAspect,
+      initialTextureKey,
+    );
+    sprite.setDisplaySize(idleFramePresentation.spriteWidth, idleFramePresentation.spriteHeight);
     const hpBg = this.add.rectangle(pos.x, pos.y - 44, 34, 5, 0x132033, 0.92).setDepth(sprite.depth + 1);
     const hpFill = this.add.rectangle(pos.x - 17, pos.y - 44, 34, 5, team === "player" ? 0x62d4a3 : 0xf06f6f, 1).setOrigin(0, 0.5).setDepth(sprite.depth + 2);
     const manaBg = this.add.rectangle(pos.x, pos.y - 38, 34, 4, 0x101a2b, 0.92).setDepth(sprite.depth + 1).setVisible(role === "support");
@@ -2876,7 +3084,7 @@ export class LaneBattleScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(sprite.depth + 3);
     this.uiCamera?.ignore([shadow, selectionRing, sprite, hpBg, hpFill, manaBg, manaFill, label]);
 
-    const supportProfile = getSupportResourceProfile(teamAgeId);
+    const supportProfile = getSupportResourceProfile(productionAgeId);
 
     const unit: LaneUnit = {
       id: nextUnitId++,
@@ -2909,18 +3117,22 @@ export class LaneBattleScene extends Phaser.Scene {
       attrition: 0,
       displaySize,
       bobPhase: Phaser.Math.FloatBetween(0, Math.PI * 2),
+      animationPrefix,
       currentTextureKey: initialTextureKey,
-      facingX: team === "player" ? 1 : -1,
-      facingDirection: initialFacingDirection,
+      travelFacingX: team === "player" ? 1 : -1,
+      travelFacingDirection: initialFacingDirection,
+      combatFacingX: team === "player" ? 1 : -1,
+      combatFacingDirection: initialFacingDirection,
       lastPresentationX: pos.x,
       lastPresentationY: pos.y,
       motionX: 0,
       motionY: 0,
+      walkCyclePhase: Phaser.Math.FloatBetween(0, 1),
       visualOffsetX: 0,
       visualLift: 0,
       visualRotationRad: 0,
-      visualSpriteWidth: displaySize,
-      visualSpriteHeight: displaySize,
+      visualSpriteWidth: idleFramePresentation.spriteWidth,
+      visualSpriteHeight: idleFramePresentation.spriteHeight,
       sprite,
       shadow,
       selectionRing,
@@ -2980,9 +3192,16 @@ export class LaneBattleScene extends Phaser.Scene {
     }
   }
 
-  private syncUnitVisual(unit: LaneUnit): void {
-    unit.visualProgress = Phaser.Math.Linear(unit.visualProgress, unit.progress, 0.22);
-    unit.visualLaneRow = Phaser.Math.Linear(unit.visualLaneRow, unit.laneRow, 0.18);
+  private syncUnitVisual(unit: LaneUnit, deltaSec: number): void {
+    const progressCatchup = 1 - Math.exp(-18 * deltaSec);
+    const rowCatchup = 1 - Math.exp(-14 * deltaSec);
+    const progressDelta = progressBetween(unit.progress, unit.visualProgress);
+    const rowDelta = Math.abs(unit.laneRow - unit.visualLaneRow);
+    if (progressDelta > 0.00006 || rowDelta > 0.015) {
+      unit.walkCyclePhase = (unit.walkCyclePhase + deltaSec * (1.7 + unit.speed * 0.55)) % 1;
+    }
+    unit.visualProgress = Phaser.Math.Linear(unit.visualProgress, unit.progress, progressCatchup);
+    unit.visualLaneRow = Phaser.Math.Linear(unit.visualLaneRow, unit.laneRow, rowCatchup);
     this.syncUnitPresentation(unit);
   }
 
@@ -3045,22 +3264,34 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private syncUnitPresentation(unit: LaneUnit): void {
     const rawPos = this.progressToScreen(unit.visualProgress, unit.visualLaneRow, unit.laneId);
-    const pos = this.isPrototypeV2()
-      ? this.snapWorldPointToCanvasPixel(rawPos.x, rawPos.y)
-      : rawPos;
-    const moving = progressBetween(unit.progress, unit.visualProgress) > 0.0008;
+    const pos = rawPos;
+    const moving = progressBetween(unit.progress, unit.visualProgress) > 0.00012 || Math.abs(unit.motionX) > 0.22;
+    const usingCombatFacing = unit.attackFacingLockSec > 0 || unit.combatFacingHoldSec > 0;
+    const locomotionFacingX = unit.travelFacingX;
+    const locomotionFacingDirection = unit.travelFacingDirection;
+    const presentationFacingX = usingCombatFacing ? unit.combatFacingX : locomotionFacingX;
+    const presentationFacingDirection: UnitFacingDirection = unit.role === "support"
+      ? (locomotionFacingX >= 0 ? "e" : "w")
+      : (usingCombatFacing ? unit.combatFacingDirection : locomotionFacingDirection);
     const attackDurationSec = this.getUnitAttackTiming(unit, unit.attackTargetKind).durationSec;
     const attackProgress = unit.attackAnimTime > 0
       ? 1 - unit.attackAnimTime / attackDurationSec
       : 0;
-    const walkCycleProgress = ((this.elapsedSec * 1.25 + unit.bobPhase / (Math.PI * 2)) % 1 + 1) % 1;
-    const gait = this.elapsedSec * 6.2 + unit.bobPhase;
-    const desiredTexture = unit.presentationOverrideTexture ?? resolveUnitAnimationTexture(
+    const walkCycleProgress = unit.walkCyclePhase;
+    const gait = walkCycleProgress * Math.PI * 2 + unit.bobPhase;
+    const desiredTexture = unit.presentationOverrideTexture ?? resolveAnimationTextureFromPrefix(
+      unit.unitId,
+      unit.animationPrefix,
+      moving,
+      walkCycleProgress,
+      attackProgress,
+      presentationFacingDirection,
+    ) ?? resolveUnitAnimationTexture(
       unit.unitId,
       moving,
-      Math.sin(walkCycleProgress * Math.PI * 2),
+      walkCycleProgress,
       attackProgress,
-      unit.facingDirection,
+      presentationFacingDirection,
     ) ?? UNIT_STATS[unit.unitId].textureKey;
     if (desiredTexture !== unit.currentTextureKey) {
       unit.currentTextureKey = desiredTexture;
@@ -3071,30 +3302,42 @@ export class LaneBattleScene extends Phaser.Scene {
     unit.lastPresentationX = pos.x;
     unit.lastPresentationY = pos.y;
 
-    const walkMotion = moving ? resolveWalkMotion(walkCycleProgress, unit.facingX) : { swayX: 0, lift: 0, rotationRad: 0 };
-    const bob = moving ? Math.sin(gait) * 0.45 + walkMotion.lift : Math.sin(this.elapsedSec * 4 + unit.bobPhase) * 0.35;
+    const rawWalkMotion = moving ? resolveWalkMotion(walkCycleProgress, locomotionFacingX) : { swayX: 0, lift: 0, rotationRad: 0 };
+    const walkMotion = unit.role === "support"
+      ? { ...rawWalkMotion, rotationRad: 0 }
+      : rawWalkMotion;
+    const bob = moving ? Math.sin(gait) * 0.72 + walkMotion.lift : Math.sin(this.elapsedSec * 4 + unit.bobPhase) * 0.35;
     const targetAttackMotion = resolveAttackMotion({
       role: unit.role,
       melee: this.isMeleeUnit(unit),
       ranged: this.isRangedUnit(unit),
       targetKind: unit.attackTargetKind,
       progress: attackProgress,
-      facing: unit.facingX,
+      facing: presentationFacingX,
     });
     const legacyScale = unit.role === "support" ? 1.08 : 1;
     const frameAspect = unit.sprite.frame.realHeight > 0
       ? unit.sprite.frame.realWidth / unit.sprite.frame.realHeight
       : 1;
-    const targetVisibleCssHeight = this.scaleVisualConfig.normalUnitCssHeight;
+    const targetVisibleCssHeight = unit.role === "support"
+      ? this.scaleVisualConfig.supportUnitCssHeight
+      : this.scaleVisualConfig.normalUnitCssHeight;
     const targetVisibleWorldHeight = this.isPrototypeV2()
       ? this.cssPxToWorld(targetVisibleCssHeight)
       : unit.role === "support" ? 118 : 112;
-    const idleTextureKey = resolveUnitAnimationTexture(
+    const idleTextureKey = resolveAnimationTextureFromPrefix(
+      unit.unitId,
+      unit.animationPrefix,
+      false,
+      0,
+      0,
+      presentationFacingDirection,
+    ) ?? resolveUnitAnimationTexture(
       unit.unitId,
       false,
       0,
       0,
-      unit.facingDirection,
+      presentationFacingDirection,
     ) ?? UNIT_STATS[unit.unitId].textureKey;
     const idleFramePresentation = resolveUnitFramePresentation(
       unit.unitId,
@@ -3108,17 +3351,30 @@ export class LaneBattleScene extends Phaser.Scene {
       frameAspect,
       desiredTexture,
     );
+    const isMeleePose = this.isMeleeUnit(unit);
+    const widthAllowance = isMeleePose ? 1.6 : unit.role === "support" ? 1.2 : 1.35;
+    const widthFrameScale = Math.min(
+      1,
+      (idleFramePresentation.spriteWidth * widthAllowance) / Math.max(1, framePresentation.spriteWidth),
+    );
+    const heightFrameScale = 1;
+    const cappedFrameWidth = framePresentation.spriteWidth * widthFrameScale;
+    const cappedFrameHeight = framePresentation.spriteHeight * heightFrameScale;
     const unconstrainedSpriteWidth = this.terrainPrototypeEnabled
-      ? framePresentation.spriteWidth
-      : unit.displaySize * legacyScale;
-    const maxPoseWidth = idleFramePresentation.spriteWidth * 1.16;
+      ? cappedFrameWidth
+      : unit.displaySize * legacyScale * widthFrameScale;
+    const maxPoseWidth = idleFramePresentation.spriteWidth * widthAllowance;
     const spriteWidth = Math.min(unconstrainedSpriteWidth, maxPoseWidth);
     const spriteHeight = this.terrainPrototypeEnabled
-      ? framePresentation.spriteHeight
-      : unit.displaySize * legacyScale;
+      ? cappedFrameHeight
+      : unit.displaySize * legacyScale * heightFrameScale;
     unit.visualOffsetX = Phaser.Math.Linear(unit.visualOffsetX, targetAttackMotion.offsetX, 0.22);
     unit.visualLift = Phaser.Math.Linear(unit.visualLift, targetAttackMotion.lift, 0.2);
-    unit.visualRotationRad = Phaser.Math.Linear(unit.visualRotationRad, targetAttackMotion.rotationRad, 0.18);
+    unit.visualRotationRad = Phaser.Math.Linear(
+      unit.visualRotationRad,
+      unit.role === "support" ? 0 : targetAttackMotion.rotationRad,
+      0.18,
+    );
     unit.visualSpriteWidth = Phaser.Math.Linear(unit.visualSpriteWidth, spriteWidth, 0.22);
     unit.visualSpriteHeight = Phaser.Math.Linear(unit.visualSpriteHeight, spriteHeight, 0.22);
     const attackOffsetX = unit.visualOffsetX + walkMotion.swayX;
@@ -3174,8 +3430,8 @@ export class LaneBattleScene extends Phaser.Scene {
       .setSize(ringWidth, ringHeight)
       .setDepth(this.getGroundDepth(pos.y, -2))
       .setVisible(this.isPrototypeV2() && (unit.selected || unit.hovered));
-    const baseFlipX = shouldFlipUnitFrame(unit.unitId, unit.facingX, unit.facingDirection);
-    const flipX = unit.unitId === "musketeer" && attackProgress > 0
+    const baseFlipX = shouldFlipUnitFrame(unit.unitId, presentationFacingX, presentationFacingDirection);
+    const flipX = getProjectileKeyForUnit(unit.unitId) === "projectile-shot" && attackProgress > 0
       ? !baseFlipX
       : baseFlipX;
 
@@ -3254,12 +3510,12 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private hireWorker(): void {
-    if (!canAfford(this.player.resources, BASE_WORKER_COST)) {
+    if (!this.devModeEnabled && !canAfford(this.player.resources, BASE_WORKER_COST)) {
       this.hud.setInfo("일꾼 고용 실패: 금/목재/식량 부족");
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "hire:worker:shortage" });
       return;
     }
-    payCost(this.player.resources, BASE_WORKER_COST);
+    if (!this.devModeEnabled) payCost(this.player.resources, BASE_WORKER_COST);
     this.player.workers.idle += 1;
     this.hud.setInfo("일꾼 1명을 고용했습니다");
     this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:worker:${this.player.workers.idle}` });
@@ -3267,8 +3523,8 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private hireResearchWorker(): void {
     const cost = getResearchWorkerDirectCost(this.player.ageId);
-    if (canAfford(this.player.resources, cost)) {
-      payCost(this.player.resources, cost);
+    if (this.devModeEnabled || canAfford(this.player.resources, cost)) {
+      if (!this.devModeEnabled) payCost(this.player.resources, cost);
       this.player.workers.research += 1;
       this.hud.setInfo("연구 일꾼을 직접 고용했습니다");
       this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:research:direct:${this.player.workers.research}` });
@@ -3302,21 +3558,54 @@ export class LaneBattleScene extends Phaser.Scene {
       return;
     }
     const cost = getAgeUpCost(idx);
-    if (!canAfford(this.player.resources, cost)) {
+    if (!this.devModeEnabled && !canAfford(this.player.resources, cost)) {
       this.hud.setInfo(`시대 업 실패: ${this.formatResourceShortage(cost)}`);
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "age:shortage" });
       return;
     }
-    payCost(this.player.resources, cost);
+    if (!this.devModeEnabled) payCost(this.player.resources, cost);
     this.advanceAge(this.player);
     this.hud.setInfo(`${getAge(this.player.ageId).label} 도달`);
     this.audio.playSfx("sfx.ui.confirm", { eventKey: `age:${this.player.ageId}` });
   }
 
   private advanceAge(team: TeamState): void {
+    const previousAgeId = team.ageId;
     if (!advanceTeamAge(team)) return;
+    this.applyTowerResearchCarryover(team, previousAgeId, team.ageId);
     if (getAge(team.ageId).immediateWaveTokenGranted) this.grantInstantWaveToken(team);
     if (team.id === "player") this.refreshUi();
+  }
+
+  private applyTowerResearchCarryover(team: TeamState, previousAgeId: AgeId, nextAgeId: AgeId): void {
+    const researchState = this.getResearchStateForTeam(team.id);
+    const nextLevels = { ...getAppliedResearchLevels(researchState, nextAgeId, TOWER_RESEARCH_SUBJECT_ID) };
+    let changed = false;
+    if (shouldGrantTowerResearchCarryover(previousAgeId, nextAgeId, researchState, "attack") && nextLevels.attackLevel < 1) {
+      nextLevels.attackLevel = 1;
+      changed = true;
+    }
+    if (shouldGrantTowerResearchCarryover(previousAgeId, nextAgeId, researchState, "defense") && nextLevels.defenseLevel < 1) {
+      nextLevels.defenseLevel = 1;
+      changed = true;
+    }
+    if (!changed) return;
+    researchState.applied[nextAgeId] = {
+      ...(researchState.applied[nextAgeId] ?? {}),
+      [TOWER_RESEARCH_SUBJECT_ID]: nextLevels,
+    };
+    if (researchState.draft[nextAgeId]?.[TOWER_RESEARCH_SUBJECT_ID]) {
+      delete researchState.draft[nextAgeId]?.[TOWER_RESEARCH_SUBJECT_ID];
+    }
+  }
+
+  private getResearchStateForTeam(teamId: TeamId): TeamResearchState {
+    return teamId === "player" ? this.playerResearchState : this.enemyResearchState;
+  }
+
+  private getTowerResearchState(owner: TeamId | "neutral"): TeamResearchState | undefined {
+    if (owner === "neutral") return undefined;
+    return this.getResearchStateForTeam(owner);
   }
 
   private grantInstantWaveToken(team: TeamState): void {
@@ -3339,6 +3628,17 @@ export class LaneBattleScene extends Phaser.Scene {
     });
     const selectedActions = this.getSelectedCaptureActions();
     this.hud.apply(snapshot, selectedActions);
+    this.hud.setDevMode(this.devModeEnabled);
+    if (this.selectedMainBaseTeam === "player") {
+      this.baseResearchPanel.applySnapshot(createBaseResearchPanelSnapshot({
+        team: this.player,
+        researchState: this.playerResearchState,
+        viewedAgeId: this.player.selectedProductionAgeId,
+        freeApply: this.devModeEnabled,
+      }));
+    } else {
+      this.baseResearchPanel.setVisible(false);
+    }
     this.refreshHudActionLabels();
   }
 
@@ -3353,7 +3653,7 @@ export class LaneBattleScene extends Phaser.Scene {
         ? "시대 업\n최종 시대"
         : `시대 업\n${this.formatCostShort(ageUpCost ?? {})}`,
     );
-    this.hud.setStrategicActionEnabled("age-up", ageUpCost ? canAfford(this.player.resources, ageUpCost) : true);
+    this.hud.setStrategicActionEnabled("age-up", this.devModeEnabled || (ageUpCost ? canAfford(this.player.resources, ageUpCost) : true));
     this.hud.setStrategicActionLabel("use-instant-wave", `즉시 웨이브\n토큰 ${this.player.instantWaveTokens}`);
 
     this.hud.setCaptureActionLabel("rebuild-defense-tower", `타워 재건\n${this.formatCostShort(getDefenseTowerBuildCost(this.player.ageId))}`);
@@ -3363,23 +3663,46 @@ export class LaneBattleScene extends Phaser.Scene {
     this.hud.setCaptureActionLabel("dismantle", `폐기\n${DISMANTLE_COST_GOLD}G`);
   }
 
-  private formatCostShort(cost: Partial<Record<"gold" | "wood" | "food" | "metal", number>>): string {
+  private toggleDevMode(): void {
+    this.devModeEnabled = !this.devModeEnabled;
+    this.hud.setInfo(this.devModeEnabled ? "DEV 모드 활성화" : "DEV 모드 비활성화");
+    this.audio.playSfx(this.devModeEnabled ? "sfx.ui.confirm" : "sfx.ui.cancel", {
+      eventKey: `dev-mode:${this.devModeEnabled ? "on" : "off"}`,
+    });
+    this.refreshUi();
+  }
+
+  private grantDevResearchPoints(amount = 25): void {
+    if (!this.devModeEnabled) {
+      this.hud.setInfo("DEV 모드에서만 연구 포인트를 추가할 수 있습니다");
+      this.audio.playSfx("sfx.ui.cancel", { eventKey: "dev-research:disabled" });
+      return;
+    }
+    this.player.resources.research += amount;
+    this.hud.setInfo(`연구 포인트 +${amount}`);
+    this.audio.playSfx("sfx.ui.confirm", { eventKey: `dev-research:${amount}` });
+    this.refreshUi();
+  }
+
+  private formatCostShort(cost: Partial<Record<"gold" | "wood" | "food" | "metal" | "research", number>>): string {
     const parts: string[] = [];
     if (cost.gold) parts.push(`${Math.round(cost.gold)}G`);
     if (cost.wood) parts.push(`${Math.round(cost.wood)}W`);
     if (cost.food) parts.push(`${Math.round(cost.food)}F`);
     if (cost.metal) parts.push(`${Math.round(cost.metal)}M`);
+    if (cost.research) parts.push(`${Math.round(cost.research)}R`);
     return parts.join(" ");
   }
 
-  private formatResourceShortage(cost: Partial<Record<"gold" | "wood" | "food" | "metal", number>>): string {
+  private formatResourceShortage(cost: Partial<Record<"gold" | "wood" | "food" | "metal" | "research", number>>): string {
     const labels = {
       gold: "금",
       wood: "목재",
       food: "식량",
       metal: "금속",
+      research: "연구",
     } as const;
-    const shortages = (Object.entries(cost) as Array<["gold" | "wood" | "food" | "metal", number | undefined]>)
+    const shortages = (Object.entries(cost) as Array<["gold" | "wood" | "food" | "metal" | "research", number | undefined]>)
       .map(([resourceId, required]) => {
         const missing = Math.max(0, Math.ceil((required ?? 0) - this.player.resources[resourceId]));
         return missing > 0 ? `${labels[resourceId]} ${missing}` : null;
@@ -3398,6 +3721,7 @@ export class LaneBattleScene extends Phaser.Scene {
       elapsedSec: this.elapsedSec,
       player: {
         ageId: this.player.ageId,
+        selectedProductionAgeId: this.player.selectedProductionAgeId,
         resources: this.player.resources,
         workers: this.player.workers,
         baseHp: this.player.baseHp,
@@ -3405,6 +3729,7 @@ export class LaneBattleScene extends Phaser.Scene {
       },
       enemy: {
         ageId: this.enemy.ageId,
+        selectedProductionAgeId: this.enemy.selectedProductionAgeId,
         resources: this.enemy.resources,
         workers: this.enemy.workers,
         baseHp: this.enemy.baseHp,
@@ -3420,8 +3745,12 @@ export class LaneBattleScene extends Phaser.Scene {
         laneRow: unit.laneRow,
         hp: unit.hp,
         maxHp: unit.maxHp,
-        facingX: unit.facingX,
-        facingDirection: unit.facingDirection,
+        facingX: unit.travelFacingX,
+        facingDirection: unit.travelFacingDirection,
+        travelFacingX: unit.travelFacingX,
+        travelFacingDirection: unit.travelFacingDirection,
+        combatFacingX: unit.combatFacingX,
+        combatFacingDirection: unit.combatFacingDirection,
         flipX: unit.sprite.flipX,
         tint: unit.sprite.tintTopLeft,
         motion: { x: unit.motionX, y: unit.motionY },
@@ -3440,6 +3769,8 @@ export class LaneBattleScene extends Phaser.Scene {
           x: unit.sprite.x,
           y: unit.sprite.y,
           rotationRad: unit.sprite.rotation,
+          spriteDisplayWidth: unit.sprite.displayWidth,
+          spriteDisplayHeight: unit.sprite.displayHeight,
         },
         overlay: {
           mode: this.unitOverlayModes.get(unit.id) ?? "detail",
@@ -3491,6 +3822,8 @@ export class LaneBattleScene extends Phaser.Scene {
       },
       ui: {
         ageLabel: this.hud.getAgeLabelText(),
+        playerSelectedProductionAgeId: this.player.selectedProductionAgeId,
+        selectedMainBaseTeam: this.selectedMainBaseTeam,
         selectedCapturePointId: this.selectedCapturePointId,
         selectedDefenseTowerId: this.selectedDefenseTowerId,
         visibleCaptureActions: this.hud.getVisibleCaptureActions(),
@@ -3608,7 +3941,8 @@ export class LaneBattleScene extends Phaser.Scene {
             labelResolution: unit.label.style.resolution,
             labelScale: unit.label.scaleX,
             labelVisible: unit.label.visible,
-            facingX: unit.facingX,
+            travelFacingX: unit.travelFacingX,
+            combatFacingX: unit.combatFacingX,
             flipX: unit.sprite.flipX,
             motion: { x: unit.motionX, y: unit.motionY },
           })),
