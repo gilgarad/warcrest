@@ -5090,3 +5090,45 @@ N idle 승인됐다. `rifleman-n-idle-candidate.png`를 실제
 NE idle도 비교 스크린샷을 만들어서 사용자 승인을 받아라. **승인 전까지
 walk 세트나 다른 방향/유닛으로 넘어가지 마라.**
 ```
+
+## 2026-08-06 (45) — NE idle 승인, walk 세트 재생성 + fringe 전체 재처리로 진행
+
+- **배경**: NE idle 후보를 `rifleman-ne-idle-before-vs-candidate.png`로
+  직접 비교 — 등판/어깨 스트랩 위주, 얼굴 거의 미노출, 팔이 소총 쪽으로
+  돌아간 중간 각도 확인. N과도 E와도 뚜렷이 구분됨. 승인(완벽하진 않지만
+  방향성 오류 없음, 추가 반복은 불필요 판단).
+- **작성한 프롬프트**:
+
+```
+NE idle 승인됐다. `rifleman-ne-idle-candidate.png`를 실제
+`rifleman-ne-idle.png`/`rifleman-ne-idle-enemy.png` 프로덕션 자산으로
+반영해라(N idle 때와 동일한 정규화 계약 적용).
+
+(43)번 프롬프트의 3~5번 단계로 진행해라:
+
+### 3. N/NE walk-01~10 재생성
+승인된 N idle, NE idle의 각도를 유지한 채 각각의 walk-01~10을 다시
+만들어라. 다리 교차(passing 프레임 2개, 전체 사이클 중 legs
+maximally-crossed 지점)는 기존 10프레임 지시 그대로 유지해라. attack
+프레임도 같은 각도로 갱신해라.
+
+### 4. 5방향 전체 교차 검증
+n, ne, e, se, s idle을 나란히 놓고 서로 뚜렷이 구분되는지(특히 n vs s,
+ne vs e) 최종 확인 표를 만들어라.
+
+### 5. Fringe 파이프라인 전체 재적용
+`remove_background()`에 despill 단계를 추가한 걸 rifleman의 기존
+생성된 모든 프레임(5방향 x idle/walk/attack)에 재적용해라.
+
+## 검증
+- `npm run build`, `npm test`
+- 이번에도 sandbox vs 본 게임 비교나 다른 유닛 확장은 아직 하지 마라
+  — walk 세트까지 끝내고 5방향 전체가 확실히 구분되는 게 확인된 뒤에
+  사용자 승인을 받고 진행해라.
+
+## 결과물
+- N/NE walk-01~10 + attack 재생성 완료 스크린샷
+- 5방향 교차 구분 확인표
+- fringe 재처리 전/후 비교
+- **사용자 승인 전까지 sandbox 비교/다른 유닛 확장 금지**
+```
