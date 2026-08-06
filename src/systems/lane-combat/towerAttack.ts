@@ -1,31 +1,31 @@
-import { AGES, type AgeId } from "../../data/ages";
-import { UNIT_STATS } from "../lane-units/unitStats";
+import type { AgeId } from "../../data/ages";
+import { getDefenseTowerAttackMultiplier, getDefenseTowerReferenceUnit } from "../lane-capture/defenseTowerRules";
+import type { TeamResearchState } from "../lane-economy/researchState";
+import { getProjectileKeyForUnit, UNIT_STATS } from "../lane-units/unitStats";
+import { RANGE_TO_PROGRESS } from "../lane-units/rangeRules";
 
 export interface TowerAttackPattern {
   projectileKey: string;
   projectileCount: number;
   perProjectileDamage: number;
+  basePerProjectileDamage: number;
   spreadWorldPx: number;
   rangeProgress: number;
   cooldownSec: number;
 }
 
-export function createTowerAttackPattern(ageId: AgeId): TowerAttackPattern {
-  const stoneTowerRangeProgress = UNIT_STATS.stone_slinger.range * 0.013 * 2;
-  const ageIndex = AGES.findIndex((age) => age.id === ageId);
-  if (ageIndex >= 4) {
-    return { projectileKey: "projectile-shot", projectileCount: 2, perProjectileDamage: 10, spreadWorldPx: 12, rangeProgress: stoneTowerRangeProgress, cooldownSec: 2.05 };
-  }
-  if (ageIndex >= 2) {
-    return { projectileKey: "projectile-arrow", projectileCount: 2, perProjectileDamage: 8, spreadWorldPx: 12, rangeProgress: stoneTowerRangeProgress, cooldownSec: 1.95 };
-  }
-  const slinger = UNIT_STATS.stone_slinger;
+export function createTowerAttackPattern(ageId: AgeId, researchState?: TeamResearchState): TowerAttackPattern {
+  const referenceUnit = UNIT_STATS[getDefenseTowerReferenceUnit(ageId)];
+  const towerRangeProgress = referenceUnit.range * 1.2 * RANGE_TO_PROGRESS;
+  const attackMultiplier = getDefenseTowerAttackMultiplier(ageId, researchState);
+  const basePerProjectileDamage = referenceUnit.attack;
   return {
-    projectileKey: "projectile-stone",
+    projectileKey: getProjectileKeyForUnit(getDefenseTowerReferenceUnit(ageId)),
     projectileCount: 2,
-    perProjectileDamage: slinger.attack,
-    spreadWorldPx: 18,
-    rangeProgress: stoneTowerRangeProgress,
-    cooldownSec: slinger.attackCooldownSec,
+    basePerProjectileDamage,
+    perProjectileDamage: Math.max(1, Math.round(basePerProjectileDamage * attackMultiplier)),
+    spreadWorldPx: referenceUnit.range >= 8 ? 22 : referenceUnit.range >= 6 ? 18 : 12,
+    rangeProgress: towerRangeProgress,
+    cooldownSec: referenceUnit.attackCooldownSec,
   };
 }

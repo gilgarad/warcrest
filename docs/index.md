@@ -36,6 +36,7 @@ first — a maintained snapshot of current status/architecture/next-steps.
 - [Audio System Prototype](dev-wiki/audio-system-prototype.md)
 - [Audio Integration Validation](dev-wiki/audio-integration-validation.md)
 - [Era Expansion + Research Panel Plan](dev-wiki/research-era-expansion-plan.md)
+- [Unit Balance Reference](dev-wiki/unit-balance-reference.md)
 - [Codex Prompt Log](dev-wiki/codex-prompt-log.md) — separate from AI Usage Log below; this is where the current session's turns go while it's in prompt-engineering-only mode
 
 ## Patterns

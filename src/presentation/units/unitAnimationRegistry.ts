@@ -286,7 +286,7 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
   }),
   automatic_rifleman: modernFootProductionAnimation("automatic-rifleman", 0.98),
   support_gunner: directionalProductionAnimation("support-gunner", 0.98, false, "direct", {
-    groundOriginY: 276 / 384,
+    groundOriginY: MODERN_FOOT_GROUND_ORIGIN_Y,
     poseVisibleHeightRatios: {
       idle: 270 / 384,
       "walk-a": 270 / 384,

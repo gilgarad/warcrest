@@ -58,14 +58,20 @@ function manaGatedSurvivalSec(): { survivalSec: number; castTimes: number[] } {
 }
 
 describe("support healing roster scaling", () => {
-  it("reduces each heal and derives the same mana profile for every current three-unit roster", () => {
+  it("derives support heal and mana from the active battleline count of each age", () => {
     for (const age of AGES) {
       const roster = getWaveRoster(age.id);
-      expect(getBattlelineUnitCount(roster)).toBe(3);
-      expect(getSupportHealPower(age.id)).toBe(4);
+      const battlelineCount = getBattlelineUnitCount(roster);
+      const expectedHealPower = battlelineCount === 3
+        ? 4
+        : battlelineCount === 4
+          ? 5.33
+          : 6.67;
+      expect([3, 4, 5]).toContain(battlelineCount);
+      expect(getSupportHealPower(age.id)).toBe(expectedHealPower);
       expect(getSupportResourceProfile(age.id)).toEqual({
-        healPower: 4,
-        manaMax: 18,
+        healPower: expectedHealPower,
+        manaMax: battlelineCount * 6,
         healManaCost: 6,
         manaRegenPerSec: 1.25,
       });

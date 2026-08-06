@@ -5,9 +5,11 @@ import { createLaneBattleHudSnapshot } from "../laneBattleHudModel";
 
 describe("lane battle HUD model", () => {
   it("formats economy, wave, and worker state without Phaser objects", () => {
-    const player = createTeamState("player", makeResourceMap(10.4, 20.6, 30.9, 40.2), 400);
+    const player = createTeamState("player", makeResourceMap(10.4, 20.6, 30.9, 40.2, 3.7), 400);
     const enemy = createTeamState("enemy", makeResourceMap(0, 0, 0, 0), 400);
     player.workers.idle = 2;
+    player.ageId = "iron_late";
+    player.selectedProductionAgeId = "bronze";
     const snapshot = createLaneBattleHudSnapshot({
       player,
       enemy,
@@ -18,7 +20,9 @@ describe("lane battle HUD model", () => {
       opponentCount: 1,
     });
 
-    expect(snapshot.resources).toMatchObject({ gold: "10", wood: "21", food: "30", metal: "40" });
+    expect(snapshot.resources).toMatchObject({ gold: "10", wood: "21", food: "30", metal: "40", research: "4" });
+    expect(snapshot.ageText).toContain("생산 청동기");
+    expect(snapshot.rosterLines[0]).toContain("생산 시대: 청동기");
     expect(snapshot.baseText).toBe("전장 병력 4 | 적 병력 3");
     expect(snapshot.workers.gold.canIncrease).toBe(true);
     expect(snapshot.captureTitle).toBe("거점 또는 타워 선택");

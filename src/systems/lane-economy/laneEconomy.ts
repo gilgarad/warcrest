@@ -1,6 +1,7 @@
 import { AGES, type AgeId } from "../../data/ages";
 import {
   BASE_RESOURCE_TICK_SEC,
+  RESEARCH_RESOURCE_TICK_SEC,
   WAVE_INTERVAL_SEC,
   type ResourceCost,
 } from "../../data/balance";
@@ -14,6 +15,7 @@ export interface TeamState {
   id: TeamId;
   baseHp: number;
   ageId: AgeId;
+  selectedProductionAgeId: AgeId;
   resources: Record<ResourceId, number>;
   workers: Record<WorkerRole, number>;
   instantWaveTokens: number;
@@ -27,8 +29,9 @@ export function makeResourceMap(
   wood: number,
   food: number,
   metal: number,
+  research = 0,
 ): Record<ResourceId, number> {
-  return { gold, wood, food, metal, gunpowder: 0, fuel: 0 };
+  return { gold, wood, food, metal, research, gunpowder: 0, fuel: 0 };
 }
 
 export function createTeamState(
@@ -40,6 +43,7 @@ export function createTeamState(
     id,
     baseHp,
     ageId: "stone",
+    selectedProductionAgeId: "stone",
     resources,
     workers: {
       gold: 1,
@@ -76,6 +80,7 @@ export function tickLaneEconomy(
     tickResourceWorker(team, workerAccumulator, "wood", deltaSec, BASE_RESOURCE_TICK_SEC);
     tickResourceWorker(team, workerAccumulator, "food", deltaSec, BASE_RESOURCE_TICK_SEC);
     tickResourceWorker(team, workerAccumulator, "metal", deltaSec, BASE_RESOURCE_TICK_SEC);
+    tickResourceWorker(team, workerAccumulator, "research", deltaSec, RESEARCH_RESOURCE_TICK_SEC);
   });
 }
 
@@ -90,7 +95,7 @@ export function getAgeUpCost(ageIndex: number): ResourceCost {
 export function shouldAdvanceAiAge(
   team: TeamState,
   elapsedSec: number,
-  thresholds: readonly number[] = [0, 55, 120, 190, 280],
+  thresholds: readonly number[] = [0, 55, 120, 190, 280, 375, 475, 580, 690, 805, 925],
 ): boolean {
   const ageIndex = AGES.findIndex((age) => age.id === team.ageId);
   if (ageIndex < 0 || ageIndex >= AGES.length - 1) return false;
@@ -102,13 +107,14 @@ export function advanceTeamAge(team: TeamState): boolean {
   const ageIndex = AGES.findIndex((age) => age.id === team.ageId);
   if (ageIndex < 0 || ageIndex >= AGES.length - 1) return false;
   team.ageId = AGES[ageIndex + 1].id;
+  team.selectedProductionAgeId = team.ageId;
   return true;
 }
 
 function tickResourceWorker(
   team: TeamState,
   workerAccumulator: Map<string, number>,
-  resourceId: WorkerResourceId,
+  resourceId: WorkerResourceId | "research",
   deltaSec: number,
   intervalSec: number,
 ): void {

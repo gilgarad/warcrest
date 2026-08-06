@@ -9,7 +9,31 @@ export type BattleUnitId =
   | "iron_swordsman"
   | "iron_spearman"
   | "musketeer"
-  | "knight";
+  | "knight"
+  | "pikeman"
+  | "heavy_cavalry"
+  | "rifleman"
+  | "grenadier"
+  | "light_cavalry"
+  | "cannon_i"
+  | "rifleman_late"
+  | "grenadier_late"
+  | "cavalry"
+  | "cannon_ii"
+  | "infantry"
+  | "machine_gunner"
+  | "shock_trooper"
+  | "artillery_i"
+  | "automatic_rifleman"
+  | "support_gunner"
+  | "mobile_infantry"
+  | "artillery_ii"
+  | "tank"
+  | "special_forces"
+  | "heavy_gunner"
+  | "breakthrough_trooper"
+  | "mobile_artillery"
+  | "modern_tank";
 
 export type SupportUnitId = "supply_wagon";
 
@@ -59,8 +83,8 @@ export const AGE_WAVE_ROSTERS: AgeWaveRoster[] = [
   {
     ageId: "iron_early",
     battleline: [
-      { unitId: "stone_slinger", count: 1 },
       { unitId: "archer", count: 1 },
+      { unitId: "bronze_spearman", count: 1 },
       { unitId: "iron_swordsman", count: 1 },
     ],
     support: [{ unitId: "supply_wagon", count: 1 }],
@@ -80,6 +104,67 @@ export const AGE_WAVE_ROSTERS: AgeWaveRoster[] = [
       { unitId: "archer", count: 1 },
       { unitId: "knight", count: 1 },
       { unitId: "musketeer", count: 1 },
+    ],
+    support: [{ unitId: "supply_wagon", count: 1 }],
+  },
+  {
+    ageId: "renaissance",
+    battleline: [
+      { unitId: "musketeer", count: 1 },
+      { unitId: "pikeman", count: 1 },
+      { unitId: "heavy_cavalry", count: 1 },
+    ],
+    support: [{ unitId: "supply_wagon", count: 1 }],
+  },
+  {
+    ageId: "industrial_early",
+    battleline: [
+      { unitId: "rifleman", count: 1 },
+      { unitId: "grenadier", count: 1 },
+      { unitId: "light_cavalry", count: 1 },
+      { unitId: "cannon_i", count: 1 },
+    ],
+    support: [{ unitId: "supply_wagon", count: 1 }],
+  },
+  {
+    ageId: "industrial_late",
+    battleline: [
+      { unitId: "rifleman_late", count: 1 },
+      { unitId: "grenadier_late", count: 1 },
+      { unitId: "cavalry", count: 1 },
+      { unitId: "cannon_ii", count: 1 },
+    ],
+    support: [{ unitId: "supply_wagon", count: 1 }],
+  },
+  {
+    ageId: "modern_early",
+    battleline: [
+      { unitId: "infantry", count: 1 },
+      { unitId: "machine_gunner", count: 1 },
+      { unitId: "shock_trooper", count: 1 },
+      { unitId: "artillery_i", count: 1 },
+    ],
+    support: [{ unitId: "supply_wagon", count: 1 }],
+  },
+  {
+    ageId: "modern_mid",
+    battleline: [
+      { unitId: "automatic_rifleman", count: 1 },
+      { unitId: "support_gunner", count: 1 },
+      { unitId: "mobile_infantry", count: 1 },
+      { unitId: "artillery_ii", count: 1 },
+      { unitId: "tank", count: 1 },
+    ],
+    support: [{ unitId: "supply_wagon", count: 1 }],
+  },
+  {
+    ageId: "modern_late",
+    battleline: [
+      { unitId: "special_forces", count: 1 },
+      { unitId: "heavy_gunner", count: 1 },
+      { unitId: "breakthrough_trooper", count: 1 },
+      { unitId: "mobile_artillery", count: 1 },
+      { unitId: "modern_tank", count: 1 },
     ],
     support: [{ unitId: "supply_wagon", count: 1 }],
   },

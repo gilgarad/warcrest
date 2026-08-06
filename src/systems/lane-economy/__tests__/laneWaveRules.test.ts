@@ -25,6 +25,15 @@ describe("lane wave rules", () => {
     expect(team.lastWaveElapsedSec).toBe(0);
   });
 
+  it("uses selected production age for roster and food cost", () => {
+    const team = createTeamState("player", makeResourceMap(0, 0, 20, 0), 400);
+    team.ageId = "iron_late";
+    team.selectedProductionAgeId = "bronze";
+    const plan = createWaveDeploymentPlan(team, 1);
+    expect(plan.roster.ageId).toBe("bronze");
+    expect(plan.foodCost).toBe(8);
+  });
+
   it("distinguishes token absence from the post-wave cooldown", () => {
     const team = createTeamState("player", makeResourceMap(0, 0, 20, 0), 400);
     expect(getInstantWaveEligibility(team)).toBe("no-token");

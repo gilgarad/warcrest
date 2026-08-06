@@ -17,11 +17,15 @@ describe("lane economy", () => {
     team.workers.wood = 3;
     team.workers.food = 4;
     team.workers.metal = 2;
+    team.workers.research = 2;
     tickLaneEconomy([team], new Map(), 5);
     expect(team.resources.gold).toBe(2);
     expect(team.resources.wood).toBe(3);
     expect(team.resources.food).toBe(4);
     expect(team.resources.metal).toBe(2);
+    expect(team.resources.research).toBe(0);
+    tickLaneEconomy([team], new Map([["player:research", 5]]), 5);
+    expect(team.resources.research).toBe(2);
   });
 
   it("keeps affordability and payment as one shared rule", () => {
@@ -36,8 +40,10 @@ describe("lane economy", () => {
     const team = createTeamState("enemy", makeResourceMap(35, 20, 0, 28), 400);
     expect(shouldAdvanceAiAge(team, 54)).toBe(false);
     expect(shouldAdvanceAiAge(team, 55)).toBe(true);
+    team.selectedProductionAgeId = "stone";
     expect(advanceTeamAge(team)).toBe(true);
     expect(team.ageId).toBe("bronze");
+    expect(team.selectedProductionAgeId).toBe("bronze");
   });
 
 });

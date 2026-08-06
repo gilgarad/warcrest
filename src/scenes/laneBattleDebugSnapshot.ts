@@ -15,6 +15,10 @@ export interface LaneBattleDebugUnitSnapshot {
   maxHp: number;
   facingX: -1 | 1;
   facingDirection: UnitFacingDirection;
+  travelFacingX: -1 | 1;
+  travelFacingDirection: UnitFacingDirection;
+  combatFacingX: -1 | 1;
+  combatFacingDirection: UnitFacingDirection;
   flipX: boolean;
   tint: number;
   motion: { x: number; y: number };
@@ -33,6 +37,8 @@ export interface LaneBattleDebugUnitSnapshot {
     x: number;
     y: number;
     rotationRad: number;
+    spriteDisplayWidth: number;
+    spriteDisplayHeight: number;
   };
   overlay: {
     mode: string;
@@ -54,6 +60,7 @@ export interface LaneBattleDebugSnapshot {
   elapsedSec: number;
   player: {
     ageId: string;
+    selectedProductionAgeId: string;
     resources: Record<string, number>;
     workers: Record<string, number>;
     baseHp: number;
@@ -61,6 +68,7 @@ export interface LaneBattleDebugSnapshot {
   };
   enemy: {
     ageId: string;
+    selectedProductionAgeId: string;
     resources: Record<string, number>;
     workers: Record<string, number>;
     baseHp: number;
@@ -108,6 +116,8 @@ export interface LaneBattleDebugSnapshot {
   };
   ui: {
     ageLabel: string;
+    playerSelectedProductionAgeId: string;
+    selectedMainBaseTeam: TeamId | null;
     selectedCapturePointId: number | null;
     selectedDefenseTowerId: number | null;
     visibleCaptureActions: string[];

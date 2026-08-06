@@ -31,7 +31,7 @@ export function resolveUnitFramePresentation(
   }
   const frameVisibleHeightRatio = getFrameVisibleHeightRatio(unitId, textureKey)
     ?? definition.referenceVisibleHeightRatio;
-  const spriteHeight = targetVisibleWorldHeight / frameVisibleHeightRatio;
+  const spriteHeight = (targetVisibleWorldHeight * definition.scaleFactor) / frameVisibleHeightRatio;
   return {
     spriteWidth: spriteHeight * (getFrameCanvasAspect(unitId, textureKey) ?? fallbackFrameAspect),
     spriteHeight,

@@ -4807,3 +4807,70 @@ Use consistent headings so entries are easy to grep.
 - geometry 감사:
   - `artifacts/unit-geometry-audit-2026-08-05/report.json`
   - `failure_count: 0`
+
+## 2026-08-06 - explicit 5-column unit walk-cycle rollout
+
+- `docs/dev-wiki/visual-drafts/`
+  - `late-era-human-pose-board-2026-08-06-5col.png`
+  - `modern-combat-pose-board-2026-08-06-5col.png`
+  - `support-evolution-pose-board-2026-08-06-5col.png`
+  - `mechanized-pose-board-2026-08-06-5col.png`
+  - 사람형 / 현대형 / 보급형 / 메카닉형 보드를 모두
+    `idle / walk-a / walk-b / walk-c / attack(or support)`의
+    5열 실프레임 구조로 새 생성했다.
+- `tools/asset-qa/generate_pose_board_production_assets.py`
+  - `human`, `modern`, `support`, `mechanized` board spec을 5열 보드로 교체.
+  - 위 네 보드에서는 더 이상 `walk-b/c`를 합성하지 않고, 실제 보드 열을
+    직접 읽도록 수정했다.
+  - 메카닉 계열은 후반 debris-cleanup이 차체를 부수는 회귀를 만들고 있어,
+    해당 후처리를 우회하도록 정리했다.
+- 실검수:
+  - `artifacts/sandbox-capture-2026-08-06/`
+  - `artifacts/sandbox-capture-2026-08-06-mech-rerun/`
+  - `artifacts/sandbox-capture-2026-08-06-5col/`
+  - `rifleman`, `support_gunner`, `heavy_cavalry`, `supply_wagon`,
+    `cannon_i`, `tank`, `modern_tank` 등을 `?sandbox=1`에서 phase별로
+    재캡처해 실제 렌더 기준으로 확인했다.
+- 관찰:
+  - 3열+합성 경로에서는 `cannon_i`, `tank`가 샌드박스에서 본체가
+    무너졌고, 이는 새 보드 문제가 아니라 생성 스크립트 cleanup/합성 경로
+    문제였다.
+  - 5열 실프레임 구조 반영 후에는 `tank`와 `cannon_i` 하부 붕괴가 사라졌다.
+
+## 2026-08-06 - modern foot strip split and re-audit
+
+- `docs/dev-wiki/visual-drafts/`
+  - `infantry-pose-strip-2026-08-06.png`
+  - `machine-gunner-pose-strip-2026-08-06.png`
+  - `shock-trooper-pose-strip-2026-08-06.png`
+  - `automatic-rifleman-pose-strip-2026-08-06.png`
+  - `support-gunner-pose-strip-2026-08-06.png`
+  - `special-forces-pose-strip-2026-08-06.png`
+  - modern foot 공용 보드의 잘린/오염된 셀을 계속 재활용하지 않도록,
+    six-unit 전용 1x5 pose strip을 새로 생성했다.
+- `tools/asset-qa/generate_pose_board_production_assets.py`
+  - 위 여섯 병종을 각각 별도 board spec으로 분리했다.
+  - `cleanup_mode`를 `largest-only`로 바꿔 `walk-c`/`attack`에서 옆 포즈
+    파편이 함께 살아나던 회귀를 제거했다.
+- `src/presentation/units/unitAnimationRegistry.ts`
+  - `support_gunner`의 `groundOriginY`를 modern foot 공통 기준으로
+    되돌려, sandbox에서 지면 아래로 과하게 묻히던 문제를 교정했다.
+- 재생성/재검수:
+  - `python3 tools/asset-qa/generate_pose_board_production_assets.py --prefix infantry --prefix machine-gunner --prefix shock-trooper --prefix automatic-rifleman --prefix support-gunner --prefix special-forces`
+  - `artifacts/sandbox-verify-2026-08-06-b/`
+  - `artifacts/sandbox-verify-2026-08-06-c/`
+  - `artifacts/sandbox-verify-2026-08-06-d/`
+  - `artifacts/sandbox-verify-2026-08-06-e/`
+  - `?sandbox=1` 기준으로 `w idle / walk / attack`, `nw walk`,
+    `s attack`을 다시 캡처해, 검은 사각형 attack frame, 허리/하체 잘림,
+    walk-c 옆 포즈 파편이 제거됐는지 다시 확인했다.
+- 결과:
+  - `special_forces`는 깨진 원본 행 대신 전용 strip을 읽도록 바뀌며
+    하반신 파편 상태가 해소됐다.
+  - `automatic_rifleman` / `support_gunner` 공격 프레임의 검은 오염 배경이
+    제거됐다.
+  - 자동 bbox/면적 검사 기준으로는 위 여섯 병종 중
+    `machine-gunner`, `shock-trooper`, `automatic-rifleman`,
+    `support-gunner`, `special-forces`가 이상치 0으로 정리됐고,
+    `infantry`도 sandbox 렌더에서는 허리/하체 잘림 없이 정상 표시를
+    재확인했다.

@@ -4,6 +4,7 @@ import { BootScene } from "./scenes/BootScene";
 import { LaneBattleScene } from "./scenes/LaneBattleScene";
 import { GameOverScene } from "./scenes/GameOverScene";
 import { GoldenReferenceScene } from "./scenes/GoldenReferenceScene";
+import { UnitSandboxScene } from "./scenes/UnitSandboxScene";
 import { destroySharedAudioSystem } from "./systems/audio";
 
 document.title = GAME_TITLE;
@@ -30,7 +31,7 @@ const game = new Phaser.Game({
     default: "arcade",
     arcade: { debug: false },
   },
-  scene: [BootScene, LaneBattleScene, GameOverScene, GoldenReferenceScene],
+  scene: [BootScene, LaneBattleScene, GameOverScene, GoldenReferenceScene, UnitSandboxScene],
 });
 
 (window as unknown as { __warcrestGame?: Phaser.Game }).__warcrestGame = game;

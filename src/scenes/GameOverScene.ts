@@ -88,7 +88,9 @@ export class GameOverScene extends Phaser.Scene {
     retryRect.on("pointerdown", () => {
       audio.playSfx("sfx.ui.confirm", { eventKey: "gameover:retry" });
       audio.resetDirector("menu");
-      this.scene.start("boot");
+      this.time.delayedCall(80, () => {
+        window.location.assign(window.location.href);
+      });
     });
   }
 

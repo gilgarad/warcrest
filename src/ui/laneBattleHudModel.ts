@@ -1,4 +1,4 @@
-import { getAge } from "../data/ages";
+import { getAge, getAgeIndex, isFinalAge } from "../data/ages";
 import { getAgeBalance, getOpponentScale, getResearchWorkerDirectCost, MVP_ACTIVE_RESOURCE_IDS } from "../data/balance";
 import type { CapturePointDefinition } from "../data/capturePointDefinitions";
 import type { DefenseTowerDefinition } from "../data/defenseTowerDefinitions";
@@ -15,6 +15,7 @@ function formatCostInline(cost: Partial<Record<ResourceId, number>>): string {
   if (cost.wood) parts.push(`${Math.round(cost.wood)}W`);
   if (cost.food) parts.push(`${Math.round(cost.food)}F`);
   if (cost.metal) parts.push(`${Math.round(cost.metal)}M`);
+  if (cost.research) parts.push(`${Math.round(cost.research)}R`);
   return parts.join(" ");
 }
 
@@ -91,7 +92,8 @@ export function getWorkerRoleLabel(role: WorkerRole): string {
 }
 
 export function createLaneBattleHudSnapshot(input: LaneBattleHudInput): LaneBattleHudSnapshot {
-  const roster = getWaveRoster(input.player.ageId);
+  const productionAge = getAge(input.player.selectedProductionAgeId);
+  const roster = getWaveRoster(input.player.selectedProductionAgeId);
   const rosterSummary = roster.battleline
     .map((entry) => `${UNIT_STATS[entry.unitId].label}${entry.count}`)
     .join(" · ");
@@ -108,7 +110,9 @@ export function createLaneBattleHudSnapshot(input: LaneBattleHudInput): LaneBatt
   const selectedTower = input.selectedDefenseTower;
 
   return {
-    ageText: `시대 ${getAge(input.player.ageId).label}`,
+    ageText: input.player.selectedProductionAgeId === input.player.ageId
+      ? `시대 ${getAge(input.player.ageId).label}`
+      : `시대 ${getAge(input.player.ageId).label} | 생산 ${productionAge.label}`,
     waveText: `다음 웨이브 ${Math.max(0, Math.ceil(input.player.nextWaveInSec))}초 | 적 ${Math.max(0, Math.ceil(input.enemy.nextWaveInSec))}초`,
     baseText: `전장 병력 ${input.playerUnitCount} | 적 병력 ${input.enemyUnitCount}`,
     tokensText: `즉시 웨이브 토큰 ${input.player.instantWaveTokens}`,
@@ -117,9 +121,10 @@ export function createLaneBattleHudSnapshot(input: LaneBattleHudInput): LaneBatt
     playerBaseRatio: clampRatio(input.player.baseHp / input.playerBaseMaxHp),
     enemyBaseRatio: clampRatio(input.enemy.baseHp / input.enemyBaseMaxHp),
     rosterLines: [
+      `생산 시대: ${productionAge.label}`,
       `다음 웨이브: ${rosterSummary}`,
       `보급대 ${roster.support[0]?.count ?? 0}기 포함`,
-      `웨이브 식량 ${Math.round(getAgeBalance(input.player.ageId).baseWaveFoodCost * getOpponentScale(input.opponentCount).foodCostMultiplier)} | 연구 ${formatCostInline(getResearchWorkerDirectCost(input.player.ageId))} | 시대 업 ${AGESummary(input.player.ageId)}`,
+      `웨이브 식량 ${Math.round(getAgeBalance(input.player.selectedProductionAgeId).baseWaveFoodCost * getOpponentScale(input.opponentCount).foodCostMultiplier)} | 연구 ${formatCostInline(getResearchWorkerDirectCost(input.player.ageId))} | 시대 업 ${AGESummary(input.player.ageId)}`,
     ],
     captureTitle: selectedTower
       ? `방어 타워 ${selectedTower.id + 1}`
@@ -147,6 +152,6 @@ export function createLaneBattleHudSnapshot(input: LaneBattleHudInput): LaneBatt
 }
 
 function AGESummary(ageId: TeamState["ageId"]): string {
-  const ageIndex = ["stone", "bronze", "iron_early", "iron_mid", "iron_late"].indexOf(ageId);
-  return ageIndex >= 4 ? "최종" : formatCostInline(getAgeUpCost(ageIndex));
+  if (isFinalAge(ageId)) return "최종";
+  return formatCostInline(getAgeUpCost(getAgeIndex(ageId)));
 }

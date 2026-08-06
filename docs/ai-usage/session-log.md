@@ -4897,3 +4897,80 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
       보강 후 `failure_count 233`까지 감소. 남은 실패는 주로 legacy/attack
       ratio와 일부 wide-unit pose-size jump 계열로, 다음 교정 대상이
       분명히 드러나는 상태까지 좁혀 둠.
+
+## 2026-08-06 - Codex (explicit 5-column walk-cycle boards)
+
+- **사용자 지시 요약**:
+  - 기존 그림을 재배치해 프레임 수만 늘리는 방식이 아니라, 실제로 다른
+    모션 프레임을 새로 생성해 적용하라고 재지시.
+  - 사람 시선/몸통/무기 방향은 항상 일치해야 하고, 샌드박스와 본게임은
+    같은 자산을 써야 한다고 재확인.
+- **AI 산출물 요약**:
+  - `docs/dev-wiki/visual-drafts/`
+    - `late-era-human-pose-board-2026-08-06-5col.png`
+    - `modern-combat-pose-board-2026-08-06-5col.png`
+    - `support-evolution-pose-board-2026-08-06-5col.png`
+    - `mechanized-pose-board-2026-08-06-5col.png`
+    - 네 보드를 모두 `idle / walk-a / walk-b / walk-c / attack(or support)`
+      구조의 5열 실프레임 보드로 새 생성.
+  - `tools/asset-qa/generate_pose_board_production_assets.py`
+    - `human`, `modern`, `support`, `mechanized` 보드 spec을 5열 보드로 교체.
+    - 5열 보드에서는 더 이상 `walk-b/c`를 합성하지 않고 실제 보드 열을
+      직접 읽도록 변경.
+    - 메카닉 계열(`cannon-*`, `artillery-*`, `tank`, `modern-tank`,
+      `mobile-artillery`)은 후반 debris cleanup이 차체를 부수는 문제를
+      확인해, 해당 후처리를 우회하도록 정리.
+  - 실캡처:
+    - `artifacts/sandbox-capture-2026-08-06/`
+    - `artifacts/sandbox-capture-2026-08-06-mech-rerun/`
+    - `artifacts/sandbox-capture-2026-08-06-5col/`
+    - `rifleman`, `support_gunner`, `heavy_cavalry`, `supply_wagon`,
+      `cannon_i`, `tank`, `modern_tank` 등을 phase별로 다시 캡처해
+      실제 렌더를 확인.
+- **관찰 요약**:
+  - 3열+합성 구조에서는 `cannon_i`, `tank`가 샌드박스에서 본체가 붕괴.
+  - 5열 실프레임 구조 반영 후에는 `tank`/`cannon_i` 하부 붕괴가 사라지고,
+    사람형도 하체가 살아 있는 쪽으로 회복.
+
+## 2026-08-06 - Codex (modern foot strip split + sandbox re-audit)
+
+- **사용자 지시 요약**:
+  - 방금 생성한 캐릭터들을 다시 전수 검수해 idle / 이동 / 공격 방향,
+    얼굴 방향, 무기 방향이 불일치하는 것을 바로잡고, sandbox 기준으로
+    허리/하체 잘림이 남아 있지 않도록 다시 확인하라고 재지시.
+- **AI 산출물 요약**:
+  - `docs/dev-wiki/visual-drafts/`
+    - `infantry-pose-strip-2026-08-06.png`
+    - `machine-gunner-pose-strip-2026-08-06.png`
+    - `shock-trooper-pose-strip-2026-08-06.png`
+    - `automatic-rifleman-pose-strip-2026-08-06.png`
+    - `support-gunner-pose-strip-2026-08-06.png`
+    - `special-forces-pose-strip-2026-08-06.png`
+  - `tools/asset-qa/generate_pose_board_production_assets.py`
+    - `modern` 공용 6행 보드에서 잘린/오염된 셀을 계속 읽던
+      `infantry`, `machine-gunner`, `shock-trooper`,
+      `automatic-rifleman`, `support-gunner`, `special-forces`를
+      각각 전용 1x5 strip board spec으로 분리했다.
+    - 위 여섯 병종의 cleanup mode를 `largest-only`로 조정해
+      `walk-c` / `attack`에 섞여 들어오던 옆 포즈 파편을 제거했다.
+  - `src/presentation/units/unitAnimationRegistry.ts`
+    - `support_gunner`의 `groundOriginY`를 modern foot 공통 기준으로
+      되돌려 sandbox에서 과하게 묻히던 표시 기준선을 정상화했다.
+- **실검수**:
+  - `artifacts/sandbox-verify-2026-08-06-b/`
+  - `artifacts/sandbox-verify-2026-08-06-c/`
+  - `artifacts/sandbox-verify-2026-08-06-d/`
+  - `artifacts/sandbox-verify-2026-08-06-e/`
+  - 위 캡처들로 `w idle`, `w walk`, `w attack`, `nw walk`,
+    `s attack`를 다시 찍어 modern foot 계열의 실제 렌더를 재검수했다.
+- **관찰 요약**:
+  - `special_forces`는 기존 modern 보드 6행 자체가 하반신 파편만 들어 있는
+    상태여서 복구가 불가능했고, 전용 strip 분리로 정상화했다.
+  - `automatic_rifleman`, `support_gunner`의 검은 사각형 공격 프레임은
+    sandbox 문제가 아니라 오염된 attack source cell 문제였고,
+    전용 strip 교체 후 사라졌다.
+  - 자동 bbox/면적 검사 기준으로는 위 여섯 병종 중
+    `machine-gunner`, `shock-trooper`, `automatic-rifleman`,
+    `support-gunner`, `special-forces`가 이상치 0,
+    `infantry`는 남쪽 공격 1프레임만 상대적 면적 차이로 남았지만
+    sandbox 렌더상 하체 분리/허리 잘림/옆 포즈 파편은 제거된 상태로 확인했다.

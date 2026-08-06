@@ -32,10 +32,10 @@ export function tickWaveClock(team: TeamState, deltaSec: number, prepareWarningS
 
 export function createWaveDeploymentPlan(team: TeamState, opponentCount: 1 | 2 | 3): WaveDeploymentPlan {
   const foodCost = Math.round(
-    getAgeBalance(team.ageId).baseWaveFoodCost * getOpponentScale(opponentCount).foodCostMultiplier,
+    getAgeBalance(team.selectedProductionAgeId).baseWaveFoodCost * getOpponentScale(opponentCount).foodCostMultiplier,
   );
   return {
-    roster: getWaveRoster(team.ageId),
+    roster: getWaveRoster(team.selectedProductionAgeId),
     foodCost,
     canDeploy: team.resources.food >= foodCost,
   };

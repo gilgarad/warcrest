@@ -1,4 +1,4 @@
-export type ResourceId = "gold" | "wood" | "food" | "metal" | "gunpowder" | "fuel";
+export type ResourceId = "gold" | "wood" | "food" | "metal" | "research" | "gunpowder" | "fuel";
 
 export type ResourceTierId = "stone" | "copper" | "bronze" | "iron" | "steel" | "alloy" | "graphite" | "smokeless" | "coal" | "oil";
 
@@ -35,6 +35,12 @@ export const RESOURCES: ResourceDef[] = [
     mvpEnabled: true,
     description: "병종 업그레이드, 연구 일꾼, 중후반 건물 강화에 쓰이는 군수 자원.",
     lateGameNotes: "석기 -> 동 -> 청동 -> 철 -> 강철 -> 합금 흐름으로 확장.",
+  },
+  {
+    id: "research",
+    label: "연구",
+    mvpEnabled: true,
+    description: "연구 일꾼이 생산하며 본진 연구 패널에서 병력 공방 업그레이드에 쓰이는 연구 포인트.",
   },
   {
     id: "gunpowder",

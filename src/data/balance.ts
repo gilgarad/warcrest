@@ -24,6 +24,7 @@ export const INSTANT_WAVE_TOKEN_COOLDOWN_AFTER_WAVE_SEC = 10;
 export const AI_INSTANT_WAVE_MIN_REMAINING_RATIO = 22 / 90;
 export const AI_INSTANT_WAVE_MIN_REMAINING_SEC = WAVE_INTERVAL_SEC * AI_INSTANT_WAVE_MIN_REMAINING_RATIO;
 export const BASE_RESOURCE_TICK_SEC = 5;
+export const RESEARCH_RESOURCE_TICK_SEC = 10;
 export const EVENT_WAVE_BONUS_MIN = 1;
 export const EVENT_WAVE_BONUS_MAX = 3;
 export const EVENT_EXTRA_UNIT_COUNT = 1;
@@ -35,7 +36,7 @@ export const OPPONENT_SCALE_PRESETS: OpponentScalePreset[] = [
   { opponentCount: 3, productionMultiplier: 2.7, foodCostMultiplier: 2.4, upkeepMultiplier: 2.3, rewardMultiplier: 2 },
 ];
 
-export const MVP_ACTIVE_RESOURCE_IDS: ResourceId[] = ["gold", "wood", "food", "metal"];
+export const MVP_ACTIVE_RESOURCE_IDS: ResourceId[] = ["gold", "wood", "food", "metal", "research"];
 
 export const AGE_BALANCE = AGES.map((age) => ({
   ageId: age.id,
@@ -51,6 +52,12 @@ const RESEARCH_WORKER_COST_BY_AGE: Record<AgeId, ResourceCost> = {
   iron_early: { gold: 100, wood: 100, food: 100, metal: 100 },
   iron_mid: { gold: 150, wood: 150, food: 150, metal: 150 },
   iron_late: { gold: 225, wood: 225, food: 225, metal: 225 },
+  renaissance: { gold: 300, wood: 300, food: 300, metal: 300 },
+  industrial_early: { gold: 380, wood: 380, food: 380, metal: 380 },
+  industrial_late: { gold: 470, wood: 470, food: 470, metal: 470 },
+  modern_early: { gold: 570, wood: 570, food: 570, metal: 570 },
+  modern_mid: { gold: 680, wood: 680, food: 680, metal: 680 },
+  modern_late: { gold: 800, wood: 800, food: 800, metal: 800 },
 };
 
 export function getOpponentScale(opponentCount: 1 | 2 | 3): OpponentScalePreset {

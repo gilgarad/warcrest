@@ -10,9 +10,9 @@ export interface AttackTimingProfile {
 }
 
 const ROLE_TIMING: Record<AttackTimingRole, Omit<AttackTimingProfile, "eventDelayMs" | "targetKind">> = {
-  melee: { durationSec: 0.46, eventProgress: 0.48 },
-  ranged: { durationSec: 0.58, eventProgress: 0.42 },
-  support: { durationSec: 0.66, eventProgress: 0.52 },
+  melee: { durationSec: 0.38, eventProgress: 0.44 },
+  ranged: { durationSec: 0.46, eventProgress: 0.36 },
+  support: { durationSec: 0.56, eventProgress: 0.52 },
 };
 
 export function getAttackTimingProfile(
@@ -26,4 +26,3 @@ export function getAttackTimingProfile(
     eventDelayMs: timing.durationSec * timing.eventProgress * 1000,
   };
 }
-

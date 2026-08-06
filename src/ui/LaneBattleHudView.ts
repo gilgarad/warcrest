@@ -41,11 +41,14 @@ export interface LaneBattleHudCallbacks {
   buildSupplyDepot: () => void;
   buildMint: () => void;
   dismantle: () => void;
+  toggleDevMode: () => void;
+  grantDevResearch: () => void;
   onAudioSettingsVisibilityChange: (visible: boolean) => void;
 }
 
 export class LaneBattleHudView {
   private readonly resourceTexts = new Map<string, Phaser.GameObjects.Text>();
+  private readonly resourceLabelTexts = new Map<string, Phaser.GameObjects.Text>();
   private readonly workerRows = new Map<WorkerRole, WorkerUiRow>();
   private readonly captureActionButtons = new Map<CapturePointAction | DefenseTowerAction, ActionButton>();
   private readonly strategicActionButtons = new Map<StrategicActionId, ActionButton>();
@@ -61,6 +64,8 @@ export class LaneBattleHudView {
   private enemyBaseBar!: Phaser.GameObjects.Rectangle;
   private audioDebugText?: Phaser.GameObjects.Text;
   private audioSettingsPanel!: AudioSettingsPanel;
+  private devToggleButton?: ActionButton;
+  private devResearchButton?: ActionButton;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -140,6 +145,21 @@ export class LaneBattleHudView {
     button.text.setText(label);
   }
 
+  setDevMode(active: boolean): void {
+    if (!this.devToggleButton || !this.devResearchButton) return;
+    this.devToggleButton.rect.setFillStyle(active ? 0x27503f : 0x3b2a2a, 0.96);
+    this.devToggleButton.rect.setStrokeStyle(2, active ? 0x9fe3c4 : 0xd79b9b, 0.75);
+    this.devToggleButton.text.setText(active ? "DEV ON" : "DEV OFF");
+    this.devToggleButton.text.setColor(active ? "#eafff2" : "#ffe3e3");
+    this.devResearchButton.rect.setVisible(active);
+    this.devResearchButton.text.setVisible(active);
+    if (active) {
+      this.devResearchButton.rect.setInteractive({ useHandCursor: true });
+    } else {
+      this.devResearchButton.rect.disableInteractive();
+    }
+  }
+
   getCompositionMetrics(): { topHeight: number; bottomHeight: number; openWorldHeight: number; openWorldRatio: number } {
     const scale = this.canvasWidth / HUD_SOURCE_WIDTH;
     const topHeight = HUD_TOP_SOURCE_HEIGHT * scale;
@@ -156,22 +176,52 @@ export class LaneBattleHudView {
   private create(audioDebugEnabled: boolean): void {
     const hudScale = this.canvasWidth / HUD_SOURCE_WIDTH;
     const bottomHeight = HUD_BOTTOM_SOURCE_HEIGHT * hudScale;
-    this.scene.add.image(0, 0, "war-table-hud").setOrigin(0, 0).setScale(hudScale).setCrop(0, 0, HUD_SOURCE_WIDTH, HUD_TOP_SOURCE_HEIGHT).setDepth(this.depth).setScrollFactor(0);
+    this.scene.add.image(0, 0, "war-table-hud").setOrigin(0, 0).setScale(hudScale).setCrop(0, 0, HUD_SOURCE_WIDTH, HUD_TOP_SOURCE_HEIGHT).setDepth(this.depth).setScrollFactor(0).setAlpha(0.18);
     this.scene.add.image(0, this.canvasHeight - bottomHeight, "war-table-hud").setOrigin(0, 0).setScale(hudScale).setCrop(0, 721, HUD_SOURCE_WIDTH, HUD_BOTTOM_SOURCE_HEIGHT).setDepth(this.depth).setScrollFactor(0);
-    this.scene.add.rectangle(150, 72, 230, 116, 0x07111a, 0.72).setStrokeStyle(2, 0x7ea0c9, 0.26).setDepth(this.depth + 1).setScrollFactor(0);
-    this.scene.add.text(42, 14, "전선 지휘", { fontFamily: "Georgia, serif", fontSize: "22px", color: "#eaf3ff", stroke: "#182535", strokeThickness: 4 }).setDepth(this.depth + 2).setScrollFactor(0);
-    this.ageText = this.scene.add.text(42, 46, "", { fontFamily: "sans-serif", fontSize: "12px", color: "#d6e3f1" }).setDepth(this.depth + 2).setScrollFactor(0);
-    this.waveText = this.scene.add.text(42, 66, "", { fontFamily: "sans-serif", fontSize: "12px", color: "#d6e3f1" }).setDepth(this.depth + 2).setScrollFactor(0);
-    this.baseText = this.scene.add.text(42, 86, "", { fontFamily: "sans-serif", fontSize: "12px", color: "#d6e3f1" }).setDepth(this.depth + 2).setScrollFactor(0);
-    this.tokensText = this.scene.add.text(42, 106, "", { fontFamily: "sans-serif", fontSize: "12px", color: "#f3d27a" }).setDepth(this.depth + 2).setScrollFactor(0);
+    this.scene.add.rectangle(this.canvasWidth / 2, 74, this.canvasWidth - 36, 126, 0x081119, 0.84)
+      .setStrokeStyle(2, 0x233448, 0.54)
+      .setDepth(this.depth + 1)
+      .setScrollFactor(0);
+    this.scene.add.rectangle(this.canvasWidth / 2, 24, this.canvasWidth - 80, 2, 0x557aa6, 0.28)
+      .setDepth(this.depth + 2)
+      .setScrollFactor(0);
+    this.scene.add.rectangle(this.canvasWidth / 2, 124, this.canvasWidth - 80, 2, 0xd0b073, 0.16)
+      .setDepth(this.depth + 2)
+      .setScrollFactor(0);
+    this.scene.add.rectangle(152, 74, 236, 112, 0x0b1621, 0.86)
+      .setStrokeStyle(2, 0x476786, 0.42)
+      .setDepth(this.depth + 2)
+      .setScrollFactor(0);
+    this.scene.add.text(42, 18, "전선 지휘", { fontFamily: "Georgia, serif", fontSize: "24px", color: "#eef5ff", stroke: "#101b28", strokeThickness: 3 }).setDepth(this.depth + 3).setScrollFactor(0);
+    this.ageText = this.scene.add.text(42, 48, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
+    this.waveText = this.scene.add.text(42, 69, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
+    this.baseText = this.scene.add.text(42, 90, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
+    this.tokensText = this.scene.add.text(42, 111, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#f1d891" }).setDepth(this.depth + 3).setScrollFactor(0);
 
-    this.scene.add.rectangle(this.canvasWidth / 2, 54, 900, 82, 0x09131e, 0.76).setStrokeStyle(2, 0x7ea0c9, 0.24).setDepth(this.depth + 1).setScrollFactor(0);
-    const resourceXs = [500, 710, 920, 1130];
+    this.scene.add.rectangle(this.canvasWidth / 2 + 60, 72, 1018, 82, 0x09131d, 0.64)
+      .setStrokeStyle(1, 0x3f556f, 0.3)
+      .setDepth(this.depth + 2)
+      .setScrollFactor(0);
+    const resourceXs = [448, 638, 828, 1018, 1208];
     MVP_ACTIVE_RESOURCE_IDS.forEach((resourceId, index) => {
-      this.scene.add.rectangle(resourceXs[index], 54, 170, 54, 0x132235, 0.74).setStrokeStyle(1, 0xa8bfdc, 0.18).setDepth(this.depth + 2).setScrollFactor(0);
-      this.scene.add.image(resourceXs[index] - 52, 54, getResourceIconKey(resourceId)).setDisplaySize(28, 28).setDepth(this.depth + 3).setScrollFactor(0);
-      this.scene.add.text(resourceXs[index] - 24, 36, getResource(resourceId).label, { fontFamily: "sans-serif", fontSize: "13px", color: "#9fb7d5" }).setDepth(this.depth + 3).setScrollFactor(0).setOrigin(0, 0);
-      this.resourceTexts.set(resourceId, this.scene.add.text(resourceXs[index] - 24, 52, "", { fontFamily: "Georgia, serif", fontSize: "27px", color: "#f5fbff" }).setDepth(this.depth + 3).setScrollFactor(0).setOrigin(0, 0.5));
+      this.scene.add.rectangle(resourceXs[index], 72, 172, 58, 0x101c28, 0.84)
+        .setStrokeStyle(1, resourceId === "research" ? 0x63a9bb : 0x5c6f88, 0.42)
+        .setDepth(this.depth + 3)
+        .setScrollFactor(0);
+      this.scene.add.image(resourceXs[index] - 54, 72, getResourceIconKey(resourceId)).setDisplaySize(24, 24).setAlpha(0.96).setDepth(this.depth + 4).setScrollFactor(0);
+      this.resourceLabelTexts.set(
+        resourceId,
+        this.scene.add.text(resourceXs[index] - 8, 50, getResource(resourceId).label, {
+          fontFamily: "sans-serif",
+          fontSize: "13px",
+          color: resourceId === "research" ? "#b9f2ff" : "#aac1db",
+        }).setDepth(this.depth + 4).setScrollFactor(0).setOrigin(0.5, 0.5),
+      );
+      this.resourceTexts.set(resourceId, this.scene.add.text(resourceXs[index] + 2, 80, "", {
+        fontFamily: "Georgia, serif",
+        fontSize: resourceId === "research" ? "30px" : "33px",
+        color: resourceId === "research" ? "#d2fbff" : "#f5fbff",
+      }).setDepth(this.depth + 4).setScrollFactor(0).setOrigin(0.5, 0.5));
     });
 
     this.scene.add.text(64, 704, "일꾼 배치", { fontFamily: "Georgia, serif", fontSize: "20px", color: "#f4e6c5" }).setDepth(this.depth + 2).setScrollFactor(0);
@@ -196,18 +246,23 @@ export class LaneBattleHudView {
     this.captureActionButtons.set("build-supply-depot", this.createActionButton(920, 788, 150, 32, "병참", this.callbacks.buildSupplyDepot));
     this.captureActionButtons.set("build-mint", this.createActionButton(920, 828, 150, 32, "조달소", this.callbacks.buildMint));
     this.captureActionButtons.set("dismantle", this.createActionButton(920, 868, 150, 28, "폐기", this.callbacks.dismantle));
+    this.devToggleButton = this.createActionButton(42, 846, 94, 34, "DEV OFF", this.callbacks.toggleDevMode);
+    this.devResearchButton = this.createActionButton(42, 804, 94, 34, "연구 +25", this.callbacks.grantDevResearch);
+    this.devResearchButton.rect.setVisible(false);
+    this.devResearchButton.text.setVisible(false);
 
-    this.playerBaseBar = this.scene.add.rectangle(300, 140, 180, 9, 0x4fc1ff, 1).setOrigin(0, 0.5).setDepth(this.depth + 2);
-    this.enemyBaseBar = this.scene.add.rectangle(1120, 140, 180, 9, 0xff7373, 1).setOrigin(0, 0.5).setDepth(this.depth + 2);
-    this.scene.add.rectangle(300, 140, 180, 9, 0, 0).setOrigin(0, 0.5).setStrokeStyle(2, 0xd6e3f1, 0.4).setDepth(this.depth + 1);
-    this.scene.add.rectangle(1120, 140, 180, 9, 0, 0).setOrigin(0, 0.5).setStrokeStyle(2, 0xd6e3f1, 0.4).setDepth(this.depth + 1);
-    this.scene.add.text(300, 120, "아군 본진", { fontFamily: "sans-serif", fontSize: "11px", color: "#c7e5ff" }).setDepth(this.depth + 2);
-    this.scene.add.text(1120, 120, "적 본진", { fontFamily: "sans-serif", fontSize: "11px", color: "#ffd0d0" }).setDepth(this.depth + 2);
+    this.playerBaseBar = this.scene.add.rectangle(304, 140, 180, 10, 0x58c5ff, 1).setOrigin(0, 0.5).setDepth(this.depth + 3);
+    this.enemyBaseBar = this.scene.add.rectangle(1116, 140, 180, 10, 0xff7b7b, 1).setOrigin(0, 0.5).setDepth(this.depth + 3);
+    this.scene.add.rectangle(304, 140, 180, 10, 0x000000, 0.14).setOrigin(0, 0.5).setStrokeStyle(2, 0x9cb1c8, 0.34).setDepth(this.depth + 2);
+    this.scene.add.rectangle(1116, 140, 180, 10, 0x000000, 0.14).setOrigin(0, 0.5).setStrokeStyle(2, 0x9cb1c8, 0.34).setDepth(this.depth + 2);
+    this.scene.add.text(304, 121, "아군 본진", { fontFamily: "sans-serif", fontSize: "11px", color: "#c7e5ff" }).setDepth(this.depth + 3);
+    this.scene.add.text(1116, 121, "적 본진", { fontFamily: "sans-serif", fontSize: "11px", color: "#ffd0d0" }).setDepth(this.depth + 3);
 
     this.audioSettingsPanel = new AudioSettingsPanel(this.scene, { depth: this.depth + 60, onVisibilityChange: this.callbacks.onAudioSettingsVisibilityChange });
     if (audioDebugEnabled) {
       this.audioDebugText = this.scene.add.text(1160, 116, "", { fontFamily: "monospace", fontSize: "11px", color: "#d9f2ff", backgroundColor: "rgba(4, 13, 22, 0.84)", padding: { x: 9, y: 7 }, lineSpacing: 2 }).setDepth(this.depth + 50).setScrollFactor(0);
     }
+    this.setDevMode(false);
   }
 
   private createWorkerRow(role: WorkerRole, y: number): WorkerUiRow {

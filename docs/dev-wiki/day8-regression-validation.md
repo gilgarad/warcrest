@@ -49,7 +49,7 @@ texture:
 | --- | --- | --- |
 | Stone | `시대 석기 시대` | slinger, axeman x2, supply wagon |
 | Bronze | `시대 청동기` | slinger, bronze swordsman, bronze spearman, supply wagon |
-| Early Iron | `시대 초기 철기` | slinger, archer, iron swordsman, supply wagon |
+| Early Iron | `시대 초기 철기` | archer, bronze spearman, iron swordsman, supply wagon |
 | Middle Iron | `시대 중기 철기` | archer, iron swordsman, iron spearman, supply wagon |
 | Late Iron | `시대 후기 철기` | archer, knight, musketeer, supply wagon |
 

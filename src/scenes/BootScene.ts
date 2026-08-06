@@ -10,6 +10,7 @@ export class BootScene extends Phaser.Scene {
   private bg!: ParallaxBackground;
   private battleAssetsReady = false;
   private pendingStart = false;
+  private autoStart = false;
   private progressText?: Phaser.GameObjects.Text;
   private promptText?: Phaser.GameObjects.Text;
   private startBattle?: () => Promise<void>;
@@ -23,10 +24,16 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    if (new URLSearchParams(window.location.search).get("golden") === "1") {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("golden") === "1") {
       this.scene.start("golden-reference");
       return;
     }
+    if (params.get("sandbox") === "1") {
+      this.scene.start("unit-sandbox");
+      return;
+    }
+    this.autoStart = params.get("autostart") === "1";
     const { width, height } = this.scale;
     const audio = getAudioSystem();
     void audio.initialize();
@@ -103,14 +110,24 @@ export class BootScene extends Phaser.Scene {
         return;
       }
       starting = true;
-      await audio.unlock();
-      audio.playSfx("sfx.ui.confirm", { eventKey: "boot:start" });
+      if (!this.autoStart) {
+        await audio.unlock();
+        audio.playSfx("sfx.ui.confirm", { eventKey: "boot:start" });
+      }
       audio.resetDirector("preparation");
+      this.scene.stop("gameover");
+      this.scene.stop("run");
       this.scene.start("run");
     };
 
     this.input.keyboard?.on("keydown-SPACE", () => void this.startBattle?.());
     this.input.on("pointerdown", () => void this.startBattle?.());
+    this.events.once("shutdown", () => {
+      this.input.keyboard?.off("keydown-SPACE");
+      this.input.off("pointerdown");
+      this.load.off("progress");
+      this.load.off("complete");
+    });
     this.prepareBattleAssets();
   }
 
@@ -144,6 +161,10 @@ export class BootScene extends Phaser.Scene {
     this.battleAssetsReady = true;
     this.promptText?.setText("터치 / 클릭 / 스페이스바로 시작");
     this.progressText?.setText("전장 준비 완료");
+    if (this.autoStart) {
+      this.time.delayedCall(60, () => void this.startBattle?.());
+      return;
+    }
     if (this.pendingStart) {
       this.pendingStart = false;
       this.time.delayedCall(60, () => void this.startBattle?.());
