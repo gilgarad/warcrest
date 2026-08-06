@@ -105,6 +105,38 @@ to reason visibly and let them correct it.
   up/down recoil-and-lift transitions between those anchors. The two
   passing frames are the ones that must show unambiguous leg overlap — this
   is the exact frame type `synth_walk_b` could never produce.
+
+  **Canonical per-frame table (2026-08-06, user-authored, mandatory —
+  supersedes any looser paraphrase of the above)**. Call the leg that
+  starts in front "Leg A" and the other "Leg B". This covers exactly two
+  full steps (one for each leg) in 10 frames, looping cleanly back to
+  frame 1:
+
+  | Frame | Leg A (starts front) | Leg B (starts back) |
+  | --- | --- | --- |
+  | 1 | just stepped slightly forward from center | trailing behind |
+  | 2 | extends further forward (bigger stride than 1) | still trailing |
+  | 3 | heel touches down — full forward contact (no ground drawn, just the pose) | still trailing |
+  | 4 | holds forward contact | begins swinging forward, gap narrowing but still behind |
+  | 5 | holds | nearly caught up to Leg A — legs close/crossing |
+  | 6 | now becomes the trailing leg | swings past Leg A, now slightly ahead — passing complete, roles swapped |
+  | 7 | trailing | extends further forward (bigger stride than 6) |
+  | 8 | trailing | heel touches down — full forward contact |
+  | 9 | begins swinging forward, gap narrowing but still behind | holds forward contact |
+  | 10 | nearly caught up to Leg B — approaching the next crossing point | holds |
+
+  Frame 10 -> frame 1 (wraparound) is the second crossing: Leg A swings
+  past Leg B the same way Leg B passed Leg A between frames 5 and 6. This
+  second crossing is implied by the loop, not drawn as its own numbered
+  frame — do not insert an extra frame for it, the 10-frame budget already
+  accounts for it via the wraparound.
+
+  Quantitative check for any generated set: measure foot-region alpha-bbox
+  width (stride width) per frame. It must show **two clear maxima**
+  (frames ~3 and ~8, full contact) and **two clear minima** (frames ~5-6
+  and the 10->1 wraparound, crossing) — not a flat plateau followed by a
+  sudden narrow tail, which is what `synth_walk_b`-era and the first v2
+  attempt both produced.
 - **Quadrupeds (horses, point 2)**: same 10-frame budget, but gait
   structure follows an actual walk/trot pattern — **front legs cross each
   other's stride independently from the back legs** (a horse's front-left
@@ -188,16 +220,38 @@ All frames:
 
 ## Status
 
-All 14 points have a decision recorded above. Next: one detailed
-implementation prompt for the 그래픽/캐릭터 track.
+All 14 points have a decision recorded above.
 
-**Gate scope correction (2026-08-06, same day)**: the first gate must cover
-one representative of **each structurally distinct locomotion type** —
-biped human (`rifleman`), quadruped (a cavalry unit), and vehicle (a
-tank/artillery unit) — not `rifleman` alone. Each type uses different code
-paths and a different gait/frame breakdown (see the per-type sections
-above), so a human-only pass validates none of the horse or vehicle
-decisions. Only after all three pass their own QA checklist does the
-pipeline count as proven and batch expansion to the rest of the roster
-begin. This replaces the earlier "rifleman only, then expand" framing —
-that was too narrow and was corrected before implementation started.
+2026-08-06 update:
+- Runtime/code migration started for the first v2 pilot unit, `rifleman`.
+- `UnitLocomotionPose`/file naming moved to `idle | walk-01 ... walk-10 |
+  attack`.
+- Synthetic walk generation was removed from
+  `generate_pose_board_production_assets.py`; v2 walk frames now have to be
+  authored source cells.
+- `UnitSandboxScene` now imports the same walk-motion resolver as
+  `LaneBattleScene` instead of running its own sine-bob approximation.
+- `rifleman` now uses 5 authored directions (`n / ne / e / se / s`) plus
+  runtime mirroring for `nw / w / sw`.
+- Approved corrective pass:
+  - `rifleman-n-idle` was replaced with an actual rear-facing north view
+  - `rifleman-ne-idle` was replaced with a true between-`n`/`e` away-angle
+    view
+  - `rifleman-n` and `rifleman-ne` `walk-01..10` plus `attack` were then
+    regenerated from those approved angles
+  - `remove_background()` gained a despill step and rifleman's 5 authored
+    directions were regenerated through the updated pipeline
+- Stage-1 cleanup/proof step completed for `rifleman`:
+  - dead directionless runtime-unused duplicates were removed
+  - generator alias emission for `rifleman` / `rifleman-late` was disabled
+    so those files are not recreated
+  - `rifleman_late` was aligned to the same v2 10-frame mirrored contract
+  - sandbox and `LaneBattleScene` were compared at the same walk phase
+    (`e/w`, phase `0.55`, `walk-06`) and matched on texture key, mirrored
+    state, and facing direction
+  - a runtime bug found during parity work was fixed:
+    `LaneBattleScene.create()` now initializes team state before calling
+    `syncGameplayMusicTheme()`
+- Gate status:
+  - rifleman stage-1 is complete and ready for user approval
+  - expansion to any other unit remains blocked until that approval is given
