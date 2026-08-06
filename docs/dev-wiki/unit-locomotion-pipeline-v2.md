@@ -310,3 +310,52 @@ All 14 points have a decision recorded above.
 - Gate status:
   - rifleman stage-1 is complete and ready for user approval
   - expansion to any other unit remains blocked until that approval is given
+
+2026-08-06 fallback update:
+- The east-facing rifleman walk pilot moved from the failed 10-unique-frame
+  experiment to the documented 5-frame ping-pong fallback contract.
+- Implemented runtime playback array:
+  `walk-01, walk-02, walk-01, walk-03, walk-04, walk-05, walk-04, walk-03`.
+- Added automated east-frame validation under
+  `tools/asset-qa/validate_rifleman_pingpong.py`.
+  - foot-width checks on the lower alpha region
+  - leg-silhouette MAD checks (`walk-01` vs `walk-04`,
+    `walk-02` vs `walk-05`)
+- Current accepted east pilot source strip:
+  `docs/dev-wiki/visual-drafts/rifleman-e-5frame-strip-2026-08-06-attempt-1.png`
+- Accepted metrics:
+  - widths = `174, 195, 71, 162, 207`
+  - silhouette MAD = `18.92`, `18.50`
+- Scope remains gated:
+  - no expansion to other rifleman directions
+  - no expansion to other units
+  - no sandbox-final signoff yet
+
+## Final simplification: 3-frame ping-pong (2026-08-06)
+
+Both the 10-frame and 5-frame contracts above failed repeatedly at the
+same root cause: the image generation tool could not reliably swap which
+leg leads when asked to produce multiple frames of the same character in
+one pass or across separately-prompted frames. An external specialist
+tool (aetherforgeai) was also tried for a pure camera-angle/facing fix and
+judged too time-consuming to learn under deadline pressure.
+
+**Adopted final contract**: 3 frames only, idle/attack untouched.
+
+| Slot | Content |
+| --- | --- |
+| walk-01 | right leg forward, crossed stride |
+| walk-02 | neutral — both feet close together under the body |
+| walk-03 | left leg forward, crossed stride (must be the opposite leg from walk-01) |
+
+Playback (repeats): `01, 02, 03, 02` then loop to `01`. Implemented via
+`walkPoses: ["walk-01","walk-02","walk-03","walk-02"]` in
+`directionalProductionAnimation()`, same mechanism as the earlier 5-frame
+plan — no new rendering logic needed, only 3 files per direction.
+
+This supersedes the 10-frame and 5-frame contracts above for now. If a
+unit's 3-frame result still shows the same-leg-repeats bug, the leg-swap
+problem is confirmed to be a generation-tool limitation, not a prompt
+wording problem, and should be solved by local script-based leg mirroring
+(flip the leg region only, keep upper body fixed) rather than further
+prompt iteration.
