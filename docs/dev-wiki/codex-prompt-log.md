@@ -4854,3 +4854,90 @@ kind를 그대로 쓰고 있다. **전용 kind 또는 별도 코드 경로**를 
 - `bluntAttack`/`bowFire` 개선 전후 비교 설명
 - 검증 결과
 ```
+
+## 2026-08-06 (41) — 유닛 이동 파이프라인 v2: 10프레임 게이트, 실제 walk-b, sandbox/게임 함수 통합
+
+- **배경**: 며칠째 반복되던 "다리 교차가 안 보임" 문제의 근본 원인을
+  코드에서 확정했다 — `generate_pose_board_production_assets.py`의
+  `synth_walk_b`/`synth_walk_b_shift`가 실제로는 기존 이미지를
+  회전/이동만 시키는 가짜 프레임이었다(다리가 실제로 교차하는 그림을
+  새로 그린 적이 없음). 추가로 `UnitSandboxScene.ts`가
+  `LaneBattleScene.ts`의 `resolveWalkMotion()`을 안 쓰고 자체 bob
+  계산을 쓰고 있어, "sandbox와 본 게임이 같은 함수를 쓴다"는 전제
+  자체가 깨져 있었다. 사용자가 14개 항목의 요구사항을 직접 정리해서
+  전달했고, 상담 세션이 각 항목에 대한 아키텍처 결정을
+  `docs/dev-wiki/unit-locomotion-pipeline-v2.md`에 전부 기록한 뒤 이
+  프롬프트를 작성했다.
+- **작성한 프롬프트**:
+
+```
+[중요] 며칠째 같은 문제가 반복되고 있다. 이번엔 파라미터 미세조정이
+아니라 구조를 바꾼다. `docs/dev-wiki/unit-locomotion-pipeline-v2.md`를
+**반드시 전부 읽고 시작해라.** 이 문서에 왜 지금까지 실패했는지
+(코드로 확인된 3가지 근본 원인)와 14개 요구사항 각각에 대한 결정이
+이미 다 내려져 있다. 다시 논의하지 말고 그 결정대로 진행해라.
+
+`/data/projects/game_project1`에서 작업해라(master, 최신 커밋
+`656109c` 확인).
+
+## 지금 할 일 — 반드시 이 순서로, 유닛 1종만 먼저 끝까지
+
+### 1. 코드 구조 변경 (유닛 1종 규모로 먼저)
+
+- `UnitLocomotionPose`를 `idle | walk-01 ... walk-10 | attack`으로
+  확장해라(파일 네이밍도 동일하게, 예: `rifleman-e-walk-07`).
+- `generate_pose_board_production_assets.py`의 `synth_walk_b`/
+  `synth_walk_b_shift` 호출을 **완전히 제거해라.** walk 프레임은 전부
+  실제로 생성된 별개의 그림이어야 한다 — 어떤 프레임도 다른 프레임을
+  기하학적으로 변형해서 만들면 안 된다.
+- `UnitSandboxScene.ts`가 `LaneBattleScene.ts`와 동일한
+  `resolveWalkMotion()`(또는 10프레임에 맞게 갱신된 버전)을 그대로
+  import해서 쓰도록 고쳐라. 자체 bob 계산(`Math.abs(Math.sin(...))`)은
+  삭제해라.
+- `rifleman` 유닛 하나만 골라서, `docs/dev-wiki/
+  unit-locomotion-pipeline-v2.md`의 "Mirroring" 절 결정대로
+  **5방향(n, s, e, ne, se)만 원본 생성**하고 나머지 3방향(w, nw, sw)은
+  런타임 미러링(`legacy-mirrored` directionMode)으로 처리되게
+  배선해라.
+- 각 방향마다 idle 1 + walk 10 + attack N, **캐릭터 1명당 1개 생성
+  요청**으로 만들어라(문서의 "one file per character" 결정). 여러
+  방향/캐릭터를 한 시트에 몰아서 만들지 마라. 검토용 contact sheet가
+  필요하면 생성 후 별도 합성 스크립트로 만들어라 — 원본이 되면 안
+  된다.
+
+### 2. QA 체크리스트 적용
+`unit-locomotion-pipeline-v2.md`의 "QA checklist" 절 항목을 그대로
+써서, rifleman의 모든 방향 x 모든 프레임을 하나하나 검수해라. 특히:
+- east 방향의 walk-01~10 중 "passing" 프레임 2개가 실제로 다리가
+  교차해 보이는지
+- 얼굴/무기 방향과 이동 방향이 일치하는지
+- 미러링된 west 방향이 무기 손이 반대로 보이는 것 외에 이상하지
+  않은지
+
+### 3. 게이트: 승인 전 확장 금지
+rifleman 1종이 위 체크리스트를 전부 통과하고 사용자 승인을 받기
+전까지 **다른 유닛으로 확장하지 마라.** 통과하면 다음 순서로 확장:
+1. 다른 사람형 보병 1-2종으로 같은 파이프라인 재확인
+2. 기병(말) — front/back 다리 쌍이 독립적으로 교차하는 별도 10프레임
+   구조 적용
+3. 포병/전차 — 모래폭풍 이펙트 금지, 바퀴/궤도 회전만 표현
+4. 나머지 전체 로스터
+
+### 4. 검증
+- `npm run build`, `npm test`
+- sandbox(`?sandbox` 또는 해당 경로)와 본 게임 양쪽에서 rifleman이
+  동일하게 움직이는지 직접 비교 스크린샷
+- 관련 Playwright 스펙만 좁혀서 실행(전체 스위트 반복 금지)
+
+### 5. 문서/기록
+`docs/dev-wiki/log.md`, `unit-locomotion-pipeline-v2.md` "Status" 절에
+진행 상황 기록. `style-guide.md`에도 새 10프레임 계약과 미러링 정책을
+반영해라(예전 3프레임 계약은 이번 v2로 대체됨을 명시).
+
+## 결과물
+- rifleman 5방향 x 11프레임(idle+walk10) 완료 스크린샷, 미러링된 3방향
+  포함 검증
+- QA 체크리스트 결과(항목별 pass/fail)
+- sandbox vs 본 게임 동일성 비교
+- **사용자 승인 전까지 다른 유닛 확장 금지**
+```
