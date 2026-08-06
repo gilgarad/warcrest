@@ -55,6 +55,11 @@ repository work.
   pre-integration baseline from commit `f57303b`
 - `audio-integration-validation.md`: live scene integration, dynamic music,
   SFX policy, settings UI, browser evidence, and remaining asset work
+- `unit-locomotion-pipeline-v2.md`: root-cause diagnosis of the multi-day
+  leg-crossing/walk-cycle problem (fake `synth_walk_b` transform, sandbox/
+  game function drift, 3-frame budget too low) and the 10-frame v2 gait
+  contract, mirroring policy, and per-frame QA checklist decided from it —
+  read before touching unit locomotion art or animation code again
 - `audio-synthesis-naturalization-guide.md`: sourced research on why pure
   oscillator SFX reads as robotic and the concrete, named techniques
   (detune/layering, noise transients, multi-stage envelopes, per-instance
