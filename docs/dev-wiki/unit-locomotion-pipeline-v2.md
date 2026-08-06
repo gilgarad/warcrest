@@ -112,24 +112,47 @@ to reason visibly and let them correct it.
   full steps (one for each leg) in 10 frames, looping cleanly back to
   frame 1:
 
-  | Frame | Leg A (starts front) | Leg B (starts back) |
-  | --- | --- | --- |
-  | 1 | just stepped slightly forward from center | trailing behind |
-  | 2 | extends further forward (bigger stride than 1) | still trailing |
-  | 3 | heel touches down — full forward contact (no ground drawn, just the pose) | still trailing |
-  | 4 | holds forward contact | begins swinging forward, gap narrowing but still behind |
-  | 5 | holds | nearly caught up to Leg A — legs close/crossing |
-  | 6 | now becomes the trailing leg | swings past Leg A, now slightly ahead — passing complete, roles swapped |
-  | 7 | trailing | extends further forward (bigger stride than 6) |
-  | 8 | trailing | heel touches down — full forward contact |
-  | 9 | begins swinging forward, gap narrowing but still behind | holds forward contact |
-  | 10 | nearly caught up to Leg B — approaching the next crossing point | holds |
+  | Frame | Leg A (starts front) | Leg A angle* | Leg B (starts back) | Leg B angle* |
+  | --- | --- | --- | --- | --- |
+  | 1 | just stepped slightly forward from center | ~+15° | trailing behind | ~-10° |
+  | 2 | extends further forward (bigger stride than 1) | ~+30° | still trailing | ~-15° |
+  | 3 | heel touches down — full forward contact (no ground drawn, just the pose) | ~+45° (max) | still trailing, max back | ~-20° (max) |
+  | 4 | holds forward contact, weight rolling onto it | ~+40° | begins swinging forward, knee bending, foot lifting | ~-10° |
+  | 5 | starts becoming the trailing leg as weight shifts off it | ~+30° | mid-swing, knee bent, nearly under the body | ~0° |
+  | 6 | now clearly the trailing leg | ~+10° | swings past Leg A, now slightly ahead — passing complete, roles swapped | ~+15° |
+  | 7 | trailing, moving further back | ~-10° | extends further forward (bigger stride than 6) | ~+30° |
+  | 8 | trailing, max back | ~-20° (max) | heel touches down — full forward contact, max forward | ~+45° (max) |
+  | 9 | begins swinging forward, knee bending, foot lifting | ~-10° | holds forward contact, weight rolling onto it | ~+40° |
+  | 10 | mid-swing, knee bent, nearly under the body — approaching the next crossing point | ~0° | starts becoming the trailing leg as weight shifts off it | ~+30° |
+
+  *Angle = approximate leg swing angle from vertical at the hip, `+` =
+  forward of the body, `-` = behind the body. These are directional
+  guidance, not exact degrees to enforce pixel-perfect — the point is
+  every single frame must be visibly, unambiguously different from its
+  neighbors, especially frames 5 and 6 (the crossing point), which
+  previous generation attempts rendered as near-identical because the
+  instruction only said "legs close/crossing" without a concrete angle
+  delta.
 
   Frame 10 -> frame 1 (wraparound) is the second crossing: Leg A swings
   past Leg B the same way Leg B passed Leg A between frames 5 and 6. This
   second crossing is implied by the loop, not drawn as its own numbered
   frame — do not insert an extra frame for it, the 10-frame budget already
   accounts for it via the wraparound.
+
+  **Leg-identity chain rule (mandatory, added 2026-08-06 after a
+  generation attempt violated it)**: once a leg starts swinging forward
+  (e.g. Leg B from frame 4 through frame 8), it must keep swinging forward
+  monotonically across every one of those frames — it must never reverse
+  and show the *other* leg swinging forward again until its own swing
+  phase is properly finished and passed. A generated set where, say,
+  frame 7 shows Leg B mid-swing and frame 8 suddenly shows Leg A swinging
+  forward again instead of Leg B completing its contact, is wrong — that
+  is a leg-identity reversal bug, not a valid alternate pose. Before
+  accepting a generated set, trace each leg's angle column top to bottom
+  and confirm it changes monotonically within each half-cycle (frames
+  1-3 Leg A rises then holds, 4-8 Leg B rises/holds/Leg A falls, 9-10 Leg A
+  begins rising again) — any non-monotonic jump back is a defect.
 
   Quantitative check for any generated set: measure foot-region alpha-bbox
   width (stride width) per frame. It must show **two clear maxima**
