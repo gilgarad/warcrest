@@ -189,7 +189,15 @@ All frames:
 ## Status
 
 All 14 points have a decision recorded above. Next: one detailed
-implementation prompt for the 그래픽/캐릭터 track, gated the same way as
-the earlier angle-correction work (one unit, full pipeline, user review,
-then batch expand) — not a repeat of the "-fix all units in parallel and
-hope" pattern that caused this multi-day loop.
+implementation prompt for the 그래픽/캐릭터 track.
+
+**Gate scope correction (2026-08-06, same day)**: the first gate must cover
+one representative of **each structurally distinct locomotion type** —
+biped human (`rifleman`), quadruped (a cavalry unit), and vehicle (a
+tank/artillery unit) — not `rifleman` alone. Each type uses different code
+paths and a different gait/frame breakdown (see the per-type sections
+above), so a human-only pass validates none of the horse or vehicle
+decisions. Only after all three pass their own QA checklist does the
+pipeline count as proven and batch expansion to the rest of the roster
+begin. This replaces the earlier "rifleman only, then expand" framing —
+that was too narrow and was corrected before implementation started.
