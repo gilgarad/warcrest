@@ -160,6 +160,38 @@ to reason visibly and let them correct it.
   and the 10->1 wraparound, crossing) — not a flat plateau followed by a
   sudden narrow tail, which is what `synth_walk_b`-era and the first v2
   attempt both produced.
+
+  **Fallback: 5-frame ping-pong contract (2026-08-06, user-authored,
+  adopted after repeated 10-frame generation failures)**. Generating 10
+  fully independent, correctly-ordered frames in one pass proved too
+  failure-prone for the image tool (leg-identity reversals, near-duplicate
+  crossing frames). Instead of 10 unique authored walk frames, author only
+  **5**, and let runtime playback order (not the generation step) produce
+  a full two-step cycle by reusing frames:
+
+  | Slot | Content |
+  | --- | --- |
+  | walk-01 | Leg A slightly forward |
+  | walk-02 | Leg A fully forward (contact) |
+  | walk-03 | Legs crossing (mid-point, symmetric — used for both crossing transitions) |
+  | walk-04 | Leg B slightly forward |
+  | walk-05 | Leg B fully forward (contact) |
+
+  **Playback sequence** (repeats): `01, 02, 01, 03, 04, 05, 04, 03` then
+  loop back to `01`. This is implemented purely as the `walkPoses` array
+  passed into `directionalProductionAnimation()` in
+  `unitAnimationRegistry.ts` —
+  `walkPoses: ["walk-01","walk-02","walk-01","walk-03","walk-04","walk-05","walk-04","walk-03"]`
+  — the existing code already supports an arbitrary pose-name array and
+  builds texture keys by name, so repeating a name in the array reuses the
+  same file without any new rendering logic. Only 5 actual PNG files need
+  to be generated per direction, not 10.
+
+  Each of the 5 frames is independently describable with no risk of a
+  multi-frame identity-reversal chain bug — this is the primary reason for
+  adopting it over the 10-unique-frame contract. If this also proves
+  unreliable, escalate to hand-authored/manually-corrected frames rather
+  than another generation-prompt rewrite.
 - **Quadrupeds (horses, point 2)**: same 10-frame budget, but gait
   structure follows an actual walk/trot pattern — **front legs cross each
   other's stride independently from the back legs** (a horse's front-left
