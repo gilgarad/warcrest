@@ -5335,3 +5335,25 @@ Use consistent headings so entries are easy to grep.
   for pikeman walk/attack and Rifleman I attack.
 - Verification passed: biped asset QA `21/21`, `npm run build`, `npm test`
   (`33` files / `159` tests), and focused Playwright (`2/2`).
+
+## 2026-08-07 - Per-frame infantry body scale and long-weapon anchoring
+
+- Confirmed that bronze sword/spear and iron sword attack silhouettes were
+  authored at 312px but presented with the 270px idle ratio, causing a sudden
+  15.6% body-size increase. Added exact attack-frame visible-height ratios.
+- Calibrated bronze/iron spearmen from person height rather than spear-tip
+  height, normalized Rifleman I's 312px walk frames against its 270px attack,
+  and normalized Rifleman II's 260/265px walks and 251px attack to infantry
+  body height.
+- Added per-frame horizontal origins. The 1024px pikeman attack canvas now
+  anchors at the soldier's foot center (`253/1024`) instead of the pike/canvas
+  midpoint, preventing the body from jumping backward on attack.
+- Removed width/height interpolation across pose textures because it distorted
+  wide attack canvases during the transition. Attack motion offsets remain
+  smoothed independently.
+- Stabilized sandbox/game shadows and selection rings against idle body width,
+  so long spears and pikes no longer enlarge ground UI.
+- Added unit-level scale/origin assertions and sandbox plus in-game Playwright
+  captures for all seven reported infantry families.
+- Verification passed: `npm run build`, `npm test` (`33` files / `165` tests),
+  and focused Playwright (`3/3`, sandbox roster plus real-game pikeman attack).

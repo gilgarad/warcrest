@@ -53,6 +53,7 @@ export interface UnitAnimationDefinition {
   groundOriginY: number;
   referenceVisibleHeightRatio: number;
   frameVisibleHeightRatios: Readonly<Record<string, number>>;
+  frameOriginXs: Readonly<Record<string, number>>;
   scaleFactor: number;
 }
 
@@ -69,6 +70,7 @@ interface ProductionAnimationOptions {
   extraPrefixPoseVisibleHeightRatios?: Readonly<Record<string, Partial<Record<FramePoseKey, number>>>>;
   exactFrameVisibleHeightRatios?: Readonly<Record<string, number>>;
   exactFrameCanvasAspects?: Readonly<Record<string, number>>;
+  exactFrameOriginXs?: Readonly<Record<string, number>>;
 }
 
 function parsePoseFromTextureKey(key: string): FramePoseKey {
@@ -186,6 +188,7 @@ function directionalProductionAnimation(
     groundOriginY: options.groundOriginY ?? PRODUCTION_GROUND_ORIGIN_Y,
     referenceVisibleHeightRatio: defaultHeightRatio,
     frameVisibleHeightRatios,
+    frameOriginXs: options.exactFrameOriginXs ?? {},
     scaleFactor,
   };
 }
@@ -231,11 +234,43 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
       },
     },
   }),
-  bronze_swordsman: threeFrameBipedAnimation("bronze-swordsman", 1),
-  bronze_spearman: threeFrameBipedAnimation("bronze-spearman", 1),
+  bronze_swordsman: directionalProductionAnimation("bronze-swordsman", 1, false, "legacy-mirrored", {
+    authoredDirections: ["e"],
+    fallbackDirection: "e",
+    walkPoses: THREE_FRAME_PING_PONG_WALK_POSES,
+    exactFrameVisibleHeightRatios: { "bronze-swordsman-e-attack": 312 / 384 },
+  }),
+  bronze_spearman: directionalProductionAnimation("bronze-spearman", 1, false, "legacy-mirrored", {
+    authoredDirections: ["e"],
+    fallbackDirection: "e",
+    walkPoses: THREE_FRAME_PING_PONG_WALK_POSES,
+    exactFrameVisibleHeightRatios: {
+      "bronze-spearman-e-idle": 250 / 384,
+      "bronze-spearman-e-walk-01": 256 / 384,
+      "bronze-spearman-e-walk-02": 250 / 384,
+      "bronze-spearman-e-walk-03": 256 / 384,
+      "bronze-spearman-e-attack": 312 / 384,
+    },
+  }),
   archer: threeFrameBipedAnimation("archer", 0.96),
-  iron_swordsman: threeFrameBipedAnimation("iron-swordsman", 1.04),
-  iron_spearman: threeFrameBipedAnimation("iron-spearman", 1.06),
+  iron_swordsman: directionalProductionAnimation("iron-swordsman", 1.04, false, "legacy-mirrored", {
+    authoredDirections: ["e"],
+    fallbackDirection: "e",
+    walkPoses: THREE_FRAME_PING_PONG_WALK_POSES,
+    exactFrameVisibleHeightRatios: { "iron-swordsman-e-attack": 312 / 384 },
+  }),
+  iron_spearman: directionalProductionAnimation("iron-spearman", 1, false, "legacy-mirrored", {
+    authoredDirections: ["e"],
+    fallbackDirection: "e",
+    walkPoses: THREE_FRAME_PING_PONG_WALK_POSES,
+    exactFrameVisibleHeightRatios: {
+      "iron-spearman-e-idle": 231 / 384,
+      "iron-spearman-e-walk-01": 232 / 384,
+      "iron-spearman-e-walk-02": 231 / 384,
+      "iron-spearman-e-walk-03": 226 / 384,
+      "iron-spearman-e-attack": 191 / 384,
+    },
+  }),
   musketeer: threeFrameBipedAnimation("musketeer", 0.98),
   knight: directionalProductionAnimation("knight", 1.16, true),
   pikeman: directionalProductionAnimation("pikeman", 1, false, "legacy-mirrored", {
@@ -255,6 +290,7 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
       "pikeman-e-walk-03": 384 / 512,
       "pikeman-e-attack": 1024 / 384,
     },
+    exactFrameOriginXs: { "pikeman-e-attack": 253 / 1024 },
   }),
   heavy_cavalry: directionalProductionAnimation("heavy-cavalry", 1.14, true, "direct", {
     poseVisibleHeightRatios: {
@@ -273,6 +309,11 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
     authoredDirections: ["e"],
     fallbackDirection: "e",
     walkPoses: THREE_FRAME_PING_PONG_WALK_POSES,
+    exactFrameVisibleHeightRatios: {
+      "rifleman-e-walk-01": 312 / 384,
+      "rifleman-e-walk-02": 312 / 384,
+      "rifleman-e-walk-03": 312 / 384,
+    },
   }),
   grenadier: threeFrameBipedAnimation("grenadier", 1.02),
   light_cavalry: directionalProductionAnimation("light-cavalry", 1.12, true, "direct", {
@@ -301,7 +342,17 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
       "cannon-i-nw-attack": 197 / 384,
     },
   }),
-  rifleman_late: threeFrameBipedAnimation("rifleman-late", 0.98),
+  rifleman_late: directionalProductionAnimation("rifleman-late", 1, false, "legacy-mirrored", {
+    authoredDirections: ["e"],
+    fallbackDirection: "e",
+    walkPoses: THREE_FRAME_PING_PONG_WALK_POSES,
+    exactFrameVisibleHeightRatios: {
+      "rifleman-late-e-walk-01": 260 / 384,
+      "rifleman-late-e-walk-02": 265 / 384,
+      "rifleman-late-e-walk-03": 260 / 384,
+      "rifleman-late-e-attack": 251 / 384,
+    },
+  }),
   grenadier_late: threeFrameBipedAnimation("grenadier-late", 1.04),
   cavalry: directionalProductionAnimation("cavalry", 1.16, true, "direct", {
     poseVisibleHeightRatios: {
@@ -421,11 +472,11 @@ export const UNIT_ANIMATION_ASSETS = Object.values(UNIT_ANIMATION_REGISTRY)
   .concat(EXTRA_UNIT_ANIMATION_PREFIXES.flatMap((prefix) => listAnimationKeysForPrefix(prefix)))
   .filter((key, index, all) => all.indexOf(key) === index)
   .flatMap((key) => [
-    { key, path: assetUrl(`assets/production/units/${key}.png?v=20260807-human3frame-locomotion-5`) },
+    { key, path: assetUrl(`assets/production/units/${key}.png?v=20260807-human3frame-locomotion-6`) },
     ...(hasEnemyVariantForTexture(key)
       ? [{
           key: `${key}-enemy`,
-          path: assetUrl(`assets/production/units/${key}-enemy.png?v=20260807-human3frame-locomotion-5`),
+          path: assetUrl(`assets/production/units/${key}-enemy.png?v=20260807-human3frame-locomotion-6`),
         }]
       : []),
   ]);
@@ -491,6 +542,12 @@ export function getFrameCanvasAspect(unitId: LaneUnitId, textureKey?: string): n
   if (exact !== undefined) return exact;
   if (unitId === "supply_wagon" && textureKey.startsWith("supply-wagon-")) return WIDE_ASPECT;
   return undefined;
+}
+
+export function getFrameOriginX(unitId: LaneUnitId, textureKey?: string): number | undefined {
+  const definition = getUnitAnimationDefinition(unitId);
+  if (!definition || !textureKey) return undefined;
+  return definition.frameOriginXs[textureKey];
 }
 
 export function deriveAnimationPrefix(textureKey: string): string {

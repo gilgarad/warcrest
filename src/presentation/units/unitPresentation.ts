@@ -1,5 +1,6 @@
 import {
   getFrameCanvasAspect,
+  getFrameOriginX,
   getFrameVisibleHeightRatio,
   getUnitAnimationDefinition,
 } from "./unitAnimationRegistry";
@@ -35,7 +36,7 @@ export function resolveUnitFramePresentation(
   return {
     spriteWidth: spriteHeight * (getFrameCanvasAspect(unitId, textureKey) ?? fallbackFrameAspect),
     spriteHeight,
-    originX: definition.groundOriginX,
+    originX: getFrameOriginX(unitId, textureKey) ?? definition.groundOriginX,
     originY: definition.groundOriginY,
     referenceVisibleHeight: targetVisibleWorldHeight,
   };

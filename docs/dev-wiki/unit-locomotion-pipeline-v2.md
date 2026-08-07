@@ -412,3 +412,10 @@ normalization. Pikeman locomotion therefore uses a 384x512 transparent canvas
 and pikeman attack uses a 1024x384 transparent canvas. Runtime presentation
 records each canvas aspect and visible-body ratio explicitly, preserving the
 same soldier scale while retaining the complete pike.
+
+Long-weapon attack frames also record the person's foot-center `originX`; the
+canvas midpoint is not a valid body anchor when most of the width is weapon.
+Frame canvas dimensions are applied immediately rather than interpolated,
+because independently lerping width and height across unlike canvas aspects
+temporarily deforms the character. Position/attack-motion easing remains
+independent. Ground shadows and selection rings always use idle body width.

@@ -5370,3 +5370,21 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   captures for pikeman walk/attack and Rifleman I attack before completion.
 - **Verification**: asset QA `21/21`, build, `159` unit tests, and both focused
   Playwright specs passed.
+
+## 2026-08-07 - Normalize reported infantry transitions
+
+- **User feedback**: bronze sword/spear and iron sword enlarged on attack;
+  bronze/iron spearmen were undersized; Rifleman I had oversized walks;
+  Rifleman II was undersized; pikeman attack risked shifting the body because
+  its long pike occupied the canvas center.
+- **Measured causes**: multiple poses used one 270/384 presentation ratio despite
+  visible heights ranging from 191px to 312px; pikeman's body center was at
+  x=253 on a 1024px attack canvas; game-side dimension lerp temporarily
+  squashed wide attack textures.
+- **Implementation**: exact frame ratios, frame-specific origin support,
+  body-width ground UI, and non-interpolated texture geometry.
+- **Visual validation**: captured all reported walk/attack pairs in sandbox and
+  a real LaneBattleScene pikeman attack. The game capture confirms full pike
+  length, normal body proportions, and foot-center anchoring.
+- **Regression**: build, all `165` unit tests, and all `3` focused Playwright
+  checks passed.

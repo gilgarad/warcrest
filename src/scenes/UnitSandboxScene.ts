@@ -433,6 +433,20 @@ export class UnitSandboxScene extends Phaser.Scene {
       frameAspect,
       textureKey,
     );
+    const idleTextureKey = resolveAnimationTextureFromPrefix(
+      this.state.unitId,
+      prefix,
+      false,
+      0,
+      0,
+      this.state.direction,
+    ) ?? logicalTextureKey;
+    const idleFramePresentation = resolveUnitFramePresentation(
+      this.state.unitId,
+      targetVisibleWorldHeight,
+      frameAspect,
+      idleTextureKey,
+    );
 
     const facing = directionVector(this.state.direction);
     const flipX = shouldFlipUnitFrame(this.state.unitId, facing.x, this.state.direction);
@@ -442,7 +456,7 @@ export class UnitSandboxScene extends Phaser.Scene {
     const attackOffsetX = facing.x * 12 * attackEase;
     const attackOffsetY = facing.y * 8 * attackEase - attackEase * 4;
     const attackRotation = facing.x * 0.08 * attackEase;
-    const shadowWidth = Math.max(44, framePresentation.spriteWidth * 0.8);
+    const shadowWidth = Math.max(44, idleFramePresentation.spriteWidth * 0.8);
     const shadowHeight = Math.max(14, framePresentation.spriteHeight * 0.12);
 
     this.sprite

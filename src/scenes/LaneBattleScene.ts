@@ -3413,8 +3413,11 @@ export class LaneBattleScene extends Phaser.Scene {
       unit.role === "support" ? 0 : targetAttackMotion.rotationRad,
       0.18,
     );
-    unit.visualSpriteWidth = Phaser.Math.Linear(unit.visualSpriteWidth, spriteWidth, 0.22);
-    unit.visualSpriteHeight = Phaser.Math.Linear(unit.visualSpriteHeight, spriteHeight, 0.22);
+    // Interpolating dimensions across differently shaped texture canvases
+    // squashes the whole character during pose changes. Motion offsets are
+    // smoothed separately; frame geometry must retain its authored aspect.
+    unit.visualSpriteWidth = spriteWidth;
+    unit.visualSpriteHeight = spriteHeight;
     const attackOffsetX = unit.visualOffsetX + walkMotion.swayX;
     const attackLift = unit.visualLift;
     const originX = this.isPrototypeV2() ? framePresentation.originX : 0.5;
@@ -3440,7 +3443,7 @@ export class LaneBattleScene extends Phaser.Scene {
       ? hpY - this.cssPxToWorld(16)
       : this.terrainPrototypeEnabled ? hpY - 14 : pos.y - 58 - bob - attackLift;
     const shadowWidth = this.terrainPrototypeEnabled
-      ? Math.max(38, unit.visualSpriteWidth * 0.88)
+      ? Math.max(38, idleFramePresentation.spriteWidth * 0.88)
       : unit.role === "support" ? 56 : 46;
     const shadowHeight = this.terrainPrototypeEnabled
       ? unit.role === "support" ? 15 : 12
@@ -3457,8 +3460,8 @@ export class LaneBattleScene extends Phaser.Scene {
       .setScale(moving ? 0.96 : 1, moving ? 0.94 : 1)
       .setDepth(this.getGroundDepth(pos.y, -1));
     const ringWidth = unit.role === "support"
-      ? Math.max(42, unit.visualSpriteWidth * 0.72)
-      : Math.max(40, unit.visualSpriteWidth * 0.8);
+      ? Math.max(42, idleFramePresentation.spriteWidth * 0.72)
+      : Math.max(40, idleFramePresentation.spriteWidth * 0.8);
     const ringHeight = unit.role === "support"
       ? Math.max(14, shadowHeight * 1.08)
       : Math.max(14, shadowHeight * 1.18);
@@ -3806,6 +3809,8 @@ export class LaneBattleScene extends Phaser.Scene {
         presentation: {
           x: unit.sprite.x,
           y: unit.sprite.y,
+          originX: unit.sprite.originX,
+          originY: unit.sprite.originY,
           rotationRad: unit.sprite.rotation,
           spriteDisplayWidth: unit.sprite.displayWidth,
           spriteDisplayHeight: unit.sprite.displayHeight,
