@@ -179,15 +179,13 @@ to reason visibly and let them correct it.
   must not only differ in silhouette, they must invert left/right foot mass
   in the lower-foot region. If `walk-01` is right-heavy, `walk-03` must be
   left-heavy, and vice versa.
-- **Quadrupeds (horses, point 2)**: same 10-frame budget, but gait
-  structure follows an actual walk/trot pattern — **front legs cross each
-  other's stride independently from the back legs** (a horse's front-left
-  and front-right alternate on their own phase relationship to
-  back-left/back-right; they are not a mirrored pair of the human 2-leg
-  cycle). Do not reuse the human 10-frame key-pose timing for horses;
-  derive a separate 10-frame breakdown for the front-leg pair and back-leg
-  pair so both pairs individually show a clear alternating/crossing
-  stride.
+- **Quadrupeds (horses, point 2; active override 2026-08-07)**: cavalry now
+  uses the same three-file playback envelope as infantry (`01,02,03,02`), but
+  the authored content is horse-specific. `walk-01` and `walk-03` must show
+  opposite lead legs in both the front and hind pairs; `walk-02` is the passing
+  pose with the legs gathered under the horse. This replaces the abandoned
+  10-frame horse budget. The rider, equipment, horse body, and ground anchor
+  remain fixed while only the gait changes.
 - **Vehicles (tanks, artillery, wagons)**: no leg-crossing concept applies.
   10-frame budget still applies for wheel/track rotation continuity (so
   motion reads smoothly), but the per-frame content is wheel/track rotation
@@ -281,8 +279,9 @@ presentation:
 - The 2026-08-06 roster expansion applies this contract to every standing
   biped infantry entry, not merely generator rows tagged `board == "human"`.
   The 21 regenerated entries span ancient infantry through modern infantry;
-  cavalry, artillery/vehicles, and the evolving supply unit remain separate
-  locomotion classes.
+  artillery/vehicles and the evolving supply unit remain separate locomotion
+  classes. Cavalry joined the active three-frame envelope on 2026-08-07 while
+  retaining horse-specific gait QA.
 - Each regenerated biped keeps an uncut five-slot source strip and a marked-leg
   diagnostic strip. Production crops are generated only after the diagnostic
   tracks the same near anatomical leg in red and the same far anatomical leg
@@ -304,6 +303,20 @@ presentation:
 - Team markers are clipped to opaque sprite pixels. Wide attacks therefore
   cannot place a detached marker in empty space when their weapon changes the
   overall alpha bounding box.
+
+Cavalry rollout update (2026-08-07):
+
+- `knight`, `heavy_cavalry`, `light_cavalry`, and `cavalry` now use canonical
+  east art, runtime west mirroring, and `walk-01, walk-02, walk-03, walk-02`.
+- All four use one horse-scale runtime factor (`1.14`) and one source scale per
+  five-pose strip, so attack does not resize the horse or rider.
+- The Renaissance heavy cavalry's upright lance uses a taller locomotion
+  canvas and a wider attack canvas. Frame-specific canvas/visible-body ratios
+  preserve a 270px horse/rider reference rather than shrinking to fit the
+  lance.
+- Source QA requires complete head, hooves, tail, hands, and weapon; safe
+  canvas margins; different `walk-01`/`walk-03` full silhouettes; and a
+  lower-leg silhouette difference proving that the horse gait changes.
 
 Rifleman gate update:
 

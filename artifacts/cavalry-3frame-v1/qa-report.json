@@ -1,0 +1,198 @@
+{
+  "contract": [
+    "walk-01",
+    "walk-02",
+    "walk-03",
+    "walk-02"
+  ],
+  "units": [
+    {
+      "unitId": "knight",
+      "prefix": "knight",
+      "design": "late-Iron medieval knight, shield and sword",
+      "source": "docs/dev-wiki/visual-drafts/cavalry-3frame-v1/knight-e-5slot-source.png",
+      "checks": {
+        "five_complete_poses": true,
+        "not_clipped": true,
+        "opposite_stride_silhouettes": true,
+        "opposite_horse_leg_silhouettes": true
+      },
+      "pass": true,
+      "strideDifference": 0.031,
+      "legDifference": 0.0477,
+      "boxes": {
+        "idle": [
+          130,
+          66,
+          381,
+          336
+        ],
+        "walk-01": [
+          124,
+          73,
+          388,
+          336
+        ],
+        "walk-02": [
+          126,
+          70,
+          387,
+          336
+        ],
+        "walk-03": [
+          126,
+          73,
+          386,
+          336
+        ],
+        "attack": [
+          118,
+          81,
+          395,
+          336
+        ]
+      }
+    },
+    {
+      "unitId": "heavy_cavalry",
+      "prefix": "heavy-cavalry",
+      "design": "Renaissance cuirassier, lance",
+      "source": "docs/dev-wiki/visual-drafts/cavalry-3frame-v1/heavy-cavalry-e-5slot-source.png",
+      "checks": {
+        "five_complete_poses": true,
+        "not_clipped": true,
+        "opposite_stride_silhouettes": true,
+        "opposite_horse_leg_silhouettes": true
+      },
+      "pass": true,
+      "strideDifference": 0.0309,
+      "legDifference": 0.0389,
+      "boxes": {
+        "idle": [
+          119,
+          57,
+          393,
+          448
+        ],
+        "walk-01": [
+          110,
+          78,
+          402,
+          448
+        ],
+        "walk-02": [
+          104,
+          96,
+          407,
+          448
+        ],
+        "walk-03": [
+          105,
+          103,
+          407,
+          448
+        ],
+        "attack": [
+          191,
+          66,
+          577,
+          336
+        ]
+      }
+    },
+    {
+      "unitId": "light_cavalry",
+      "prefix": "light-cavalry",
+      "design": "early-industrial hussar, sabre",
+      "source": "docs/dev-wiki/visual-drafts/cavalry-3frame-v1/light-cavalry-e-5slot-source.png",
+      "checks": {
+        "five_complete_poses": true,
+        "not_clipped": true,
+        "opposite_stride_silhouettes": true,
+        "opposite_horse_leg_silhouettes": true
+      },
+      "pass": true,
+      "strideDifference": 0.0408,
+      "legDifference": 0.0723,
+      "boxes": {
+        "idle": [
+          133,
+          66,
+          379,
+          336
+        ],
+        "walk-01": [
+          128,
+          70,
+          384,
+          336
+        ],
+        "walk-02": [
+          142,
+          72,
+          370,
+          336
+        ],
+        "walk-03": [
+          131,
+          75,
+          381,
+          336
+        ],
+        "attack": [
+          104,
+          81,
+          409,
+          336
+        ]
+      }
+    },
+    {
+      "unitId": "cavalry",
+      "prefix": "cavalry",
+      "design": "late-industrial cavalry, sabre and carbine",
+      "source": "docs/dev-wiki/visual-drafts/cavalry-3frame-v1/cavalry-e-5slot-source.png",
+      "checks": {
+        "five_complete_poses": true,
+        "not_clipped": true,
+        "opposite_stride_silhouettes": true,
+        "opposite_horse_leg_silhouettes": true
+      },
+      "pass": true,
+      "strideDifference": 0.0308,
+      "legDifference": 0.0608,
+      "boxes": {
+        "idle": [
+          136,
+          66,
+          377,
+          336
+        ],
+        "walk-01": [
+          130,
+          71,
+          381,
+          336
+        ],
+        "walk-02": [
+          134,
+          71,
+          377,
+          336
+        ],
+        "walk-03": [
+          132,
+          72,
+          379,
+          336
+        ],
+        "attack": [
+          117,
+          39,
+          395,
+          336
+        ]
+      }
+    }
+  ]
+}

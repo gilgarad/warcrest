@@ -5388,3 +5388,22 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   length, normal body proportions, and foot-center anchoring.
 - **Regression**: build, all `165` unit tests, and all `3` focused Playwright
   checks passed.
+
+## 2026-08-07 - Cavalry locomotion and presentation pass
+
+- **Request**: checkpoint and push the completed infantry corrections, then
+  rebuild every cavalry class with stable walk/attack size and an actual
+  alternating horse gait.
+- **Checkpoint**: committed and pushed the infantry state as `a8891e4` on
+  `master` before beginning cavalry work.
+- **Assets**: generated four uncut five-pose strips, each with era-appropriate
+  rider/equipment identity, then installed canonical E player/enemy frames at
+  a shared horse scale.
+- **Runtime**: all mounted units now use the three-frame ping-pong sequence and
+  W mirroring. Heavy-cavalry lance canvases use explicit body-height ratios to
+  prevent pose-dependent resizing.
+- **QA**: automated alpha-margin and full/lower-leg silhouette checks pass for
+  all four strips; focused Playwright confirms the exact pose sequence,
+  mirroring, body scale, and matching sandbox/game textures.
+- **Regression**: `npm run build`, `npm test` (`33` files / `169` tests), and
+  focused cavalry Playwright (`3/3`) passed.

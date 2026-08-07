@@ -27,6 +27,13 @@ const THREE_FRAME_BIPEDS = [
   ["breakthrough_trooper", "breakthrough-trooper"],
 ] as const;
 
+const THREE_FRAME_CAVALRY = [
+  ["knight", "knight"],
+  ["heavy_cavalry", "heavy-cavalry"],
+  ["light_cavalry", "light-cavalry"],
+  ["cavalry", "cavalry"],
+] as const;
+
 describe("unit animation registry", () => {
   it.each([
     "stone_axeman", "stone_slinger", "supply_wagon", "bronze_swordsman", "bronze_spearman",
@@ -42,7 +49,7 @@ describe("unit animation registry", () => {
       const authoredDirections = getAuthoredUnitDirections(unitId);
       expect(definition?.fallbackDirection).toBe(authoredDirections[0]);
       expect(definition?.directions[authoredDirections[0]]?.attack.length).toBeGreaterThan(0);
-      if (unitId === "supply_wagon" || unitId === "knight") {
+      if (unitId === "supply_wagon") {
         expect(definition?.legacyHorizontalMirror).toBe(false);
         expect(definition?.directionMode).toBe("direct");
         expect(getAuthoredUnitDirections(unitId)).toEqual(UNIT_FACING_DIRECTIONS);
@@ -79,6 +86,20 @@ describe("unit animation registry", () => {
     expect(resolveUnitAnimationTexture(unitId, true, 0.9, 0, "e")).toBe(`${prefix}-e-walk-02`);
     expect(resolveUnitAnimationTexture(unitId, false, 0, 0.25, "sw")).toBe(`${prefix}-e-attack`);
     expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === `${prefix}-e-walk-03-enemy`)).toBe(true);
+  });
+
+  it.each(THREE_FRAME_CAVALRY)("uses the quadruped 3-frame contract for %s", (unitId, prefix) => {
+    const definition = getUnitAnimationDefinition(unitId);
+    expect(definition?.scaleFactor).toBe(1.14);
+    expect(definition?.directionMode).toBe("legacy-mirrored");
+    expect(getAuthoredUnitDirections(unitId)).toEqual(["e"]);
+    expect(hasCompleteUnitDirectionalSet(unitId)).toBe(false);
+    expect(resolveUnitAnimationTexture(unitId, true, 0.05, 0, "e")).toBe(`${prefix}-e-walk-01`);
+    expect(resolveUnitAnimationTexture(unitId, true, 0.30, 0, "e")).toBe(`${prefix}-e-walk-02`);
+    expect(resolveUnitAnimationTexture(unitId, true, 0.55, 0, "e")).toBe(`${prefix}-e-walk-03`);
+    expect(resolveUnitAnimationTexture(unitId, true, 0.80, 0, "w")).toBe(`${prefix}-e-walk-02`);
+    expect(resolveUnitAnimationTexture(unitId, false, 0, 0.25, "w")).toBe(`${prefix}-e-attack`);
+    expect(shouldFlipUnitFrame(unitId, 1, "w")).toBe(true);
   });
 
   it("selects team palette variants without whole-sprite tinting", () => {

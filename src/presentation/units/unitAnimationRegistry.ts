@@ -215,6 +215,18 @@ function threeFrameBipedAnimation(
   });
 }
 
+function threeFrameCavalryAnimation(
+  prefix: string,
+  options: ProductionAnimationOptions = {},
+): UnitAnimationDefinition {
+  return directionalProductionAnimation(prefix, 1.14, true, "legacy-mirrored", {
+    ...options,
+    authoredDirections: ["e"],
+    fallbackDirection: "e",
+    walkPoses: THREE_FRAME_PING_PONG_WALK_POSES,
+  });
+}
+
 export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDefinition>> = {
   stone_slinger: threeFrameBipedAnimation("stone-slinger", 0.96),
   stone_axeman: threeFrameBipedAnimation("stone-axeman", 1.04),
@@ -272,7 +284,7 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
     },
   }),
   musketeer: threeFrameBipedAnimation("musketeer", 0.98),
-  knight: directionalProductionAnimation("knight", 1.16, true),
+  knight: threeFrameCavalryAnimation("knight"),
   pikeman: directionalProductionAnimation("pikeman", 1, false, "legacy-mirrored", {
     authoredDirections: ["e"],
     fallbackDirection: "e",
@@ -292,17 +304,22 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
     },
     exactFrameOriginXs: { "pikeman-e-attack": 253 / 1024 },
   }),
-  heavy_cavalry: directionalProductionAnimation("heavy-cavalry", 1.14, true, "direct", {
-    poseVisibleHeightRatios: {
-      idle: 292.88 / 384,
-      "walk-a": 299.25 / 384,
-      "walk-b": 302.75 / 384,
-      attack: 267.25 / 384,
-    },
+  heavy_cavalry: threeFrameCavalryAnimation("heavy-cavalry", {
+    // The upright lance needs a taller locomotion canvas; these ratios keep the
+    // horse and rider at the same 270 px reference height as the attack pose.
     exactFrameVisibleHeightRatios: {
-      "heavy-cavalry-n-attack": 312 / 384,
-      "heavy-cavalry-e-attack": 299 / 384,
-      "heavy-cavalry-w-attack": 299 / 384,
+      "heavy-cavalry-e-idle": 270 / 512,
+      "heavy-cavalry-e-walk-01": 270 / 512,
+      "heavy-cavalry-e-walk-02": 270 / 512,
+      "heavy-cavalry-e-walk-03": 270 / 512,
+      "heavy-cavalry-e-attack": 270 / 384,
+    },
+    exactFrameCanvasAspects: {
+      "heavy-cavalry-e-idle": 512 / 512,
+      "heavy-cavalry-e-walk-01": 512 / 512,
+      "heavy-cavalry-e-walk-02": 512 / 512,
+      "heavy-cavalry-e-walk-03": 512 / 512,
+      "heavy-cavalry-e-attack": 768 / 384,
     },
   }),
   rifleman: directionalProductionAnimation("rifleman", 0.98, false, "legacy-mirrored", {
@@ -316,14 +333,7 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
     },
   }),
   grenadier: threeFrameBipedAnimation("grenadier", 1.02),
-  light_cavalry: directionalProductionAnimation("light-cavalry", 1.12, true, "direct", {
-    poseVisibleHeightRatios: {
-      idle: 293.25 / 384,
-      "walk-a": 291.25 / 384,
-      "walk-b": 290.5 / 384,
-      attack: 281.62 / 384,
-    },
-  }),
+  light_cavalry: threeFrameCavalryAnimation("light-cavalry"),
   cannon_i: directionalProductionAnimation("cannon-i", 1.02, true, "direct", {
     poseVisibleHeightRatios: {
       idle: 268.62 / 384,
@@ -354,14 +364,7 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
     },
   }),
   grenadier_late: threeFrameBipedAnimation("grenadier-late", 1.04),
-  cavalry: directionalProductionAnimation("cavalry", 1.16, true, "direct", {
-    poseVisibleHeightRatios: {
-      idle: 290.88 / 384,
-      "walk-a": 289.88 / 384,
-      "walk-b": 289.88 / 384,
-      attack: 280.75 / 384,
-    },
-  }),
+  cavalry: threeFrameCavalryAnimation("cavalry"),
   cannon_ii: directionalProductionAnimation("cannon-ii", 1.02, true, "direct", {
     poseVisibleHeightRatios: {
       idle: 269.5 / 384,
@@ -472,11 +475,11 @@ export const UNIT_ANIMATION_ASSETS = Object.values(UNIT_ANIMATION_REGISTRY)
   .concat(EXTRA_UNIT_ANIMATION_PREFIXES.flatMap((prefix) => listAnimationKeysForPrefix(prefix)))
   .filter((key, index, all) => all.indexOf(key) === index)
   .flatMap((key) => [
-    { key, path: assetUrl(`assets/production/units/${key}.png?v=20260807-human3frame-locomotion-6`) },
+    { key, path: assetUrl(`assets/production/units/${key}.png?v=20260807-cavalry3frame-1`) },
     ...(hasEnemyVariantForTexture(key)
       ? [{
           key: `${key}-enemy`,
-          path: assetUrl(`assets/production/units/${key}-enemy.png?v=20260807-human3frame-locomotion-6`),
+          path: assetUrl(`assets/production/units/${key}-enemy.png?v=20260807-cavalry3frame-1`),
         }]
       : []),
   ]);

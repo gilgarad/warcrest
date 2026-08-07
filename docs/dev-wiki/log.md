@@ -5357,3 +5357,20 @@ Use consistent headings so entries are easy to grep.
   captures for all seven reported infantry families.
 - Verification passed: `npm run build`, `npm test` (`33` files / `165` tests),
   and focused Playwright (`3/3`, sandbox roster plus real-game pikeman attack).
+
+## 2026-08-07 - Cavalry three-frame gait and scale normalization
+
+- Rebuilt all four mounted units from distinct five-pose source strips:
+  medieval knight, Renaissance heavy cavalry, early-industrial light cavalry,
+  and late-industrial cavalry.
+- Normalized every strip with one source scale and one shared runtime cavalry
+  factor (`1.14`). Heavy cavalry uses explicit tall/wide canvas ratios so its
+  lance does not resize the horse between locomotion and attack.
+- Replaced legacy `walk-a/b/c` runtime selection with canonical E
+  `walk-01,walk-02,walk-03,walk-02` and W mirroring. The two stride poses show
+  different front/hind leg silhouettes; the middle pose gathers the legs.
+- Added reproducible installation, clipping/stride QA, a production contact
+  sheet, and focused sandbox plus LaneBattleScene Playwright coverage for all
+  four cavalry units.
+- Verification passed: cavalry asset QA `4/4`, `npm run build`, `npm test`
+  (`33` files / `169` tests), and focused Playwright (`3/3`).

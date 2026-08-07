@@ -77,8 +77,26 @@ interface UnitAnimationDefinition {
   changes camera-relative orientation, not character design, proportions,
   palette, or weapon loadout.
 - Rifleman established the contract; the same three-frame contract now covers
-  all 21 standing biped infantry entries. Cavalry, vehicles, and supply remain
+  all 21 standing biped infantry entries. Cavalry uses the same playback
+  envelope but a separate quadruped gait contract; vehicles and supply remain
   separate locomotion classes.
+
+### 1.2 Cavalry animation contract
+
+- The horse-scale roster is `knight`, `heavy_cavalry`, `light_cavalry`, and
+  `cavalry`. All four use scale factor `1.14`, canonical E source art, and
+  runtime W mirroring.
+- Each source strip contains `idle`, `walk-01`, `walk-02`, `walk-03`, and
+  `attack`. Playback repeats `01,02,03,02`.
+- `walk-01` and `walk-03` must reverse the leading horse legs; both front and
+  hind pairs visibly change. `walk-02` is the gathered passing pose. Merely
+  moving the entire horse or rider without changing the legs is invalid.
+- Horse/rider scale and foot baseline remain unchanged across idle, walk, and
+  attack. Long lances or raised sabres receive a larger canvas and explicit
+  body-height/origin metadata; the weapon extent must never shrink the animal.
+- Visual identity is era-specific: knight = medieval shield/sword; heavy
+  cavalry = Renaissance armor/lance; light cavalry = early-industrial hussar
+  and sabre; cavalry = late-industrial uniform, sabre, and carbine equipment.
 
 ## 2. Measured source problem
 
