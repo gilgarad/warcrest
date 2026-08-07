@@ -78,8 +78,9 @@ interface UnitAnimationDefinition {
   palette, or weapon loadout.
 - Rifleman established the contract; the same three-frame contract now covers
   all 21 standing biped infantry entries. Cavalry uses the same playback
-  envelope but a separate quadruped gait contract; vehicles and supply remain
-  separate locomotion classes.
+  envelope but a separate quadruped gait contract; vehicles remain a separate
+  locomotion class. Human supply actors use the biped playback envelope with a
+  support-specific final action pose.
 
 ### 1.2 Cavalry animation contract
 
@@ -97,6 +98,21 @@ interface UnitAnimationDefinition {
 - Visual identity is era-specific: knight = medieval shield/sword; heavy
   cavalry = Renaissance armor/lance; light cavalry = early-industrial hussar
   and sabre; cavalry = late-industrial uniform, sabre, and carbine equipment.
+
+### 1.3 Supply animation contract
+
+- Supply uses six visual families: ancient, iron, Renaissance, industrial,
+  modern early, and modern mid/late. Each owns one uncut canonical-E source
+  strip and player/enemy production variants; W is mirrored at runtime.
+- Source slots are `idle`, `walk-01`, `walk-02`, `walk-03`, and heal. Runtime
+  playback repeats `01,02,03,02`; the heal source occupies the existing
+  `attack` texture slot so combat timing APIs do not need a parallel path.
+- Every frame contains exactly one standing human supply actor. The backpack
+  stays worn. Healing is represented by a raised hand and compact light only;
+  no patient, dropped bag, cart, or scene vignette is allowed.
+- All five poses in a family share one source-derived body scale, a 512x384
+  transparent canvas, and a 336px foot anchor. Extended hands and light effects
+  do not redefine the body center or visual height.
 
 ## 2. Measured source problem
 

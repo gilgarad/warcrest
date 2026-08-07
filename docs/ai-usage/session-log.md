@@ -5407,3 +5407,45 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   mirroring, body scale, and matching sandbox/game textures.
 - **Regression**: `npm run build`, `npm test` (`33` files / `169` tests), and
   focused cavalry Playwright (`3/3`) passed.
+
+## 2026-08-07 - Supply asset mapping audit
+
+- **Request**: push the cavalry work, immediately restore the supply unit's
+  canonical right-facing direction, then determine whether existing age art
+  should be mapped or regenerated.
+- **Checkpoint**: committed and pushed cavalry as `c1c6616` on `master`.
+- **Diagnosis**: age stats selected distinct prefixes, but the shared resolver
+  returned base-registry pose keys and ignored those prefixes. The supply
+  registry also remained on the obsolete eight-direction direct contract.
+- **Correction**: canonical E supply art is now used directly, W is mirrored,
+  and age prefixes survive idle/walk/support pose resolution.
+- **Visual finding**: current crops are unsuitable for final promotion due to
+  a five-prefix/six-concept mismatch, shifted source rows, scale defects, wheel
+  transparency, and legacy locomotion. The concepts should be retained while
+  six clean production strips are regenerated in a later approved step.
+- **Verification**: build, all `170` unit tests, and focused supply age/direction
+  Playwright (`1/1`) passed.
+
+## 2026-08-07 - Supply six-family production rollout
+
+- **User direction**: after the mapping audit, the user approved rebuilding the
+  age-specific supply visuals: "오케이 진행해".
+- **AI production**: Codex used the built-in image generator to create six
+  uncut right-facing five-pose strips, preserving one actor, a worn backpack,
+  distinct stride silhouettes, and a raised-hand light heal pose. Flat chroma
+  backgrounds were removed locally with despill before production cropping.
+- **Engineering**: added a reproducible normalizer/QA script, six separate age
+  prefixes, 3-frame ping-pong playback, modern-early/late separation, and
+  dynamic prefix rebasing coverage.
+- **Validation**: automated asset checks passed `6/6`; sandbox and real game
+  screenshots confirmed the same age-specific idle/heal assets and E/W policy.
+
+## 2026-08-07 - Modern supply strap-grip correction
+
+- **User feedback**: "현대 중기/후기만 캐릭터가 가방끈을 안 붙잡고 있다.
+  붙잡도록 변경하여 적용해줘."
+- **AI edit**: Codex used the built-in image editor on the uncut modern-late
+  strip, changing only the free arm/hand so all five poses grip the shoulder
+  strap while retaining the raised blue-light heal hand.
+- **Production**: chroma removal, common-scale installation, automated supply
+  QA, focused presentation checks, build, and tests were rerun before commit.

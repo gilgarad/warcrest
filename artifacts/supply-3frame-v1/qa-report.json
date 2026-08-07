@@ -1,0 +1,311 @@
+{
+  "contract": [
+    "walk-01",
+    "walk-02",
+    "walk-03",
+    "walk-02"
+  ],
+  "healPoseRuntimeName": "attack",
+  "units": [
+    {
+      "ageGroup": "stone/bronze",
+      "prefix": "supply-wagon-ancient",
+      "uncutSource": "docs/dev-wiki/visual-drafts/supply-3frame-v1/supply-wagon-ancient-e-5slot-source.png",
+      "alphaSource": "docs/dev-wiki/visual-drafts/supply-3frame-v1/supply-wagon-ancient-e-5slot-source-alpha.png",
+      "checks": {
+        "five_complete_poses": true,
+        "safe_canvas_margins": true,
+        "locomotion_height_consistent": true,
+        "opposite_stride_silhouettes_distinct": true,
+        "opposite_stride_lower_bodies_distinct": true,
+        "heal_reaches_beyond_idle": true
+      },
+      "pass": true,
+      "heightRatio": 1.0112,
+      "walkSilhouetteDifference": 0.0431,
+      "walkLowerBodyDifference": 0.0523,
+      "boxes": {
+        "idle": [
+          184,
+          66,
+          315,
+          336
+        ],
+        "walk-01": [
+          186,
+          69,
+          357,
+          336
+        ],
+        "walk-02": [
+          186,
+          67,
+          315,
+          336
+        ],
+        "walk-03": [
+          188,
+          68,
+          340,
+          336
+        ],
+        "attack": [
+          181,
+          67,
+          352,
+          336
+        ]
+      }
+    },
+    {
+      "ageGroup": "iron",
+      "prefix": "supply-wagon-iron",
+      "uncutSource": "docs/dev-wiki/visual-drafts/supply-3frame-v1/supply-wagon-iron-e-5slot-source.png",
+      "alphaSource": "docs/dev-wiki/visual-drafts/supply-3frame-v1/supply-wagon-iron-e-5slot-source-alpha.png",
+      "checks": {
+        "five_complete_poses": true,
+        "safe_canvas_margins": true,
+        "locomotion_height_consistent": true,
+        "opposite_stride_silhouettes_distinct": true,
+        "opposite_stride_lower_bodies_distinct": true,
+        "heal_reaches_beyond_idle": true
+      },
+      "pass": true,
+      "heightRatio": 1.0189,
+      "walkSilhouetteDifference": 0.0306,
+      "walkLowerBodyDifference": 0.0298,
+      "boxes": {
+        "idle": [
+          180,
+          66,
+          316,
+          336
+        ],
+        "walk-01": [
+          187,
+          70,
+          349,
+          336
+        ],
+        "walk-02": [
+          183,
+          70,
+          310,
+          336
+        ],
+        "walk-03": [
+          188,
+          71,
+          345,
+          336
+        ],
+        "attack": [
+          181,
+          67,
+          355,
+          336
+        ]
+      }
+    },
+    {
+      "ageGroup": "renaissance",
+      "prefix": "supply-wagon-renaissance",
+      "uncutSource": "docs/dev-wiki/visual-drafts/supply-3frame-v1/supply-wagon-renaissance-e-5slot-source.png",
+      "alphaSource": "docs/dev-wiki/visual-drafts/supply-3frame-v1/supply-wagon-renaissance-e-5slot-source-alpha.png",
+      "checks": {
+        "five_complete_poses": true,
+        "safe_canvas_margins": true,
+        "locomotion_height_consistent": true,
+        "opposite_stride_silhouettes_distinct": true,
+        "opposite_stride_lower_bodies_distinct": true,
+        "heal_reaches_beyond_idle": true
+      },
+      "pass": true,
+      "heightRatio": 1.0112,
+      "walkSilhouetteDifference": 0.0389,
+      "walkLowerBodyDifference": 0.0428,
+      "boxes": {
+        "idle": [
+          180,
+          66,
+          314,
+          336
+        ],
+        "walk-01": [
+          183,
+          69,
+          350,
+          336
+        ],
+        "walk-02": [
+          182,
+          67,
+          314,
+          336
+        ],
+        "walk-03": [
+          187,
+          69,
+          342,
+          336
+        ],
+        "attack": [
+          178,
+          68,
+          361,
+          336
+        ]
+      }
+    },
+    {
+      "ageGroup": "industrial",
+      "prefix": "supply-wagon-industrial",
+      "uncutSource": "docs/dev-wiki/visual-drafts/supply-3frame-v1/supply-wagon-industrial-e-5slot-source.png",
+      "alphaSource": "docs/dev-wiki/visual-drafts/supply-3frame-v1/supply-wagon-industrial-e-5slot-source-alpha.png",
+      "checks": {
+        "five_complete_poses": true,
+        "safe_canvas_margins": true,
+        "locomotion_height_consistent": true,
+        "opposite_stride_silhouettes_distinct": true,
+        "opposite_stride_lower_bodies_distinct": true,
+        "heal_reaches_beyond_idle": true
+      },
+      "pass": true,
+      "heightRatio": 1.0075,
+      "walkSilhouetteDifference": 0.0208,
+      "walkLowerBodyDifference": 0.0266,
+      "boxes": {
+        "idle": [
+          184,
+          66,
+          319,
+          336
+        ],
+        "walk-01": [
+          188,
+          68,
+          360,
+          336
+        ],
+        "walk-02": [
+          184,
+          66,
+          309,
+          336
+        ],
+        "walk-03": [
+          184,
+          68,
+          359,
+          336
+        ],
+        "attack": [
+          181,
+          66,
+          367,
+          336
+        ]
+      }
+    },
+    {
+      "ageGroup": "modern early",
+      "prefix": "supply-wagon-modern-early",
+      "uncutSource": "docs/dev-wiki/visual-drafts/supply-3frame-v1/supply-wagon-modern-early-e-5slot-source.png",
+      "alphaSource": "docs/dev-wiki/visual-drafts/supply-3frame-v1/supply-wagon-modern-early-e-5slot-source-alpha.png",
+      "checks": {
+        "five_complete_poses": true,
+        "safe_canvas_margins": true,
+        "locomotion_height_consistent": true,
+        "opposite_stride_silhouettes_distinct": true,
+        "opposite_stride_lower_bodies_distinct": true,
+        "heal_reaches_beyond_idle": true
+      },
+      "pass": true,
+      "heightRatio": 1.0189,
+      "walkSilhouetteDifference": 0.031,
+      "walkLowerBodyDifference": 0.0322,
+      "boxes": {
+        "idle": [
+          189,
+          66,
+          313,
+          336
+        ],
+        "walk-01": [
+          192,
+          71,
+          344,
+          336
+        ],
+        "walk-02": [
+          190,
+          68,
+          303,
+          336
+        ],
+        "walk-03": [
+          191,
+          68,
+          336,
+          336
+        ],
+        "attack": [
+          188,
+          67,
+          362,
+          336
+        ]
+      }
+    },
+    {
+      "ageGroup": "modern mid/late",
+      "prefix": "supply-wagon-modern-late",
+      "uncutSource": "docs/dev-wiki/visual-drafts/supply-3frame-v1/supply-wagon-modern-late-e-5slot-source.png",
+      "alphaSource": "docs/dev-wiki/visual-drafts/supply-3frame-v1/supply-wagon-modern-late-e-5slot-source-alpha.png",
+      "checks": {
+        "five_complete_poses": true,
+        "safe_canvas_margins": true,
+        "locomotion_height_consistent": true,
+        "opposite_stride_silhouettes_distinct": true,
+        "opposite_stride_lower_bodies_distinct": true,
+        "heal_reaches_beyond_idle": true
+      },
+      "pass": true,
+      "heightRatio": 1.0305,
+      "walkSilhouetteDifference": 0.0239,
+      "walkLowerBodyDifference": 0.0193,
+      "boxes": {
+        "idle": [
+          198,
+          66,
+          298,
+          336
+        ],
+        "walk-01": [
+          192,
+          74,
+          346,
+          336
+        ],
+        "walk-02": [
+          199,
+          73,
+          298,
+          336
+        ],
+        "walk-03": [
+          190,
+          72,
+          343,
+          336
+        ],
+        "attack": [
+          198,
+          75,
+          343,
+          336
+        ]
+      }
+    }
+  ]
+}

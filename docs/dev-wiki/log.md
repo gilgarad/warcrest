@@ -5374,3 +5374,43 @@ Use consistent headings so entries are easy to grep.
   four cavalry units.
 - Verification passed: cavalry asset QA `4/4`, `npm run build`, `npm test`
   (`33` files / `169` tests), and focused Playwright (`3/3`).
+
+## 2026-08-07 - Supply direction and age-prefix diagnosis
+
+- Changed supply presentation from legacy eight-direction direct lookup to
+  canonical E art with W runtime mirroring; all canonical supply frames now
+  face right.
+- Fixed the shared animation resolver so a selected age prefix is rebased onto
+  the resolved pose instead of being discarded. Sandbox now displays ancient,
+  iron, Renaissance, industrial, and modern supply families by selected age.
+- Audited the existing six-row concept board and five production families.
+  Found a missing modern-early/modern-late split, shifted generator row indices,
+  undersized support actions, transparent modern wheels, and legacy walk poses.
+  Recommendation is to reuse the concepts but regenerate six production strips.
+- Added focused sandbox coverage for age-prefix selection and E/W mirroring.
+- Verification passed: `npm run build`, `npm test` (`33` files / `170` tests),
+  and focused supply-age Playwright (`1/1`).
+
+## 2026-08-07 - Six-age supply production rebuild
+
+- Rebuilt supply as six era-specific human actors: ancient, iron,
+  Renaissance, industrial, modern early, and modern mid/late.
+- Preserved every uncut five-slot source strip and installed normalized
+  canonical-E player/enemy production frames for idle, three-step locomotion,
+  and the single-actor hand-light heal action.
+- Split modern early from modern mid/late, replaced legacy `walk-a/b/c` runtime
+  selection with `walk-01,02,03,02`, retained W mirroring, and kept vertical
+  movement on the last horizontal facing.
+- Added reproducible supply installation/QA and focused sandbox plus real-game
+  age-prefix/pose coverage. Asset QA passed for all six families and focused
+  Playwright passed (`2/2`).
+
+## 2026-08-07 - Modern supply strap-grip correction
+
+- Regenerated the modern mid/late uncut five-slot source so the actor visibly
+  grips a backpack shoulder strap at chest level in every pose.
+- The heal pose keeps the opposite hand raised with its blue support light;
+  backpack, equipment, direction, gait, body scale, and foot anchor remain
+  unchanged.
+- Reinstalled the six-family production sheet, reran asset QA, and bumped the
+  browser asset revision so the corrected modern frames replace cached art.

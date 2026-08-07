@@ -432,3 +432,16 @@ Frame canvas dimensions are applied immediately rather than interpolated,
 because independently lerping width and height across unlike canvas aspects
 temporarily deforms the character. Position/attack-motion easing remains
 independent. Ground shadows and selection rings always use idle body width.
+
+### Supply-family rollout (2026-08-07)
+
+- Six human supply families now use the final 3-frame ping-pong contract with
+  canonical E art and runtime W mirroring.
+- Their fifth source slot is a support-only hand-light heal, mapped to the
+  runtime `attack` pose name. It preserves the worn backpack and contains no
+  second actor or detached equipment.
+- Production installation is reproducible through
+  `tools/asset-qa/install_supply_three_frame_strips.py`; all six families pass
+  clipping, body-height, stride-difference, and heal-reach checks.
+- Sandbox and `LaneBattleScene` resolve the same age-specific prefix. Modern
+  early and modern mid/late are intentionally separate families.

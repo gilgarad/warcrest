@@ -91,7 +91,7 @@ export const UNIT_STATS: Record<LaneUnitId, UnitStatDef> = {
   breakthrough_trooper: { hp: 110, attack: 52, defense: 22, ...meleeRange(1.27), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 0.75, label: "돌파병", textureKey: "breakthrough-trooper-w-idle", tint: 0xf0d4c1 },
   mobile_artillery: { hp: 120, attack: 64, defense: 18, ...rangedRangeUnits(12), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.85, label: "자주포", textureKey: "mobile-artillery-w-idle", tint: 0xcddbe2 },
   modern_tank: { hp: 200, attack: 60, defense: 60, ...rangedRangeUnits(10), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.6, label: "현대 전차", textureKey: "modern-tank-w-idle", tint: 0x9ac089 },
-  supply_wagon: { hp: 28, attack: 0, defense: 1, ...supportRange(1), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.2, healPower: getSupportHealPower("stone"), label: "보급", textureKey: "supply-wagon-w-idle", tint: 0x89da93 },
+  supply_wagon: { hp: 28, attack: 0, defense: 1, ...supportRange(1), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.2, healPower: getSupportHealPower("stone"), label: "보급", textureKey: "supply-wagon-ancient-e-idle", tint: 0x89da93 },
 };
 
 export interface SupportWagonAgeStats {
@@ -106,21 +106,21 @@ export interface SupportWagonAgeStats {
 export function getSupportWagonAgeStats(ageId: AgeId): SupportWagonAgeStats {
   const group = getAge(ageId).productionGroup;
   if (group === "ancient" || group === "classical") {
-    return { hp: 28, attack: 0, defense: 1, range: 3, textureKey: "supply-wagon-ancient-w-idle", tint: 0x89da93 };
+    return { hp: 28, attack: 0, defense: 1, range: 3, textureKey: "supply-wagon-ancient-e-idle", tint: 0x89da93 };
   }
   if (group === "iron") {
-    return { hp: 40, attack: 0, defense: 3, range: 3.5, textureKey: "supply-wagon-iron-w-idle", tint: 0x93c9a3 };
+    return { hp: 40, attack: 0, defense: 3, range: 3.5, textureKey: "supply-wagon-iron-e-idle", tint: 0x93c9a3 };
   }
   if (group === "renaissance") {
-    return { hp: 60, attack: 0, defense: 8, range: 4, textureKey: "supply-wagon-renaissance-w-idle", tint: 0xa3c3d6 };
+    return { hp: 60, attack: 0, defense: 8, range: 4, textureKey: "supply-wagon-renaissance-e-idle", tint: 0xa3c3d6 };
   }
   if (group === "industrial") {
-    return { hp: 80, attack: 0, defense: 14, range: 4.5, textureKey: "supply-wagon-industrial-w-idle", tint: 0xb0b7d8 };
+    return { hp: 80, attack: 0, defense: 14, range: 4.5, textureKey: "supply-wagon-industrial-e-idle", tint: 0xb0b7d8 };
   }
   if (ageId === "modern_early") {
-    return { hp: 120, attack: 0, defense: 30, range: 5, textureKey: "supply-wagon-modern-w-idle", tint: 0xb2d0ea };
+    return { hp: 120, attack: 0, defense: 30, range: 5, textureKey: "supply-wagon-modern-early-e-idle", tint: 0xb2d0ea };
   }
-  return { hp: 140, attack: 0, defense: 40, range: 5.5, textureKey: "supply-wagon-modern-w-idle", tint: 0xc6def2 };
+  return { hp: 140, attack: 0, defense: 40, range: 5.5, textureKey: "supply-wagon-modern-late-e-idle", tint: 0xc6def2 };
 }
 
 export function getProjectileKeyForUnit(unitId: LaneUnitId): string {

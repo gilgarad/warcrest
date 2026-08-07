@@ -65,6 +65,45 @@
 | 현대 초기 | Support Wagon Age Drafts | 5 | 무전/의무/강화 배낭을 포함한 현대 초기 병참병 |
 | 현대 중기 / 후기 | Support Wagon Age Drafts | 6 | 하드케이스/모듈팩 중심의 현대형 보급 오퍼레이터 |
 
+### 2026-08-07 Runtime audit
+
+- The five age prefixes existed, but `resolveAnimationTextureFromPrefix()`
+  discarded the selected prefix whenever a registry pose existed. Sandbox and
+  LaneBattleScene therefore resolved the base `supply-wagon-*` family instead
+  of the selected age family. Prefix rebasing now preserves the selected age.
+- Supply presentation now follows the global horizontal contract: canonical E
+  production art faces right, W mirrors it at runtime, and non-horizontal
+  authored directions are disconnected.
+- The current production set is not a final-quality source for simple remapping.
+  The six-row concept board was reduced to five runtime prefixes, modern early
+  and modern mid/late share one visual, and the generator row indices skip the
+  second concept row before shifting later concepts.
+- Existing pose defects also remain: Renaissance/industrial support actions
+  are normalized much smaller than idle/walk, and the modern vehicle walk has
+  missing/transparent wheel regions. All families still use the legacy
+  `walk-a/b/c` contract rather than the approved three-frame opposite-leg gait.
+- Decision recommendation: retain the six concepts as references, but rebuild
+  six canonical-E five-pose strips (`idle`, `walk-01/02/03`, `support-action`)
+  rather than promoting the current production crops. Modern early and modern
+  mid/late need distinct prefixes.
+
+### 2026-08-07 Six-family production rebuild
+
+- The recommendation above has now been implemented. Six uncut canonical-E
+  source strips live under `visual-drafts/supply-3frame-v1/`; each contains
+  `idle`, `walk-01`, `walk-02`, `walk-03`, and a single-actor hand-light heal.
+- The actor keeps the backpack equipped during healing. No patient, dropped
+  bag, cart, mule, or vehicle is introduced inside the support-action frame.
+- Runtime prefixes are now `supply-wagon-ancient`, `-iron`, `-renaissance`,
+  `-industrial`, `-modern-early`, and `-modern-late`. Modern early no longer
+  shares its visual with modern mid/late.
+- All production poses use a common 512x384 canvas, 336px foot anchor, and one
+  idle-derived scale per strip. W is a runtime mirror of the canonical E art.
+- `tools/asset-qa/install_supply_three_frame_strips.py` installs player/enemy
+  frames and checks clipping, height consistency, stride distinction, lower
+  body change, and heal reach. The contact sheet and report are in
+  `artifacts/supply-3frame-v1/`.
+
 ## Battle Unit Mapping
 
 | 유닛 ID | 표시명 | 보드 | 컬럼 | 시안 설명 |
@@ -100,3 +139,8 @@
   체적과 방향 안에서 이어지는 단일 유닛 애니메이션으로 제작한다.
 - 그 다음 기존 `public/assets/production/units/<prefix>-<dir>-<pose>.png`
   계약에 맞춰 8방향 x 4포즈 생산 자산으로 정규화한다.
+
+> 2026-08-07 correction: the supply portion of this legacy next-step text is
+> complete and superseded by the six-family canonical-E production rebuild
+> above. Stored legacy directions remain available but are disconnected from
+> active presentation.

@@ -230,21 +230,10 @@ function threeFrameCavalryAnimation(
 export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDefinition>> = {
   stone_slinger: threeFrameBipedAnimation("stone-slinger", 0.96),
   stone_axeman: threeFrameBipedAnimation("stone-axeman", 1.04),
-  supply_wagon: directionalProductionAnimation("supply-wagon", 1, true, "direct", {
-    extraPrefixPoseVisibleHeightRatios: {
-      "supply-wagon-industrial": {
-        idle: 270 / 384,
-        "walk-a": 268.25 / 384,
-        "walk-b": 269.25 / 384,
-        attack: 257.25 / 384,
-      },
-      "supply-wagon-modern": {
-        idle: 265.75 / 384,
-        "walk-a": 266 / 384,
-        "walk-b": 268.75 / 384,
-        attack: 269.25 / 384,
-      },
-    },
+  supply_wagon: directionalProductionAnimation("supply-wagon-ancient", 1, true, "legacy-mirrored", {
+    authoredDirections: ["e"],
+    fallbackDirection: "e",
+    walkPoses: THREE_FRAME_PING_PONG_WALK_POSES,
   }),
   bronze_swordsman: directionalProductionAnimation("bronze-swordsman", 1, false, "legacy-mirrored", {
     authoredDirections: ["e"],
@@ -447,19 +436,19 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
 };
 
 const EXTRA_UNIT_ANIMATION_PREFIXES = [
-  "supply-wagon-ancient",
   "supply-wagon-iron",
   "supply-wagon-renaissance",
   "supply-wagon-industrial",
-  "supply-wagon-modern",
+  "supply-wagon-modern-early",
+  "supply-wagon-modern-late",
 ] as const;
 
 function listAnimationKeysForPrefix(prefix: string): string[] {
-  return UNIT_FACING_DIRECTIONS.flatMap((direction) => [
-    `${prefix}-${direction}-idle`,
-    ...LEGACY_WALK_POSES.map((pose) => `${prefix}-${direction}-${pose}`),
-    `${prefix}-${direction}-attack`,
-  ]);
+  return [
+    `${prefix}-e-idle`,
+    ...THREE_FRAME_PING_PONG_WALK_POSES.map((pose) => `${prefix}-e-${pose}`),
+    `${prefix}-e-attack`,
+  ];
 }
 
 function hasEnemyVariantForTexture(key: string): boolean {
@@ -475,11 +464,11 @@ export const UNIT_ANIMATION_ASSETS = Object.values(UNIT_ANIMATION_REGISTRY)
   .concat(EXTRA_UNIT_ANIMATION_PREFIXES.flatMap((prefix) => listAnimationKeysForPrefix(prefix)))
   .filter((key, index, all) => all.indexOf(key) === index)
   .flatMap((key) => [
-    { key, path: assetUrl(`assets/production/units/${key}.png?v=20260807-cavalry3frame-1`) },
+    { key, path: assetUrl(`assets/production/units/${key}.png?v=20260807-supply3frame-2`) },
     ...(hasEnemyVariantForTexture(key)
       ? [{
           key: `${key}-enemy`,
-          path: assetUrl(`assets/production/units/${key}-enemy.png?v=20260807-cavalry3frame-1`),
+          path: assetUrl(`assets/production/units/${key}-enemy.png?v=20260807-supply3frame-2`),
         }]
       : []),
   ]);
@@ -572,9 +561,15 @@ export function resolveAnimationTextureFromPrefix(
 ): string {
   const directional = getUnitDirectionalPoses(unitId, direction);
   if (directional) {
-    if (attackProgress > 0) return directional.attack[0];
-    if (!moving) return directional.idle;
-    return directional.walk[resolveWalkFrameIndex(walkCycleProgress, directional.walk.length)];
+    const textureKey = attackProgress > 0
+      ? directional.attack[0]
+      : !moving
+        ? directional.idle
+        : directional.walk[resolveWalkFrameIndex(walkCycleProgress, directional.walk.length)];
+    const registeredPrefix = deriveAnimationPrefix(textureKey);
+    return registeredPrefix === prefix
+      ? textureKey
+      : `${prefix}${textureKey.slice(registeredPrefix.length)}`;
   }
   const definition = getUnitAnimationDefinition(unitId);
   const authoredDirection = resolveAuthoredDirection(

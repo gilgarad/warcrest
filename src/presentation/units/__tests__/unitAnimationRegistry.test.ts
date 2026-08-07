@@ -7,6 +7,7 @@ import {
   getFrameVisibleHeightRatio,
   getUnitAnimationDefinition,
   hasCompleteUnitDirectionalSet,
+  resolveAnimationTextureFromPrefix,
   resolveUnitAnimationTexture,
   resolveUnitFacingDirection,
   resolveTeamUnitTextureKey,
@@ -51,9 +52,9 @@ describe("unit animation registry", () => {
       expect(definition?.directions[authoredDirections[0]]?.attack.length).toBeGreaterThan(0);
       if (unitId === "supply_wagon") {
         expect(definition?.legacyHorizontalMirror).toBe(false);
-        expect(definition?.directionMode).toBe("direct");
-        expect(getAuthoredUnitDirections(unitId)).toEqual(UNIT_FACING_DIRECTIONS);
-        expect(hasCompleteUnitDirectionalSet(unitId)).toBe(true);
+        expect(definition?.directionMode).toBe("legacy-mirrored");
+        expect(getAuthoredUnitDirections(unitId)).toEqual(["e"]);
+        expect(hasCompleteUnitDirectionalSet(unitId)).toBe(false);
       }
     },
   );
@@ -69,6 +70,19 @@ describe("unit animation registry", () => {
     expect(resolveUnitAnimationTexture("bronze_spearman", false, 0, 0)).toBe("bronze-spearman-e-idle");
     expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === "bronze-spearman-e-attack")).toBe(true);
     expect(UNIT_ANIMATION_ASSETS.some((asset) => asset.key === "bronze-spearman-e-attack-enemy")).toBe(true);
+  });
+
+  it("rebases support poses onto the selected age prefix", () => {
+    expect(resolveAnimationTextureFromPrefix(
+      "supply_wagon", "supply-wagon-iron", false, 0, 0, "e",
+    )).toBe("supply-wagon-iron-e-idle");
+    expect(resolveAnimationTextureFromPrefix(
+      "supply_wagon", "supply-wagon-renaissance", true, 0.1, 0, "e",
+    )).toBe("supply-wagon-renaissance-e-walk-01");
+    expect(resolveAnimationTextureFromPrefix(
+      "supply_wagon", "supply-wagon-modern-late", false, 0, 0.5, "w",
+    )).toBe("supply-wagon-modern-late-e-attack");
+    expect(shouldFlipUnitFrame("supply_wagon", -1, "w")).toBe(true);
   });
 
   it("records per-frame visible heights for scale normalization", () => {
