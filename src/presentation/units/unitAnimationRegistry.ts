@@ -68,6 +68,7 @@ interface ProductionAnimationOptions {
   poseVisibleHeightRatios?: Partial<Record<FramePoseKey, number>>;
   extraPrefixPoseVisibleHeightRatios?: Readonly<Record<string, Partial<Record<FramePoseKey, number>>>>;
   exactFrameVisibleHeightRatios?: Readonly<Record<string, number>>;
+  exactFrameCanvasAspects?: Readonly<Record<string, number>>;
 }
 
 function parsePoseFromTextureKey(key: string): FramePoseKey {
@@ -175,9 +176,12 @@ function directionalProductionAnimation(
     fallbackDirection: options.fallbackDirection ?? authoredDirections[0] ?? "w",
     legacyHorizontalMirror: false,
     directionMode,
-    frameCanvasAspects: wideAllFrames
+    frameCanvasAspects: {
+      ...(wideAllFrames
       ? frameAspects([], allFrames)
-      : frameAspects(standardFrames, wideFrames),
+      : frameAspects(standardFrames, wideFrames)),
+      ...(options.exactFrameCanvasAspects ?? {}),
+    },
     groundOriginX: PRODUCTION_GROUND_ORIGIN_X,
     groundOriginY: options.groundOriginY ?? PRODUCTION_GROUND_ORIGIN_Y,
     referenceVisibleHeightRatio: defaultHeightRatio,
@@ -234,7 +238,24 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
   iron_spearman: threeFrameBipedAnimation("iron-spearman", 1.06),
   musketeer: threeFrameBipedAnimation("musketeer", 0.98),
   knight: directionalProductionAnimation("knight", 1.16, true),
-  pikeman: threeFrameBipedAnimation("pikeman", 1),
+  pikeman: directionalProductionAnimation("pikeman", 1, false, "legacy-mirrored", {
+    authoredDirections: ["e"],
+    fallbackDirection: "e",
+    walkPoses: THREE_FRAME_PING_PONG_WALK_POSES,
+    exactFrameVisibleHeightRatios: {
+      "pikeman-e-idle": 270 / 512,
+      "pikeman-e-walk-01": 270 / 512,
+      "pikeman-e-walk-02": 270 / 512,
+      "pikeman-e-walk-03": 270 / 512,
+    },
+    exactFrameCanvasAspects: {
+      "pikeman-e-idle": 384 / 512,
+      "pikeman-e-walk-01": 384 / 512,
+      "pikeman-e-walk-02": 384 / 512,
+      "pikeman-e-walk-03": 384 / 512,
+      "pikeman-e-attack": 1024 / 384,
+    },
+  }),
   heavy_cavalry: directionalProductionAnimation("heavy-cavalry", 1.14, true, "direct", {
     poseVisibleHeightRatios: {
       idle: 292.88 / 384,
@@ -400,9 +421,12 @@ export const UNIT_ANIMATION_ASSETS = Object.values(UNIT_ANIMATION_REGISTRY)
   .concat(EXTRA_UNIT_ANIMATION_PREFIXES.flatMap((prefix) => listAnimationKeysForPrefix(prefix)))
   .filter((key, index, all) => all.indexOf(key) === index)
   .flatMap((key) => [
-    { key, path: assetUrl(`assets/production/units/${key}.png`) },
+    { key, path: assetUrl(`assets/production/units/${key}.png?v=20260807-human3frame-locomotion-5`) },
     ...(hasEnemyVariantForTexture(key)
-      ? [{ key: `${key}-enemy`, path: assetUrl(`assets/production/units/${key}-enemy.png`) }]
+      ? [{
+          key: `${key}-enemy`,
+          path: assetUrl(`assets/production/units/${key}-enemy.png?v=20260807-human3frame-locomotion-5`),
+        }]
       : []),
   ]);
 

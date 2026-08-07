@@ -66,6 +66,11 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         type=Path,
         help="Install one uncut chroma-key source as rifleman east walk-03.",
     )
+    parser.add_argument(
+        "--attack-source",
+        type=Path,
+        help="Install one uncut chroma-key source as the rifleman east attack frame.",
+    )
     return parser.parse_args(argv)
 
 
@@ -78,6 +83,26 @@ def main(argv: Sequence[str]) -> int:
 
     debug_dir = ROOT / "artifacts/rifleman-e-triplet"
     debug_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.attack_source:
+        source = Image.open(args.attack_source).convert("RGBA")
+        removed = module.remove_background(source)
+        components = extract_components(removed)
+        if len(components) != 1:
+            raise RuntimeError(
+                f"Expected one connected character in {args.attack_source}, found {len(components)}"
+            )
+        content = module.cleanup_content_image(removed.crop(components[0]), spec)
+        attack_scale = module.compute_reference_scale(content, module.WIDE_CANVAS)
+        player = module.cleanup_canvas(
+            module.normalize_to_canvas(content, module.WIDE_CANVAS, attack_scale),
+            spec,
+        )
+        enemy = module.add_team_accent(player, spec.role, "enemy")
+        player.save(DEST_DIR / "rifleman-e-attack.png")
+        enemy.save(DEST_DIR / "rifleman-e-attack-enemy.png")
+        player.save(debug_dir / "rifleman-e-attack.png")
+        return 0
 
     if args.walk_03_source:
         source = Image.open(args.walk_03_source).convert("RGBA")

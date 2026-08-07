@@ -291,6 +291,19 @@ presentation:
   Independent per-frame coloring of whichever leg leads is explicitly invalid.
 - Runtime registration for those 21 entries is canonical E only, mirrored for
   W, with `walk-01, walk-02, walk-03, walk-02` playback.
+- Visual identity is now part of the source-strip gate. The installer records
+  each roster entry's expected equipment, while
+  `artifacts/human-3frame-v2/visual-mapping-audit.md` records the checked game
+  label and observed art. This prevents a valid locomotion strip from passing
+  when it depicts the wrong class, such as a rifleman under `pikeman`.
+- Attack extraction no longer assumes the fifth pose stays inside a fixed 20%
+  slot. It reads an expanded region and selects the rightmost substantial
+  connected figure. If the uncut strip itself lacks safe outer-canvas room, a
+  standalone `<prefix>-e-attack-source.png` override is required and must keep
+  at least 32 pixels of foreground margin on every side.
+- Team markers are clipped to opaque sprite pixels. Wide attacks therefore
+  cannot place a detached marker in empty space when their weapon changes the
+  overall alpha bounding box.
 
 Rifleman gate update:
 
@@ -390,3 +403,12 @@ colored each frame's apparent lead leg and therefore produced false positives.
 After the identity-chain strip passes automated centroid checks, diagnostic
 colors are removed without changing the verified poses and the clean strip is
 split into production assets.
+
+### Long-weapon canvas exception (2026-08-07)
+
+Standing bipeds still target a 270px visible person height. A weapon that
+extends substantially beyond that body must not participate in body-scale
+normalization. Pikeman locomotion therefore uses a 384x512 transparent canvas
+and pikeman attack uses a 1024x384 transparent canvas. Runtime presentation
+records each canvas aspect and visible-body ratio explicitly, preserving the
+same soldier scale while retaining the complete pike.

@@ -932,7 +932,8 @@ def add_team_accent(canvas: Image.Image, role: str, team: Literal["player", "ene
     if bbox is None:
         return canvas
     out = canvas.copy()
-    draw = ImageDraw.Draw(out)
+    accent = Image.new("RGBA", canvas.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(accent)
     left, top, right, bottom = bbox
     primary_fill = (72, 126, 220, 255) if team == "player" else (196, 88, 88, 255)
     secondary_fill = (108, 168, 255, 255) if team == "player" else (244, 134, 134, 255)
@@ -953,6 +954,10 @@ def add_team_accent(canvas: Image.Image, role: str, team: Literal["player", "ene
             [(x0, y0), (x0 + 13, y0 + 4), (x0 + 8, y0 + 11), (x0 - 4, y0 + 7)],
             fill=primary_fill,
         )
+    # Wide attack silhouettes can shift the bbox-derived marker away from the
+    # body. Clip the team accent to opaque sprite pixels so it never floats.
+    accent.putalpha(ImageChops.multiply(accent.getchannel("A"), canvas.getchannel("A")))
+    out.alpha_composite(accent)
     return out
 
 
@@ -968,7 +973,12 @@ def compute_reference_scale(image: Image.Image, canvas_size: tuple[int, int]) ->
     return scale
 
 
-def normalize_to_canvas(image: Image.Image, canvas_size: tuple[int, int], scale: float) -> Image.Image:
+def normalize_to_canvas(
+    image: Image.Image,
+    canvas_size: tuple[int, int],
+    scale: float,
+    anchor_y: int = TARGET_ANCHOR_Y,
+) -> Image.Image:
     bbox = image.getchannel("A").getbbox()
     if bbox is None:
         return Image.new("RGBA", canvas_size, (0, 0, 0, 0))
@@ -978,7 +988,7 @@ def normalize_to_canvas(image: Image.Image, canvas_size: tuple[int, int], scale:
         Image.Resampling.LANCZOS,
     )
     max_width = canvas_size[0] - 24
-    max_height = TARGET_ANCHOR_Y - 24
+    max_height = anchor_y - 24
     if resized.width > max_width:
         width = max_width
         height = max(1, round(resized.height * (width / resized.width)))
@@ -990,7 +1000,7 @@ def normalize_to_canvas(image: Image.Image, canvas_size: tuple[int, int], scale:
     resized = threshold_alpha(resized)
     canvas = Image.new("RGBA", canvas_size, (0, 0, 0, 0))
     x = round(canvas_size[0] / 2 - resized.width / 2)
-    y = TARGET_ANCHOR_Y - resized.height
+    y = anchor_y - resized.height
     canvas.alpha_composite(resized, (x, y))
     return canvas
 

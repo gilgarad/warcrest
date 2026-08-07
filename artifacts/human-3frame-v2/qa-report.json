@@ -10,61 +10,69 @@
       "unitId": "stone_slinger",
       "prefix": "stone-slinger",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/stone-slinger-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "sling",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
-      "heightRatio": 1.0266,
-      "walkSilhouetteDifference": 0.0082,
+      "heightRatio": 1.0227,
+      "walkSilhouetteDifference": 0.0145,
       "widths": {
         "idle": 89,
         "walk-01": 164,
         "walk-02": 102,
-        "walk-03": 159,
-        "attack": 172
+        "walk-03": 162,
+        "attack": 301
       },
       "heights": {
         "idle": 270,
-        "walk-01": 263,
+        "walk-01": 264,
         "walk-02": 269,
         "walk-03": 264,
-        "attack": 249
+        "attack": 257
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 10465,
         "slot2BluePixels": 5503,
-        "slot2RedCentroidX": 199.95269947443862,
-        "slot2BlueCentroidX": 114.75613301835362,
-        "slot4RedPixels": 11400,
+        "slot2RedCentroidX": 142.95269947443862,
+        "slot2BlueCentroidX": 57.75613301835362,
+        "slot4RedPixels": 9958,
         "slot4BluePixels": 5825,
-        "slot4RedCentroidX": 131.59456140350878,
-        "slot4BlueCentroidX": 161.8945922746781
+        "slot4RedCentroidX": 94.24362321751356,
+        "slot4BlueCentroidX": 164.8945922746781
       }
     },
     {
       "unitId": "stone_axeman",
       "prefix": "stone-axeman",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/stone-axeman-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "stone axe",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
       "heightRatio": 1.0149,
-      "walkSilhouetteDifference": 0.0084,
+      "walkSilhouetteDifference": 0.0083,
       "widths": {
         "idle": 166,
         "walk-01": 201,
         "walk-02": 165,
         "walk-03": 200,
-        "attack": 232
+        "attack": 233
       },
       "heights": {
         "idle": 270,
@@ -76,112 +84,134 @@
       "diagnosticLegIdentity": {
         "slot2RedPixels": 9591,
         "slot2BluePixels": 3073,
-        "slot2RedCentroidX": 206.40141799603796,
-        "slot2BlueCentroidX": 125.18971688903352,
+        "slot2RedCentroidX": 137.40141799603796,
+        "slot2BlueCentroidX": 56.18971688903352,
         "slot4RedPixels": 9408,
         "slot4BluePixels": 2474,
-        "slot4RedCentroidX": 156.50924744897958,
-        "slot4BlueCentroidX": 243.27849636216652
+        "slot4RedCentroidX": 92.5092474489796,
+        "slot4BlueCentroidX": 179.27849636216652
       }
     },
     {
       "unitId": "bronze_swordsman",
       "prefix": "bronze-swordsman",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/bronze-swordsman-e-5slot-source.png",
+      "attackSource": "docs/dev-wiki/visual-drafts/human-3frame-v2/bronze-swordsman-e-attack-source.png",
+      "attackSourceMargins": {
+        "left": 485,
+        "top": 177,
+        "right": 331,
+        "bottom": 253
+      },
+      "expectedEquipment": "bronze sword and round shield",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
       "heightRatio": 1.0305,
-      "walkSilhouetteDifference": 0.0042,
+      "walkSilhouetteDifference": 0.0045,
       "widths": {
         "idle": 143,
         "walk-01": 153,
         "walk-02": 144,
-        "walk-03": 153,
-        "attack": 233
+        "walk-03": 154,
+        "attack": 378
       },
       "heights": {
         "idle": 270,
         "walk-01": 262,
         "walk-02": 270,
         "walk-03": 262,
-        "attack": 227
+        "attack": 312
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 9076,
         "slot2BluePixels": 3033,
-        "slot2RedCentroidX": 170.50308505949758,
-        "slot2BlueCentroidX": 83.76162215628091,
-        "slot4RedPixels": 9302,
+        "slot2RedCentroidX": 125.50308505949758,
+        "slot2BlueCentroidX": 38.76162215628091,
+        "slot4RedPixels": 9029,
         "slot4BluePixels": 3336,
-        "slot4RedCentroidX": 122.57718770156956,
-        "slot4BlueCentroidX": 190.32973621103116
+        "slot4RedCentroidX": 96.2526304131133,
+        "slot4BlueCentroidX": 170.32973621103116
       }
     },
     {
       "unitId": "bronze_spearman",
       "prefix": "bronze-spearman",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/bronze-spearman-e-5slot-source.png",
+      "attackSource": "docs/dev-wiki/visual-drafts/human-3frame-v2/bronze-spearman-e-attack-source.png",
+      "attackSourceMargins": {
+        "left": 274,
+        "top": 115,
+        "right": 251,
+        "bottom": 190
+      },
+      "expectedEquipment": "bronze spear and round shield",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
       "heightRatio": 1.0266,
-      "walkSilhouetteDifference": 0.0519,
+      "walkSilhouetteDifference": 0.0115,
       "widths": {
         "idle": 120,
         "walk-01": 157,
         "walk-02": 121,
-        "walk-03": 142,
-        "attack": 250
+        "walk-03": 158,
+        "attack": 439
       },
       "heights": {
         "idle": 270,
         "walk-01": 267,
         "walk-02": 270,
         "walk-03": 263,
-        "attack": 209
+        "attack": 312
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 11944,
         "slot2BluePixels": 4889,
-        "slot2RedCentroidX": 226.87633958472873,
-        "slot2BlueCentroidX": 121.15647371650644,
-        "slot4RedPixels": 10340,
+        "slot2RedCentroidX": 156.87633958472873,
+        "slot2BlueCentroidX": 51.15647371650644,
+        "slot4RedPixels": 9594,
         "slot4BluePixels": 6547,
-        "slot4RedCentroidX": 116.5431334622824,
-        "slot4BlueCentroidX": 170.62608828471056
+        "slot4RedCentroidX": 103.16385240775485,
+        "slot4BlueCentroidX": 190.62608828471056
       }
     },
     {
       "unitId": "archer",
       "prefix": "archer",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/archer-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "bow",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
       "heightRatio": 1.0227,
-      "walkSilhouetteDifference": 0.0756,
+      "walkSilhouetteDifference": 0.0762,
       "widths": {
         "idle": 182,
-        "walk-01": 189,
+        "walk-01": 188,
         "walk-02": 126,
         "walk-03": 157,
-        "attack": 217
+        "attack": 216
       },
       "heights": {
         "idle": 270,
@@ -193,219 +223,253 @@
       "diagnosticLegIdentity": {
         "slot2RedPixels": 6423,
         "slot2BluePixels": 5631,
-        "slot2RedCentroidX": 231.06554569515802,
-        "slot2BlueCentroidX": 129.78938021665778,
+        "slot2RedCentroidX": 158.06554569515802,
+        "slot2BlueCentroidX": 56.78938021665779,
         "slot4RedPixels": 5464,
         "slot4BluePixels": 6407,
-        "slot4RedCentroidX": 132.72236456808199,
-        "slot4BlueCentroidX": 217.80989542687686
+        "slot4RedCentroidX": 71.72236456808199,
+        "slot4BlueCentroidX": 156.80989542687686
       }
     },
     {
       "unitId": "iron_swordsman",
       "prefix": "iron-swordsman",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/iron-swordsman-e-5slot-source.png",
+      "attackSource": "docs/dev-wiki/visual-drafts/human-3frame-v2/iron-swordsman-e-attack-source.png",
+      "attackSourceMargins": {
+        "left": 391,
+        "top": 221,
+        "right": 257,
+        "bottom": 255
+      },
+      "expectedEquipment": "iron sword and kite shield",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
-      "heightRatio": 1.0074,
-      "walkSilhouetteDifference": 0.0081,
+      "heightRatio": 1.015,
+      "walkSilhouetteDifference": 0.0195,
       "widths": {
-        "idle": 206,
-        "walk-01": 207,
-        "walk-02": 206,
-        "walk-03": 208,
-        "attack": 285
+        "idle": 205,
+        "walk-01": 221,
+        "walk-02": 205,
+        "walk-03": 218,
+        "attack": 409
       },
       "heights": {
         "idle": 270,
-        "walk-01": 269,
-        "walk-02": 271,
-        "walk-03": 269,
-        "attack": 255
+        "walk-01": 266,
+        "walk-02": 270,
+        "walk-03": 267,
+        "attack": 312
       },
       "diagnosticLegIdentity": {
-        "slot2RedPixels": 4885,
-        "slot2BluePixels": 4562,
-        "slot2RedCentroidX": 257.1987717502559,
-        "slot2BlueCentroidX": 102.68785620341956,
-        "slot4RedPixels": 3116,
-        "slot4BluePixels": 6118,
-        "slot4RedCentroidX": 63.36264441591784,
-        "slot4BlueCentroidX": 201.81382804838182
+        "slot2RedPixels": 1696,
+        "slot2BluePixels": 1272,
+        "slot2RedCentroidX": 191.65212264150944,
+        "slot2BlueCentroidX": 75.44025157232704,
+        "slot4RedPixels": 865,
+        "slot4BluePixels": 2164,
+        "slot4RedCentroidX": 92.74450867052023,
+        "slot4BlueCentroidX": 189.3738447319778
       }
     },
     {
       "unitId": "iron_spearman",
       "prefix": "iron-spearman",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/iron-spearman-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "iron spear",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
-      "heightRatio": 1.0227,
-      "walkSilhouetteDifference": 0.0363,
+      "heightRatio": 1.0266,
+      "walkSilhouetteDifference": 0.0784,
       "widths": {
         "idle": 118,
         "walk-01": 148,
         "walk-02": 121,
-        "walk-03": 185,
-        "attack": 241
+        "walk-03": 206,
+        "attack": 284
       },
       "heights": {
         "idle": 270,
         "walk-01": 264,
         "walk-02": 270,
-        "walk-03": 264,
+        "walk-03": 263,
         "attack": 191
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 1291,
         "slot2BluePixels": 431,
-        "slot2RedCentroidX": 243.03950426026336,
-        "slot2BlueCentroidX": 118.25754060324826,
-        "slot4RedPixels": 1305,
+        "slot2RedCentroidX": 189.03950426026336,
+        "slot2BlueCentroidX": 64.25754060324826,
+        "slot4RedPixels": 1023,
         "slot4BluePixels": 810,
-        "slot4RedCentroidX": 167.6919540229885,
-        "slot4BlueCentroidX": 226.9320987654321
+        "slot4RedCentroidX": 103.97458455522971,
+        "slot4BlueCentroidX": 246.9320987654321
       }
     },
     {
       "unitId": "musketeer",
       "prefix": "musketeer",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/musketeer-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "matchlock musket",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
-      "heightRatio": 1.0075,
-      "walkSilhouetteDifference": 0.0066,
+      "heightRatio": 1.0385,
+      "walkSilhouetteDifference": 0.047,
       "widths": {
-        "idle": 157,
-        "walk-01": 183,
-        "walk-02": 154,
-        "walk-03": 180,
-        "attack": 223
+        "idle": 201,
+        "walk-01": 232,
+        "walk-02": 197,
+        "walk-03": 212,
+        "attack": 289
       },
       "heights": {
         "idle": 270,
-        "walk-01": 268,
-        "walk-02": 269,
-        "walk-03": 268,
-        "attack": 248
+        "walk-01": 260,
+        "walk-02": 264,
+        "walk-03": 262,
+        "attack": 262
       },
       "diagnosticLegIdentity": {
-        "slot2RedPixels": 3447,
-        "slot2BluePixels": 1010,
-        "slot2RedCentroidX": 260.73600232085874,
-        "slot2BlueCentroidX": 167.15544554455445,
-        "slot4RedPixels": 2566,
-        "slot4BluePixels": 1942,
-        "slot4RedCentroidX": 162.49922057677318,
-        "slot4BlueCentroidX": 241.90113285272915
+        "slot2RedPixels": 4528,
+        "slot2BluePixels": 3250,
+        "slot2RedCentroidX": 134.26258833922262,
+        "slot2BlueCentroidX": 53.543076923076924,
+        "slot4RedPixels": 4739,
+        "slot4BluePixels": 3293,
+        "slot4RedCentroidX": 72.9645494830133,
+        "slot4BlueCentroidX": 147.9505010628606
       }
     },
     {
       "unitId": "pikeman",
       "prefix": "pikeman",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/pikeman-e-5slot-source.png",
+      "attackSource": "docs/dev-wiki/visual-drafts/human-3frame-v2/pikeman-e-attack-source.png",
+      "attackSourceMargins": {
+        "left": 95,
+        "top": 215,
+        "right": 120,
+        "bottom": 177
+      },
+      "expectedEquipment": "long pike; no firearm",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
-      "heightRatio": 1.0112,
-      "walkSilhouetteDifference": 0.0235,
+      "heightRatio": 1.0443,
+      "walkSilhouetteDifference": 0.0228,
       "widths": {
-        "idle": 137,
-        "walk-01": 186,
-        "walk-02": 139,
-        "walk-03": 176,
-        "attack": 238
+        "idle": 75,
+        "walk-01": 276,
+        "walk-02": 75,
+        "walk-03": 270,
+        "attack": 771
       },
       "heights": {
-        "idle": 270,
-        "walk-01": 268,
-        "walk-02": 271,
-        "walk-03": 269,
-        "attack": 256
+        "idle": 424,
+        "walk-01": 406,
+        "walk-02": 424,
+        "walk-03": 408,
+        "attack": 270
       },
       "diagnosticLegIdentity": {
-        "slot2RedPixels": 8605,
-        "slot2BluePixels": 7854,
-        "slot2RedCentroidX": 240.8575246949448,
-        "slot2BlueCentroidX": 112.00522026992616,
-        "slot4RedPixels": 5714,
-        "slot4BluePixels": 8290,
-        "slot4RedCentroidX": 111.83269163458174,
-        "slot4BlueCentroidX": 216.6546441495778
+        "slot2RedPixels": 4940,
+        "slot2BluePixels": 1890,
+        "slot2RedCentroidX": 172.26437246963562,
+        "slot2BlueCentroidX": 91.08994708994709,
+        "slot4RedPixels": 4690,
+        "slot4BluePixels": 2647,
+        "slot4RedCentroidX": 103.77654584221749,
+        "slot4BlueCentroidX": 182.15413675859463
       }
     },
     {
       "unitId": "grenadier",
       "prefix": "grenadier",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/grenadier-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "round hand grenade; no firearm",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
-      "heightRatio": 1.0075,
-      "walkSilhouetteDifference": 0.0122,
+      "heightRatio": 1.042,
+      "walkSilhouetteDifference": 0.0371,
       "widths": {
-        "idle": 161,
-        "walk-01": 173,
-        "walk-02": 167,
-        "walk-03": 182,
-        "attack": 311
+        "idle": 105,
+        "walk-01": 156,
+        "walk-02": 103,
+        "walk-03": 163,
+        "attack": 235
       },
       "heights": {
         "idle": 270,
         "walk-01": 268,
-        "walk-02": 270,
-        "walk-03": 268,
-        "attack": 231
+        "walk-02": 273,
+        "walk-03": 262,
+        "attack": 252
       },
       "diagnosticLegIdentity": {
-        "slot2RedPixels": 5912,
-        "slot2BluePixels": 4297,
-        "slot2RedCentroidX": 257.944350473613,
-        "slot2BlueCentroidX": 170.38049802187572,
-        "slot4RedPixels": 7253,
-        "slot4BluePixels": 4941,
-        "slot4RedCentroidX": 187.31848890114435,
-        "slot4BlueCentroidX": 218.6883222019834
+        "slot2RedPixels": 7641,
+        "slot2BluePixels": 1870,
+        "slot2RedCentroidX": 143.79125768878419,
+        "slot2BlueCentroidX": 37.227807486631015,
+        "slot4RedPixels": 4354,
+        "slot4BluePixels": 4002,
+        "slot4RedCentroidX": 93.0367478180983,
+        "slot4BlueCentroidX": 175.33633183408296
       }
     },
     {
       "unitId": "rifleman_late",
       "prefix": "rifleman-late",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/rifleman-late-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "late rifle",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
       "heightRatio": 1.0385,
@@ -415,7 +479,7 @@
         "walk-01": 147,
         "walk-02": 129,
         "walk-03": 147,
-        "attack": 168
+        "attack": 190
       },
       "heights": {
         "idle": 270,
@@ -427,112 +491,124 @@
       "diagnosticLegIdentity": {
         "slot2RedPixels": 10360,
         "slot2BluePixels": 7740,
-        "slot2RedCentroidX": 204.2034749034749,
-        "slot2BlueCentroidX": 90.57390180878554,
+        "slot2RedCentroidX": 180.2034749034749,
+        "slot2BlueCentroidX": 66.57390180878554,
         "slot4RedPixels": 7049,
         "slot4BluePixels": 10662,
-        "slot4RedCentroidX": 85.949070790183,
-        "slot4BlueCentroidX": 191.65119114612642
+        "slot4RedCentroidX": 73.949070790183,
+        "slot4BlueCentroidX": 179.65119114612642
       }
     },
     {
       "unitId": "grenadier_late",
       "prefix": "grenadier-late",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/grenadier-late-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "cylindrical hand grenade; no firearm",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
-      "heightRatio": 1.0227,
-      "walkSilhouetteDifference": 0.0081,
+      "heightRatio": 1.0112,
+      "walkSilhouetteDifference": 0.0106,
       "widths": {
-        "idle": 137,
-        "walk-01": 176,
-        "walk-02": 138,
-        "walk-03": 175,
-        "attack": 242
+        "idle": 112,
+        "walk-01": 158,
+        "walk-02": 109,
+        "walk-03": 169,
+        "attack": 258
       },
       "heights": {
         "idle": 270,
-        "walk-01": 264,
+        "walk-01": 267,
         "walk-02": 269,
-        "walk-03": 266,
-        "attack": 255
+        "walk-03": 267,
+        "attack": 269
       },
       "diagnosticLegIdentity": {
-        "slot2RedPixels": 4927,
-        "slot2BluePixels": 4343,
-        "slot2RedCentroidX": 226.6783032271159,
-        "slot2BlueCentroidX": 129.7669813492977,
-        "slot4RedPixels": 4593,
-        "slot4BluePixels": 4577,
-        "slot4RedCentroidX": 99.97909862834749,
-        "slot4BlueCentroidX": 189.7631636443085
+        "slot2RedPixels": 7457,
+        "slot2BluePixels": 3587,
+        "slot2RedCentroidX": 139.89164543382057,
+        "slot2BlueCentroidX": 51.52383607471425,
+        "slot4RedPixels": 5966,
+        "slot4BluePixels": 5636,
+        "slot4RedCentroidX": 70.44569225611801,
+        "slot4BlueCentroidX": 146.0095812633073
       }
     },
     {
       "unitId": "infantry",
       "prefix": "infantry",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/infantry-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "service rifle",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
-      "heightRatio": 1.0226,
-      "walkSilhouetteDifference": 0.0114,
+      "heightRatio": 1.0189,
+      "walkSilhouetteDifference": 0.0109,
       "widths": {
         "idle": 126,
-        "walk-01": 171,
+        "walk-01": 172,
         "walk-02": 126,
-        "walk-03": 163,
-        "attack": 195
+        "walk-03": 172,
+        "attack": 200
       },
       "heights": {
         "idle": 270,
         "walk-01": 265,
-        "walk-02": 271,
+        "walk-02": 270,
         "walk-03": 265,
         "attack": 252
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 4219,
         "slot2BluePixels": 2637,
-        "slot2RedCentroidX": 219.173026783598,
-        "slot2BlueCentroidX": 90.97838452787258,
+        "slot2RedCentroidX": 178.173026783598,
+        "slot2BlueCentroidX": 49.978384527872585,
         "slot4RedPixels": 2557,
         "slot4BluePixels": 3715,
-        "slot4RedCentroidX": 62.941337504888544,
-        "slot4BlueCentroidX": 177.76635262449528
+        "slot4RedCentroidX": 72.94133750488854,
+        "slot4BlueCentroidX": 187.76635262449528
       }
     },
     {
       "unitId": "machine_gunner",
       "prefix": "machine-gunner",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/machine-gunner-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "machine gun",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
       "heightRatio": 1.0112,
-      "walkSilhouetteDifference": 0.0189,
+      "walkSilhouetteDifference": 0.0184,
       "widths": {
         "idle": 170,
         "walk-01": 200,
         "walk-02": 171,
         "walk-03": 210,
-        "attack": 217
+        "attack": 233
       },
       "heights": {
         "idle": 270,
@@ -544,38 +620,42 @@
       "diagnosticLegIdentity": {
         "slot2RedPixels": 5766,
         "slot2BluePixels": 6398,
-        "slot2RedCentroidX": 221.8851890391953,
-        "slot2BlueCentroidX": 111.4467020944045,
+        "slot2RedCentroidX": 191.8851890391953,
+        "slot2BlueCentroidX": 81.4467020944045,
         "slot4RedPixels": 7122,
         "slot4BluePixels": 5267,
-        "slot4RedCentroidX": 104.22844706543106,
-        "slot4BlueCentroidX": 209.2517562179609
+        "slot4RedCentroidX": 94.22844706543106,
+        "slot4BlueCentroidX": 199.2517562179609
       }
     },
     {
       "unitId": "shock_trooper",
       "prefix": "shock-trooper",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/shock-trooper-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "assault weapon",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
       "heightRatio": 1.0112,
-      "walkSilhouetteDifference": 0.0193,
+      "walkSilhouetteDifference": 0.0213,
       "widths": {
-        "idle": 151,
+        "idle": 150,
         "walk-01": 185,
         "walk-02": 151,
-        "walk-03": 191,
-        "attack": 202
+        "walk-03": 192,
+        "attack": 205
       },
       "heights": {
         "idle": 270,
-        "walk-01": 270,
+        "walk-01": 269,
         "walk-02": 270,
         "walk-03": 267,
         "attack": 258
@@ -583,8 +663,8 @@
       "diagnosticLegIdentity": {
         "slot2RedPixels": 7363,
         "slot2BluePixels": 4626,
-        "slot2RedCentroidX": 210.04332473176694,
-        "slot2BlueCentroidX": 101.95849546044099,
+        "slot2RedCentroidX": 167.04332473176694,
+        "slot2BlueCentroidX": 58.958495460440986,
         "slot4RedPixels": 4487,
         "slot4BluePixels": 7924,
         "slot4RedCentroidX": 67.94896367283263,
@@ -595,12 +675,16 @@
       "unitId": "automatic_rifleman",
       "prefix": "automatic-rifleman",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/automatic-rifleman-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "automatic rifle",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
       "heightRatio": 1.0305,
@@ -610,7 +694,7 @@
         "walk-01": 166,
         "walk-02": 126,
         "walk-03": 168,
-        "attack": 174
+        "attack": 185
       },
       "heights": {
         "idle": 270,
@@ -622,73 +706,81 @@
       "diagnosticLegIdentity": {
         "slot2RedPixels": 8327,
         "slot2BluePixels": 5151,
-        "slot2RedCentroidX": 203.7658220247388,
-        "slot2BlueCentroidX": 88.94777713065425,
+        "slot2RedCentroidX": 168.7658220247388,
+        "slot2BlueCentroidX": 53.947777130654245,
         "slot4RedPixels": 5151,
         "slot4BluePixels": 8606,
-        "slot4RedCentroidX": 72.81013395457192,
-        "slot4BlueCentroidX": 193.7892168254706
+        "slot4RedCentroidX": 63.81013395457193,
+        "slot4BlueCentroidX": 184.7892168254706
       }
     },
     {
       "unitId": "support_gunner",
       "prefix": "support-gunner",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/support-gunner-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "support weapon",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
       "heightRatio": 1.0037,
-      "walkSilhouetteDifference": 0.0271,
+      "walkSilhouetteDifference": 0.0058,
       "widths": {
-        "idle": 178,
+        "idle": 187,
         "walk-01": 207,
         "walk-02": 184,
-        "walk-03": 196,
-        "attack": 189
+        "walk-03": 207,
+        "attack": 221
       },
       "heights": {
         "idle": 270,
         "walk-01": 269,
-        "walk-02": 269,
+        "walk-02": 270,
         "walk-03": 269,
-        "attack": 253
+        "attack": 257
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 5323,
         "slot2BluePixels": 4075,
-        "slot2RedCentroidX": 224.6122487319181,
-        "slot2BlueCentroidX": 86.2522699386503,
-        "slot4RedPixels": 5301,
+        "slot2RedCentroidX": 199.6122487319181,
+        "slot2BlueCentroidX": 61.25226993865031,
+        "slot4RedPixels": 5395,
         "slot4BluePixels": 6195,
-        "slot4RedCentroidX": 60.56744010564044,
-        "slot4BlueCentroidX": 180.8989507667474
+        "slot4RedCentroidX": 69.46858202038925,
+        "slot4BlueCentroidX": 193.8989507667474
       }
     },
     {
       "unitId": "mobile_infantry",
       "prefix": "mobile-infantry",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/mobile-infantry-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "carbine",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
       "heightRatio": 1.0112,
-      "walkSilhouetteDifference": 0.0212,
+      "walkSilhouetteDifference": 0.0182,
       "widths": {
         "idle": 146,
         "walk-01": 180,
         "walk-02": 141,
-        "walk-03": 174,
-        "attack": 221
+        "walk-03": 186,
+        "attack": 246
       },
       "heights": {
         "idle": 270,
@@ -700,73 +792,81 @@
       "diagnosticLegIdentity": {
         "slot2RedPixels": 4221,
         "slot2BluePixels": 2747,
-        "slot2RedCentroidX": 203.01990049751242,
-        "slot2BlueCentroidX": 92.34109938114307,
-        "slot4RedPixels": 3140,
+        "slot2RedCentroidX": 161.01990049751242,
+        "slot2BlueCentroidX": 50.34109938114307,
+        "slot4RedPixels": 3147,
         "slot4BluePixels": 3872,
-        "slot4RedCentroidX": 54.48535031847134,
-        "slot4BlueCentroidX": 163.9555785123967
+        "slot4RedCentroidX": 65.57070225611693,
+        "slot4BlueCentroidX": 176.9555785123967
       }
     },
     {
       "unitId": "special_forces",
       "prefix": "special-forces",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/special-forces-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "special-operations rifle",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
-      "heightRatio": 1.0266,
-      "walkSilhouetteDifference": 0.0117,
+      "heightRatio": 1.0265,
+      "walkSilhouetteDifference": 0.0115,
       "widths": {
-        "idle": 140,
+        "idle": 141,
         "walk-01": 163,
-        "walk-02": 134,
-        "walk-03": 159,
-        "attack": 177
+        "walk-02": 135,
+        "walk-03": 160,
+        "attack": 191
       },
       "heights": {
         "idle": 270,
         "walk-01": 264,
-        "walk-02": 270,
-        "walk-03": 263,
+        "walk-02": 271,
+        "walk-03": 264,
         "attack": 259
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 8082,
         "slot2BluePixels": 2527,
-        "slot2RedCentroidX": 211.06681514476614,
-        "slot2BlueCentroidX": 95.27542540561932,
+        "slot2RedCentroidX": 166.06681514476614,
+        "slot2BlueCentroidX": 50.27542540561931,
         "slot4RedPixels": 3707,
         "slot4BluePixels": 7184,
-        "slot4RedCentroidX": 62.41893714594011,
-        "slot4BlueCentroidX": 171.42302338530067
+        "slot4RedCentroidX": 51.41893714594011,
+        "slot4BlueCentroidX": 160.42302338530067
       }
     },
     {
       "unitId": "heavy_gunner",
       "prefix": "heavy-gunner",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/heavy-gunner-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "heavy weapon",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
       "heightRatio": 1.0037,
-      "walkSilhouetteDifference": 0.0568,
+      "walkSilhouetteDifference": 0.0365,
       "widths": {
-        "idle": 174,
-        "walk-01": 188,
-        "walk-02": 156,
-        "walk-03": 169,
-        "attack": 213
+        "idle": 173,
+        "walk-01": 187,
+        "walk-02": 155,
+        "walk-03": 195,
+        "attack": 233
       },
       "heights": {
         "idle": 270,
@@ -778,51 +878,55 @@
       "diagnosticLegIdentity": {
         "slot2RedPixels": 5805,
         "slot2BluePixels": 4567,
-        "slot2RedCentroidX": 194.5464254952627,
-        "slot2BlueCentroidX": 82.37157871688198,
-        "slot4RedPixels": 2297,
+        "slot2RedCentroidX": 166.5464254952627,
+        "slot2BlueCentroidX": 54.37157871688198,
+        "slot4RedPixels": 2780,
         "slot4BluePixels": 5676,
-        "slot4RedCentroidX": 28.23900740095777,
-        "slot4BlueCentroidX": 165.46811134601833
+        "slot4RedCentroidX": 48.91187050359712,
+        "slot4BlueCentroidX": 192.46811134601833
       }
     },
     {
       "unitId": "breakthrough_trooper",
       "prefix": "breakthrough-trooper",
       "source": "docs/dev-wiki/visual-drafts/human-3frame-v2/breakthrough-trooper-e-5slot-source.png",
+      "attackSource": null,
+      "attackSourceMargins": null,
+      "expectedEquipment": "assault rifle",
       "checks": {
         "diagnostic_leg_identity_swap": true,
         "nonempty": true,
         "not_clipped": true,
         "height_consistent": true,
-        "walk_frames_distinct": true
+        "walk_frames_distinct": true,
+        "attack_source_has_safe_margin": true
       },
       "pass": true,
       "heightRatio": 1.0037,
-      "walkSilhouetteDifference": 0.0553,
+      "walkSilhouetteDifference": 0.0241,
       "widths": {
         "idle": 156,
         "walk-01": 196,
         "walk-02": 156,
-        "walk-03": 179,
-        "attack": 207
+        "walk-03": 200,
+        "attack": 256
       },
       "heights": {
         "idle": 270,
         "walk-01": 271,
         "walk-02": 271,
         "walk-03": 270,
-        "attack": 263
+        "attack": 264
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 3384,
         "slot2BluePixels": 6219,
-        "slot2RedCentroidX": 193.71217494089834,
-        "slot2BlueCentroidX": 91.13941148094548,
-        "slot4RedPixels": 5511,
+        "slot2RedCentroidX": 172.71217494089834,
+        "slot2BlueCentroidX": 70.13941148094548,
+        "slot4RedPixels": 5775,
         "slot4BluePixels": 3869,
-        "slot4RedCentroidX": 55.43004899292325,
-        "slot4BlueCentroidX": 147.00697854742828
+        "slot4RedCentroidX": 74.57073593073594,
+        "slot4BlueCentroidX": 169.00697854742828
       }
     }
   ]

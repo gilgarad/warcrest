@@ -5307,3 +5307,66 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
 - **Verification**: asset QA `21/21`, build, all `158` unit tests, and the
   focused human three-frame Playwright roster spec passed. The 21-row contact
   sheet was also reviewed in three enlarged sections.
+
+## 2026-08-07 - Human class mapping and attack clipping correction
+
+- **User request**: commit/push the current locomotion state, then audit wrong
+  pikeman/musketeer/rifleman/grenadier visuals and clipped human attack poses.
+- **Initial checkpoint**: committed and pushed the prior state as `8841c0a` on
+  `master`.
+- **Root causes**: code labels and texture prefixes were correct, but four
+  uncut strips depicted the wrong equipment; attack extraction also cut at a
+  fixed slot boundary even when the fifth pose extended into the prior slot.
+- **Implementation**: regenerated the four incorrect class strips, retained
+  only candidates passing anatomical-leg diagnostics and visual equipment
+  review, added four standalone attack sources for art clipped at the outer
+  canvas, widened attack extraction for cross-slot poses, and made team accent
+  geometry alpha-safe.
+- **Durable QA**: added expected equipment to the machine report, a 22-entry
+  human mapping audit including rifleman I, source attack margin validation,
+  and full production contact-sheet review.
+- **Verification**: installer asset QA `21/21`, focused Playwright roster
+  verification (`1` spec), `npm run build`, and `npm test` (`33` files / `158`
+  tests) all passed.
+- **Runtime follow-up**: the user's open sandbox still showed the replaced art.
+  A clean browser rendered the corrected files, proving stale Phaser/browser
+  textures rather than a remaining ID mapping error. Added a unit-asset URL
+  revision, restarted port 5173, and captured the restarted sandbox while
+  observing revisioned HTTP 200 responses for all four corrected families.
+
+## 2026-08-07 - Correct clipped strips and reported walk cycles
+
+- **User request**: correct the pikeman's anachronistic rifleman uniform,
+  clipped Grenadier I/pikeman backs and modern-infantry heels, and ineffective
+  walk cycles for Grenadier II, musketeer, and iron swordsman.
+- **Root cause**: the source strips contained complete figures, but production
+  installation cropped fixed 20% slots. Limbs and equipment that crossed those
+  artificial boundaries were discarded; the same fixed slots also made the
+  earlier diagnostic inspect incomplete figures.
+- **Implementation**: changed installation and leg diagnostics to identify the
+  five complete connected figures across the full strip, regenerated the five
+  reported historical walk sources, restored the Renaissance pikeman design,
+  reinstalled all 21 biped families, and bumped the asset revision.
+- **Visual verification**: reviewed uncut source strips, the 21-row production
+  contact sheet, and explicit sandbox captures for pikeman, grenadier I/II,
+  musketeer, iron swordsman, support gunner, mobile infantry, and heavy gunner
+  at each of the three walk poses.
+- **Regression**: asset QA `21/21`, build, all `158` unit tests, and focused
+  Playwright roster coverage passed. Final fresh-browser captures use the
+  revisioned production URLs served from port 5173.
+
+## 2026-08-07 - Final human attack and pikeman-scale correction
+
+- **User feedback**: human walks were accepted, with three remaining defects:
+  undersized pikeman walk body, anachronistic pikeman attack clothing, and a
+  half-clipped Rifleman I attack.
+- **Diagnosis**: pikeman normalization used the pike-inclusive bounding box;
+  Rifleman I's production attack PNG itself contained only half the body.
+- **Implementation**: introduced explicit long-weapon canvases and runtime
+  aspect ratios, regenerated the pikeman attack from the approved Renaissance
+  reference, regenerated Rifleman I attack with safe margins, and made both
+  installation paths reproducible.
+- **Visual proof**: inspected final production PNGs and fresh-browser sandbox
+  captures for pikeman walk/attack and Rifleman I attack before completion.
+- **Verification**: asset QA `21/21`, build, `159` unit tests, and both focused
+  Playwright specs passed.

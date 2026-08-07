@@ -3388,7 +3388,9 @@ export class LaneBattleScene extends Phaser.Scene {
       desiredTexture,
     );
     const isMeleePose = this.isMeleeUnit(unit);
-    const widthAllowance = isMeleePose ? 1.6 : unit.role === "support" ? 1.2 : 1.35;
+    const widthAllowance = unit.unitId === "pikeman"
+      ? 2.8
+      : isMeleePose ? 1.6 : unit.role === "support" ? 1.2 : 1.35;
     const widthFrameScale = Math.min(
       1,
       (idleFramePresentation.spriteWidth * widthAllowance) / Math.max(1, framePresentation.spriteWidth),

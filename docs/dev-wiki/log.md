@@ -5264,3 +5264,74 @@ Use consistent headings so entries are easy to grep.
 - Verification passed: asset QA `21/21`, `npm run build`, `npm test` (`33`
   files / `158` tests), and focused Playwright roster coverage (`1` spec,
   `21` units x `2` teams x `2` directions x `4` phases).
+
+## 2026-08-07 - Human visual mapping and attack-source audit
+
+- Preserved and pushed the prior three-frame rollout as commit `8841c0a` before
+  beginning this corrective pass.
+- Confirmed the registry and Korean labels pointed to the intended prefixes;
+  the wrong visuals were embedded in the source strips themselves.
+- Replaced the source art for `musketeer`, `pikeman`, `grenadier`, and
+  `grenadier-late` so they visibly carry a matchlock, long pike, round grenade,
+  and cylindrical grenade respectively. All four marked-leg strips pass the
+  continuous anatomical-leg identity check.
+- Added standalone unclipped attack sources for bronze swordsman, bronze
+  spearman, iron swordsman, and pikeman. Changed attack extraction to recover
+  poses that cross the fixed fifth-slot boundary, and added source/production
+  margin checks.
+- Added a complete human roster visual mapping audit and expected-equipment
+  metadata to the generated QA report. All 21 installer rows pass; the
+  separately approved rifleman I is also recorded in the visual audit.
+- Clipped team accents to opaque sprite pixels so wide attack poses cannot
+  leave detached blue/red geometry beside the character.
+- Focused Playwright roster verification passed (`1` spec, `21` units x `2`
+  teams x `2` directions x `4` phases).
+- Follow-up runtime verification found that a fresh browser rendered the new
+  mapping correctly while the user's already-open sandbox retained old Phaser
+  textures under unchanged PNG URLs. Added an explicit unit-asset revision
+  query, restarted the 5173 Vite server, and confirmed all corrected walk URLs
+  returned HTTP 200 with the new revision.
+
+## 2026-08-07 - Human strip clipping and locomotion correction
+
+- Traced clipped backs, coats, weapons, and heels to the installer splitting
+  every source strip into fixed 20% cells even when a complete figure crossed
+  a nominal cell boundary.
+- Replaced fixed-cell cropping with connected-figure extraction over the full
+  transparent strip. The five complete figures are grouped with their detached
+  equipment components and ordered by horizontal center before normalization.
+- Rebuilt the pikeman from the approved Renaissance concept: morion helmet,
+  steel breastplate, slashed striped breeches, boots, and long pike. It no
+  longer uses the later rifleman uniform.
+- Regenerated musketeer, grenadier I/II, iron swordsman, and pikeman walk
+  sources so `walk-01` and `walk-03` retain opposite anatomical lead legs and
+  visibly different trailing-knee/heel articulation without changing facing or
+  equipment direction.
+- Reinstalled all 21 standing-biped player/enemy assets so the same extraction
+  fix also restores complete heels for support gunner, mobile infantry, and
+  heavy gunner. Bumped the runtime asset revision to prevent stale Phaser or
+  browser textures from masking the correction.
+- Verification: asset installer QA `21/21`; sandbox frames captured for all
+  eight reported units at `walk-01/02/03`; no head, back, weapon, toe, or heel
+  clipping remained in the final production contact sheet.
+- Final regression passed: `npm run build`, `npm test` (`33` files / `158`
+  tests), and focused Playwright human-roster coverage (`1/1`). A fresh browser
+  using asset revision `human3frame-locomotion-4` rendered the final corrected
+  frames on the running 5173 sandbox.
+
+## 2026-08-07 - Pikeman scale and attack-frame completion
+
+- Replaced the pikeman attack source with a period-correct Renaissance pose
+  matching its walk art: morion, breastplate, slashed striped breeches, boots,
+  and a complete long pike. The obsolete rifleman-style attack uniform is gone.
+- Fixed the structural scale error that normalized the pikeman from the full
+  vertical pike rather than the soldier. Locomotion now uses a 384x512 canvas
+  with the same 270px infantry body target; attack uses a 1024x384 weapon-safe
+  canvas so neither the body nor pike must be shrunk or clipped.
+- Replaced the clipped Rifleman I attack source and added a reproducible
+  `--attack-source` install path. The resulting frame contains the full head,
+  torso, legs, boots, rifle stock, barrel, and muzzle with safe margins.
+- Added focused presentation/unit and Playwright coverage plus sandbox captures
+  for pikeman walk/attack and Rifleman I attack.
+- Verification passed: biped asset QA `21/21`, `npm run build`, `npm test`
+  (`33` files / `159` tests), and focused Playwright (`2/2`).
