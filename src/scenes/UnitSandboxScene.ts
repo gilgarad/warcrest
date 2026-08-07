@@ -6,6 +6,7 @@ import {
   UNIT_ANIMATION_ASSETS,
   deriveAnimationPrefix,
   getUnitAnimationDefinition,
+  isMechanizedUnit,
   resolveAnimationTextureFromPrefix,
   resolveHorizontalPresentationDirection,
   resolveTeamUnitTextureKey,
@@ -451,8 +452,13 @@ export class UnitSandboxScene extends Phaser.Scene {
     const facing = directionVector(this.state.direction);
     const flipX = shouldFlipUnitFrame(this.state.unitId, facing.x, this.state.direction);
     const locomotionFacingX: -1 | 1 = facing.x >= 0 ? 1 : -1;
-    const walkMotion = moving ? resolveWalkMotion(phase, locomotionFacingX) : { swayX: 0, lift: 0, rotationRad: 0 };
-    const attackEase = this.state.mode === "attack" ? Math.sin(attackProgress * Math.PI) : 0;
+    const mechanized = isMechanizedUnit(this.state.unitId);
+    const walkMotion = moving && !mechanized
+      ? resolveWalkMotion(phase, locomotionFacingX)
+      : { swayX: 0, lift: 0, rotationRad: 0 };
+    const attackEase = this.state.mode === "attack" && !mechanized
+      ? Math.sin(attackProgress * Math.PI)
+      : 0;
     const attackOffsetX = facing.x * 12 * attackEase;
     const attackOffsetY = facing.y * 8 * attackEase - attackEase * 4;
     const attackRotation = facing.x * 0.08 * attackEase;

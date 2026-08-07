@@ -1,0 +1,331 @@
+{
+  "contract": [
+    "walk-01",
+    "walk-02",
+    "walk-03"
+  ],
+  "units": [
+    {
+      "unitId": "cannon_i",
+      "prefix": "cannon-i",
+      "locomotion": "wheel",
+      "source": "docs/dev-wiki/visual-drafts/mechanized-3frame-v1/cannon-i-e-5slot-source.png",
+      "checks": {
+        "five_frames": true,
+        "not_clipped": true,
+        "locomotion_height_consistent": true,
+        "locomotion_width_consistent": true,
+        "wheel_or_track_phases_distinct": true,
+        "attack_height_consistent": true,
+        "attack_body_anchor_consistent": true
+      },
+      "pass": true,
+      "widths": {
+        "idle": 332,
+        "walk-01": 332,
+        "walk-02": 330,
+        "walk-03": 333,
+        "attack": 407
+      },
+      "heights": {
+        "idle": 250,
+        "walk-01": 250,
+        "walk-02": 251,
+        "walk-03": 248,
+        "attack": 250
+      },
+      "alphaCentersX": {
+        "idle": 387.0,
+        "walk-01": 387.0,
+        "walk-02": 387.0,
+        "walk-03": 386.5,
+        "attack": 408.5
+      },
+      "wheelTrackRgbDifferences": {
+        "01-02": 14.958,
+        "02-03": 20.437,
+        "03-01": 19.163
+      },
+      "walkSilhouetteDifferences": {
+        "01-02": 0.0072,
+        "02-03": 0.012
+      }
+    },
+    {
+      "unitId": "cannon_ii",
+      "prefix": "cannon-ii",
+      "locomotion": "wheel",
+      "source": "docs/dev-wiki/visual-drafts/mechanized-3frame-v1/cannon-ii-e-5slot-source.png",
+      "checks": {
+        "five_frames": true,
+        "not_clipped": true,
+        "locomotion_height_consistent": true,
+        "locomotion_width_consistent": true,
+        "wheel_or_track_phases_distinct": true,
+        "attack_height_consistent": true,
+        "attack_body_anchor_consistent": true
+      },
+      "pass": true,
+      "widths": {
+        "idle": 517,
+        "walk-01": 518,
+        "walk-02": 517,
+        "walk-03": 517,
+        "attack": 557
+      },
+      "heights": {
+        "idle": 250,
+        "walk-01": 250,
+        "walk-02": 251,
+        "walk-03": 250,
+        "attack": 250
+      },
+      "alphaCentersX": {
+        "idle": 387.5,
+        "walk-01": 388.0,
+        "walk-02": 387.5,
+        "walk-03": 386.5,
+        "attack": 401.5
+      },
+      "wheelTrackRgbDifferences": {
+        "01-02": 19.998,
+        "02-03": 16.88,
+        "03-01": 20.279
+      },
+      "walkSilhouetteDifferences": {
+        "01-02": 0.0101,
+        "02-03": 0.0066
+      }
+    },
+    {
+      "unitId": "artillery_i",
+      "prefix": "artillery-i",
+      "locomotion": "wheel",
+      "source": "docs/dev-wiki/visual-drafts/mechanized-3frame-v1/artillery-i-e-5slot-source.png",
+      "checks": {
+        "five_frames": true,
+        "not_clipped": true,
+        "locomotion_height_consistent": true,
+        "locomotion_width_consistent": true,
+        "wheel_or_track_phases_distinct": true,
+        "attack_height_consistent": true,
+        "attack_body_anchor_consistent": true
+      },
+      "pass": true,
+      "widths": {
+        "idle": 433,
+        "walk-01": 420,
+        "walk-02": 421,
+        "walk-03": 420,
+        "attack": 463
+      },
+      "heights": {
+        "idle": 250,
+        "walk-01": 249,
+        "walk-02": 249,
+        "walk-03": 249,
+        "attack": 249
+      },
+      "alphaCentersX": {
+        "idle": 371.5,
+        "walk-01": 374.0,
+        "walk-02": 372.5,
+        "walk-03": 373.0,
+        "attack": 391.5
+      },
+      "wheelTrackRgbDifferences": {
+        "01-02": 16.481,
+        "02-03": 16.188,
+        "03-01": 20.24
+      },
+      "walkSilhouetteDifferences": {
+        "01-02": 0.0082,
+        "02-03": 0.0073
+      }
+    },
+    {
+      "unitId": "artillery_ii",
+      "prefix": "artillery-ii",
+      "locomotion": "wheel",
+      "source": "docs/dev-wiki/visual-drafts/mechanized-3frame-v1/artillery-ii-e-5slot-source.png",
+      "checks": {
+        "five_frames": true,
+        "not_clipped": true,
+        "locomotion_height_consistent": true,
+        "locomotion_width_consistent": true,
+        "wheel_or_track_phases_distinct": true,
+        "attack_height_consistent": true,
+        "attack_body_anchor_consistent": true
+      },
+      "pass": true,
+      "widths": {
+        "idle": 497,
+        "walk-01": 497,
+        "walk-02": 500,
+        "walk-03": 501,
+        "attack": 565
+      },
+      "heights": {
+        "idle": 250,
+        "walk-01": 258,
+        "walk-02": 258,
+        "walk-03": 258,
+        "attack": 258
+      },
+      "alphaCentersX": {
+        "idle": 379.5,
+        "walk-01": 380.5,
+        "walk-02": 381.0,
+        "walk-03": 381.5,
+        "attack": 406.5
+      },
+      "wheelTrackRgbDifferences": {
+        "01-02": 17.439,
+        "02-03": 12.856,
+        "03-01": 13.93
+      },
+      "walkSilhouetteDifferences": {
+        "01-02": 0.0058,
+        "02-03": 0.0047
+      }
+    },
+    {
+      "unitId": "tank",
+      "prefix": "tank",
+      "locomotion": "track",
+      "source": "docs/dev-wiki/visual-drafts/mechanized-3frame-v1/tank-e-5slot-source.png",
+      "checks": {
+        "five_frames": true,
+        "not_clipped": true,
+        "locomotion_height_consistent": true,
+        "locomotion_width_consistent": true,
+        "wheel_or_track_phases_distinct": true,
+        "attack_height_consistent": true,
+        "attack_body_anchor_consistent": true
+      },
+      "pass": true,
+      "widths": {
+        "idle": 358,
+        "walk-01": 365,
+        "walk-02": 358,
+        "walk-03": 364,
+        "attack": 421
+      },
+      "heights": {
+        "idle": 250,
+        "walk-01": 255,
+        "walk-02": 250,
+        "walk-03": 252,
+        "attack": 254
+      },
+      "alphaCentersX": {
+        "idle": 382.0,
+        "walk-01": 381.5,
+        "walk-02": 381.0,
+        "walk-03": 381.0,
+        "attack": 397.5
+      },
+      "wheelTrackRgbDifferences": {
+        "01-02": 36.213,
+        "02-03": 30.58,
+        "03-01": 28.72
+      },
+      "walkSilhouetteDifferences": {
+        "01-02": 0.0101,
+        "02-03": 0.006
+      }
+    },
+    {
+      "unitId": "mobile_artillery",
+      "prefix": "mobile-artillery",
+      "locomotion": "track",
+      "source": "docs/dev-wiki/visual-drafts/mechanized-3frame-v1/mobile-artillery-e-5slot-source.png",
+      "checks": {
+        "five_frames": true,
+        "not_clipped": true,
+        "locomotion_height_consistent": true,
+        "locomotion_width_consistent": true,
+        "wheel_or_track_phases_distinct": true,
+        "attack_height_consistent": true,
+        "attack_body_anchor_consistent": true
+      },
+      "pass": true,
+      "widths": {
+        "idle": 429,
+        "walk-01": 428,
+        "walk-02": 428,
+        "walk-03": 424,
+        "attack": 498
+      },
+      "heights": {
+        "idle": 250,
+        "walk-01": 250,
+        "walk-02": 251,
+        "walk-03": 252,
+        "attack": 251
+      },
+      "alphaCentersX": {
+        "idle": 418.5,
+        "walk-01": 418.0,
+        "walk-02": 419.0,
+        "walk-03": 418.0,
+        "attack": 443.0
+      },
+      "wheelTrackRgbDifferences": {
+        "01-02": 16.917,
+        "02-03": 20.459,
+        "03-01": 19.714
+      },
+      "walkSilhouetteDifferences": {
+        "01-02": 0.0062,
+        "02-03": 0.009
+      }
+    },
+    {
+      "unitId": "modern_tank",
+      "prefix": "modern-tank",
+      "locomotion": "track",
+      "source": "docs/dev-wiki/visual-drafts/mechanized-3frame-v1/modern-tank-e-5slot-source.png",
+      "checks": {
+        "five_frames": true,
+        "not_clipped": true,
+        "locomotion_height_consistent": true,
+        "locomotion_width_consistent": true,
+        "wheel_or_track_phases_distinct": true,
+        "attack_height_consistent": true,
+        "attack_body_anchor_consistent": true
+      },
+      "pass": true,
+      "widths": {
+        "idle": 558,
+        "walk-01": 560,
+        "walk-02": 558,
+        "walk-03": 556,
+        "attack": 575
+      },
+      "heights": {
+        "idle": 250,
+        "walk-01": 249,
+        "walk-02": 250,
+        "walk-03": 250,
+        "attack": 251
+      },
+      "alphaCentersX": {
+        "idle": 417.0,
+        "walk-01": 418.0,
+        "walk-02": 417.0,
+        "walk-03": 417.0,
+        "attack": 413.5
+      },
+      "wheelTrackRgbDifferences": {
+        "01-02": 13.834,
+        "02-03": 13.711,
+        "03-01": 14.099
+      },
+      "walkSilhouetteDifferences": {
+        "01-02": 0.005,
+        "02-03": 0.004
+      }
+    }
+  ]
+}

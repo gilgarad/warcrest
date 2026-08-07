@@ -26,6 +26,11 @@ export const THREE_FRAME_PING_PONG_WALK_POSES = [
   "walk-03",
   "walk-02",
 ] as const;
+export const THREE_FRAME_CYCLIC_VEHICLE_POSES = [
+  "walk-01",
+  "walk-02",
+  "walk-03",
+] as const;
 export type LegacyWalkPose = typeof LEGACY_WALK_POSES[number];
 export type V2WalkPose = typeof V2_WALK_POSES[number];
 export type UnitWalkPose = LegacyWalkPose | V2WalkPose;
@@ -66,6 +71,7 @@ interface ProductionAnimationOptions {
   directionAliases?: Partial<Record<UnitFacingDirection, UnitFacingDirection>>;
   authoredDirections?: readonly UnitFacingDirection[];
   walkPoses?: readonly UnitWalkPose[];
+  frameCanvasAspect?: number;
   poseVisibleHeightRatios?: Partial<Record<FramePoseKey, number>>;
   extraPrefixPoseVisibleHeightRatios?: Readonly<Record<string, Partial<Record<FramePoseKey, number>>>>;
   exactFrameVisibleHeightRatios?: Readonly<Record<string, number>>;
@@ -179,7 +185,9 @@ function directionalProductionAnimation(
     legacyHorizontalMirror: false,
     directionMode,
     frameCanvasAspects: {
-      ...(wideAllFrames
+      ...(options.frameCanvasAspect !== undefined
+        ? Object.fromEntries(allFrames.map((key) => [key, options.frameCanvasAspect as number]))
+        : wideAllFrames
       ? frameAspects([], allFrames)
       : frameAspects(standardFrames, wideFrames)),
       ...(options.exactFrameCanvasAspects ?? {}),
@@ -224,6 +232,33 @@ function threeFrameCavalryAnimation(
     authoredDirections: ["e"],
     fallbackDirection: "e",
     walkPoses: THREE_FRAME_PING_PONG_WALK_POSES,
+  });
+}
+
+const MECHANIZED_UNIT_IDS = new Set<LaneUnitId>([
+  "cannon_i",
+  "cannon_ii",
+  "artillery_i",
+  "artillery_ii",
+  "tank",
+  "mobile_artillery",
+  "modern_tank",
+]);
+
+export function isMechanizedUnit(unitId: LaneUnitId): boolean {
+  return MECHANIZED_UNIT_IDS.has(unitId);
+}
+
+function threeFrameMechanizedAnimation(
+  prefix: string,
+  scaleFactor: number,
+): UnitAnimationDefinition {
+  return directionalProductionAnimation(prefix, scaleFactor, true, "legacy-mirrored", {
+    authoredDirections: ["e"],
+    fallbackDirection: "e",
+    walkPoses: THREE_FRAME_CYCLIC_VEHICLE_POSES,
+    referenceVisibleHeightRatio: 250 / 384,
+    frameCanvasAspect: 768 / 384,
   });
 }
 
@@ -323,24 +358,7 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
   }),
   grenadier: threeFrameBipedAnimation("grenadier", 1.02),
   light_cavalry: threeFrameCavalryAnimation("light-cavalry"),
-  cannon_i: directionalProductionAnimation("cannon-i", 1.02, true, "direct", {
-    poseVisibleHeightRatios: {
-      idle: 268.62 / 384,
-      "walk-a": 254.5 / 384,
-      "walk-b": 255.75 / 384,
-      attack: 244.88 / 384,
-    },
-    exactFrameVisibleHeightRatios: {
-      "cannon-i-e-walk-a": 242 / 384,
-      "cannon-i-w-walk-a": 242 / 384,
-      "cannon-i-e-walk-b": 246 / 384,
-      "cannon-i-w-walk-b": 246 / 384,
-      "cannon-i-e-attack": 197 / 384,
-      "cannon-i-se-attack": 197 / 384,
-      "cannon-i-w-attack": 197 / 384,
-      "cannon-i-nw-attack": 197 / 384,
-    },
-  }),
+  cannon_i: threeFrameMechanizedAnimation("cannon-i", 1.02),
   rifleman_late: directionalProductionAnimation("rifleman-late", 1, false, "legacy-mirrored", {
     authoredDirections: ["e"],
     fallbackDirection: "e",
@@ -354,43 +372,11 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
   }),
   grenadier_late: threeFrameBipedAnimation("grenadier-late", 1.04),
   cavalry: threeFrameCavalryAnimation("cavalry"),
-  cannon_ii: directionalProductionAnimation("cannon-ii", 1.02, true, "direct", {
-    poseVisibleHeightRatios: {
-      idle: 269.5 / 384,
-      "walk-a": 253.88 / 384,
-      "walk-b": 254.62 / 384,
-      attack: 254.75 / 384,
-    },
-    exactFrameVisibleHeightRatios: {
-      "cannon-ii-e-walk-a": 206 / 384,
-      "cannon-ii-w-walk-a": 206 / 384,
-      "cannon-ii-e-walk-b": 209 / 384,
-      "cannon-ii-w-walk-b": 209 / 384,
-      "cannon-ii-e-attack": 218 / 384,
-      "cannon-ii-se-attack": 218 / 384,
-      "cannon-ii-w-attack": 218 / 384,
-      "cannon-ii-nw-attack": 218 / 384,
-    },
-  }),
+  cannon_ii: threeFrameMechanizedAnimation("cannon-ii", 1.02),
   infantry: modernFootProductionAnimation("infantry", 0.98),
   machine_gunner: modernFootProductionAnimation("machine-gunner", 0.98),
   shock_trooper: modernFootProductionAnimation("shock-trooper", 1),
-  artillery_i: directionalProductionAnimation("artillery-i", 1.04, true, "direct", {
-    poseVisibleHeightRatios: {
-      idle: 263.5 / 384,
-      "walk-a": 259.75 / 384,
-      "walk-b": 259.75 / 384,
-      attack: 260.62 / 384,
-    },
-    exactFrameVisibleHeightRatios: {
-      "artillery-i-e-walk-a": 230 / 384,
-      "artillery-i-w-walk-a": 230 / 384,
-      "artillery-i-e-walk-b": 230 / 384,
-      "artillery-i-w-walk-b": 230 / 384,
-      "artillery-i-se-attack": 233 / 384,
-      "artillery-i-nw-attack": 233 / 384,
-    },
-  }),
+  artillery_i: threeFrameMechanizedAnimation("artillery-i", 1.04),
   automatic_rifleman: modernFootProductionAnimation("automatic-rifleman", 0.98),
   support_gunner: threeFrameBipedAnimation("support-gunner", 0.98, {
     groundOriginY: MODERN_FOOT_GROUND_ORIGIN_Y,
@@ -402,37 +388,15 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
     },
   }),
   mobile_infantry: modernFootProductionAnimation("mobile-infantry", 0.98),
-  artillery_ii: directionalProductionAnimation("artillery-ii", 1.04, true, "direct", {
-    poseVisibleHeightRatios: {
-      idle: 265.38 / 384,
-      "walk-a": 253.75 / 384,
-      "walk-b": 254.88 / 384,
-      attack: 257.75 / 384,
-    },
-    exactFrameVisibleHeightRatios: {
-      "artillery-ii-e-idle": 233 / 384,
-      "artillery-ii-w-idle": 233 / 384,
-      "artillery-ii-e-walk-a": 222 / 384,
-      "artillery-ii-w-walk-a": 222 / 384,
-      "artillery-ii-e-walk-b": 225 / 384,
-      "artillery-ii-w-walk-b": 225 / 384,
-      "artillery-ii-e-attack": 224 / 384,
-      "artillery-ii-w-attack": 224 / 384,
-    },
-  }),
-  tank: directionalProductionAnimation("tank", 1.06, true, "direct", {
-    exactFrameVisibleHeightRatios: {
-      "tank-se-attack": 243 / 384,
-      "tank-nw-attack": 243 / 384,
-    },
-  }),
+  artillery_ii: threeFrameMechanizedAnimation("artillery-ii", 1.04),
+  tank: threeFrameMechanizedAnimation("tank", 1.06),
   special_forces: modernFootProductionAnimation("special-forces", 0.98),
   heavy_gunner: modernFootProductionAnimation("heavy-gunner", 0.98),
   breakthrough_trooper: threeFrameBipedAnimation("breakthrough-trooper", 1, {
     groundOriginY: 288 / 384,
   }),
-  mobile_artillery: directionalProductionAnimation("mobile-artillery", 1.14, true),
-  modern_tank: directionalProductionAnimation("modern-tank", 1.06, true),
+  mobile_artillery: threeFrameMechanizedAnimation("mobile-artillery", 1.14),
+  modern_tank: threeFrameMechanizedAnimation("modern-tank", 1.06),
 };
 
 const EXTRA_UNIT_ANIMATION_PREFIXES = [
@@ -464,7 +428,7 @@ export const UNIT_ANIMATION_ASSETS = Object.values(UNIT_ANIMATION_REGISTRY)
   .concat(EXTRA_UNIT_ANIMATION_PREFIXES.flatMap((prefix) => listAnimationKeysForPrefix(prefix)))
   .filter((key, index, all) => all.indexOf(key) === index)
   .flatMap((key) => [
-    { key, path: assetUrl(`assets/production/units/${key}.png?v=20260807-supply3frame-2`) },
+    { key, path: assetUrl(`assets/production/units/${key}.png?v=20260807-mechanized3frame-1`) },
     ...(hasEnemyVariantForTexture(key)
       ? [{
           key: `${key}-enemy`,

@@ -186,10 +186,13 @@ to reason visibly and let them correct it.
   pose with the legs gathered under the horse. This replaces the abandoned
   10-frame horse budget. The rider, equipment, horse body, and ground anchor
   remain fixed while only the gait changes.
-- **Vehicles (tanks, artillery, wagons)**: no leg-crossing concept applies.
-  10-frame budget still applies for wheel/track rotation continuity (so
-  motion reads smoothly), but the per-frame content is wheel/track rotation
-  angle, not a gait.
+- **Vehicles (tanks and artillery; active override 2026-08-07)**: the former
+  10-frame budget is superseded by a three-frame forward cycle.
+  `walk-01,walk-02,walk-03` show successively advanced wheel spokes or
+  track/road-wheel markers and loop directly to `walk-01`. Do not use
+  biped/cavalry ping-pong because that reverses the running gear. Chassis,
+  barrel, crew, scale, and ground anchor remain fixed. Attack keeps the same
+  machine and crew with only compact barrel recoil and muzzle flash.
 
 ### Vehicle-specific artifact policy (point 5)
 
@@ -445,3 +448,17 @@ independent. Ground shadows and selection rings always use idle body width.
   clipping, body-height, stride-difference, and heal-reach checks.
 - Sandbox and `LaneBattleScene` resolve the same age-specific prefix. Modern
   early and modern mid/late are intentionally separate families.
+
+### Mechanized rollout (2026-08-07)
+
+- `cannon_i`, `cannon_ii`, `artillery_i`, `artillery_ii`, `tank`,
+  `mobile_artillery`, and `modern_tank` use canonical-E five-slot sources:
+  idle, three forward running-gear phases, and attack. W is mirrored at runtime.
+- Every family uses one idle-derived scale on a 768x384 canvas and a 336px
+  ground anchor. Median opaque-pixel anchoring prevents muzzle flash from
+  pulling the chassis sideways.
+- Generic biped walk sway/bob/rotation and whole-body ranged attack recoil are
+  disabled for these units in both sandbox and `LaneBattleScene`.
+- `tools/asset-qa/install_mechanized_three_frame_strips.py` installs the assets
+  and checks clipping, size consistency, distinct running-gear phases, attack
+  height, and body-anchor continuity.

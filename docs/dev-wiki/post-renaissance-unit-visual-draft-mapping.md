@@ -130,7 +130,18 @@
 | `mobile_artillery` | 자주포 | Modern Heavy Drafts | 6 | 중장비 메카나이즈드 계열 시안 |
 | `modern_tank` | 현대 전차 | Modern Heavy Drafts | 6 | 자주포보다 더 무겁게 갈 현대 전차 계열 시안 |
 
-## Next Step
+### 2026-08-07 Mechanized production rebuild
+
+- Seven artillery/vehicle entries now have separate uncut canonical-E
+  five-slot sources under `visual-drafts/mechanized-3frame-v1/`; they no longer
+  share the old board's final row.
+- Production poses are idle, three forward wheel/track phases, and attack.
+  Cannon I, later field guns, WWII tank, boxy self-propelled artillery, and
+  modern tank retain distinct era identities.
+- Attack keeps the same machine, crew, scale, and anchor as locomotion with
+  only barrel recoil and muzzle flash. W uses runtime mirroring.
+
+## Legacy Next Step
 
 - 새 포즈 마스터 보드를 기준으로, 병종별로 서쪽 기준
   `idle / walk-a / walk-b / walk-c / attack` 프레임을 실제 게임용

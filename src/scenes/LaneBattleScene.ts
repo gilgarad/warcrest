@@ -73,6 +73,7 @@ import {
   resolveAnimationTextureFromPrefix,
   getUnitAnimationDefinition,
   getUnitDirectionalPoses,
+  isMechanizedUnit,
   resolveUnitAnimationTexture,
   resolveUnitFacingDirection,
   resolveTeamUnitTextureKey,
@@ -198,6 +199,8 @@ const QUERY_PARAMS = new URLSearchParams(window.location.search);
 const FACING_DEAD_ZONE_WORLD_PX = 1.5;
 const HORIZONTAL_FACING_FLIP_DEAD_ZONE_WORLD_PX = 22;
 const COMBAT_FACING_HOLD_SEC = 0.2;
+const SUPPORT_ACQUISITION_RANGE_PROGRESS = 0.13;
+const SUPPORT_ARRIVAL_EPSILON_PROGRESS = 0.003;
 
 
 interface LaneUnit {
@@ -1150,6 +1153,34 @@ export class LaneBattleScene extends Phaser.Scene {
         this.publishDebug();
         this.scene.pause();
       },
+      prepareSupportSeekProbe: (
+        team: TeamId,
+        relation: "ahead" | "behind" | "far",
+      ) => {
+        this.units.forEach((unit) => this.destroyUnitPresentation(unit));
+        this.units = [];
+        this.activeProjectiles.forEach((projectile) => projectile.destroy());
+        this.activeProjectiles.clear();
+        const supportProgress = 0.5;
+        const forward = team === "player" ? 1 : -1;
+        const allyOffset = relation === "far"
+          ? forward * 0.22
+          : relation === "ahead" ? forward * 0.09 : forward * -0.06;
+        this.spawnLaneUnit(team, "support", "supply_wagon", supportProgress, 0);
+        this.spawnLaneUnit(team, "battle", "stone_axeman", supportProgress + allyOffset, 0);
+        const support = this.units.find((unit) => unit.role === "support");
+        const ally = this.units.find((unit) => unit.role === "battle");
+        if (!support || !ally) return;
+        support.attackTimerSec = 0;
+        support.manaCurrent = support.manaMax;
+        ally.attackTimerSec = 10;
+        ally.hp = Math.max(1, ally.maxHp - 20);
+        this.units.forEach((unit) => this.syncUnitPresentation(unit));
+        const focus = this.progressToScreen(supportProgress, 0, support.laneId);
+        this.cameras.main.centerOn(focus.x, focus.y);
+        this.publishDebug();
+        this.scene.pause();
+      },
       stepSupportProbe: (deltaSec: number) => {
         const support = this.units.find((unit) => unit.unitId === "supply_wagon" && unit.team === "player");
         if (!support) return;
@@ -1158,6 +1189,19 @@ export class LaneBattleScene extends Phaser.Scene {
         support.manaCurrent = Math.min(support.manaMax, support.manaCurrent + support.manaRegenPerSec * step);
         this.tickSupport(support, step);
         this.units.filter((unit) => unit.team === "player").forEach((unit) => this.syncUnitPresentation(unit));
+        this.publishDebug();
+      },
+      stepSupportSeekProbe: (deltaSec: number) => {
+        const step = Math.max(0, deltaSec);
+        this.units.filter((unit) => unit.role === "support").forEach((support) => {
+          support.attackTimerSec -= step;
+          support.manaCurrent = Math.min(
+            support.manaMax,
+            support.manaCurrent + support.manaRegenPerSec * step,
+          );
+          this.tickSupport(support, step);
+        });
+        this.units.forEach((unit) => this.syncUnitVisual(unit, step));
         this.publishDebug();
       },
     };
@@ -1689,25 +1733,67 @@ export class LaneBattleScene extends Phaser.Scene {
       && other.role === "battle"
       && other.laneId === unit.laneId,
     );
+    const healRange = unit.range * RANGE_TO_PROGRESS;
     const injured = allies
-      .filter((ally) => ally.hp < ally.maxHp && this.unitDistance(unit, ally) <= unit.range * RANGE_TO_PROGRESS)
-      .sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp);
-    if (injured.length > 0 && unit.attackTimerSec <= 0 && unit.manaCurrent >= unit.healManaCost) {
+      .filter((ally) => ally.hp < ally.maxHp)
+      .sort((a, b) => {
+        const distanceDelta = this.unitDistance(unit, a) - this.unitDistance(unit, b);
+        if (Math.abs(distanceDelta) > 0.004) return distanceDelta;
+        return a.hp / a.maxHp - b.hp / b.maxHp;
+      });
+    const injuredInRange = injured.filter((ally) => this.unitDistance(unit, ally) <= healRange);
+    if (injuredInRange.length > 0 && unit.attackTimerSec <= 0 && unit.manaCurrent >= unit.healManaCost) {
       unit.attackTimerSec = unit.attackCooldownSec;
       unit.manaCurrent -= unit.healManaCost;
-      this.startSupportCast(unit, injured[0].sprite.x, injured[0].sprite.y, () => this.applySupportHeal(unit));
+      this.startSupportCast(
+        unit,
+        injuredInRange[0].sprite.x,
+        injuredInRange[0].sprite.y,
+        () => this.applySupportHeal(unit),
+      );
       return;
     }
 
-    const allyFront = allies.sort((a, b) => (unit.team === "player" ? b.progress - a.progress : a.progress - b.progress))[0];
-    if (allyFront) {
-      const desired = unit.team === "player" ? allyFront.progress - 0.06 : allyFront.progress + 0.06;
-      if ((unit.team === "player" && unit.progress < desired) || (unit.team === "enemy" && unit.progress > desired)) {
-        this.advanceUnit(unit, deltaSec);
-      }
-    } else {
-      this.advanceUnit(unit, deltaSec);
-    }
+    const pursuedInjured = injured.find(
+      (ally) => this.unitDistance(unit, ally) <= SUPPORT_ACQUISITION_RANGE_PROGRESS,
+    );
+    const nearestAlly = [...allies]
+      .filter((ally) => this.unitDistance(unit, ally) <= SUPPORT_ACQUISITION_RANGE_PROGRESS)
+      .sort((a, b) => this.unitDistance(unit, a) - this.unitDistance(unit, b))[0];
+    const target = pursuedInjured ?? nearestAlly;
+    if (!target) return;
+
+    const currentDistance = this.unitDistance(unit, target);
+    const desiredRange = healRange * (pursuedInjured ? 0.68 : 0.78);
+    if (currentDistance <= desiredRange) return;
+    this.moveSupportTowardAlly(unit, target, desiredRange, deltaSec);
+  }
+
+  private moveSupportTowardAlly(
+    unit: LaneUnit,
+    ally: LaneUnit,
+    desiredRange: number,
+    deltaSec: number,
+  ): void {
+    const trailingDirection = unit.team === "player" ? -1 : 1;
+    const desiredProgress = Phaser.Math.Clamp(
+      ally.progress + trailingDirection * desiredRange,
+      0.01,
+      0.99,
+    );
+    const desiredLaneRow = ally.laneRow;
+    if (
+      progressBetween(unit.progress, desiredProgress) <= SUPPORT_ARRIVAL_EPSILON_PROGRESS
+      && Math.abs(unit.laneRow - desiredLaneRow) <= 0.18
+    ) return;
+
+    // Use the full ally-relative destination for facing. A one-tick movement
+    // delta is below the flip dead zone and previously left support walking backward.
+    this.setUnitTravelFacing(unit, desiredProgress, desiredLaneRow);
+    const moveStep = unit.speed * UNIT_PROGRESS_SPEED * deltaSec;
+    unit.progress = this.moveToward(unit.progress, desiredProgress, moveStep);
+    unit.laneRow = Phaser.Math.Linear(unit.laneRow, desiredLaneRow, Math.min(1, deltaSec * 4.2));
+    this.keepUnitInPlayableLane(unit);
   }
 
   private applySupportHeal(unit: LaneUnit): void {
@@ -1715,6 +1801,7 @@ export class LaneBattleScene extends Phaser.Scene {
       .filter((ally) => (
         ally.team === unit.team
         && ally.role === "battle"
+        && ally.laneId === unit.laneId
         && ally.hp < ally.maxHp
         && this.unitDistance(unit, ally) <= unit.range * RANGE_TO_PROGRESS
       ))
@@ -3338,12 +3425,17 @@ export class LaneBattleScene extends Phaser.Scene {
     unit.lastPresentationX = pos.x;
     unit.lastPresentationY = pos.y;
 
-    const rawWalkMotion = moving ? resolveWalkMotion(walkCycleProgress, locomotionFacingX) : { swayX: 0, lift: 0, rotationRad: 0 };
+    const mechanized = isMechanizedUnit(unit.unitId);
+    const rawWalkMotion = moving && !mechanized
+      ? resolveWalkMotion(walkCycleProgress, locomotionFacingX)
+      : { swayX: 0, lift: 0, rotationRad: 0 };
     const walkMotion = unit.role === "support"
       ? { ...rawWalkMotion, rotationRad: 0 }
       : rawWalkMotion;
-    const bob = moving ? Math.sin(gait) * 0.72 + walkMotion.lift : Math.sin(this.elapsedSec * 4 + unit.bobPhase) * 0.35;
-    const targetAttackMotion = resolveAttackMotion({
+    const bob = mechanized
+      ? 0
+      : moving ? Math.sin(gait) * 0.72 + walkMotion.lift : Math.sin(this.elapsedSec * 4 + unit.bobPhase) * 0.35;
+    const targetAttackMotion = mechanized ? { offsetX: 0, lift: 0, rotationRad: 0 } : resolveAttackMotion({
       role: unit.role,
       melee: this.isMeleeUnit(unit),
       ranged: this.isRangedUnit(unit),

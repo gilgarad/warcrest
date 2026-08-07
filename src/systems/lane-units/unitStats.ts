@@ -29,6 +29,42 @@ export const NORMALIZED_MOVE_SPEED = 1;
 export const NORMALIZED_RANGED_RANGE_MULTIPLIER = 1;
 export const NORMALIZED_ATTACK_SPEED = 1;
 
+export const BATTLE_UNIT_MOVE_SPEEDS: Record<BattleUnitId, number> = {
+  stone_slinger: 1,
+  stone_axeman: 1,
+  bronze_swordsman: 1,
+  bronze_spearman: 1,
+  archer: 1,
+  iron_swordsman: 1,
+  iron_spearman: 1,
+  musketeer: 1.2,
+  knight: 1.5,
+  pikeman: 0.8,
+  heavy_cavalry: 1.2,
+  rifleman: 1.2,
+  grenadier: 1.2,
+  light_cavalry: 1.5,
+  cannon_i: 0.8,
+  rifleman_late: 1.2,
+  grenadier_late: 1.2,
+  cavalry: 1.5,
+  cannon_ii: 0.8,
+  infantry: 1.2,
+  machine_gunner: 1,
+  shock_trooper: 1.2,
+  artillery_i: 1.2,
+  automatic_rifleman: 1.2,
+  support_gunner: 1.2,
+  mobile_infantry: 1.2,
+  artillery_ii: 1.2,
+  tank: 1.5,
+  special_forces: 1.2,
+  heavy_gunner: 1,
+  breakthrough_trooper: 1.2,
+  mobile_artillery: 1.5,
+  modern_tank: 1.5,
+};
+
 function meleeRange(multiplier: number): Pick<UnitStatDef, "range" | "rangeProfile" | "rangeMultiplier"> {
   return {
     range: resolveAttackRangeUnits("melee", multiplier),
@@ -57,7 +93,7 @@ function supportRange(multiplier = 1): Pick<UnitStatDef, "range" | "rangeProfile
   };
 }
 
-export const UNIT_STATS: Record<LaneUnitId, UnitStatDef> = {
+const BASE_UNIT_STATS: Record<LaneUnitId, UnitStatDef> = {
   stone_slinger: { hp: 30, attack: 5, defense: 2, ...rangedRangeUnits(3), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.3, label: "투석", textureKey: "stone-slinger-w-idle", tint: 0xd4b27c },
   stone_axeman: { hp: 50, attack: 9, defense: 3, ...meleeRange(1), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.0, label: "도끼", textureKey: "stone-axeman-w-idle", tint: 0xa7b1be },
   bronze_swordsman: { hp: 60, attack: 12, defense: 5, ...meleeRange(1), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 0.95, label: "청동검", textureKey: "bronze-swordsman-w-idle", tint: 0xe1af64 },
@@ -72,33 +108,46 @@ export const UNIT_STATS: Record<LaneUnitId, UnitStatDef> = {
   rifleman: { hp: 60, attack: 18, defense: 6, ...rangedRangeUnits(5.5), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.8, label: "소총병 I", textureKey: "rifleman-w-idle", tint: 0xc8c0ff },
   grenadier: { hp: 60, attack: 22, defense: 6, ...rangedRangeUnits(3), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 2.0, label: "척탄병 I", textureKey: "grenadier-w-idle", tint: 0xffc98e },
   light_cavalry: { hp: 90, attack: 23, defense: 10, ...meleeRange(1.2), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.25, label: "경기병", textureKey: "light-cavalry-w-idle", tint: 0xffe0ac },
-  cannon_i: { hp: 50, attack: 30, defense: 8, ...rangedRangeUnits(7), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 2.6, label: "대포 I", textureKey: "cannon-i-w-idle", tint: 0xb9c7d8 },
+  cannon_i: { hp: 50, attack: 30, defense: 8, ...rangedRangeUnits(7), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 2.6, label: "대포 I", textureKey: "cannon-i-e-idle", tint: 0xb9c7d8 },
   rifleman_late: { hp: 70, attack: 22, defense: 6, ...rangedRangeUnits(6), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.65, label: "소총병 II", textureKey: "rifleman-late-w-idle", tint: 0xd8d0ff },
   grenadier_late: { hp: 70, attack: 25, defense: 6, ...rangedRangeUnits(4), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.85, label: "척탄병 II", textureKey: "grenadier-late-w-idle", tint: 0xffcf99 },
   cavalry: { hp: 120, attack: 28, defense: 12, ...meleeRange(1.27), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.2, label: "기병대", textureKey: "cavalry-w-idle", tint: 0xffdfb5 },
-  cannon_ii: { hp: 70, attack: 36, defense: 8, ...rangedRangeUnits(8), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 2.35, label: "대포 II", textureKey: "cannon-ii-w-idle", tint: 0xc9d2e0 },
+  cannon_ii: { hp: 70, attack: 36, defense: 8, ...rangedRangeUnits(8), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 2.35, label: "대포 II", textureKey: "cannon-ii-e-idle", tint: 0xc9d2e0 },
   infantry: { hp: 70, attack: 30, defense: 10, ...rangedRangeUnits(6), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.45, label: "보병", textureKey: "infantry-w-idle", tint: 0xe2d8ff },
   machine_gunner: { hp: 70, attack: 32, defense: 26, ...rangedRangeUnits(5.5), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 0.8, label: "기관총병", textureKey: "machine-gunner-w-idle", tint: 0xced7ff },
   shock_trooper: { hp: 70, attack: 36, defense: 13, ...meleeRange(1.13), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 0.8, label: "돌격병", textureKey: "shock-trooper-w-idle", tint: 0xf1d9d9 },
-  artillery_i: { hp: 80, attack: 42, defense: 20, ...rangedRangeUnits(10), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 2.45, label: "포병 I", textureKey: "artillery-i-w-idle", tint: 0xc4d3de },
+  artillery_i: { hp: 80, attack: 42, defense: 20, ...rangedRangeUnits(10), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 2.45, label: "포병 I", textureKey: "artillery-i-e-idle", tint: 0xc4d3de },
   automatic_rifleman: { hp: 70, attack: 34, defense: 20, ...rangedRangeUnits(6.5), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.0, label: "자동소총병", textureKey: "automatic-rifleman-w-idle", tint: 0xd6e1ff },
   support_gunner: { hp: 70, attack: 30, defense: 24, ...rangedRangeUnits(4), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.15, label: "지원화기병", textureKey: "support-gunner-w-idle", tint: 0xc4dbff },
   mobile_infantry: { hp: 70, attack: 38, defense: 30, ...rangedRangeUnits(5), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 0.95, label: "기동병", textureKey: "mobile-infantry-w-idle", tint: 0xebe1d3 },
-  artillery_ii: { hp: 90, attack: 50, defense: 26, ...rangedRangeUnits(12), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 2.15, label: "포병 II", textureKey: "artillery-ii-w-idle", tint: 0xd2dde5 },
-  tank: { hp: 150, attack: 45, defense: 50, ...rangedRangeUnits(9), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.9, label: "전차", textureKey: "tank-w-idle", tint: 0xa0c394 },
+  artillery_ii: { hp: 90, attack: 50, defense: 26, ...rangedRangeUnits(12), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 2.15, label: "포병 II", textureKey: "artillery-ii-e-idle", tint: 0xd2dde5 },
+  tank: { hp: 150, attack: 45, defense: 50, ...rangedRangeUnits(9), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.9, label: "전차", textureKey: "tank-e-idle", tint: 0xa0c394 },
   special_forces: { hp: 80, attack: 38, defense: 22, ...rangedRangeUnits(7), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 0.9, label: "특수보병", textureKey: "special-forces-w-idle", tint: 0xe4ecff },
   heavy_gunner: { hp: 80, attack: 36, defense: 20, ...rangedRangeUnits(4), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.0, label: "중화기병", textureKey: "heavy-gunner-w-idle", tint: 0xcad6ff },
   breakthrough_trooper: { hp: 110, attack: 52, defense: 22, ...meleeRange(1.27), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 0.75, label: "돌파병", textureKey: "breakthrough-trooper-w-idle", tint: 0xf0d4c1 },
-  mobile_artillery: { hp: 120, attack: 64, defense: 18, ...rangedRangeUnits(12), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.85, label: "자주포", textureKey: "mobile-artillery-w-idle", tint: 0xcddbe2 },
-  modern_tank: { hp: 200, attack: 60, defense: 60, ...rangedRangeUnits(10), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.6, label: "현대 전차", textureKey: "modern-tank-w-idle", tint: 0x9ac089 },
+  mobile_artillery: { hp: 120, attack: 64, defense: 18, ...rangedRangeUnits(12), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.85, label: "자주포", textureKey: "mobile-artillery-e-idle", tint: 0xcddbe2 },
+  modern_tank: { hp: 200, attack: 60, defense: 60, ...rangedRangeUnits(10), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.6, label: "현대 전차", textureKey: "modern-tank-e-idle", tint: 0x9ac089 },
   supply_wagon: { hp: 28, attack: 0, defense: 1, ...supportRange(1), speed: NORMALIZED_MOVE_SPEED, attackSpeed: NORMALIZED_ATTACK_SPEED, attackCooldownSec: 1.2, healPower: getSupportHealPower("stone"), label: "보급", textureKey: "supply-wagon-ancient-e-idle", tint: 0x89da93 },
 };
+
+export const UNIT_STATS: Record<LaneUnitId, UnitStatDef> = Object.fromEntries(
+  Object.entries(BASE_UNIT_STATS).map(([unitId, stats]) => [
+    unitId,
+    {
+      ...stats,
+      speed: unitId === "supply_wagon"
+        ? 0.8
+        : BATTLE_UNIT_MOVE_SPEEDS[unitId as BattleUnitId],
+    },
+  ]),
+) as Record<LaneUnitId, UnitStatDef>;
 
 export interface SupportWagonAgeStats {
   hp: number;
   attack: number;
   defense: number;
   range: number;
+  speed: number;
   textureKey: string;
   tint: number;
 }
@@ -106,21 +155,21 @@ export interface SupportWagonAgeStats {
 export function getSupportWagonAgeStats(ageId: AgeId): SupportWagonAgeStats {
   const group = getAge(ageId).productionGroup;
   if (group === "ancient" || group === "classical") {
-    return { hp: 28, attack: 0, defense: 1, range: 3, textureKey: "supply-wagon-ancient-e-idle", tint: 0x89da93 };
+    return { hp: 28, attack: 0, defense: 1, range: 3, speed: 0.8, textureKey: "supply-wagon-ancient-e-idle", tint: 0x89da93 };
   }
   if (group === "iron") {
-    return { hp: 40, attack: 0, defense: 3, range: 3.5, textureKey: "supply-wagon-iron-e-idle", tint: 0x93c9a3 };
+    return { hp: 40, attack: 0, defense: 3, range: 3.5, speed: ageId === "iron_late" ? 1 : 0.8, textureKey: "supply-wagon-iron-e-idle", tint: 0x93c9a3 };
   }
   if (group === "renaissance") {
-    return { hp: 60, attack: 0, defense: 8, range: 4, textureKey: "supply-wagon-renaissance-e-idle", tint: 0xa3c3d6 };
+    return { hp: 60, attack: 0, defense: 8, range: 4, speed: 1, textureKey: "supply-wagon-renaissance-e-idle", tint: 0xa3c3d6 };
   }
   if (group === "industrial") {
-    return { hp: 80, attack: 0, defense: 14, range: 4.5, textureKey: "supply-wagon-industrial-e-idle", tint: 0xb0b7d8 };
+    return { hp: 80, attack: 0, defense: 14, range: 4.5, speed: 1.2, textureKey: "supply-wagon-industrial-e-idle", tint: 0xb0b7d8 };
   }
   if (ageId === "modern_early") {
-    return { hp: 120, attack: 0, defense: 30, range: 5, textureKey: "supply-wagon-modern-early-e-idle", tint: 0xb2d0ea };
+    return { hp: 120, attack: 0, defense: 30, range: 5, speed: 1.3, textureKey: "supply-wagon-modern-early-e-idle", tint: 0xb2d0ea };
   }
-  return { hp: 140, attack: 0, defense: 40, range: 5.5, textureKey: "supply-wagon-modern-late-e-idle", tint: 0xc6def2 };
+  return { hp: 140, attack: 0, defense: 40, range: 5.5, speed: 1.3, textureKey: "supply-wagon-modern-late-e-idle", tint: 0xc6def2 };
 }
 
 export function getProjectileKeyForUnit(unitId: LaneUnitId): string {

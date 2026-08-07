@@ -5414,3 +5414,58 @@ Use consistent headings so entries are easy to grep.
   unchanged.
 - Reinstalled the six-family production sheet, reran asset QA, and bumped the
   browser asset revision so the corrected modern frames replace cached art.
+
+## 2026-08-07 - Mechanized three-frame forward locomotion
+
+- Rebuilt four cannon/artillery and three tracked vehicle families as separate
+  canonical-E five-slot strips: idle, three running-gear phases, and attack.
+- Replaced human-style ping-pong with a forward-only `01,02,03` cycle so wheels
+  and tracks do not reverse. W uses runtime mirroring.
+- Normalized each family with one chassis scale and ground anchor. Attack keeps
+  the same machine and crew, adding only authored recoil and muzzle flash.
+- Disabled whole-sprite walk rocking and ranged attack lunging for mechanized
+  units in both sandbox and the game scene.
+- Added reproducible installation/QA and focused sandbox plus real-game
+  Playwright coverage. Asset QA passed `7/7`; focused Playwright passed `3/3`.
+
+## 2026-08-07 - Support ally seeking, healing range, and facing
+
+- Replaced the fixed 0.06-progress frontline trail distance, which exceeded
+  the Stone Age 0.039 heal range and kept support from ever casting normally.
+- Support now prioritizes nearby injured allies, moves both forward and
+  backward until inside an age-specific heal range, and otherwise accompanies
+  only the nearest ally within a bounded acquisition radius. With no nearby
+  ally it waits instead of advancing alone.
+- Seeking uses the support unit's normal configured movement speed; it has no
+  hidden catch-up multiplier. Healing remains mana/cooldown gated after range
+  acquisition.
+- Facing now uses the full ally-relative destination instead of a sub-pixel
+  one-tick delta. Canonical Stone Age art remains right-facing; runtime mirrors
+  it only when actual movement is leftward.
+- Added focused player/enemy pursuit, backward-turn, out-of-range wait, and
+  cast-acquisition Playwright coverage. Existing delayed heal-event coverage
+  also passes.
+
+## 2026-08-07 - Planned differentiated movement-speed table
+
+- Recorded the user-approved movement multipliers for all 33 current battle
+  unit IDs without changing runtime stats.
+- Split the balance reference into `current movement speed` and `planned
+  movement speed`; current runtime speed remains normalized to `1`.
+- Mapped the support-unit age bands to the current age model: Stone through
+  Mid Iron `0.8`, Late Iron/Renaissance `1.0`, Industrial `1.2`, and Modern
+  `1.3`. `iron_late` is the project's existing late-medieval stage.
+
+## 2026-08-07 - Differentiated movement speeds applied
+
+- Applied the approved `0.8/1.0/1.2/1.5` battle-unit speed multipliers through
+  an exhaustive `Record<BattleUnitId, number>` so new or missing roster IDs
+  fail type checking.
+- Extended age-specific support stats with movement speed and wired it through
+  `resolveSpawnUnitStats`: Stone through Mid Iron `0.8`, Late Iron and
+  Renaissance `1.0`, Industrial `1.2`, Modern `1.3`.
+- Added independent regression expectations for all 33 battle units and all
+  11 support production ages, and synchronized current values in the balance
+  reference.
+- Updated the support pursuit Playwright assertion to compare against its
+  starting position rather than a `speed = 1`-specific absolute threshold.

@@ -24,6 +24,7 @@ export function resolveSpawnUnitStats(
         defense: supportAgeStats.defense,
         range: supportAgeStats.range,
         rangeMultiplier: supportAgeStats.range / 4.4,
+        speed: supportAgeStats.speed,
         textureKey: supportAgeStats.textureKey,
         tint: supportAgeStats.tint,
       };

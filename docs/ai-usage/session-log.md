@@ -5449,3 +5449,67 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   strap while retaining the raised blue-light heal hand.
 - **Production**: chroma removal, common-scale installation, automated supply
   QA, focused presentation checks, build, and tests were rerun before commit.
+
+## 2026-08-07 - Mechanized locomotion and attack continuity
+
+- **User direction**: "이건 바퀴가 있는 거라 어떤식으로 프레임을 짜야
+  움직이는 것처럼 보이게 될지를 좀 고민을 먼저 하고 진행해줘."
+- **Design decision**: unlike biped and cavalry ping-pong, mechanized running
+  gear uses a forward-only three-phase loop. The chassis remains fixed while
+  spokes, tread links, and road-wheel markers advance.
+- **AI production**: Codex used the built-in image generator to create seven
+  separate uncut right-facing strips. Cannon I and mobile artillery were
+  regenerated after visual review because the first candidates were
+  anachronistic or insufficiently distinct.
+- **Engineering**: added common-scale/anchor installation, automated clipping
+  and phase-difference QA, E/W runtime presentation, and mechanized-specific
+  suppression of generic whole-body walk/attack motion.
+- **Validation**: production contact-sheet review, asset QA `7/7`, and focused
+  sandbox/real-game Playwright `3/3` passed.
+
+## 2026-08-07 - Support seeking and healing correction
+
+- **User report**: allied support did not heal, enemy support stopped healing
+  after a small separation, and Stone Age support sometimes appeared to walk
+  backward.
+- **Root cause**: support followed the frontline at a hard-coded 0.06 progress
+  gap while Stone Age healing reached only 0.039. It selected the frontline
+  rather than an injured ally, advanced alone with no ally, and attempted to
+  update facing from a one-tick destination too small to cross the flip dead
+  zone.
+- **Correction**: injured-first bounded ally acquisition, bidirectional
+  movement at the unit's normal configured speed, age-range-relative arrival
+  distance, no-ally waiting, and full destination-based facing.
+- **Visual verification**: canonical Stone Age source art was confirmed to
+  face right. Focused captures confirmed player-right, enemy-left, and player
+  backward-left movement without backstepping.
+
+## 2026-08-07 - Movement-speed design table recorded, runtime unchanged
+
+- **User direction**: assign planned movement multipliers by unit group and
+  age-specific support tier, update the table only, and report any omitted
+  roster entries without applying the values to the game yet.
+- **AI action**: Codex compared the supplied names against the live
+  `BattleUnitId` union and found all 33 combat units covered. It added a
+  separate planned-speed column to the balance reference while retaining the
+  current runtime-speed column at `1`.
+- **Age interpretation**: the existing `iron_late` definition explicitly
+  represents the end of the medieval period, so support speed is documented as
+  Stone/Mid-Iron `0.8`, Late-Iron/Renaissance `1.0`, Industrial `1.2`, and
+  Modern `1.3`.
+- **Scope**: documentation only; no source or runtime movement value changed.
+
+## 2026-08-07 - Approved movement-speed multipliers implemented
+
+- **User direction**: apply the previously recorded movement-speed table, then
+  commit and push the accumulated work.
+- **AI implementation**: Codex introduced a compile-time exhaustive movement
+  table for all battle-unit IDs and connected support speed to its existing
+  age-specific spawn-stat resolver. The scene's baseline movement formula was
+  not altered; only each unit's multiplier now differs.
+- **Regression design**: tests contain an independent copy of the approved 33
+  battle-unit values plus the complete 11-age support mapping, preventing a
+  self-referential configuration test from masking incorrect numbers.
+- **Focused browser regression**: the new Stone support speed exposed one stale
+  absolute-position assertion. Codex changed it to verify actual backward
+  displacement from the starting position; both support pursuit tests passed.

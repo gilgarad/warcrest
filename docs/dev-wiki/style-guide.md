@@ -114,6 +114,21 @@ interface UnitAnimationDefinition {
   transparent canvas, and a 336px foot anchor. Extended hands and light effects
   do not redefine the body center or visual height.
 
+### 1.4 Mechanized animation contract
+
+- Cannon, artillery, tank, and self-propelled artillery assets use canonical
+  E source art and W runtime mirroring; unused compass directions stay
+  disconnected.
+- Locomotion is a forward-only `walk-01,walk-02,walk-03` loop. Spoked wheels
+  rotate through three distinct angles; tracked vehicles advance tread links
+  and road-wheel markers. Never ping-pong these frames.
+- Chassis, crew, turret/barrel, scale, and ground anchor remain stable across
+  idle, locomotion, and attack. Attack may add short barrel recoil and compact
+  muzzle flash, but may not redesign, rescale, or move the whole vehicle.
+- Never hide wheels or tracks with dust, sand, smoke clouds, motion blur, or
+  speed lines. Running gear, barrel tips, and crew extremities must stay inside
+  the transparent canvas.
+
 ## 2. Measured source problem
 
 The current pose PNGs are `1152 x 1024`, while their alpha bounds are much
