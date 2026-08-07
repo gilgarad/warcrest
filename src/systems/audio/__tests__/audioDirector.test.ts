@@ -24,9 +24,18 @@ describe("AudioDirector", () => {
     const { backend, director } = setup();
     director.setState("battle-low");
     director.setState("battle-high");
-    expect(backend.bgmVoices.length).toBe(2);
-    expect(backend.bgmVoices[0].stopped).toBe(true); // low was faded out
+    expect(backend.bgmVoices.length).toBe(1);
+    expect(backend.bgmVoices[0].stopped).toBe(false);
     expect(director.state).toBe("battle-high");
+  });
+
+  it("crossfades to a new era track when the gameplay theme changes mid-battle", () => {
+    const { backend, director } = setup();
+    director.setState("battle-low");
+    director.setGameplayTheme("industrial");
+    expect(backend.bgmVoices.length).toBe(2);
+    expect(backend.bgmVoices[0].stopped).toBe(true);
+    expect(director.currentGameplayTheme).toBe("industrial");
   });
 
   it("fortress-under-attack layers a warning instead of replacing the current track", () => {

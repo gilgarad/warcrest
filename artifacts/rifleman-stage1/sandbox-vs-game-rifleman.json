@@ -1,0 +1,160 @@
+[
+  {
+    "direction": "e",
+    "phase": 0.55,
+    "sandbox": {
+      "unitId": "rifleman",
+      "team": "player",
+      "ageId": "stone",
+      "direction": "e",
+      "mode": "walk",
+      "autoplay": false,
+      "manualPhase": 0.55,
+      "textureKey": "rifleman-e-walk-03",
+      "textureKeyResolved": "rifleman-e-walk-03",
+      "directionMode": "legacy-mirrored",
+      "flipX": false,
+      "spriteWidth": 156.1031111111111,
+      "spriteHeight": 156.1031111111111,
+      "spriteX": 869.6600813061875,
+      "spriteY": 469.0758271512219
+    },
+    "game": {
+      "id": 53,
+      "team": "player",
+      "unitId": "rifleman",
+      "role": "battle",
+      "laneId": "north",
+      "progress": 0.455,
+      "laneRow": 0,
+      "hp": 60,
+      "maxHp": 60,
+      "facingX": 1,
+      "facingDirection": "e",
+      "travelFacingX": 1,
+      "travelFacingDirection": "e",
+      "combatFacingX": 1,
+      "combatFacingDirection": "e",
+      "flipX": false,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "rifleman-e-walk-03",
+      "renderTexture": "rifleman-e-walk-03",
+      "attackAnimTime": 0,
+      "attackFacingLockSec": 0,
+      "combatFacingHoldSec": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3839.6600813061877,
+        "y": 860.5411145915225,
+        "rotationRad": -0.00016230589874943746,
+        "spriteDisplayWidth": 302.9951690821256,
+        "spriteDisplayHeight": 302.9951690821256
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "소총병 I Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.36,
+        "targetKind": "unit",
+        "eventDelayMs": 165.6
+      }
+    },
+    "screenshots": {
+      "sandbox": "artifacts/rifleman-stage1/sandbox-e-walk-03.png",
+      "game": "artifacts/rifleman-stage1/game-e-walk-03.png"
+    }
+  },
+  {
+    "direction": "w",
+    "phase": 0.55,
+    "sandbox": {
+      "unitId": "rifleman",
+      "team": "player",
+      "ageId": "stone",
+      "direction": "w",
+      "mode": "walk",
+      "autoplay": false,
+      "manualPhase": 0.55,
+      "textureKey": "rifleman-e-walk-03",
+      "textureKeyResolved": "rifleman-e-walk-03",
+      "directionMode": "legacy-mirrored",
+      "flipX": true,
+      "spriteWidth": 156.1031111111111,
+      "spriteHeight": 156.1031111111111,
+      "spriteX": 870.3399186938125,
+      "spriteY": 469.0758271512219
+    },
+    "game": {
+      "id": 54,
+      "team": "player",
+      "unitId": "rifleman",
+      "role": "battle",
+      "laneId": "north",
+      "progress": 0.545,
+      "laneRow": 0,
+      "hp": 60,
+      "maxHp": 60,
+      "facingX": -1,
+      "facingDirection": "w",
+      "travelFacingX": -1,
+      "travelFacingDirection": "w",
+      "combatFacingX": -1,
+      "combatFacingDirection": "w",
+      "flipX": true,
+      "tint": 16777215,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "rifleman-e-walk-03",
+      "renderTexture": "rifleman-e-walk-03",
+      "attackAnimTime": 0,
+      "attackFacingLockSec": 0,
+      "combatFacingHoldSec": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 3840.3399186938123,
+        "y": 860.9831857449238,
+        "rotationRad": 0.00016230589874943746,
+        "spriteDisplayWidth": 302.9951690821256,
+        "spriteDisplayHeight": 302.9951690821256
+      },
+      "overlay": {
+        "mode": "detail",
+        "hpVisible": true,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "소총병 I Lv.1"
+      },
+      "attackTiming": {
+        "durationSec": 0.46,
+        "eventProgress": 0.36,
+        "targetKind": "unit",
+        "eventDelayMs": 165.6
+      }
+    },
+    "screenshots": {
+      "sandbox": "artifacts/rifleman-stage1/sandbox-w-walk-03.png",
+      "game": "artifacts/rifleman-stage1/game-w-walk-03.png"
+    }
+  }
+]

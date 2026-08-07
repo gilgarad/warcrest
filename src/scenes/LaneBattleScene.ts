@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { AGES, getAge, type AgeId } from "../data/ages";
+import { AGES, getAge, type AgeId, type AgeProductionGroup } from "../data/ages";
 import {
   BASE_WORKER_COST,
   AI_INSTANT_WAVE_MIN_REMAINING_SEC,
@@ -146,6 +146,7 @@ import {
 } from "../systems/lane-economy/researchState";
 import { TOWER_RESEARCH_SUBJECT_ID, type ResearchSubjectId } from "../systems/lane-economy/researchSubjects";
 import {
+  commitForcedWaveDeployment,
   commitWaveDeployment,
   createWaveDeploymentPlan,
   getInstantWaveEligibility,
@@ -338,6 +339,24 @@ const TOWER_CAPTURE_RATE_PER_SEC = 0.34;
 const SUPPLY_DEPOT_ATTACK_BUFF_MULTIPLIER = 1.2;
 const SUPPLY_DEPOT_SUPPORT_MANA_RESTORE = 6;
 const STRUCTURE_SOCKET_ATTACH_Y = 12;
+
+function resolveGameplayMusicTheme(group: AgeProductionGroup): "stone" | "bronze" | "medieval" | "renaissance" | "industrial" | "modern" {
+  switch (group) {
+    case "ancient":
+      return "stone";
+    case "classical":
+      return "bronze";
+    case "iron":
+      return "medieval";
+    case "renaissance":
+      return "renaissance";
+    case "industrial":
+      return "industrial";
+    case "modern":
+      return "modern";
+  }
+}
+
 function progressBetween(a: number, b: number): number {
   return Math.abs(a - b);
 }
@@ -432,6 +451,7 @@ export class LaneBattleScene extends Phaser.Scene {
 
     this.player = createTeamState("player", makeResourceMap(20, 20, 20, 0), PLAYER_BASE_HP);
     this.enemy = createTeamState("enemy", makeResourceMap(20, 20, 20, 0), ENEMY_BASE_HP);
+    this.syncGameplayMusicTheme();
 
     this.drawBattlefield();
     this.worldObjects.push(...this.children.list);
@@ -469,6 +489,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.tickCombat(deltaSec);
     this.refreshUnitOverlayDensity();
     this.tickCapturePoints(deltaSec);
+    this.syncGameplayMusicTheme();
     this.updateAudioState();
     this.refreshUi();
     this.publishDebug();
@@ -787,11 +808,12 @@ export class LaneBattleScene extends Phaser.Scene {
         if (!definition || !poses) return;
         this.units.forEach((unit) => this.destroyUnitPresentation(unit));
         this.units = [];
+        const walkPreview = poses.walk.length >= 3
+          ? [poses.walk[0], poses.walk[Math.floor(poses.walk.length / 2)], poses.walk[poses.walk.length - 1]]
+          : poses.walk;
         const textures = [
           poses.idle,
-          poses.walkA,
-          poses.walkB,
-          poses.walkC,
+          ...walkPreview,
           poses.attack[poses.attack.length - 1] ?? poses.idle,
         ];
         textures.forEach((texture, index) => {
@@ -1067,6 +1089,13 @@ export class LaneBattleScene extends Phaser.Scene {
         const unit = this.units.find((entry) => entry.sprite.visible);
         if (!unit) return;
         this.syncUnitVisual(unit, 1 / 60);
+        this.publishDebug();
+      },
+      setDirectionalAuditPhase: (phase: number) => {
+        const unit = this.units.find((entry) => entry.sprite.visible);
+        if (!unit) return;
+        unit.walkCyclePhase = Phaser.Math.Wrap(phase, 0, 1);
+        this.syncUnitPresentation(unit);
         this.publishDebug();
       },
       setUnitsVisible: (visible: boolean) => {
@@ -1487,6 +1516,11 @@ export class LaneBattleScene extends Phaser.Scene {
         ? playerTower.built ? playerTower.hp / playerTower.maxHp : 0
         : 1,
     });
+  }
+
+  private syncGameplayMusicTheme(): void {
+    const theme = resolveGameplayMusicTheme(getAge(this.player.ageId).productionGroup);
+    this.audio.setGameplayMusicTheme(theme);
   }
 
   private playWorldSfx(
@@ -2882,7 +2916,11 @@ export class LaneBattleScene extends Phaser.Scene {
       return false;
     }
 
-    commitWaveDeployment(team, plan.foodCost);
+    if (forced) {
+      commitForcedWaveDeployment(team, plan.foodCost);
+    } else {
+      commitWaveDeployment(team, plan.foodCost);
+    }
     this.spawnWaveUnits(team, plan.roster);
 
     if (team.id === "player") this.hud.setInfo(forced ? "즉시 웨이브를 투입했습니다" : "정규 웨이브가 출전했습니다");
@@ -3040,9 +3078,7 @@ export class LaneBattleScene extends Phaser.Scene {
     const stats = resolveSpawnUnitStats(unitId, productionAgeId, researchState);
     const pos = this.progressToScreen(progress, laneRow, laneId);
     const displaySize = role === "support" ? 86 : 76;
-    const initialFacingDirection: UnitFacingDirection = role === "support"
-      ? (team === "player" ? "e" : "w")
-      : (team === "player" ? "ne" : "sw");
+    const initialFacingDirection: UnitFacingDirection = team === "player" ? "e" : "w";
     const animationPrefix = deriveAnimationPrefix(stats.textureKey);
     const initialTextureKey = resolveAnimationTextureFromPrefix(unitId, animationPrefix, false, 0, 0, initialFacingDirection)
       ?? resolveUnitAnimationTexture(unitId, false, 0, 0, initialFacingDirection)
@@ -3430,10 +3466,7 @@ export class LaneBattleScene extends Phaser.Scene {
       .setSize(ringWidth, ringHeight)
       .setDepth(this.getGroundDepth(pos.y, -2))
       .setVisible(this.isPrototypeV2() && (unit.selected || unit.hovered));
-    const baseFlipX = shouldFlipUnitFrame(unit.unitId, presentationFacingX, presentationFacingDirection);
-    const flipX = getProjectileKeyForUnit(unit.unitId) === "projectile-shot" && attackProgress > 0
-      ? !baseFlipX
-      : baseFlipX;
+    const flipX = shouldFlipUnitFrame(unit.unitId, presentationFacingX, presentationFacingDirection);
 
     unit.sprite
       .setPosition(pos.x + attackOffsetX, pos.y - bob - attackLift)
@@ -3487,7 +3520,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private shiftWorker(role: WorkerRole, delta: 1 | -1): void {
-    if (role === "idle") {
+    if (role === "idle" || role === "research") {
       this.audio.playSfx("sfx.ui.cancel", { eventKey: `worker:${role}:${delta}` });
       return;
     }
@@ -3526,7 +3559,7 @@ export class LaneBattleScene extends Phaser.Scene {
     if (this.devModeEnabled || canAfford(this.player.resources, cost)) {
       if (!this.devModeEnabled) payCost(this.player.resources, cost);
       this.player.workers.research += 1;
-      this.hud.setInfo("연구 일꾼을 직접 고용했습니다");
+      this.hud.setInfo("연구 일꾼 1명이 즉시 연구에 배치되었습니다");
       this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:research:direct:${this.player.workers.research}` });
       return;
     }
@@ -3543,7 +3576,7 @@ export class LaneBattleScene extends Phaser.Scene {
       return;
     }
     if (eligibility === "cooldown") {
-      if (team.id === "player") this.hud.setInfo("직전 웨이브 후 10초 뒤 사용 가능");
+      if (team.id === "player") this.hud.setInfo("직전 웨이브 후 5초 뒤 사용 가능");
       if (team.id === "player") this.audio.playSfx("sfx.ui.cancel", { eventKey: "wave:instant:cooldown" });
       return;
     }
@@ -3574,7 +3607,10 @@ export class LaneBattleScene extends Phaser.Scene {
     if (!advanceTeamAge(team)) return;
     this.applyTowerResearchCarryover(team, previousAgeId, team.ageId);
     if (getAge(team.ageId).immediateWaveTokenGranted) this.grantInstantWaveToken(team);
-    if (team.id === "player") this.refreshUi();
+    if (team.id === "player") {
+      this.syncGameplayMusicTheme();
+      this.refreshUi();
+    }
   }
 
   private applyTowerResearchCarryover(team: TeamState, previousAgeId: AgeId, nextAgeId: AgeId): void {

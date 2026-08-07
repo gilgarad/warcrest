@@ -9,6 +9,7 @@ import type {
   AudioSystemState,
   BgmStateId,
   CombatSfxMode,
+  GameplayMusicThemeId,
   SfxPlaybackOptions,
 } from "./types";
 
@@ -125,6 +126,10 @@ export class AudioSystem {
     this.director.setState(state);
   }
 
+  setGameplayMusicTheme(theme: GameplayMusicThemeId): void {
+    this.director.setGameplayTheme(theme);
+  }
+
   resetDirector(state: BgmStateId = "menu"): void {
     this.pendingBgmId = null;
     if (!this.backend.isUnlocked()) {
@@ -218,6 +223,7 @@ export class AudioSystem {
       contextState: this.backend.contextState,
       currentBgmId: this.bgm.currentAssetId,
       bgmState: this.director.state ?? this.pendingDirectorState,
+      gameplayMusicTheme: this.director.currentGameplayTheme,
       activeBgmVoices: this.bgm.activeVoiceCount,
       activeSfxVoices: this.sfx.activeVoiceCount,
       settings: this.settings.get(),

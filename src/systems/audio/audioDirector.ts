@@ -1,5 +1,5 @@
 import { BgmManager } from "./bgmManager";
-import type { BgmStateId } from "./types";
+import type { BgmStateId, GameplayMusicThemeId } from "./types";
 
 const STATE_PRIORITY: Record<BgmStateId, number> = {
   menu: 10,
@@ -13,14 +13,7 @@ const STATE_PRIORITY: Record<BgmStateId, number> = {
 
 const VICTORY_DEFEAT_PRIORITY = STATE_PRIORITY.victory;
 
-const STATE_TO_BGM: Partial<Record<BgmStateId, string>> = {
-  menu: "bgm.menu",
-  preparation: "bgm.preparation",
-  "battle-low": "bgm.battle.low",
-  "battle-high": "bgm.battle.high",
-  victory: "bgm.victory",
-  defeat: "bgm.defeat",
-};
+const GAMEPLAY_STATE_IDS = new Set<BgmStateId>(["preparation", "battle-low", "battle-high"]);
 
 /**
  * Situational music state machine. NOT wired into any scene yet — see the
@@ -34,6 +27,7 @@ export class AudioDirector {
   private locked = false;
   private crossfadeDurationMs = 1200;
   private warningTimer: ReturnType<typeof setTimeout> | null = null;
+  private gameplayTheme: GameplayMusicThemeId = "stone";
 
   constructor(private readonly bgm: BgmManager) {}
 
@@ -43,6 +37,21 @@ export class AudioDirector {
 
   setCrossfadeDuration(ms: number): void {
     this.crossfadeDurationMs = ms;
+  }
+
+  get currentGameplayTheme(): GameplayMusicThemeId {
+    return this.gameplayTheme;
+  }
+
+  setGameplayTheme(theme: GameplayMusicThemeId): void {
+    if (theme === this.gameplayTheme) return;
+    this.gameplayTheme = theme;
+    if (!this.currentState || !GAMEPLAY_STATE_IDS.has(this.currentState)) return;
+    const bgmId = this.resolveBgmId(this.currentState);
+    if (!bgmId) return;
+    this.clearWarningTimer();
+    this.bgm.setWarningLayer(false);
+    this.bgm.crossfadeTo(bgmId, Math.min(700, this.crossfadeDurationMs));
   }
 
   setState(next: BgmStateId): void {
@@ -58,7 +67,7 @@ export class AudioDirector {
     this.clearWarningTimer();
     this.bgm.setWarningLayer(false);
 
-    const bgmId = STATE_TO_BGM[next];
+    const bgmId = this.resolveBgmId(next);
     if (bgmId) {
       const isBattleIntensitySwap =
         (this.currentState === "battle-low" && next === "battle-high") ||
@@ -101,5 +110,22 @@ export class AudioDirector {
     if (this.warningTimer === null) return;
     clearTimeout(this.warningTimer);
     this.warningTimer = null;
+  }
+
+  private resolveBgmId(state: BgmStateId): string | null {
+    switch (state) {
+      case "menu":
+        return "bgm.menu";
+      case "preparation":
+      case "battle-low":
+      case "battle-high":
+        return `bgm.age.${this.gameplayTheme}`;
+      case "victory":
+        return "bgm.victory";
+      case "defeat":
+        return "bgm.defeat";
+      default:
+        return null;
+    }
   }
 }

@@ -85,11 +85,17 @@ export function tickLaneEconomy(
 }
 
 export function getAgeUpCost(ageIndex: number): ResourceCost {
-  return {
-    gold: 35 + ageIndex * 20,
-    wood: 20 + ageIndex * 15,
-    metal: 28 + ageIndex * 20,
-  };
+  const base = { gold: 35, wood: 20, metal: 28 };
+  if (ageIndex <= 0) return base;
+  let gold = base.gold;
+  let wood = base.wood;
+  let metal = base.metal;
+  for (let index = 0; index < ageIndex; index += 1) {
+    gold = Math.round(gold * 1.5);
+    wood = Math.round(wood * 1.5);
+    metal = Math.round(metal * 1.5);
+  }
+  return { gold, wood, metal };
 }
 
 export function shouldAdvanceAiAge(

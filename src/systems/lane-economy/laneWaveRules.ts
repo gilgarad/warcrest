@@ -1,5 +1,6 @@
 import {
   getAgeBalance,
+  INSTANT_WAVE_TIMER_PENALTY_SEC,
   getOpponentScale,
   INSTANT_WAVE_TOKEN_COOLDOWN_AFTER_WAVE_SEC,
   WAVE_INTERVAL_SEC,
@@ -44,6 +45,12 @@ export function createWaveDeploymentPlan(team: TeamState, opponentCount: 1 | 2 |
 export function commitWaveDeployment(team: TeamState, foodCost: number): void {
   team.resources.food -= foodCost;
   resetWaveClock(team);
+}
+
+export function commitForcedWaveDeployment(team: TeamState, foodCost: number): void {
+  team.resources.food -= foodCost;
+  team.nextWaveInSec = Math.max(0, team.nextWaveInSec) + INSTANT_WAVE_TIMER_PENALTY_SEC;
+  team.lastWaveElapsedSec = 0;
 }
 
 export function resetWaveClock(team: TeamState): void {

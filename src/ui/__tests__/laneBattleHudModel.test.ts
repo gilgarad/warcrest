@@ -25,6 +25,8 @@ describe("lane battle HUD model", () => {
     expect(snapshot.rosterLines[0]).toContain("생산 시대: 청동기");
     expect(snapshot.baseText).toBe("전장 병력 4 | 적 병력 3");
     expect(snapshot.workers.gold.canIncrease).toBe(true);
+    expect(snapshot.workers.research.canIncrease).toBe(false);
+    expect(snapshot.workers.research.canDecrease).toBe(false);
     expect(snapshot.captureTitle).toBe("거점 또는 타워 선택");
   });
 

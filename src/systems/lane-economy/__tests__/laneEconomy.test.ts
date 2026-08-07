@@ -36,6 +36,13 @@ describe("lane economy", () => {
     expect(resources).toMatchObject({ gold: 0, wood: 0, metal: 0 });
   });
 
+  it("scales each age-up step to 1.5x the previous one", () => {
+    expect(getAgeUpCost(0)).toEqual({ gold: 35, wood: 20, metal: 28 });
+    expect(getAgeUpCost(1)).toEqual({ gold: 53, wood: 30, metal: 42 });
+    expect(getAgeUpCost(2)).toEqual({ gold: 80, wood: 45, metal: 63 });
+    expect(getAgeUpCost(3)).toEqual({ gold: 120, wood: 68, metal: 95 });
+  });
+
   it("advances AI age only after time and cost gates", () => {
     const team = createTeamState("enemy", makeResourceMap(35, 20, 0, 28), 400);
     expect(shouldAdvanceAiAge(team, 54)).toBe(false);

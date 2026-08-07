@@ -76,7 +76,7 @@ export class GoldenReferenceScene extends Phaser.Scene {
       .flatMap((direction) => {
         const poses = getUnitDirectionalPoses("bronze_spearman", direction);
         return poses
-          ? [poses.idle, poses.walkA, poses.walkB, ...poses.attack]
+          ? [poses.idle, poses.walk[0], poses.walk[1] ?? poses.walk[0], ...poses.attack]
           : [];
       })
       .filter((key, index, all) => all.indexOf(key) === index);
@@ -371,9 +371,9 @@ export class GoldenReferenceScene extends Phaser.Scene {
       const texture = pose === "idle"
         ? directional.idle
         : pose === "walk-a"
-          ? directional.walkA
+          ? directional.walk[0]
           : pose === "walk-b"
-            ? directional.walkB
+            ? directional.walk[1] ?? directional.walk[0]
             : directional.attack[0];
       sprite
         .setTexture(texture)

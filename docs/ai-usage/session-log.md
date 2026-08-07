@@ -4974,3 +4974,336 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
     `support-gunner`, `special-forces`가 이상치 0,
     `infantry`는 남쪽 공격 1프레임만 상대적 면적 차이로 남았지만
     sandbox 렌더상 하체 분리/허리 잘림/옆 포즈 파편은 제거된 상태로 확인했다.
+
+## 2026-08-06 - Codex (era-based gameplay music mapping)
+
+- **사용자 지시 요약**:
+  - 새로 넣어 둔 시대별 음악 파일을 확인하고, 이름은 고정된 상태로
+    실제 게임 플레이 중 시대 변화에 맞게 매핑되도록 개발하라고 요청.
+- **AI 산출물 요약**:
+  - `public/assets/audio/`
+    - `01_stone_ancient_colossi_v5.ogg`
+    - `02_bronze_weight_of_discovery_v5.ogg`
+    - `03_medieval_iron_procession_v5.ogg`
+    - `04_renaissance_restless_workshop_v6.ogg`
+    - `05_early_modern_age_of_momentum_v6.ogg`
+    - `06_modern_forward_vector_v6.ogg`
+  - `src/systems/audio/assetManifest.ts`
+    - 위 여섯 파일을 실재하는 loop형 BGM asset으로 등록하고
+      `bgm.age.stone|bronze|medieval|renaissance|industrial|modern`
+      id로 노출했다.
+  - `src/systems/audio/audioDirector.ts`
+    - 고정 `preparation/battle-low/battle-high` 트랙 대신
+      현재 gameplay theme에 따라 시대별 BGM id를 resolve하도록 변경했다.
+    - 플레이 중 시대 테마가 바뀌면 현재 gameplay state를 유지한 채
+      새 시대 음악으로 crossfade하도록 추가했다.
+  - `src/scenes/LaneBattleScene.ts`
+    - `player.ageId`의 `productionGroup`을
+      `stone / bronze / medieval / renaissance / industrial / modern`
+      테마로 변환해, 씬 시작과 매 update에서 AudioSystem에 동기화한다.
+  - 테스트 갱신:
+    - `src/systems/audio/__tests__/audioDirector.test.ts`
+    - `src/systems/audio/__tests__/audioSystem.test.ts`
+    - `src/systems/audio/__tests__/assetManifest.test.ts`
+    - `src/systems/audio/__tests__/laneBattleAudioWiring.test.ts`
+- **관찰 요약**:
+  - 기존 코드는 시대와 무관한 상황형 BGM state만 있었고,
+    실제 파일도 없는 synth fallback이 기본값이었다.
+  - 이번 변경 후 gameplay BGM은 플레이어 시대 그룹에 따라 실제 `.ogg`
+    파일로 전환되고, menu/victory/defeat만 기존 상태형 경로를 유지한다.
+
+## 2026-08-06 (rifleman v2 follow-up)
+
+- 승인된 `rifleman-n-idle-candidate.png`를 프로덕션 `rifleman-n-idle.png`로 반영했고, 같은 정규화 계약으로 `rifleman-ne-idle-candidate.png`도 `rifleman-ne-idle.png`에 반영했다.
+- `generate_pose_board_production_assets.py`의 `remove_background()`에 초록 fringe를 줄이기 위한 despill 단계를 추가했다.
+- 다음 단계로 `rifleman`의 N/NE `walk-01..10` 및 `attack`를 승인된 idle 각도 기준으로 재생성하고, 이후 rifleman 5방향 전체에 재적용할 예정.
+
+## 2026-08-06 (rifleman N/NE gutter strip recrop)
+
+- 사용자 피드백에 따라 `1프레임 1생성` 접근은 철회하고, N/NE를 다시
+  `한 strip 안에서 12프레임 전체 생성` 방식으로 되돌렸다.
+- 새 strip 프롬프트에 `정확히 12 slot`, `큰 gutter`, `slot boundary
+  침범 금지`, `누락 slot 금지`를 명시했다.
+- 초기 gutter strip은 N/NE 모두 누락/경계 불일치가 있어 그대로는
+  equal-width crop 계약을 만족하지 못했다.
+- 따라서 최종 반영본은, 생성된 gutter strip에서 실제 포즈 span을
+  기준으로 다시 정렬한 뒤 `generate_pose_board_production_assets.py
+  --prefix rifleman`으로 재생성했다.
+- 최종 산출물 검수에서 N/NE `idle + walk-01..10 + attack`를 다시 열어
+  무기/손/발/머리의 캔버스 경계 clipping 여부를 확인했고,
+  `npm run build`, `npm test`도 통과했다.
+
+## 2026-08-06 (rifleman stage-1 cleanup + sandbox/game compare)
+
+- **사용자 지시 요약**:
+  - 4단계 순차 작업 중 1단계만 먼저 끝내라고 지시.
+  - rifleman의 죽은 중복 파일 정리, `rifleman-late`의 v1 잔여 정리,
+    sandbox vs 본 게임 비교, build/test/좁은 Playwright 검증, 기록
+    갱신까지 한 뒤 승인 전에는 다음 단계로 넘어가지 말라고 요청.
+- **AI 산출물 요약**:
+  - `tools/asset-qa/generate_pose_board_production_assets.py`
+    - `rifleman` / `rifleman-late`는 directionless alias를 더 이상
+      생성하지 않도록 `emit_directionless_alias=false`를 추가했다.
+    - 둘 다 5방향 authored strip(`n/ne/e/se/s`) 기반 v2 10프레임 계약으로
+      유지되도록 재생성했다.
+  - `public/assets/production/units/`
+    - 런타임에서 참조하지 않는 directionless
+      `rifleman(-late) idle/attack/walk-01..10` 파일 48개를 제거했다.
+    - 기존 v1 `walk-a/b/c` 잔여 삭제 상태를 유지하면서 v2 산출물만
+      남기도록 정리했다.
+  - `src/scenes/LaneBattleScene.ts`
+    - 본 게임 비교 중 발견한 run 씬 진입 예외
+      (`syncGameplayMusicTheme()`가 `player.ageId` 초기화 전 호출됨)를
+      수정했다.
+  - `tools/validation/rifleman-stage1.spec.ts`
+    - Boot 자산 적재 완료를 기다린 뒤 `startBattle()`를 명시 호출하도록
+      바꿨다.
+    - sandbox와 본 게임에서 rifleman `e/w`, phase `0.55`,
+      `walk-06`을 강제해 텍스처/flip/방향 일치를 검증하고 스크린샷과
+      JSON 비교 결과를 남기도록 정리했다.
+  - 비교 산출물:
+    - `artifacts/rifleman-stage1/sandbox-e-walk-06.png`
+    - `artifacts/rifleman-stage1/game-e-walk-06.png`
+    - `artifacts/rifleman-stage1/sandbox-w-walk-06.png`
+    - `artifacts/rifleman-stage1/game-w-walk-06.png`
+    - `artifacts/rifleman-stage1/sandbox-vs-game-rifleman.json`
+- **검증**:
+  - `npm run build` 통과
+  - `npm test` 통과 (`33 files / 144 tests`)
+  - `npx playwright test tools/validation/rifleman-stage1.spec.ts --workers=1`
+    통과
+- **진행 제한**:
+  - 사용자 승인 전까지 2단계(기병 대표 1종)로 넘어가지 않음.
+
+## 2026-08-06 (rifleman E walk-cycle candidate only)
+
+- **사용자 지시 요약**:
+  - `rifleman-e-walk-01..10`이 왕복 1회 사이클이 아니라고 지적하며,
+    E방향만 먼저 다시 만들고 발 벌어짐 폭을 수치로 검증한 뒤 승인받으라고
+    요청. 승인 전까지 다른 방향/유닛 확장과 sandbox 최종 적용 금지.
+- **AI 산출물 요약**:
+  - 기존 east 원본 strip
+    `docs/dev-wiki/visual-drafts/rifleman-e-v2-strip.png`를 다시 열어
+    현재 걷기 구조를 확인했다.
+  - 새 east 후보 strip 3개를 생성했다.
+    - `docs/dev-wiki/visual-drafts/rifleman-e-v3-strip-candidate.png`
+    - `docs/dev-wiki/visual-drafts/rifleman-e-v4-strip-candidate.png`
+    - `docs/dev-wiki/visual-drafts/rifleman-e-v5-strip-candidate.png`
+  - 후보는 프로덕션에 덮어쓰지 않고, 기존 생성기와 같은 정규화 계약으로
+    잘라 `artifacts/rifleman-e-cycle-review/candidate-v4/` 등에서 비교할 수
+    있게 만들었다.
+  - 접촉/교차 패턴은 `v4`가 가장 가까워 보고용 후보로 남겼다.
+  - 비교 시트와 측정표를 생성했다.
+    - `artifacts/rifleman-e-cycle-review/current-contact.png`
+    - `artifacts/rifleman-e-cycle-review/candidate-v4-contact.png`
+    - `artifacts/rifleman-e-cycle-review/measurement-table.md`
+- **검증**:
+  - `npm run build` 통과
+  - `npm test` 통과 (`33 files / 144 tests`)
+  - `npx playwright test tools/validation/rifleman-stage1.spec.ts --workers=1`
+    통과
+- **진행 제한**:
+  - east 후보는 아직 승인 대기 상태이며 `public/assets/production/units/`
+    east walk 프레임에는 적용하지 않았다.
+  - 다른 방향/유닛/sandbox 최종 적용은 승인 전까지 보류.
+
+## 2026-08-06 (rifleman E canonical-table retry)
+
+- **사용자 지시 요약**:
+  - `unit-locomotion-pipeline-v2.md`의 canonical per-frame table을 먼저
+    읽고, 그 표를 그대로 따라 E방향 walk-01..10만 다시 만들라고 요청.
+    idle/attack은 건드리지 말고, 승인 전까지 다른 방향이나 sandbox 적용도
+    금지.
+- **AI 산출물 요약**:
+  - 승인된 기존 east strip을 직접 참조로 걸고, 슬롯 2~11의 다리 역할
+    변화를 표 순서대로 더 강하게 고정한 새 후보
+    `docs/dev-wiki/visual-drafts/rifleman-e-v6-strip-candidate.png`
+    를 생성했다.
+  - 생성기와 동일한 정규화 계약으로 잘라
+    `artifacts/rifleman-e-cycle-review/candidate-v6/` 아래에
+    `walk-01..10`을 저장하고, 하단 20% alpha bbox 폭을 다시 측정했다.
+  - 비교 산출물:
+    - `artifacts/rifleman-e-cycle-review/candidate-v6-contact.png`
+    - `artifacts/rifleman-e-cycle-review/measurement-table-v6.md`
+- **측정 요약**:
+  - 기존 프로덕션: `127, 110, 131, 106, 129, 113, 140, 44, 44, 38`
+  - 새 후보 v6: `134, 141, 143, 132, 61, 44, 145, 117, 115, 46`
+  - 현재본의 문제였던 "초반 장시간 넓음, 끝에서만 급격히 좁아짐"은
+    줄었고, 최소폭이 `walk-06`과 `walk-10` 부근으로 이동했다.
+  - 다만 두 번째 완전 접촉은 여전히 `walk-08`보다 `walk-07` 쪽이 더
+    두드러져, 표에 완전히 일치한다고 보긴 어렵다.
+- **검증**:
+  - `npm run build` 통과
+  - `npm test` 통과 (`33 files / 144 tests`)
+  - `npx playwright test tools/validation/rifleman-stage1.spec.ts --workers=1`
+    통과
+- **진행 제한**:
+  - `v6`도 아직 후보이며 프로덕션 east walk 프레임에는 적용하지 않았다.
+  - 승인 전까지 다른 방향/유닛/sandbox 적용은 보류.
+
+## 2026-08-06 (rifleman E leg-identity retry)
+
+- **사용자 지시 요약**:
+  - `walk-05/06`이 거의 같은 각도로 보이고, `walk-07`이 `walk-08`보다
+    더 넓은 실패 패턴이 다시 나왔다고 지적. 각도값과 leg-identity chain
+    rule을 더 강하게 적용해 E방향만 다시 만들라고 요청.
+- **AI 산출물 요약**:
+  - 새 후보:
+    - `docs/dev-wiki/visual-drafts/rifleman-e-v7-strip-candidate.png`
+    - `docs/dev-wiki/visual-drafts/rifleman-e-v8-strip-candidate.png`
+  - 생성기와 같은 정규화 계약으로 잘라 비교했다.
+    - `artifacts/rifleman-e-cycle-review/candidate-v7/contact.png`
+    - `artifacts/rifleman-e-cycle-review/candidate-v8/contact.png`
+- **측정 요약**:
+  - `v7`: `125, 126, 151, 109, 93, 78, 48, 53, 52, 45`
+  - `v8`: `85, 136, 138, 138, 107, 145, 155, 131, 45, 31`
+  - `v8`은 다시 중반 폭 plateau와 `7/8` 역전이 생겨 탈락.
+  - `v7`은 `3`에서 최대, `10`에서 최소, `7 < 8`은 만족하지만,
+    `8`이 두 번째 완전 접촉 최대치로 충분히 회복되지는 않았다.
+- **검증**:
+  - `npm run build` 통과
+  - `npm test` 통과 (`33 files / 144 tests`)
+- **진행 제한**:
+  - 여전히 east 후보만 다뤘고, 프로덕션 east walk 프레임이나 sandbox에는
+    적용하지 않았다.
+
+## 2026-08-06 - rifleman east 5-frame fallback implementation
+
+- **사용자 지시**:
+  - rifleman `e` 방향 걷기를 5프레임 ping-pong 계약으로 다시 만들고,
+    사람이 일일이 눈으로 보지 않아도 되도록 자동 검증 스크립트를
+    작성하라고 요청.
+- **적용 범위**:
+  - `tools/asset-qa/validate_rifleman_pingpong.py`
+  - `tools/asset-qa/install_rifleman_pingpong_from_strip.py`
+  - `src/presentation/units/unitAnimationRegistry.ts`
+  - `src/presentation/units/__tests__/unitAnimationRegistry.test.ts`
+  - `public/assets/production/units/rifleman-e-walk-01..05(.enemy).png`
+- **원본 스트립(자르기 전 파일)**:
+  - `docs/dev-wiki/visual-drafts/rifleman-e-5frame-strip-2026-08-06-attempt-1.png`
+- **자동 검증 결과**:
+  - 발 폭: `174, 195, 71, 162, 207`
+  - 다리 실루엣 MAD: `18.92`, `18.50`
+  - 최종 판정: `PASS`
+- **검증**:
+  - `python3 tools/asset-qa/validate_rifleman_pingpong.py`
+  - `npm run build`
+  - `npm test -- unitAnimationRegistry`
+- **비고**:
+  - 중간에 `walk-04/05`만 재생성하는 실험을 했지만, 다리 차이 판별은
+    RGB 색차보다 alpha 실루엣 차이가 더 적합하다고 확인되어 최종 채택
+    자산은 원본 5프레임 스트립의 정규화 결과로 유지했다.
+
+## 2026-08-06 - rifleman east 3-frame same-leg failure correction
+
+- **사용자 지적**:
+  - `walk-01`과 `walk-03`이 여전히 같은 다리가 앞으로 나가고 있다고
+    재지적.
+- **확인 결과**:
+  - 실제 이미지 검토에서 같은 lead leg가 맞았다.
+  - 기존 검증 수치만으로는 이 실패가 걸리지 않았다.
+- **수정**:
+  - `walk-03`를 opposite-step 후보로 실제 교체.
+  - 검증 스크립트에 좌/우 발 질량 역전 조건 추가.
+- **최종 검증**:
+  - `walk-01` L/R `595814 / 623849`
+  - `walk-03` L/R `623849 / 595814`
+  - MAD `70.29`
+  - `python3 tools/asset-qa/validate_rifleman_pingpong.py` PASS
+  - `npm run build` PASS
+  - `npm test` PASS (`33 files / 146 tests`)
+
+## 2026-08-06 - gameplay systems bugfix pass kickoff
+
+- **사용자 지시**:
+  - 이번 세션은 캐릭터 자산이 아니라 게임 운용/내부 버그만 수정.
+  - 르네상스/근대/현대 BGM 미재생, 연구 일꾼 고용/배치 오류, 시대업 비용
+    곡선, 웨이브 주기, 즉시 웨이브 쿨다운/타이머 규칙을 바로잡으라고 요청.
+- **확인한 사실**:
+  - `src/systems/audio/assetManifest.ts`에는 시대별 OGG 6개가 모두 매핑돼
+    있고, `file public/assets/audio/*.ogg` 기준 파일 포맷도 정상이다.
+  - 반면 경제/웨이브/HUD에는 구 규칙이 아직 남아 있다.
+    - `WAVE_INTERVAL_SEC = 30`
+    - `INSTANT_WAVE_TOKEN_COOLDOWN_AFTER_WAVE_SEC = 10`
+    - `getAgeUpCost()`는 선형 증가
+    - HUD worker +/-와 `shiftWorker()`가 `research`를 일반 재배치 대상으로
+      취급 중
+- **이번 턴 결정**:
+  - 먼저 로그를 남기고, 다음 단계에서 브라우저 런타임으로 시대 전환 시
+    `currentBgmId`와 `gameplayMusicTheme`가 실제로 어떻게 바뀌는지 확인한
+    뒤 위 5개 규칙을 코드와 테스트에 같이 반영하기로 함.
+
+## 2026-08-06 - gameplay systems bugfix pass applied
+
+- **원인 진단**:
+  - 르네상스/근대/현대 BGM 파일은 브라우저 `decodeAudioData()` 기준으로도
+    6개 전부 정상 디코드되었다. 즉 파일 손상 문제가 아니었다.
+  - 실제 결함은 후반 시대 전환을 명시적으로 재선택하는 보호 장치와 회귀
+    커버리지가 부족했던 점, 그리고 동시에 경제/웨이브 규칙 일부가 아직
+    구 30초/10초/선형 비용 기준에 머물러 있던 점이었다.
+- **적용한 코드 변경**:
+  - `src/scenes/LaneBattleScene.ts`
+    - 연구 일꾼을 `shiftWorker()` 재배치 대상에서 제외
+    - 연구 일꾼 직접 고용 시 즉시 연구 배치 메시지로 수정
+    - 즉시 웨이브 쿨다운 안내를 `5초`로 수정
+    - 플레이어 시대 업 직후 `syncGameplayMusicTheme()`를 즉시 호출하도록 추가
+    - 강제 웨이브는 전체 타이머 리셋 대신 `남은 시간 + 5초` 규칙을 사용
+  - `src/data/balance.ts`
+    - `WAVE_INTERVAL_SEC = 20`
+    - `INSTANT_WAVE_TOKEN_COOLDOWN_AFTER_WAVE_SEC = 5`
+    - `INSTANT_WAVE_TIMER_PENALTY_SEC = 5` 추가
+  - `src/systems/lane-economy/laneEconomy.ts`
+    - 시대 업 비용을 첫 단계 기준에서 단계별 `1.5x` 누적으로 계산
+  - `src/systems/lane-economy/laneWaveRules.ts`
+    - `commitForcedWaveDeployment()` 추가
+  - `src/ui/laneBattleHudModel.ts`, `src/ui/LaneBattleHudView.ts`
+    - 연구 일꾼 +/-를 비활성화해 직접 고용만 가능하게 고정
+- **검증**:
+  - 브라우저에서 시대별 OGG 6개 fetch + `decodeAudioData()` 모두 성공
+  - `npm test -- src/systems/lane-economy/__tests__/laneEconomy.test.ts src/systems/lane-economy/__tests__/laneWaveRules.test.ts src/ui/__tests__/laneBattleHudModel.test.ts src/data/__tests__/waveTiming.test.ts src/systems/audio/__tests__/audioSystem.test.ts`
+  - `npm run build`
+  - `npm test`
+## 2026-08-06 - Rifleman walk-03 lead-leg correction
+
+- Corrected a false-positive visual assessment: the earlier east `walk-03` still used the same anatomical lead leg as `walk-01`.
+- Used a marked-leg diagnostic generation to lock the anatomical right leg as the forward leg, removed the marker without changing the pose, and regenerated player/enemy production assets.
+- Verified the port 5173 response hash matches the local production file.
+
+## 2026-08-06 - Global horizontal-facing contract
+
+- **User direction**: standardize future units on three walk frames plus separate idle/attack; author E only, mirror for W, disconnect other active directions without deleting their implementation, and retain the last E/W facing during vertical movement. Apply the same rule to the sandbox before regenerating the remaining roster in a later prompt.
+- **Implementation**: added a shared E/W presentation resolver, routed game and sandbox texture lookup through canonical E art, mirrored W globally, preserved vertical-facing state, removed the projectile-only flip exception, reduced sandbox direction controls/labels to E/W, and constrained every runtime walk cycle to three authored poses plus the middle-pose return frame.
+- **Documentation**: updated `style-guide.md` and `unit-locomotion-pipeline-v2.md` with the superseding global contract while retaining older direction work as history.
+- **Verification**: build, all 146 unit tests, and focused sandbox/game E/W Playwright parity passed; generated comparison screenshots for both directions.
+
+## 2026-08-06 - Rifleman approval cleanup and infantry-list gate
+
+- **User direction**: after rifleman's 3-frame approval, remove only unused regular-rifleman assets, derive the current `human` generator roster from code, exclude cavalry, and wait for list approval before generating one infantry pilot.
+- **Implementation**: kept only regular rifleman's E idle/walk-01..03/attack player+enemy files, removed 110 stale files, and constrained its generator spec so stale directions/frames are not recreated. `rifleman-late` remained untouched.
+- **Roster result**: eligible `human`-board standing infantry are `pikeman`, `grenadier`, and `grenadier-late`; cavalry exclusions are `heavy-cavalry`, `light-cavalry`, and `cavalry`.
+- **Gate**: stopped before pilot generation pending explicit list approval.
+- **Verification**: build and all 146 tests passed; generator CLI loaded successfully.
+
+## 2026-08-06 - Standing infantry roster expansion correction
+
+- **User correction**: ancient biped infantry such as axeman, bronze spear/sword, and iron spear must not be excluded by the pose-board category filter; skip the pilot gate and expand the verified rifleman-style three-frame walk across the full standing roster.
+- **Implementation**: derived 21 biped entries from the game roster, generated marked opposite-leg diagnostic strips and clean uncut sources, installed E-only production crops/player-enemy variants, and switched registry playback to `01,02,03,02` with W mirroring.
+- **QA**: added repeatable asset QA for marked-leg evidence, clipping, locomotion height consistency, frame distinction, adjacent-strip fragment removal, and a full contact sheet.
+- **Verification**: all 21 asset rows passed; build, 158 unit tests, and the focused 336-state sandbox Playwright audit passed.
+
+## 2026-08-07 - Biped opposite-leg correction with identity-chain QA
+
+- **User correction**: every newly generated `walk-03` repeated the same lead
+  leg as `walk-01`; correct the full standing-biped roster rather than patching
+  individual units.
+- **Root cause**: the earlier QA assigned diagnostic colors independently per
+  frame instead of tracking one anatomical leg across frames, allowing a
+  same-leg cycle to pass.
+- **Implementation**: generated continuous red/blue leg-identity strips for all
+  21 units, rejected and retried failed rows, restored normal colors without
+  changing verified poses, and reinstalled player/enemy production assets.
+- **Durable guardrail**: asset QA now requires color presence and reversed
+  red/blue centroid ordering between stride slots before production install.
+- **Verification**: asset QA `21/21`, build, all `158` unit tests, and the
+  focused human three-frame Playwright roster spec passed. The 21-row contact
+  sheet was also reviewed in three enlarged sections.

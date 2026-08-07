@@ -103,8 +103,8 @@ export function createLaneBattleHudSnapshot(input: LaneBattleHudInput): LaneBatt
   })) as Record<ResourceId, string>;
   const workers = Object.fromEntries(WORKER_ROLES.map((role) => [role, {
     value: String(input.player.workers[role]),
-    canIncrease: role !== "idle" && input.player.workers.idle > 0,
-    canDecrease: role !== "idle" && input.player.workers[role] > 0,
+    canIncrease: role !== "idle" && role !== "research" && input.player.workers.idle > 0,
+    canDecrease: role !== "idle" && role !== "research" && input.player.workers[role] > 0,
   }])) as LaneBattleHudSnapshot["workers"];
   const selected = input.selectedCapturePoint;
   const selectedTower = input.selectedDefenseTower;

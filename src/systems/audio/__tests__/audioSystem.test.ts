@@ -33,7 +33,19 @@ describe("AudioSystem integration facade", () => {
     expect(audio.getState().bgmState).toBe("preparation");
     await audio.unlock();
     expect(backend.bgmVoices).toHaveLength(1);
-    expect(audio.getState().currentBgmId).toBe("bgm.preparation");
+    expect(audio.getState().currentBgmId).toBe("bgm.age.stone");
+    audio.destroy();
+  });
+
+  it("swaps the active gameplay BGM when the gameplay theme changes", async () => {
+    const { audio } = setup();
+    await audio.unlock();
+    audio.setDirectorState("battle-low");
+    expect(audio.getState().currentBgmId).toBe("bgm.age.stone");
+    (["bronze", "medieval", "renaissance", "industrial", "modern"] as const).forEach((theme) => {
+      audio.setGameplayMusicTheme(theme);
+      expect(audio.getState().currentBgmId).toBe(`bgm.age.${theme}`);
+    });
     audio.destroy();
   });
 

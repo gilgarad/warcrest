@@ -8,13 +8,13 @@ describe("unit frame presentation", () => {
       "bronze_spearman",
       targetHeight,
       1,
-      "bronze-spearman-w-idle",
+      "bronze-spearman-e-idle",
     );
     const attack = resolveUnitFramePresentation(
       "bronze_spearman",
       targetHeight,
       1,
-      "bronze-spearman-ne-attack",
+      "bronze-spearman-e-attack",
     );
 
     expect(idle.spriteHeight * (270 / 384)).toBeCloseTo(targetHeight);

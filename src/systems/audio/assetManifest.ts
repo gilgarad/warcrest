@@ -1,5 +1,5 @@
 import { assetUrl } from "../../config/assetUrl";
-import type { BgmAssetDef, SfxAssetDef } from "./types";
+import type { BgmAssetDef, GameplayMusicThemeId, SfxAssetDef } from "./types";
 
 const NO_ASSET_YET = "실제 오디오 파일 없음 — 외부 자산 없이 Web Audio 런타임 합성으로 대체 중";
 
@@ -71,6 +71,48 @@ export const BGM_ASSETS: BgmAssetDef[] = [
     synth: { kind: "pad", frequency: 98, durationMs: 0 },
     licenseNote: NO_ASSET_YET,
   },
+  gameplayBgm(
+    "stone",
+    "석기 시대",
+    "01_stone_ancient_colossi_v5.ogg",
+    0.72,
+    { kind: "pad", frequency: 196, durationMs: 0 },
+  ),
+  gameplayBgm(
+    "bronze",
+    "청동기",
+    "02_bronze_weight_of_discovery_v5.ogg",
+    0.72,
+    { kind: "pad", frequency: 174.6, durationMs: 0 },
+  ),
+  gameplayBgm(
+    "medieval",
+    "철기/중세",
+    "03_medieval_iron_procession_v5.ogg",
+    0.74,
+    { kind: "pulse", frequency: 146.8, durationMs: 0 },
+  ),
+  gameplayBgm(
+    "renaissance",
+    "르네상스",
+    "04_renaissance_restless_workshop_v6.ogg",
+    0.74,
+    { kind: "pulse", frequency: 146.8, durationMs: 0 },
+  ),
+  gameplayBgm(
+    "industrial",
+    "근대",
+    "05_early_modern_age_of_momentum_v6.ogg",
+    0.76,
+    { kind: "pulse", frequency: 146.8, durationMs: 0 },
+  ),
+  gameplayBgm(
+    "modern",
+    "현대",
+    "06_modern_forward_vector_v6.ogg",
+    0.78,
+    { kind: "pulse", frequency: 146.8, durationMs: 0 },
+  ),
 ];
 
 export const SFX_ASSETS: SfxAssetDef[] = [
@@ -139,6 +181,25 @@ function sfx(
     missingAsset: true,
     synth,
     licenseNote: NO_ASSET_YET,
+  };
+}
+
+function gameplayBgm(
+  themeId: GameplayMusicThemeId,
+  label: string,
+  filename: string,
+  baseVolume: number,
+  synth: BgmAssetDef["synth"],
+): BgmAssetDef {
+  return {
+    id: `bgm.age.${themeId}`,
+    label: `시대 BGM - ${label}`,
+    filePath: assetUrl(`assets/audio/${filename}`),
+    loop: true,
+    baseVolume,
+    missingAsset: false,
+    synth,
+    licenseNote: "프로젝트 로컬 시대별 BGM 파일",
   };
 }
 

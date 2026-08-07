@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createTeamState, makeResourceMap } from "../laneEconomy";
 import {
+  commitForcedWaveDeployment,
   commitWaveDeployment,
   createWaveDeploymentPlan,
   getInstantWaveEligibility,
@@ -39,7 +40,17 @@ describe("lane wave rules", () => {
     expect(getInstantWaveEligibility(team)).toBe("no-token");
     team.instantWaveTokens = 1;
     expect(getInstantWaveEligibility(team)).toBe("cooldown");
-    team.lastWaveElapsedSec = 10;
+    team.lastWaveElapsedSec = 5;
     expect(getInstantWaveEligibility(team)).toBe("ready");
+  });
+
+  it("adds five seconds to the remaining timer after a forced wave", () => {
+    const team = createTeamState("player", makeResourceMap(0, 0, 40, 0), 400);
+    team.nextWaveInSec = 11;
+    team.lastWaveElapsedSec = 7;
+    commitForcedWaveDeployment(team, 5);
+    expect(team.resources.food).toBe(35);
+    expect(team.nextWaveInSec).toBe(16);
+    expect(team.lastWaveElapsedSec).toBe(0);
   });
 });

@@ -9,6 +9,14 @@ export type BgmStateId =
   | "victory"
   | "defeat";
 
+export type GameplayMusicThemeId =
+  | "stone"
+  | "bronze"
+  | "medieval"
+  | "renaissance"
+  | "industrial"
+  | "modern";
+
 /** Minimal synthesis recipe used as a fallback voice when no real audio file exists yet. */
 export interface SynthProfile {
   kind:
@@ -101,6 +109,7 @@ export interface AudioSystemState {
   contextState: string;
   currentBgmId: string | null;
   bgmState: BgmStateId | null;
+  gameplayMusicTheme: GameplayMusicThemeId;
   activeBgmVoices: number;
   activeSfxVoices: number;
   settings: AudioSettingsData;

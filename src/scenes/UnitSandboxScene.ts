@@ -2,15 +2,17 @@ import Phaser from "phaser";
 import { AGES, getAge, type AgeId } from "../data/ages";
 import { assetUrl } from "../config/assetUrl";
 import {
+  ACTIVE_UNIT_FACING_DIRECTIONS,
   UNIT_ANIMATION_ASSETS,
-  UNIT_FACING_DIRECTIONS,
   deriveAnimationPrefix,
   getUnitAnimationDefinition,
   resolveAnimationTextureFromPrefix,
+  resolveHorizontalPresentationDirection,
   resolveTeamUnitTextureKey,
   shouldFlipUnitFrame,
   type UnitFacingDirection,
 } from "../presentation/units/unitAnimationRegistry";
+import { resolveWalkMotion } from "../presentation/units/combatPresentation";
 import { resolveUnitFramePresentation } from "../presentation/units/unitPresentation";
 import {
   getSupportWagonAgeStats,
@@ -94,7 +96,7 @@ export class UnitSandboxScene extends Phaser.Scene {
     unitId: "stone_slinger",
     team: "player",
     ageId: "stone",
-    direction: "w",
+    direction: "e",
     mode: "walk",
     autoplay: true,
     manualPhase: 0,
@@ -129,7 +131,7 @@ export class UnitSandboxScene extends Phaser.Scene {
     this.add.image(800, 450, SANDBOX_BG_KEY).setDisplaySize(1600, 900).setAlpha(0.36);
     this.add.rectangle(800, 450, 1600, 900, 0x07111a, 0.52);
 
-    this.add.text(42, 28, "유닛 방향/포즈 샌드박스", {
+    this.add.text(42, 28, "유닛 E/W 포즈 샌드박스", {
       fontFamily: "Georgia, serif",
       fontSize: "28px",
       color: "#f4ebd3",
@@ -177,11 +179,10 @@ export class UnitSandboxScene extends Phaser.Scene {
     const graphics = this.add.graphics();
     graphics.lineStyle(1, 0x34506a, 0.54);
     graphics.strokeLineShape(new Phaser.Geom.Line(PREVIEW_CENTER_X - 160, PREVIEW_CENTER_Y, PREVIEW_CENTER_X + 160, PREVIEW_CENTER_Y));
-    graphics.strokeLineShape(new Phaser.Geom.Line(PREVIEW_CENTER_X, PREVIEW_CENTER_Y - 160, PREVIEW_CENTER_X, PREVIEW_CENTER_Y + 160));
     graphics.lineStyle(1, 0x34506a, 0.36);
     graphics.strokeCircle(PREVIEW_CENTER_X, PREVIEW_CENTER_Y, DIRECTION_RING_RADIUS);
 
-    UNIT_FACING_DIRECTIONS.forEach((direction) => {
+    ACTIVE_UNIT_FACING_DIRECTIONS.forEach((direction) => {
       const vector = directionVector(direction).scale(DIRECTION_RING_RADIUS + 34);
       this.add.text(PREVIEW_CENTER_X + vector.x, PREVIEW_CENTER_Y + vector.y, direction.toUpperCase(), {
         fontFamily: "monospace",
@@ -257,8 +258,8 @@ export class UnitSandboxScene extends Phaser.Scene {
       { x: 1336, y: 314, label: "Walk", onClick: () => this.setMode("walk") },
       { x: 1454, y: 314, label: "Attack", onClick: () => this.setMode("attack") },
       { x: 1218, y: 370, label: "Auto", onClick: () => this.setAutoplay(!this.state.autoplay) },
-      { x: 1336, y: 370, label: "Phase -", onClick: () => this.setManualPhase(this.state.manualPhase - 0.125) },
-      { x: 1454, y: 370, label: "Phase +", onClick: () => this.setManualPhase(this.state.manualPhase + 0.125) },
+      { x: 1336, y: 370, label: "Phase -", onClick: () => this.setManualPhase(this.state.manualPhase - 0.1) },
+      { x: 1454, y: 370, label: "Phase +", onClick: () => this.setManualPhase(this.state.manualPhase + 0.1) },
     ];
 
     buttons.forEach((button) => this.createButton(button.x, button.y, button.width ?? 104, 40, button.label, button.onClick));
@@ -322,8 +323,8 @@ export class UnitSandboxScene extends Phaser.Scene {
     this.input.keyboard?.on("keydown-THREE", () => this.setMode("attack"));
     this.input.keyboard?.on("keydown-T", () => this.setTeam(this.state.team === "player" ? "enemy" : "player"));
     this.input.keyboard?.on("keydown-SPACE", () => this.setAutoplay(!this.state.autoplay));
-    this.input.keyboard?.on("keydown-OPEN_BRACKET", () => this.setManualPhase(this.state.manualPhase - 0.125));
-    this.input.keyboard?.on("keydown-CLOSED_BRACKET", () => this.setManualPhase(this.state.manualPhase + 0.125));
+    this.input.keyboard?.on("keydown-OPEN_BRACKET", () => this.setManualPhase(this.state.manualPhase - 0.1));
+    this.input.keyboard?.on("keydown-CLOSED_BRACKET", () => this.setManualPhase(this.state.manualPhase + 0.1));
   }
 
   private publishControl(): void {
@@ -359,7 +360,7 @@ export class UnitSandboxScene extends Phaser.Scene {
   }
 
   private setDirection(direction: UnitFacingDirection): void {
-    this.state.direction = direction;
+    this.state.direction = resolveHorizontalPresentationDirection(direction, this.state.direction as "e" | "w");
     this.refreshView();
   }
 
@@ -391,8 +392,11 @@ export class UnitSandboxScene extends Phaser.Scene {
   }
 
   private cycleDirection(delta: number): void {
-    const index = UNIT_FACING_DIRECTIONS.indexOf(this.state.direction);
-    this.state.direction = UNIT_FACING_DIRECTIONS[cycleIndex(index, delta, UNIT_FACING_DIRECTIONS.length)];
+    const current = resolveHorizontalPresentationDirection(this.state.direction);
+    const index = ACTIVE_UNIT_FACING_DIRECTIONS.indexOf(current);
+    this.state.direction = ACTIVE_UNIT_FACING_DIRECTIONS[
+      cycleIndex(index, delta, ACTIVE_UNIT_FACING_DIRECTIONS.length)
+    ];
     this.refreshView();
   }
 
@@ -432,7 +436,8 @@ export class UnitSandboxScene extends Phaser.Scene {
 
     const facing = directionVector(this.state.direction);
     const flipX = shouldFlipUnitFrame(this.state.unitId, facing.x, this.state.direction);
-    const walkBob = moving ? Math.abs(Math.sin(phase * Math.PI * 2)) * 5 : 0;
+    const locomotionFacingX: -1 | 1 = facing.x >= 0 ? 1 : -1;
+    const walkMotion = moving ? resolveWalkMotion(phase, locomotionFacingX) : { swayX: 0, lift: 0, rotationRad: 0 };
     const attackEase = this.state.mode === "attack" ? Math.sin(attackProgress * Math.PI) : 0;
     const attackOffsetX = facing.x * 12 * attackEase;
     const attackOffsetY = facing.y * 8 * attackEase - attackEase * 4;
@@ -443,8 +448,11 @@ export class UnitSandboxScene extends Phaser.Scene {
     this.sprite
       .setOrigin(framePresentation.originX, framePresentation.originY)
       .setFlipX(flipX)
-      .setRotation(attackRotation)
-      .setPosition(PREVIEW_CENTER_X + attackOffsetX, PREVIEW_CENTER_Y - walkBob + attackOffsetY)
+      .setRotation(walkMotion.rotationRad + attackRotation)
+      .setPosition(
+        PREVIEW_CENTER_X + walkMotion.swayX + attackOffsetX,
+        PREVIEW_CENTER_Y + walkMotion.lift + attackOffsetY,
+      )
       .setDisplaySize(framePresentation.spriteWidth, framePresentation.spriteHeight);
 
     this.shadow
@@ -495,12 +503,12 @@ export class UnitSandboxScene extends Phaser.Scene {
     this.helpText.setText([
       "키보드",
       "↑/↓ 유닛 변경",
-      "←/→ 방향 변경",
+      "←/→ E/W 방향 변경",
       "Q/E 시대 변경",
       "1/2/3 idle/walk/attack",
       "T 팀 전환",
       "Space 자동재생 토글",
-      "[ / ] 수동 phase 이동",
+      "[ / ] 수동 phase 이동 (0.1)",
       "",
       "검수 기준",
       "- walk: 제자리 프레임 전환",

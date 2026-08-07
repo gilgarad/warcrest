@@ -161,37 +161,24 @@ to reason visibly and let them correct it.
   sudden narrow tail, which is what `synth_walk_b`-era and the first v2
   attempt both produced.
 
-  **Fallback: 5-frame ping-pong contract (2026-08-06, user-authored,
-  adopted after repeated 10-frame generation failures)**. Generating 10
-  fully independent, correctly-ordered frames in one pass proved too
-  failure-prone for the image tool (leg-identity reversals, near-duplicate
-  crossing frames). Instead of 10 unique authored walk frames, author only
-  **5**, and let runtime playback order (not the generation step) produce
-  a full two-step cycle by reusing frames:
+  **Fallback: 3-frame contract (2026-08-06, user-authored, supersedes the
+  abandoned 5-frame ping-pong experiment)**. The 10-frame and 5-frame
+  variants both kept failing the same "same leg still leads" defect.
+  For the current rifleman pilot, authored walk frames are reduced to
+  **3**:
 
   | Slot | Content |
   | --- | --- |
-  | walk-01 | Leg A slightly forward |
-  | walk-02 | Leg A fully forward (contact) |
-  | walk-03 | Legs crossing (mid-point, symmetric — used for both crossing transitions) |
-  | walk-04 | Leg B slightly forward |
-  | walk-05 | Leg B fully forward (contact) |
+  | walk-01 | right foot forward, left foot back |
+  | walk-02 | neutral middle pose, feet near center |
+  | walk-03 | left foot forward, right foot back |
 
-  **Playback sequence** (repeats): `01, 02, 01, 03, 04, 05, 04, 03` then
-  loop back to `01`. This is implemented purely as the `walkPoses` array
-  passed into `directionalProductionAnimation()` in
-  `unitAnimationRegistry.ts` —
-  `walkPoses: ["walk-01","walk-02","walk-01","walk-03","walk-04","walk-05","walk-04","walk-03"]`
-  — the existing code already supports an arbitrary pose-name array and
-  builds texture keys by name, so repeating a name in the array reuses the
-  same file without any new rendering logic. Only 5 actual PNG files need
-  to be generated per direction, not 10.
+  **Playback sequence** (repeats): `01, 02, 03, 02`.
 
-  Each of the 5 frames is independently describable with no risk of a
-  multi-frame identity-reversal chain bug — this is the primary reason for
-  adopting it over the 10-unique-frame contract. If this also proves
-  unreliable, escalate to hand-authored/manually-corrected frames rather
-  than another generation-prompt rewrite.
+  The acceptance rule is stricter than before: `walk-01` and `walk-03`
+  must not only differ in silhouette, they must invert left/right foot mass
+  in the lower-foot region. If `walk-01` is right-heavy, `walk-03` must be
+  left-heavy, and vice versa.
 - **Quadrupeds (horses, point 2)**: same 10-frame budget, but gait
   structure follows an actual walk/trot pattern — **front legs cross each
   other's stride independently from the back legs** (a horse's front-left
@@ -277,6 +264,44 @@ All frames:
 
 All 14 points have a decision recorded above.
 
+### Active contract override (2026-08-06)
+
+The user replaced the earlier 8-direction/10-frame rollout decisions with a
+simpler global production contract. The earlier sections remain as design
+history and dormant implementation context, but no longer govern active
+presentation:
+
+- Every newly regenerated unit authors canonical east-facing source art only.
+- West-facing presentation mirrors the east frame at runtime.
+- `N/NE/SE/S/SW/NW` definitions, assets, and supporting code remain in the
+  repository, but game and sandbox lookup are disconnected from them.
+- A unit moving only north or south preserves its most recent E/W facing.
+- Each unit uses three authored walk frames plus separate idle and attack
+  frames. Walk playback loops `01, 02, 03, 02`.
+- The 2026-08-06 roster expansion applies this contract to every standing
+  biped infantry entry, not merely generator rows tagged `board == "human"`.
+  The 21 regenerated entries span ancient infantry through modern infantry;
+  cavalry, artillery/vehicles, and the evolving supply unit remain separate
+  locomotion classes.
+- Each regenerated biped keeps an uncut five-slot source strip and a marked-leg
+  diagnostic strip. Production crops are generated only after the diagnostic
+  tracks the same near anatomical leg in red and the same far anatomical leg
+  in blue across both stride slots. Slot 2 must place red forward and blue
+  back; slot 4 must place the same red leg back and the same blue leg forward.
+  Independent per-frame coloring of whichever leg leads is explicitly invalid.
+- Runtime registration for those 21 entries is canonical E only, mirrored for
+  W, with `walk-01, walk-02, walk-03, walk-02` playback.
+
+Rifleman gate update:
+
+- The regular rifleman E-facing idle, three walk frames, and attack were
+  approved in sandbox.
+- Runtime and generator authored directions are now E only for this unit.
+- Stale regular-rifleman directions and walk-04..10 production files were
+  removed. `rifleman-late` remains a distinct untouched asset family.
+- Next gate is user approval of the current `human`-board standing-infantry
+  list before one pilot unit is regenerated.
+
 2026-08-06 update:
 - Runtime/code migration started for the first v2 pilot unit, `rifleman`.
 - `UnitLocomotionPose`/file naming moved to `idle | walk-01 ... walk-10 |
@@ -312,20 +337,24 @@ All 14 points have a decision recorded above.
   - expansion to any other unit remains blocked until that approval is given
 
 2026-08-06 fallback update:
-- The east-facing rifleman walk pilot moved from the failed 10-unique-frame
-  experiment to the documented 5-frame ping-pong fallback contract.
+- The east-facing rifleman walk pilot now uses the documented 3-frame
+  fallback contract.
 - Implemented runtime playback array:
-  `walk-01, walk-02, walk-01, walk-03, walk-04, walk-05, walk-04, walk-03`.
-- Added automated east-frame validation under
-  `tools/asset-qa/validate_rifleman_pingpong.py`.
-  - foot-width checks on the lower alpha region
-  - leg-silhouette MAD checks (`walk-01` vs `walk-04`,
-    `walk-02` vs `walk-05`)
-- Current accepted east pilot source strip:
-  `docs/dev-wiki/visual-drafts/rifleman-e-5frame-strip-2026-08-06-attempt-1.png`
+  `walk-01, walk-02, walk-03, walk-02`.
+- Automated validation under `tools/asset-qa/validate_rifleman_pingpong.py`
+  now checks:
+  - `walk-01 > walk-02` foot width
+  - `walk-03 > walk-02` foot width
+  - silhouette MAD(`walk-01`, `walk-03`)
+  - left/right foot-mass inversion between `walk-01` and `walk-03`
+- Current east pilot source strip:
+  `docs/dev-wiki/visual-drafts/rifleman-e-3frame-strip-2026-08-06-attempt-1.png`
 - Accepted metrics:
-  - widths = `174, 195, 71, 162, 207`
-  - silhouette MAD = `18.92`, `18.50`
+  - widths = `182, 79, 182`
+  - foot masses:
+    - `walk-01` = `595814 / 623849`
+    - `walk-03` = `623849 / 595814`
+  - silhouette MAD = `70.29`
 - Scope remains gated:
   - no expansion to other rifleman directions
   - no expansion to other units
@@ -353,9 +382,11 @@ Playback (repeats): `01, 02, 03, 02` then loop to `01`. Implemented via
 `directionalProductionAnimation()`, same mechanism as the earlier 5-frame
 plan — no new rendering logic needed, only 3 files per direction.
 
-This supersedes the 10-frame and 5-frame contracts above for now. If a
-unit's 3-frame result still shows the same-leg-repeats bug, the leg-swap
-problem is confirmed to be a generation-tool limitation, not a prompt
-wording problem, and should be solved by local script-based leg mirroring
-(flip the leg region only, keep upper body fixed) rather than further
-prompt iteration.
+This supersedes the 10-frame and 5-frame contracts above for now. A generated
+set is accepted only through a continuous anatomical identity chain: the same
+near leg is marked red and the same far leg blue in both stride frames, then
+their screen positions must exchange. The previous diagnostic independently
+colored each frame's apparent lead leg and therefore produced false positives.
+After the identity-chain strip passes automated centroid checks, diagnostic
+colors are removed without changing the verified poses and the clean strip is
+split into production assets.

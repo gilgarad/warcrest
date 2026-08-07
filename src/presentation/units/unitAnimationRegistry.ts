@@ -1,17 +1,45 @@
 import { assetUrl } from "../../config/assetUrl";
 import type { LaneUnitId } from "../../systems/lane-units/unitStats";
 
-export type UnitLocomotionPose = "idle" | "walk-a" | "walk-b" | "walk-c";
+export const LEGACY_WALK_POSES = ["walk-a", "walk-b", "walk-c"] as const;
+export const LEGACY_PING_PONG_WALK_POSES = [
+  "walk-a",
+  "walk-b",
+  "walk-c",
+  "walk-b",
+] as const;
+export const V2_WALK_POSES = [
+  "walk-01",
+  "walk-02",
+  "walk-03",
+  "walk-04",
+  "walk-05",
+  "walk-06",
+  "walk-07",
+  "walk-08",
+  "walk-09",
+  "walk-10",
+] as const;
+export const THREE_FRAME_PING_PONG_WALK_POSES = [
+  "walk-01",
+  "walk-02",
+  "walk-03",
+  "walk-02",
+] as const;
+export type LegacyWalkPose = typeof LEGACY_WALK_POSES[number];
+export type V2WalkPose = typeof V2_WALK_POSES[number];
+export type UnitWalkPose = LegacyWalkPose | V2WalkPose;
+export type UnitLocomotionPose = "idle" | UnitWalkPose | "attack";
 export const UNIT_FACING_DIRECTIONS = [
   "n", "ne", "e", "se", "s", "sw", "w", "nw",
 ] as const;
 export type UnitFacingDirection = typeof UNIT_FACING_DIRECTIONS[number];
+export const ACTIVE_UNIT_FACING_DIRECTIONS = ["e", "w"] as const;
+export type ActiveUnitFacingDirection = typeof ACTIVE_UNIT_FACING_DIRECTIONS[number];
 
 export interface UnitDirectionalPoseSet {
   idle: string;
-  walkA: string;
-  walkB: string;
-  walkC: string;
+  walk: readonly string[];
   attack: readonly string[];
 }
 
@@ -28,15 +56,25 @@ export interface UnitAnimationDefinition {
   scaleFactor: number;
 }
 
-type FramePoseKey = "idle" | "walk-a" | "walk-b" | "walk-c" | "attack";
+type FramePoseKey = UnitLocomotionPose;
 
 interface ProductionAnimationOptions {
   groundOriginY?: number;
   referenceVisibleHeightRatio?: number;
+  fallbackDirection?: UnitFacingDirection;
   directionAliases?: Partial<Record<UnitFacingDirection, UnitFacingDirection>>;
+  authoredDirections?: readonly UnitFacingDirection[];
+  walkPoses?: readonly UnitWalkPose[];
   poseVisibleHeightRatios?: Partial<Record<FramePoseKey, number>>;
   extraPrefixPoseVisibleHeightRatios?: Readonly<Record<string, Partial<Record<FramePoseKey, number>>>>;
   exactFrameVisibleHeightRatios?: Readonly<Record<string, number>>;
+}
+
+function parsePoseFromTextureKey(key: string): FramePoseKey {
+  const suffix = key.replace(/^.+-(n|ne|e|se|s|sw|w|nw)-/, "");
+  if (suffix === "idle" || suffix === "attack") return suffix;
+  if (suffix.startsWith("walk-")) return suffix as UnitWalkPose;
+  return "idle";
 }
 
 function resolveAuthoredDirection(
@@ -64,7 +102,7 @@ function shouldMirrorDirection(
   mode: UnitAnimationDefinition["directionMode"],
 ): boolean {
   if (mode !== "legacy-mirrored") return false;
-  return direction === "e" || direction === "ne" || direction === "se";
+  return direction === "w" || direction === "nw" || direction === "sw";
 }
 
 const STANDARD_ASPECT = 1;
@@ -89,22 +127,22 @@ function directionalProductionAnimation(
   directionMode: UnitAnimationDefinition["directionMode"] = "direct",
   options: ProductionAnimationOptions = {},
 ): UnitAnimationDefinition {
+  const authoredDirections = options.authoredDirections ?? UNIT_FACING_DIRECTIONS;
+  const walkPoses = options.walkPoses ?? LEGACY_PING_PONG_WALK_POSES;
   const poseSet = (direction: UnitFacingDirection): UnitDirectionalPoseSet => ({
     idle: `${prefix}-${direction}-idle`,
-    walkA: `${prefix}-${direction}-walk-a`,
-    walkB: `${prefix}-${direction}-walk-b`,
-    walkC: `${prefix}-${direction}-walk-c`,
+    walk: walkPoses.map((pose) => `${prefix}-${direction}-${pose}`),
     attack: [`${prefix}-${direction}-attack`],
   });
   const directions = Object.fromEntries(
-    UNIT_FACING_DIRECTIONS.map((direction) => [
+    authoredDirections.map((direction) => [
       direction,
       poseSet(options.directionAliases?.[direction] ?? direction),
     ]),
-  ) as Readonly<Record<UnitFacingDirection, UnitDirectionalPoseSet>>;
-  const allFrames = UNIT_FACING_DIRECTIONS.flatMap((direction) => {
+  ) as Readonly<Partial<Record<UnitFacingDirection, UnitDirectionalPoseSet>>>;
+  const allFrames = authoredDirections.flatMap((direction) => {
     const poses = directions[direction];
-    return [poses.idle, poses.walkA, poses.walkB, poses.walkC, ...poses.attack];
+    return poses ? [poses.idle, ...poses.walk, ...poses.attack] : [];
   });
   const standardFrames = allFrames.filter((key) => !key.endsWith("-attack") || wideAllFrames);
   const wideFrames = wideAllFrames
@@ -113,23 +151,15 @@ function directionalProductionAnimation(
   const defaultHeightRatio = options.referenceVisibleHeightRatio ?? PRODUCTION_VISIBLE_HEIGHT_RATIO;
   const frameVisibleHeightRatios = Object.fromEntries(
     allFrames.map((key) => {
-      const pose: FramePoseKey = key.endsWith("-idle")
-        ? "idle"
-        : key.endsWith("-walk-a")
-          ? "walk-a"
-          : key.endsWith("-walk-b")
-            ? "walk-b"
-            : key.endsWith("-walk-c")
-              ? "walk-c"
-              : "attack";
+      const pose = parsePoseFromTextureKey(key);
       const poseRatio = options.poseVisibleHeightRatios?.[pose]
-        ?? (pose === "walk-c" ? options.poseVisibleHeightRatios?.["walk-a"] : undefined)
+        ?? ((pose === "walk-c" || pose === "walk-10") ? options.poseVisibleHeightRatios?.["walk-a"] : undefined)
         ?? defaultHeightRatio;
       return [key, poseRatio];
     }),
   ) as Record<string, number>;
   Object.entries(options.extraPrefixPoseVisibleHeightRatios ?? {}).forEach(([extraPrefix, ratios]) => {
-    UNIT_FACING_DIRECTIONS.forEach((direction) => {
+    authoredDirections.forEach((direction) => {
       frameVisibleHeightRatios[`${extraPrefix}-${direction}-idle`] = ratios.idle ?? defaultHeightRatio;
       frameVisibleHeightRatios[`${extraPrefix}-${direction}-walk-a`] = ratios["walk-a"] ?? defaultHeightRatio;
       frameVisibleHeightRatios[`${extraPrefix}-${direction}-walk-b`] = ratios["walk-b"] ?? defaultHeightRatio;
@@ -142,7 +172,7 @@ function directionalProductionAnimation(
   });
   return {
     directions,
-    fallbackDirection: "w",
+    fallbackDirection: options.fallbackDirection ?? authoredDirections[0] ?? "w",
     legacyHorizontalMirror: false,
     directionMode,
     frameCanvasAspects: wideAllFrames
@@ -160,14 +190,27 @@ function modernFootProductionAnimation(
   prefix: string,
   scaleFactor: number,
 ): UnitAnimationDefinition {
-  return directionalProductionAnimation(prefix, scaleFactor, false, "direct", {
+  return threeFrameBipedAnimation(prefix, scaleFactor, {
     groundOriginY: MODERN_FOOT_GROUND_ORIGIN_Y,
   });
 }
 
+function threeFrameBipedAnimation(
+  prefix: string,
+  scaleFactor: number,
+  options: ProductionAnimationOptions = {},
+): UnitAnimationDefinition {
+  return directionalProductionAnimation(prefix, scaleFactor, false, "legacy-mirrored", {
+    ...options,
+    authoredDirections: ["e"],
+    fallbackDirection: "e",
+    walkPoses: THREE_FRAME_PING_PONG_WALK_POSES,
+  });
+}
+
 export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDefinition>> = {
-  stone_slinger: directionalProductionAnimation("stone-slinger", 0.96),
-  stone_axeman: directionalProductionAnimation("stone-axeman", 1.04),
+  stone_slinger: threeFrameBipedAnimation("stone-slinger", 0.96),
+  stone_axeman: threeFrameBipedAnimation("stone-axeman", 1.04),
   supply_wagon: directionalProductionAnimation("supply-wagon", 1, true, "direct", {
     extraPrefixPoseVisibleHeightRatios: {
       "supply-wagon-industrial": {
@@ -184,18 +227,14 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
       },
     },
   }),
-  bronze_swordsman: directionalProductionAnimation("bronze-swordsman", 1),
-  bronze_spearman: directionalProductionAnimation("bronze-spearman", 1),
-  archer: directionalProductionAnimation("archer", 0.96),
-  iron_swordsman: directionalProductionAnimation("iron-swordsman", 1.04),
-  iron_spearman: directionalProductionAnimation("iron-spearman", 1.06),
-  musketeer: directionalProductionAnimation("musketeer", 0.98),
+  bronze_swordsman: threeFrameBipedAnimation("bronze-swordsman", 1),
+  bronze_spearman: threeFrameBipedAnimation("bronze-spearman", 1),
+  archer: threeFrameBipedAnimation("archer", 0.96),
+  iron_swordsman: threeFrameBipedAnimation("iron-swordsman", 1.04),
+  iron_spearman: threeFrameBipedAnimation("iron-spearman", 1.06),
+  musketeer: threeFrameBipedAnimation("musketeer", 0.98),
   knight: directionalProductionAnimation("knight", 1.16, true),
-  pikeman: directionalProductionAnimation("pikeman", 1, false, "direct", {
-    exactFrameVisibleHeightRatios: {
-      "pikeman-s-walk-b": 303 / 384,
-    },
-  }),
+  pikeman: threeFrameBipedAnimation("pikeman", 1),
   heavy_cavalry: directionalProductionAnimation("heavy-cavalry", 1.14, true, "direct", {
     poseVisibleHeightRatios: {
       idle: 292.88 / 384,
@@ -209,8 +248,12 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
       "heavy-cavalry-w-attack": 299 / 384,
     },
   }),
-  rifleman: directionalProductionAnimation("rifleman", 0.98),
-  grenadier: directionalProductionAnimation("grenadier", 1.02),
+  rifleman: directionalProductionAnimation("rifleman", 0.98, false, "legacy-mirrored", {
+    authoredDirections: ["e"],
+    fallbackDirection: "e",
+    walkPoses: THREE_FRAME_PING_PONG_WALK_POSES,
+  }),
+  grenadier: threeFrameBipedAnimation("grenadier", 1.02),
   light_cavalry: directionalProductionAnimation("light-cavalry", 1.12, true, "direct", {
     poseVisibleHeightRatios: {
       idle: 293.25 / 384,
@@ -237,8 +280,8 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
       "cannon-i-nw-attack": 197 / 384,
     },
   }),
-  rifleman_late: directionalProductionAnimation("rifleman-late", 0.98),
-  grenadier_late: directionalProductionAnimation("grenadier-late", 1.04),
+  rifleman_late: threeFrameBipedAnimation("rifleman-late", 0.98),
+  grenadier_late: threeFrameBipedAnimation("grenadier-late", 1.04),
   cavalry: directionalProductionAnimation("cavalry", 1.16, true, "direct", {
     poseVisibleHeightRatios: {
       idle: 290.88 / 384,
@@ -285,7 +328,7 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
     },
   }),
   automatic_rifleman: modernFootProductionAnimation("automatic-rifleman", 0.98),
-  support_gunner: directionalProductionAnimation("support-gunner", 0.98, false, "direct", {
+  support_gunner: threeFrameBipedAnimation("support-gunner", 0.98, {
     groundOriginY: MODERN_FOOT_GROUND_ORIGIN_Y,
     poseVisibleHeightRatios: {
       idle: 270 / 384,
@@ -321,7 +364,7 @@ export const UNIT_ANIMATION_REGISTRY: Partial<Record<LaneUnitId, UnitAnimationDe
   }),
   special_forces: modernFootProductionAnimation("special-forces", 0.98),
   heavy_gunner: modernFootProductionAnimation("heavy-gunner", 0.98),
-  breakthrough_trooper: directionalProductionAnimation("breakthrough-trooper", 1, false, "direct", {
+  breakthrough_trooper: threeFrameBipedAnimation("breakthrough-trooper", 1, {
     groundOriginY: 288 / 384,
   }),
   mobile_artillery: directionalProductionAnimation("mobile-artillery", 1.14, true),
@@ -339,24 +382,28 @@ const EXTRA_UNIT_ANIMATION_PREFIXES = [
 function listAnimationKeysForPrefix(prefix: string): string[] {
   return UNIT_FACING_DIRECTIONS.flatMap((direction) => [
     `${prefix}-${direction}-idle`,
-    `${prefix}-${direction}-walk-a`,
-    `${prefix}-${direction}-walk-b`,
-    `${prefix}-${direction}-walk-c`,
+    ...LEGACY_WALK_POSES.map((pose) => `${prefix}-${direction}-${pose}`),
     `${prefix}-${direction}-attack`,
   ]);
+}
+
+function hasEnemyVariantForTexture(key: string): boolean {
+  return !key.endsWith("-walk-c");
 }
 
 export const UNIT_ANIMATION_ASSETS = Object.values(UNIT_ANIMATION_REGISTRY)
   .flatMap((definition) => definition
     ? Object.values(definition.directions).flatMap((poses) => poses
-      ? [poses.idle, poses.walkA, poses.walkB, poses.walkC, ...poses.attack]
+      ? [poses.idle, ...poses.walk, ...poses.attack]
       : [])
     : [])
   .concat(EXTRA_UNIT_ANIMATION_PREFIXES.flatMap((prefix) => listAnimationKeysForPrefix(prefix)))
   .filter((key, index, all) => all.indexOf(key) === index)
   .flatMap((key) => [
     { key, path: assetUrl(`assets/production/units/${key}.png`) },
-    { key: `${key}-enemy`, path: assetUrl(`assets/production/units/${key}-enemy.png`) },
+    ...(hasEnemyVariantForTexture(key)
+      ? [{ key: `${key}-enemy`, path: assetUrl(`assets/production/units/${key}-enemy.png`) }]
+      : []),
   ]);
 
 export function getUnitAnimationDefinition(unitId: LaneUnitId): UnitAnimationDefinition | undefined {
@@ -376,13 +423,20 @@ export function hasCompleteUnitDirectionalSet(unitId: LaneUnitId): boolean {
 
 export function resolveUnitFacingDirection(
   motionX: number,
-  motionY: number,
+  _motionY: number,
   fallback: UnitFacingDirection = "w",
-): UnitFacingDirection {
-  if (Math.abs(motionX) < 0.0001 && Math.abs(motionY) < 0.0001) return fallback;
-  const sectors: readonly UnitFacingDirection[] = ["e", "se", "s", "sw", "w", "nw", "n", "ne"];
-  const octant = Math.round(Math.atan2(motionY, motionX) / (Math.PI / 4));
-  return sectors[(octant + sectors.length) % sectors.length];
+): ActiveUnitFacingDirection {
+  if (Math.abs(motionX) >= 0.0001) return motionX > 0 ? "e" : "w";
+  return resolveHorizontalPresentationDirection(fallback);
+}
+
+export function resolveHorizontalPresentationDirection(
+  direction: UnitFacingDirection,
+  verticalFallback: ActiveUnitFacingDirection = "w",
+): ActiveUnitFacingDirection {
+  if (direction === "e" || direction === "ne" || direction === "se") return "e";
+  if (direction === "w" || direction === "nw" || direction === "sw") return "w";
+  return verticalFallback;
 }
 
 export function getUnitDirectionalPoses(
@@ -391,7 +445,10 @@ export function getUnitDirectionalPoses(
 ): UnitDirectionalPoseSet | undefined {
   const definition = getUnitAnimationDefinition(unitId);
   if (!definition) return undefined;
-  const authoredDirection = resolveAuthoredDirection(direction, definition.directionMode);
+  const presentationDirection = resolveHorizontalPresentationDirection(direction);
+  const eastPoses = definition.directions.e;
+  if (eastPoses) return eastPoses;
+  const authoredDirection = resolveAuthoredDirection(presentationDirection, definition.directionMode);
   return definition.directions[authoredDirection] ?? definition.directions[definition.fallbackDirection];
 }
 
@@ -413,7 +470,7 @@ export function getFrameCanvasAspect(unitId: LaneUnitId, textureKey?: string): n
 }
 
 export function deriveAnimationPrefix(textureKey: string): string {
-  return textureKey.replace(/-(n|ne|e|se|s|sw|w|nw)-(idle|walk-a|walk-b|walk-c|attack)$/, "");
+  return textureKey.replace(/-(n|ne|e|se|s|sw|w|nw)-(idle|walk-a|walk-b|walk-c|walk-\d\d|attack)$/, "");
 }
 
 function resolveWalkFrameIndex(walkCycleProgress: number, frameCount: number): number {
@@ -433,8 +490,7 @@ export function resolveAnimationTextureFromPrefix(
   if (directional) {
     if (attackProgress > 0) return directional.attack[0];
     if (!moving) return directional.idle;
-    const walkFrames = [directional.walkA, directional.walkB, directional.walkC] as const;
-    return walkFrames[resolveWalkFrameIndex(walkCycleProgress, walkFrames.length)];
+    return directional.walk[resolveWalkFrameIndex(walkCycleProgress, directional.walk.length)];
   }
   const definition = getUnitAnimationDefinition(unitId);
   const authoredDirection = resolveAuthoredDirection(
@@ -443,22 +499,26 @@ export function resolveAnimationTextureFromPrefix(
   );
   if (attackProgress > 0) return `${prefix}-${authoredDirection}-attack`;
   if (!moving) return `${prefix}-${authoredDirection}-idle`;
-  const walkSuffixes = ["walk-a", "walk-b", "walk-c"] as const;
+  const walkSuffixes = LEGACY_WALK_POSES;
   return `${prefix}-${authoredDirection}-${walkSuffixes[resolveWalkFrameIndex(walkCycleProgress, walkSuffixes.length)]}`;
 }
 
 export function resolveTeamUnitTextureKey(textureKey: string, team: "player" | "enemy"): string {
-  return team === "enemy" ? `${textureKey}-enemy` : textureKey;
+  return team === "enemy" && hasEnemyVariantForTexture(textureKey) ? `${textureKey}-enemy` : textureKey;
 }
 
 export function shouldFlipUnitFrame(
-  unitId: LaneUnitId,
+  _unitId: LaneUnitId,
   facingX: number,
   direction?: UnitFacingDirection,
 ): boolean {
-  const definition = getUnitAnimationDefinition(unitId);
-  if (direction) return shouldMirrorDirection(direction, definition?.directionMode ?? "direct");
-  return Boolean(definition?.legacyHorizontalMirror && facingX > 0);
+  if (direction) {
+    return shouldMirrorDirection(
+      resolveHorizontalPresentationDirection(direction),
+      "legacy-mirrored",
+    );
+  }
+  return facingX < 0;
 }
 
 export function resolveUnitAnimationTexture(
@@ -478,6 +538,5 @@ export function resolveUnitAnimationTexture(
     return poses.attack[frameIndex];
   }
   if (!moving) return poses.idle;
-  const walkFrames = [poses.walkA, poses.walkB, poses.walkC] as const;
-  return walkFrames[resolveWalkFrameIndex(walkCycleProgress, walkFrames.length)];
+  return poses.walk[resolveWalkFrameIndex(walkCycleProgress, poses.walk.length)];
 }

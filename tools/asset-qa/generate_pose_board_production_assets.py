@@ -18,7 +18,9 @@ TARGET_ANCHOR_Y = 336
 STANDARD_CANVAS = (384, 384)
 WIDE_CANVAS = (512, 384)
 DIRECTIONS = ("w", "nw", "n", "ne", "e", "se", "s", "sw")
-POSES = ("idle", "walk-a", "walk-b", "walk-c", "attack")
+LEGACY_POSES = ("idle", "walk-a", "walk-b", "walk-c", "attack")
+V2_WALK_POSES = tuple(f"walk-{index:02d}" for index in range(1, 11))
+RIFLEMAN_V2_POSES = ("idle", *V2_WALK_POSES, "attack")
 
 
 @dataclass(frozen=True)
@@ -26,6 +28,7 @@ class BoardSpec:
     path: Path
     rows: int
     cols: int
+    pose_labels: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -33,12 +36,14 @@ class UnitSpec:
     prefix: str
     board: str
     row: int
+    authored_directions: tuple[str, ...] = DIRECTIONS
+    directional_boards: dict[str, str] | None = None
+    pose_overrides: dict[str, dict[str, Path]] | None = None
     wide_all: bool = False
     hue_shift: float = 0.0
     saturation_scale: float = 1.0
     value_scale: float = 1.0
     role: str = "infantry"
-    walk_b_mode: Literal["rotate", "shift"] = "rotate"
     cleanup_mode: Literal["largest-only", "keep-nearby", "none"] = "largest-only"
     keep_margin_x: int = 12
     keep_margin_top: int = 0
@@ -60,20 +65,27 @@ class UnitSpec:
     idle_from_walk: bool = False
     idle_from_attack: bool = False
     walk_from_attack: bool = False
+    emit_directionless_alias: bool = True
+    active_poses: tuple[str, ...] | None = None
 
 
 BOARDS: dict[str, BoardSpec] = {
-    "human": BoardSpec(BOARD_DIR / "late-era-human-pose-board-2026-08-06-5col.png", 6, 5),
-    "heavy": BoardSpec(BOARD_DIR / "late-era-heavy-pose-board-2026-08-03.png", 6, 3),
-    "modern": BoardSpec(BOARD_DIR / "modern-combat-pose-board-2026-08-06-5col-v2.png", 6, 5),
-    "modern-infantry": BoardSpec(BOARD_DIR / "infantry-pose-strip-2026-08-06.png", 1, 5),
-    "modern-machine": BoardSpec(BOARD_DIR / "machine-gunner-pose-strip-2026-08-06.png", 1, 5),
-    "modern-shock": BoardSpec(BOARD_DIR / "shock-trooper-pose-strip-2026-08-06.png", 1, 5),
-    "modern-automatic": BoardSpec(BOARD_DIR / "automatic-rifleman-pose-strip-2026-08-06.png", 1, 5),
-    "modern-support": BoardSpec(BOARD_DIR / "support-gunner-pose-strip-2026-08-06.png", 1, 5),
-    "modern-special": BoardSpec(BOARD_DIR / "special-forces-pose-strip-2026-08-06.png", 1, 5),
-    "mechanized": BoardSpec(BOARD_DIR / "mechanized-pose-board-2026-08-06-5col.png", 6, 5),
-    "support": BoardSpec(BOARD_DIR / "support-evolution-pose-board-2026-08-06-5col.png", 6, 5),
+    "human": BoardSpec(BOARD_DIR / "late-era-human-pose-board-2026-08-06-5col.png", 6, 5, LEGACY_POSES),
+    "heavy": BoardSpec(BOARD_DIR / "late-era-heavy-pose-board-2026-08-03.png", 6, 3, ("idle", "walk-a", "attack")),
+    "modern": BoardSpec(BOARD_DIR / "modern-combat-pose-board-2026-08-06-5col-v2.png", 6, 5, LEGACY_POSES),
+    "modern-infantry": BoardSpec(BOARD_DIR / "infantry-pose-strip-2026-08-06.png", 1, 5, LEGACY_POSES),
+    "modern-machine": BoardSpec(BOARD_DIR / "machine-gunner-pose-strip-2026-08-06.png", 1, 5, LEGACY_POSES),
+    "modern-shock": BoardSpec(BOARD_DIR / "shock-trooper-pose-strip-2026-08-06.png", 1, 5, LEGACY_POSES),
+    "modern-automatic": BoardSpec(BOARD_DIR / "automatic-rifleman-pose-strip-2026-08-06.png", 1, 5, LEGACY_POSES),
+    "modern-support": BoardSpec(BOARD_DIR / "support-gunner-pose-strip-2026-08-06.png", 1, 5, LEGACY_POSES),
+    "modern-special": BoardSpec(BOARD_DIR / "special-forces-pose-strip-2026-08-06.png", 1, 5, LEGACY_POSES),
+    "mechanized": BoardSpec(BOARD_DIR / "mechanized-pose-board-2026-08-06-5col.png", 6, 5, LEGACY_POSES),
+    "support": BoardSpec(BOARD_DIR / "support-evolution-pose-board-2026-08-06-5col.png", 6, 5, LEGACY_POSES),
+    "rifleman-n-v2": BoardSpec(BOARD_DIR / "rifleman-n-v2-strip.png", 1, 12, RIFLEMAN_V2_POSES),
+    "rifleman-ne-v2": BoardSpec(BOARD_DIR / "rifleman-ne-v2-strip.png", 1, 12, RIFLEMAN_V2_POSES),
+    "rifleman-e-v2": BoardSpec(BOARD_DIR / "rifleman-e-v2-strip.png", 1, 12, RIFLEMAN_V2_POSES),
+    "rifleman-se-v2": BoardSpec(BOARD_DIR / "rifleman-se-v2-strip.png", 1, 12, RIFLEMAN_V2_POSES),
+    "rifleman-s-v2": BoardSpec(BOARD_DIR / "rifleman-s-v2-strip.png", 1, 12, RIFLEMAN_V2_POSES),
 }
 
 
@@ -85,7 +97,6 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
         2,
         wide_all=True,
         role="cavalry",
-        walk_b_mode="shift",
         cleanup_mode="largest-only",
         keep_margin_x=92,
         keep_margin_top=28,
@@ -97,14 +108,24 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
         trim_wide_top_rows=4,
         trim_wide_top_threshold=0.42,
     ),
-    UnitSpec("rifleman", "human", 3, role="infantry", walk_b_mode="shift"),
+    UnitSpec(
+        "rifleman",
+        "rifleman-e-v2",
+        0,
+        authored_directions=("e",),
+        directional_boards={
+            "e": "rifleman-e-v2",
+        },
+        role="infantry",
+        emit_directionless_alias=False,
+        active_poses=("idle", "walk-01", "walk-02", "walk-03", "attack"),
+    ),
     UnitSpec(
         "grenadier",
         "human",
         4,
         role="infantry",
         saturation_scale=1.04,
-        walk_b_mode="shift",
     ),
     UnitSpec(
         "light-cavalry",
@@ -112,7 +133,6 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
         5,
         wide_all=True,
         role="cavalry",
-        walk_b_mode="shift",
         cleanup_mode="largest-only",
         keep_margin_x=92,
         keep_margin_top=24,
@@ -130,7 +150,6 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
         0,
         wide_all=True,
         role="artillery",
-        walk_b_mode="shift",
         cleanup_mode="none",
         keep_margin_x=140,
         keep_margin_bottom=48,
@@ -142,13 +161,21 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
     ),
     UnitSpec(
         "rifleman-late",
-        "human",
+        "rifleman-e-v2",
         3,
+        authored_directions=("n", "ne", "e", "se", "s"),
+        directional_boards={
+            "n": "rifleman-n-v2",
+            "ne": "rifleman-ne-v2",
+            "e": "rifleman-e-v2",
+            "se": "rifleman-se-v2",
+            "s": "rifleman-s-v2",
+        },
         role="infantry",
         hue_shift=0.04,
         saturation_scale=0.92,
         value_scale=0.94,
-        walk_b_mode="shift",
+        emit_directionless_alias=False,
     ),
     UnitSpec(
         "grenadier-late",
@@ -158,7 +185,6 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
         hue_shift=0.02,
         saturation_scale=0.98,
         value_scale=0.92,
-        walk_b_mode="shift",
     ),
     UnitSpec(
         "cavalry",
@@ -166,7 +192,6 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
         5,
         wide_all=True,
         role="cavalry",
-        walk_b_mode="shift",
         cleanup_mode="largest-only",
         keep_margin_x=92,
         keep_margin_top=24,
@@ -183,7 +208,6 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
         1,
         wide_all=True,
         role="artillery",
-        walk_b_mode="shift",
         cleanup_mode="none",
         keep_margin_x=140,
         keep_margin_bottom=48,
@@ -198,7 +222,6 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
         "modern-infantry",
         0,
         role="infantry",
-        walk_b_mode="shift",
         cleanup_mode="largest-only",
         keep_margin_x=32,
         keep_margin_bottom=120,
@@ -230,7 +253,6 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
         2,
         wide_all=True,
         role="artillery",
-        walk_b_mode="shift",
         cleanup_mode="none",
         keep_margin_x=140,
         keep_margin_bottom=48,
@@ -265,7 +287,6 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
         "heavy",
         3,
         role="infantry",
-        walk_b_mode="shift",
         cleanup_mode="keep-nearby",
         keep_margin_bottom=90,
         keep_min_area=48,
@@ -280,7 +301,6 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
         3,
         wide_all=True,
         role="artillery",
-        walk_b_mode="shift",
         cleanup_mode="keep-nearby",
         keep_margin_x=140,
         keep_margin_bottom=48,
@@ -296,7 +316,6 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
         4,
         wide_all=True,
         role="vehicle",
-        walk_b_mode="shift",
         cleanup_mode="keep-nearby",
         keep_margin_x=160,
         keep_margin_bottom=52,
@@ -311,7 +330,6 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
         "modern-special",
         0,
         role="infantry",
-        walk_b_mode="shift",
         cleanup_mode="largest-only",
         keep_margin_x=32,
         keep_margin_bottom=120,
@@ -323,7 +341,6 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
         4,
         wide_all=True,
         role="infantry",
-        walk_b_mode="shift",
         cleanup_mode="keep-nearby",
         keep_margin_bottom=90,
         keep_min_area=48,
@@ -352,7 +369,6 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
         5,
         wide_all=True,
         role="vehicle",
-        walk_b_mode="shift",
         value_scale=0.9,
         cleanup_mode="keep-nearby",
         keep_margin_x=160,
@@ -369,7 +385,6 @@ UNIT_SPECS: tuple[UnitSpec, ...] = (
         5,
         wide_all=True,
         role="vehicle",
-        walk_b_mode="shift",
         value_scale=0.92,
         cleanup_mode="keep-nearby",
         keep_margin_x=160,
@@ -446,6 +461,10 @@ def remove_background(cell: Image.Image) -> Image.Image:
             delta = abs(r - bg[0]) + abs(g - bg[1]) + abs(b - bg[2])
             if a == 0 or delta < 28:
                 continue
+            # Despill the chroma-key edge before thresholding alpha so the
+            # final production sprite does not retain a green fringe.
+            if g > r + 8 and g > b + 8:
+                g = max(r, b, int((r + b) / 2))
             out[x, y] = (r, g, b, 255)
     alpha = masked.getchannel("A")
     bbox = alpha.getbbox()
@@ -871,23 +890,6 @@ def recolor(image: Image.Image, spec: UnitSpec) -> Image.Image:
     return out
 
 
-def synth_walk_b(image: Image.Image) -> Image.Image:
-    rotated = image.rotate(3, resample=Image.Resampling.BICUBIC, expand=True, fillcolor=(0, 0, 0, 0))
-    rotated = threshold_alpha(rotated)
-    bbox = rotated.getchannel("A").getbbox()
-    return rotated.crop(bbox) if bbox else rotated
-
-
-def synth_walk_b_shift(image: Image.Image) -> Image.Image:
-    canvas = Image.new("RGBA", (image.width + 16, image.height + 16), (0, 0, 0, 0))
-    canvas.alpha_composite(image, (8, 4))
-    shifted = canvas.crop((4, 0, canvas.width - 4, canvas.height - 8))
-    shifted = affine_scale_x(shifted, 0.985)
-    shifted = threshold_alpha(shifted)
-    bbox = shifted.getchannel("A").getbbox()
-    return shifted.crop(bbox) if bbox else shifted
-
-
 def crop_to_alpha(image: Image.Image) -> Image.Image:
     bbox = image.getchannel("A").getbbox()
     return image.crop(bbox) if bbox else image
@@ -899,179 +901,6 @@ def centered_on_canvas(image: Image.Image, size: tuple[int, int]) -> Image.Image
     y = (size[1] - image.height) // 2
     canvas.alpha_composite(image, (x, y))
     return canvas
-
-
-def blend_centered(a: Image.Image, b: Image.Image, alpha: float) -> Image.Image:
-    size = (max(a.width, b.width), max(a.height, b.height))
-    out = Image.blend(centered_on_canvas(a, size), centered_on_canvas(b, size), alpha)
-    return crop_to_alpha(threshold_alpha(out))
-
-
-def alpha_components(
-    image: Image.Image,
-    *,
-    alpha_cutoff: int = 24,
-    start_y: int = 0,
-) -> list[tuple[int, tuple[int, int, int, int], list[tuple[int, int]]]]:
-    alpha = image.getchannel("A")
-    width, height = alpha.size
-    visited: set[tuple[int, int]] = set()
-    components: list[tuple[int, tuple[int, int, int, int], list[tuple[int, int]]]] = []
-    for y in range(max(0, start_y), height):
-        for x in range(width):
-            if alpha.getpixel((x, y)) < alpha_cutoff or (x, y) in visited:
-                continue
-            stack = [(x, y)]
-            visited.add((x, y))
-            component: list[tuple[int, int]] = []
-            while stack:
-                cx, cy = stack.pop()
-                component.append((cx, cy))
-                for nx, ny in ((cx - 1, cy), (cx + 1, cy), (cx, cy - 1), (cx, cy + 1)):
-                    if (
-                        0 <= nx < width
-                        and 0 <= ny < height
-                        and ny >= start_y
-                        and alpha.getpixel((nx, ny)) >= alpha_cutoff
-                        and (nx, ny) not in visited
-                    ):
-                        visited.add((nx, ny))
-                        stack.append((nx, ny))
-            xs = [point[0] for point in component]
-            ys = [point[1] for point in component]
-            components.append((len(component), (min(xs), min(ys), max(xs) + 1, max(ys) + 1), component))
-    return components
-
-
-def synth_humanoid_walk_frame(walk_image: Image.Image, phase: str) -> Image.Image:
-    content = crop_to_alpha(walk_image)
-    width, height = content.size
-    start_y = round(height * 0.5)
-    candidates = []
-    for area, bbox, component in alpha_components(content, start_y=start_y):
-        left, top, right, bottom = bbox
-        comp_w = right - left
-        comp_h = bottom - top
-        if bottom < round(height * 0.82):
-            continue
-        if top < round(height * 0.42):
-            continue
-        if comp_h < round(height * 0.16):
-            continue
-        if comp_w > round(width * 0.36):
-            continue
-        candidates.append((area, bbox, component))
-    candidates.sort(key=lambda item: (item[0], item[1][3]), reverse=True)
-    if len(candidates) < 2:
-        return split_shift_recompose(
-            content,
-            split_ratio=0.74,
-            upper_dx=0,
-            lower_dx=10 if phase == "walk-b" else -10,
-            lower_dy=2,
-        )
-
-    legs = sorted(candidates[:2], key=lambda item: item[1][0])
-    out = content.copy()
-    source = content.load()
-    target = out.load()
-    for _, _, component in legs:
-        for x, y in component:
-            target[x, y] = (0, 0, 0, 0)
-    offsets = ((-3, 0), (3, 0)) if phase == "walk-b" else ((3, 0), (-3, 0))
-    for (_, _, component), (dx, dy) in zip(legs, offsets):
-        for x, y in component:
-            nx, ny = x + dx, y + dy
-            if 0 <= nx < width and 0 <= ny < height:
-                target[nx, ny] = source[x, y]
-    return crop_to_alpha(threshold_alpha(out))
-
-
-def split_shift_recompose(
-    image: Image.Image,
-    split_ratio: float,
-    upper_dx: int,
-    lower_dx: int,
-    upper_dy: int = 0,
-    lower_dy: int = 0,
-    rotate_deg: float = 0,
-    lower_scale_x: float = 1.0,
-) -> Image.Image:
-    content = crop_to_alpha(image)
-    if rotate_deg:
-        content = threshold_alpha(content.rotate(
-            rotate_deg,
-            resample=Image.Resampling.BICUBIC,
-            expand=True,
-            fillcolor=(0, 0, 0, 0),
-        ))
-    width, height = content.size
-    overlap = max(4, round(height * 0.035))
-    split_y = max(overlap + 1, min(height - overlap - 1, round(height * split_ratio)))
-    upper = content.crop((0, 0, width, min(height, split_y + overlap)))
-    lower = content.crop((0, max(0, split_y - overlap), width, height))
-    if lower_scale_x != 1:
-        lower = affine_scale_x(lower, lower_scale_x)
-    pad_left = 20 + max(0, -min(upper_dx, lower_dx))
-    pad_right = 20 + max(0, max(upper_dx, lower_dx))
-    pad_top = 12 + max(0, -min(upper_dy, lower_dy))
-    pad_bottom = 12 + max(0, max(upper_dy, lower_dy))
-    canvas = Image.new(
-        "RGBA",
-        (width + pad_left + pad_right, height + pad_top + pad_bottom),
-        (0, 0, 0, 0),
-    )
-    canvas.alpha_composite(upper, (pad_left + upper_dx, pad_top + upper_dy))
-    lower_x = pad_left + lower_dx + (width - lower.width) // 2
-    lower_y = pad_top + split_y - overlap + lower_dy
-    canvas.alpha_composite(lower, (lower_x, lower_y))
-    return crop_to_alpha(threshold_alpha(canvas))
-
-
-def gait_params(role: str, phase: str) -> tuple[float, int, int, int, int, float, float]:
-    table = {
-        "infantry": {
-            "walk-b": (0.72, 0, 10, 0, 2, 0.0, 1.0),
-            "walk-c": (0.72, 0, -10, 0, 2, 0.0, 1.0),
-        },
-        "support": {
-            "walk-b": (0.72, 0, 10, 0, 2, 0.0, 1.0),
-            "walk-c": (0.72, 0, -10, 0, 2, 0.0, 1.0),
-        },
-        "cavalry": {
-            "walk-b": (0.8, 0, 12, 0, 2, 0.0, 1.0),
-            "walk-c": (0.8, 0, -12, 0, 2, 0.0, 1.0),
-        },
-        "artillery": {
-            "walk-b": (0.82, 0, 12, 0, 0, 0.0, 1.0),
-            "walk-c": (0.82, 0, -12, 0, 0, 0.0, 1.0),
-        },
-        "vehicle": {
-            "walk-b": (0.84, 0, 10, 0, 0, 0.0, 1.0),
-            "walk-c": (0.84, 0, -10, 0, 0, 0.0, 1.0),
-        },
-    }
-    return table.get(role, table["infantry"])[phase]
-
-
-def synth_walk_frame(idle_image: Image.Image, walk_image: Image.Image, role: str, phase: str) -> Image.Image:
-    if role in {"infantry", "support"}:
-        return synth_humanoid_walk_frame(walk_image, phase)
-    split_ratio, upper_dx, lower_dx, upper_dy, lower_dy, rotate_deg, lower_scale_x = gait_params(role, phase)
-    base = walk_image.copy()
-    framed = split_shift_recompose(
-        base,
-        split_ratio=split_ratio,
-        upper_dx=upper_dx,
-        lower_dx=lower_dx,
-        upper_dy=upper_dy,
-        lower_dy=lower_dy,
-        rotate_deg=rotate_deg,
-        lower_scale_x=lower_scale_x,
-    )
-    if phase == "walk-c" and role in {"artillery", "vehicle"}:
-        framed = affine_scale_x(framed, 0.99)
-    return crop_to_alpha(threshold_alpha(framed))
 
 
 def affine_scale_x(image: Image.Image, scale_x: float) -> Image.Image:
@@ -1098,31 +927,31 @@ def transform_for_direction(image: Image.Image, direction: str) -> Image.Image:
     return out.crop(bbox) if bbox else out
 
 
-def add_team_accent(canvas: Image.Image, role: str) -> Image.Image:
+def add_team_accent(canvas: Image.Image, role: str, team: Literal["player", "enemy"] = "player") -> Image.Image:
     bbox = canvas.getchannel("A").getbbox()
     if bbox is None:
         return canvas
     out = canvas.copy()
     draw = ImageDraw.Draw(out)
     left, top, right, bottom = bbox
-    blue_fill = (72, 126, 220, 255)
-    blue_fill_2 = (108, 168, 255, 255)
+    primary_fill = (72, 126, 220, 255) if team == "player" else (196, 88, 88, 255)
+    secondary_fill = (108, 168, 255, 255) if team == "player" else (244, 134, 134, 255)
     if role in {"vehicle", "artillery"}:
         x0 = round(left + (right - left) * 0.58)
         y0 = round(top + (bottom - top) * 0.26)
-        draw.rounded_rectangle((x0, y0, x0 + 16, y0 + 10), radius=2, fill=blue_fill)
-        draw.rectangle((x0 + 3, y0 + 3, x0 + 12, y0 + 7), fill=blue_fill_2)
+        draw.rounded_rectangle((x0, y0, x0 + 16, y0 + 10), radius=2, fill=primary_fill)
+        draw.rectangle((x0 + 3, y0 + 3, x0 + 12, y0 + 7), fill=secondary_fill)
     elif role == "support":
         x0 = round(left + (right - left) * 0.56)
         y0 = round(top + (bottom - top) * 0.22)
-        draw.ellipse((x0, y0, x0 + 12, y0 + 12), fill=blue_fill)
-        draw.ellipse((x0 + 3, y0 + 3, x0 + 8, y0 + 8), fill=blue_fill_2)
+        draw.ellipse((x0, y0, x0 + 12, y0 + 12), fill=primary_fill)
+        draw.ellipse((x0 + 3, y0 + 3, x0 + 8, y0 + 8), fill=secondary_fill)
     else:
         x0 = round(left + (right - left) * 0.48)
         y0 = round(top + (bottom - top) * 0.18)
         draw.polygon(
             [(x0, y0), (x0 + 13, y0 + 4), (x0 + 8, y0 + 11), (x0 - 4, y0 + 7)],
-            fill=blue_fill,
+            fill=primary_fill,
         )
     return out
 
@@ -1217,50 +1046,36 @@ def cleanup_content_image(image: Image.Image, spec: UnitSpec) -> Image.Image:
     return cleaned
 
 
-def pose_image(cells: list[list[Image.Image]], spec: UnitSpec, pose: str) -> Image.Image:
-    row_cells = cells[spec.row]
-    has_explicit_walk_cycle = len(row_cells) >= 5
-    attack_index = 4 if has_explicit_walk_cycle else 2
-    idle_source = remove_background(row_cells[attack_index]) if spec.idle_from_attack else remove_background(row_cells[0])
-    walk_source = remove_background(row_cells[attack_index]) if spec.walk_from_attack else remove_background(row_cells[1])
-    if pose == "idle" and spec.idle_from_attack:
-        return idle_source
-    if pose == "idle" and spec.idle_from_walk:
-        return walk_source
-    if pose == "idle":
-        return idle_source
-    if pose == "walk-a" and spec.walk_from_attack:
-        return walk_source
-    if pose == "walk-a":
-        return walk_source
-    if has_explicit_walk_cycle and pose == "walk-b":
-        return remove_background(row_cells[2])
-    if has_explicit_walk_cycle and pose == "walk-c":
-        return remove_background(row_cells[3])
-    if pose == "walk-b":
-        return synth_walk_frame(idle_source, walk_source, spec.role, "walk-b")
-    if pose == "walk-c":
-        return synth_walk_frame(idle_source, walk_source, spec.role, "walk-c")
-    return remove_background(row_cells[attack_index])
-
-
-def source_pose_images(cells: list[list[Image.Image]], spec: UnitSpec) -> dict[str, Image.Image]:
-    row_cells = cells[spec.row]
-    has_explicit_walk_cycle = len(row_cells) >= 5
-    attack_index = 4 if has_explicit_walk_cycle else 2
-    idle_source = remove_background(row_cells[attack_index]) if spec.idle_from_attack else remove_background(row_cells[0])
-    walk_source = remove_background(row_cells[attack_index]) if spec.walk_from_attack else remove_background(row_cells[1])
+def source_pose_images(
+    row_cells: list[Image.Image],
+    pose_labels: tuple[str, ...],
+    spec: UnitSpec,
+    pose_overrides: dict[str, Path] | None = None,
+) -> dict[str, Image.Image]:
+    pose_indexes = {label: index for index, label in enumerate(pose_labels)}
+    attack_index = pose_indexes["attack"]
+    walk_anchor_label = "walk-a" if "walk-a" in pose_indexes else "walk-01"
+    idle_source = remove_background(row_cells[attack_index]) if spec.idle_from_attack else remove_background(row_cells[pose_indexes["idle"]])
+    walk_source = remove_background(row_cells[attack_index]) if spec.walk_from_attack else remove_background(row_cells[pose_indexes[walk_anchor_label]])
     attack_source = remove_background(row_cells[attack_index])
     if spec.idle_from_walk:
         idle_source = walk_source.copy()
-    result = {
-        "idle": cleanup_content_image(recolor(idle_source, spec), spec),
-        "walk-a": cleanup_content_image(recolor(walk_source, spec), spec),
-        "attack": cleanup_content_image(recolor(attack_source, spec), spec),
-    }
-    if has_explicit_walk_cycle:
-        result["walk-b"] = cleanup_content_image(recolor(remove_background(row_cells[2]), spec), spec)
-        result["walk-c"] = cleanup_content_image(recolor(remove_background(row_cells[3]), spec), spec)
+
+    result: dict[str, Image.Image] = {}
+    for pose in pose_labels:
+        override_path = pose_overrides.get(pose) if pose_overrides else None
+        if override_path is not None:
+            override = Image.open(override_path).convert("RGBA")
+            source = override
+        elif pose == "idle":
+            source = idle_source
+        elif pose == "attack":
+            source = attack_source
+        elif pose == walk_anchor_label and spec.walk_from_attack:
+            source = walk_source
+        else:
+            source = remove_background(row_cells[pose_indexes[pose]])
+        result[pose] = cleanup_content_image(recolor(source, spec), spec)
     return result
 
 
@@ -1271,30 +1086,40 @@ def canvas_for_pose(spec: UnitSpec, pose: str) -> tuple[int, int]:
 
 
 def save_unit_assets(spec: UnitSpec, board_cells_cache: dict[str, list[list[Image.Image]]]) -> None:
-    rows = board_cells_cache[spec.board]
-    source_poses = source_pose_images(rows, spec)
-    has_explicit_walk_cycle = "walk-b" in source_poses and "walk-c" in source_poses
     directional_poses: dict[str, dict[str, Image.Image]] = {}
-    for direction in DIRECTIONS:
-        idle = transform_for_direction(source_poses["idle"], direction)
-        walk_a = transform_for_direction(source_poses["walk-a"], direction)
-        attack = transform_for_direction(source_poses["attack"], direction)
-        if has_explicit_walk_cycle:
-            walk_b = transform_for_direction(source_poses["walk-b"], direction)
-            walk_c = transform_for_direction(source_poses["walk-c"], direction)
-        else:
-            walk_b = cleanup_content_image(synth_walk_frame(idle, walk_a, spec.role, "walk-b"), spec)
-            walk_c = cleanup_content_image(synth_walk_frame(idle, walk_a, spec.role, "walk-c"), spec)
-        directional_poses[direction] = {
-            "idle": idle,
-            "walk-a": walk_a,
-            "walk-b": walk_b,
-            "walk-c": walk_c,
-            "attack": attack,
-        }
-    for direction in DIRECTIONS:
-        standard_poses = [pose for pose in POSES if canvas_for_pose(spec, pose) == STANDARD_CANVAS]
-        wide_poses = [pose for pose in POSES if canvas_for_pose(spec, pose) == WIDE_CANVAS]
+    if spec.directional_boards:
+        for direction, board_name in spec.directional_boards.items():
+            board_spec = BOARDS[board_name]
+            rows = board_cells_cache[board_name]
+            directional_poses[direction] = source_pose_images(
+                rows[0],
+                board_spec.pose_labels,
+                spec,
+                spec.pose_overrides.get(direction) if spec.pose_overrides else None,
+            )
+    else:
+        board_spec = BOARDS[spec.board]
+        rows = board_cells_cache[spec.board]
+        source_poses = source_pose_images(rows[spec.row], board_spec.pose_labels, spec)
+        for direction in spec.authored_directions:
+            directional_poses[direction] = {
+                pose: transform_for_direction(image, direction)
+                for pose, image in source_poses.items()
+            }
+
+    all_pose_keys = tuple(next(iter(directional_poses.values())).keys())
+    pose_keys = spec.active_poses or all_pose_keys
+    missing_poses = [pose for pose in pose_keys if pose not in all_pose_keys]
+    if missing_poses:
+        raise ValueError(f"{spec.prefix} active poses missing from source board: {missing_poses}")
+    alias_direction = None
+    if spec.emit_directionless_alias:
+        alias_direction = "w" if "w" in directional_poses else ("e" if "e" in directional_poses else None)
+    for direction in spec.authored_directions:
+        if direction not in directional_poses:
+            continue
+        standard_poses = [pose for pose in pose_keys if canvas_for_pose(spec, pose) == STANDARD_CANVAS]
+        wide_poses = [pose for pose in pose_keys if canvas_for_pose(spec, pose) == WIDE_CANVAS]
         standard_scale = (
             min(compute_reference_scale(directional_poses[direction][pose], STANDARD_CANVAS) for pose in standard_poses)
             if standard_poses
@@ -1305,14 +1130,17 @@ def save_unit_assets(spec: UnitSpec, board_cells_cache: dict[str, list[list[Imag
             if wide_poses
             else 1.0
         )
-        for pose in POSES:
+        for pose in pose_keys:
             canvas_size = canvas_for_pose(spec, pose)
             scale = wide_scale if canvas_size == WIDE_CANVAS else standard_scale
             canvas = normalize_to_canvas(directional_poses[direction][pose], canvas_size, scale)
-            final = add_team_accent(canvas, spec.role)
-            final.save(ASSET_DIR / f"{spec.prefix}-{direction}-{pose}.png")
-            if direction == "w":
-                final.save(ASSET_DIR / f"{spec.prefix}-{pose}.png")
+            player_final = add_team_accent(canvas, spec.role, "player")
+            enemy_final = add_team_accent(canvas, spec.role, "enemy")
+            player_final.save(ASSET_DIR / f"{spec.prefix}-{direction}-{pose}.png")
+            enemy_final.save(ASSET_DIR / f"{spec.prefix}-{direction}-{pose}-enemy.png")
+            if alias_direction and direction == alias_direction:
+                player_final.save(ASSET_DIR / f"{spec.prefix}-{pose}.png")
+                enemy_final.save(ASSET_DIR / f"{spec.prefix}-{pose}-enemy.png")
 
 
 def main() -> None:
