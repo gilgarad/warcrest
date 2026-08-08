@@ -21,6 +21,13 @@ export interface WaveDeploymentPlan {
 
 export type InstantWaveEligibility = "ready" | "no-token" | "cooldown";
 
+/**
+ * Missing a scheduled wave because food is short should not silently cost a
+ * full new 20s cycle. Keep the team on a short retry cadence instead so the
+ * wave leaves as soon as the economy catches up.
+ */
+export const WAVE_RETRY_DELAY_SEC = 1;
+
 export function tickWaveClock(team: TeamState, deltaSec: number, prepareWarningSec = 10): WaveClockResult {
   const previous = team.nextWaveInSec;
   team.nextWaveInSec -= deltaSec;
@@ -56,6 +63,14 @@ export function commitForcedWaveDeployment(team: TeamState, foodCost: number): v
 export function resetWaveClock(team: TeamState): void {
   team.nextWaveInSec = WAVE_INTERVAL_SEC;
   team.lastWaveElapsedSec = 0;
+}
+
+export function scheduleWaveRetry(team: TeamState, retryDelaySec = WAVE_RETRY_DELAY_SEC): void {
+  team.nextWaveInSec = Math.max(0, retryDelaySec);
+}
+
+export function shouldAnnounceWaveFoodShortage(team: TeamState, manualTrigger: boolean): boolean {
+  return manualTrigger || !team.waveBlockedByFood;
 }
 
 export function getInstantWaveEligibility(team: TeamState): InstantWaveEligibility {

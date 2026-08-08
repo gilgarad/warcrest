@@ -9,6 +9,7 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image, ImageChops, ImageDraw
+from scipy import ndimage
 
 from generate_pose_board_production_assets import (
     WIDE_CANVAS,
@@ -76,6 +77,32 @@ def align_alpha_mass_x(image: Image.Image) -> Image.Image:
     return aligned
 
 
+def recolor_semitransparent_edges(image: Image.Image, opaque_alpha_cutoff = 220) -> Image.Image:
+    """Replace black-matte fringe RGB with the nearest real sprite color."""
+    rgba = np.asarray(image.convert("RGBA")).copy()
+    alpha = rgba[:, :, 3]
+    opaque = alpha >= opaque_alpha_cutoff
+    semi = (alpha > 0) & ~opaque
+    if not semi.any() or not opaque.any():
+      return image
+    _, nearest = ndimage.distance_transform_edt(~opaque, return_indices=True)
+    rgba[semi, 0] = rgba[:, :, 0][nearest[0][semi], nearest[1][semi]]
+    rgba[semi, 1] = rgba[:, :, 1][nearest[0][semi], nearest[1][semi]]
+    rgba[semi, 2] = rgba[:, :, 2][nearest[0][semi], nearest[1][semi]]
+    return Image.fromarray(rgba, "RGBA")
+
+
+def reinforce_visible_alpha(image: Image.Image, minimum_alpha = 150, easing = 0.6) -> Image.Image:
+    rgba = np.asarray(image.convert("RGBA")).copy()
+    alpha = rgba[:, :, 3].astype(np.float32)
+    semi = (alpha > 0) & (alpha < 255)
+    if not semi.any():
+        return image
+    lifted = 255 - ((255 - alpha[semi]) * easing)
+    rgba[:, :, 3][semi] = np.clip(np.maximum(lifted, minimum_alpha), 0, 255).astype(np.uint8)
+    return Image.fromarray(rgba, "RGBA")
+
+
 def install_supply(spec: SupplySpec) -> dict[str, object]:
     raw_source = SOURCE_DIR / f"{spec.prefix}-e-5slot-source.png"
     alpha_source = SOURCE_DIR / f"{spec.prefix}-e-5slot-source-alpha.png"
@@ -89,9 +116,15 @@ def install_supply(spec: SupplySpec) -> dict[str, object]:
     reference_scale = compute_reference_scale(source_frames[0], WIDE_CANVAS)
     production: dict[str, Image.Image] = {}
     for pose, frame in zip(POSES, source_frames):
-        canvas = align_alpha_mass_x(
-            normalize_to_canvas(frame, WIDE_CANVAS, reference_scale, ANCHOR_Y)
+        canvas = recolor_semitransparent_edges(
+            align_alpha_mass_x(
+                normalize_to_canvas(frame, WIDE_CANVAS, reference_scale, ANCHOR_Y)
+            )
         )
+        if spec.prefix == "supply-wagon-modern-late":
+            canvas = reinforce_visible_alpha(canvas, minimum_alpha=138, easing=0.72)
+        else:
+            canvas = reinforce_visible_alpha(canvas)
         production[pose] = canvas
         add_team_accent(canvas, "support", "player").save(
             ASSET_DIR / f"{spec.prefix}-e-{pose}.png"

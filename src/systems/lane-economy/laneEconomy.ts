@@ -21,6 +21,7 @@ export interface TeamState {
   instantWaveTokens: number;
   nextWaveInSec: number;
   lastWaveElapsedSec: number;
+  waveBlockedByFood: boolean;
   pendingBonusWaves: number;
 }
 
@@ -56,6 +57,7 @@ export function createTeamState(
     instantWaveTokens: 0,
     nextWaveInSec: WAVE_INTERVAL_SEC,
     lastWaveElapsedSec: -100,
+    waveBlockedByFood: false,
     pendingBonusWaves: 0,
   };
 }
@@ -74,13 +76,15 @@ export function tickLaneEconomy(
   teams: readonly TeamState[],
   workerAccumulator: Map<string, number>,
   deltaSec: number,
+  getProductionMultiplier: (team: TeamState) => number = () => 1,
 ): void {
   teams.forEach((team) => {
-    tickResourceWorker(team, workerAccumulator, "gold", deltaSec, BASE_RESOURCE_TICK_SEC);
-    tickResourceWorker(team, workerAccumulator, "wood", deltaSec, BASE_RESOURCE_TICK_SEC);
-    tickResourceWorker(team, workerAccumulator, "food", deltaSec, BASE_RESOURCE_TICK_SEC);
-    tickResourceWorker(team, workerAccumulator, "metal", deltaSec, BASE_RESOURCE_TICK_SEC);
-    tickResourceWorker(team, workerAccumulator, "research", deltaSec, RESEARCH_RESOURCE_TICK_SEC);
+    const multiplier = getProductionMultiplier(team);
+    tickResourceWorker(team, workerAccumulator, "gold", deltaSec, BASE_RESOURCE_TICK_SEC, multiplier);
+    tickResourceWorker(team, workerAccumulator, "wood", deltaSec, BASE_RESOURCE_TICK_SEC, multiplier);
+    tickResourceWorker(team, workerAccumulator, "food", deltaSec, BASE_RESOURCE_TICK_SEC, multiplier);
+    tickResourceWorker(team, workerAccumulator, "metal", deltaSec, BASE_RESOURCE_TICK_SEC, multiplier);
+    tickResourceWorker(team, workerAccumulator, "research", deltaSec, RESEARCH_RESOURCE_TICK_SEC, multiplier);
   });
 }
 
@@ -123,12 +127,13 @@ function tickResourceWorker(
   resourceId: WorkerResourceId | "research",
   deltaSec: number,
   intervalSec: number,
+  multiplier = 1,
 ): void {
   const workers = team.workers[resourceId];
   if (workers <= 0) return;
   const key = `${team.id}:${resourceId}`;
   const next = (workerAccumulator.get(key) ?? 0) + deltaSec;
   const producedPerWorker = Math.floor(next / intervalSec);
-  if (producedPerWorker > 0) team.resources[resourceId] += producedPerWorker * workers;
+  if (producedPerWorker > 0) team.resources[resourceId] += producedPerWorker * workers * multiplier;
   workerAccumulator.set(key, next % intervalSec);
 }

@@ -22,8 +22,8 @@
       },
       "pass": true,
       "heightRatio": 1.0112,
-      "walkSilhouetteDifference": 0.0431,
-      "walkLowerBodyDifference": 0.0523,
+      "walkSilhouetteDifference": 0.0401,
+      "walkLowerBodyDifference": 0.0511,
       "boxes": {
         "idle": [
           184,
@@ -72,8 +72,8 @@
       },
       "pass": true,
       "heightRatio": 1.0189,
-      "walkSilhouetteDifference": 0.0306,
-      "walkLowerBodyDifference": 0.0298,
+      "walkSilhouetteDifference": 0.0264,
+      "walkLowerBodyDifference": 0.0264,
       "boxes": {
         "idle": [
           180,
@@ -122,8 +122,8 @@
       },
       "pass": true,
       "heightRatio": 1.0112,
-      "walkSilhouetteDifference": 0.0389,
-      "walkLowerBodyDifference": 0.0428,
+      "walkSilhouetteDifference": 0.0344,
+      "walkLowerBodyDifference": 0.0399,
       "boxes": {
         "idle": [
           180,
@@ -172,8 +172,8 @@
       },
       "pass": true,
       "heightRatio": 1.0075,
-      "walkSilhouetteDifference": 0.0208,
-      "walkLowerBodyDifference": 0.0266,
+      "walkSilhouetteDifference": 0.0186,
+      "walkLowerBodyDifference": 0.025,
       "boxes": {
         "idle": [
           184,
@@ -222,8 +222,8 @@
       },
       "pass": true,
       "heightRatio": 1.0189,
-      "walkSilhouetteDifference": 0.031,
-      "walkLowerBodyDifference": 0.0322,
+      "walkSilhouetteDifference": 0.0276,
+      "walkLowerBodyDifference": 0.0303,
       "boxes": {
         "idle": [
           189,
@@ -267,13 +267,13 @@
         "safe_canvas_margins": true,
         "locomotion_height_consistent": true,
         "opposite_stride_silhouettes_distinct": true,
-        "opposite_stride_lower_bodies_distinct": true,
+        "opposite_stride_lower_bodies_distinct": false,
         "heal_reaches_beyond_idle": true
       },
-      "pass": true,
+      "pass": false,
       "heightRatio": 1.0305,
-      "walkSilhouetteDifference": 0.0239,
-      "walkLowerBodyDifference": 0.0193,
+      "walkSilhouetteDifference": 0.0212,
+      "walkLowerBodyDifference": 0.0177,
       "boxes": {
         "idle": [
           198,

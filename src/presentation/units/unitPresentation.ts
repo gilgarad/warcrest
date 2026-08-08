@@ -1,8 +1,11 @@
 import {
+  deriveAnimationPrefix,
   getFrameCanvasAspect,
   getFrameOriginX,
   getFrameVisibleHeightRatio,
   getUnitAnimationDefinition,
+  resolveAnimationTextureFromPrefix,
+  type UnitFacingDirection,
 } from "./unitAnimationRegistry";
 import type { LaneUnitId } from "../../systems/lane-units/unitStats";
 
@@ -12,6 +15,13 @@ export interface UnitFramePresentation {
   originX: number;
   originY: number;
   referenceVisibleHeight: number;
+}
+
+export interface ResolvedAnimatedUnitPresentation {
+  textureKey: string;
+  idleTextureKey: string;
+  framePresentation: UnitFramePresentation;
+  idleFramePresentation: UnitFramePresentation;
 }
 
 export function resolveUnitFramePresentation(
@@ -39,6 +49,40 @@ export function resolveUnitFramePresentation(
     originX: getFrameOriginX(unitId, textureKey) ?? definition.groundOriginX,
     originY: definition.groundOriginY,
     referenceVisibleHeight: targetVisibleWorldHeight,
+  };
+}
+
+export function resolveAnimatedUnitPresentation(
+  unitId: LaneUnitId,
+  logicalTextureKey: string,
+  moving: boolean,
+  walkCycleProgress: number,
+  attackProgress: number,
+  direction: UnitFacingDirection,
+  targetVisibleWorldHeight: number,
+): ResolvedAnimatedUnitPresentation {
+  const animationPrefix = deriveAnimationPrefix(logicalTextureKey);
+  const textureKey = resolveAnimationTextureFromPrefix(
+    unitId,
+    animationPrefix,
+    moving,
+    walkCycleProgress,
+    attackProgress,
+    direction,
+  ) ?? logicalTextureKey;
+  const idleTextureKey = resolveAnimationTextureFromPrefix(
+    unitId,
+    animationPrefix,
+    false,
+    0,
+    0,
+    direction,
+  ) ?? logicalTextureKey;
+  return {
+    textureKey,
+    idleTextureKey,
+    framePresentation: resolveUnitFramePresentation(unitId, targetVisibleWorldHeight, 1, textureKey),
+    idleFramePresentation: resolveUnitFramePresentation(unitId, targetVisibleWorldHeight, 1, idleTextureKey),
   };
 }
 

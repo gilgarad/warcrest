@@ -1,8 +1,8 @@
 import Phaser from "phaser";
 import { AGES, getAge, type AgeId, type AgeProductionGroup } from "../data/ages";
+import { getDifficulty, type DifficultyDef, type DifficultyId } from "../data/difficulty";
 import {
   BASE_WORKER_COST,
-  AI_INSTANT_WAVE_MIN_REMAINING_SEC,
   getAgeBalance,
   getResearchWorkerDirectCost,
   WAVE_INTERVAL_SEC,
@@ -69,18 +69,16 @@ import { BaseResearchPanel } from "../ui/BaseResearchPanel";
 import { createBaseResearchPanelSnapshot, getBrowsableAgeIds } from "../ui/baseResearchPanelModel";
 import { areLaneBattleAssetsReady, queueLaneBattleAssets } from "./laneBattleAssetPreload";
 import {
-  deriveAnimationPrefix,
-  resolveAnimationTextureFromPrefix,
   getUnitAnimationDefinition,
   getUnitDirectionalPoses,
   isMechanizedUnit,
-  resolveUnitAnimationTexture,
   resolveUnitFacingDirection,
   resolveTeamUnitTextureKey,
   shouldFlipUnitFrame,
   type UnitFacingDirection,
 } from "../presentation/units/unitAnimationRegistry";
 import {
+  resolveAnimatedUnitPresentation,
   resolveUnitFramePresentation,
 } from "../presentation/units/unitPresentation";
 import {
@@ -134,20 +132,12 @@ import {
   getAgeUpCost,
   makeResourceMap,
   payCost,
-  shouldAdvanceAiAge,
   tickLaneEconomy,
   type TeamId,
   type TeamState,
   type WorkerRole,
 } from "../systems/lane-economy/laneEconomy";
-import {
-  createAiEconomyState,
-  pickNeediestResourceRole,
-  planAiWorkerRebalance,
-  shouldAiHireResearchWorker,
-  shouldAiHireWorker,
-  type AiEconomyState,
-} from "../systems/lane-economy/aiEconomy";
+import { AiController } from "../systems/ai/aiController";
 import {
   adjustDraftResearchLevel,
   applyResearchDraft,
@@ -167,16 +157,15 @@ import {
   createWaveDeploymentPlan,
   getInstantWaveEligibility,
   resetWaveClock,
-  shouldAiUseInstantWave,
+  scheduleWaveRetry,
+  shouldAnnounceWaveFoodShortage,
   tickWaveClock,
 } from "../systems/lane-economy/laneWaveRules";
 import {
-  BUILDING_DEFINITIONS,
   DISMANTLE_COST_GOLD,
   getBuildingDefinition,
   getBuildingCost,
   resolveCapturedBuilding,
-  type BuildingDefinition,
   type BuildingId,
 } from "../systems/lane-capture/captureRules";
 import {
@@ -247,9 +236,8 @@ interface LaneUnit {
   manaRegenPerSec: number;
   healManaCost: number;
   attrition: number;
-  displaySize: number;
+  logicalTextureKey: string;
   bobPhase: number;
-  animationPrefix: string;
   currentTextureKey: string;
   presentationOverrideTexture?: string;
   travelFacingX: -1 | 1;
@@ -300,7 +288,7 @@ interface LanePathNode {
   position: Phaser.Math.Vector2;
 }
 
-interface CapturePointState {
+export interface CapturePointState {
   id: number;
   definition: CapturePointDefinition;
   laneId: string;
@@ -323,7 +311,7 @@ interface CapturePointState {
   buildingText: Phaser.GameObjects.Text;
 }
 
-interface DefenseTowerState {
+export interface DefenseTowerState {
   id: number;
   definition: DefenseTowerDefinition;
   laneId: string;
@@ -389,7 +377,8 @@ export class LaneBattleScene extends Phaser.Scene {
   private selectedDefenseTowerId: number | null = null;
   private player!: TeamState;
   private enemy!: TeamState;
-  private aiEconomyState: AiEconomyState = createAiEconomyState();
+  private aiController!: AiController;
+  private difficulty: DifficultyDef = getDifficulty(undefined);
   private playerResearchState: TeamResearchState = createTeamResearchState();
   private enemyResearchState: TeamResearchState = createTeamResearchState();
   private devModeEnabled = false;
@@ -445,6 +434,10 @@ export class LaneBattleScene extends Phaser.Scene {
     super("run");
   }
 
+  init(data: { difficultyId?: DifficultyId }): void {
+    this.difficulty = getDifficulty(data?.difficultyId);
+  }
+
   preload(): void {
     if (!areLaneBattleAssetsReady(this, this.terrainMode)) {
       queueLaneBattleAssets(this, this.terrainMode);
@@ -459,6 +452,18 @@ export class LaneBattleScene extends Phaser.Scene {
     this.battlefield = generateBattlefield();
     this.cameras.main.setBackgroundColor(0x081018);
     this.cameras.main.setBounds(0, 0, WORLD_W, WORLD_H);
+    // Phaser's own per-frame bounds clamp (Camera.preRender -> clampX/clampY)
+    // computes its scrollable range as `(displayWidth/Height - width/height) / 2`
+    // offset from the bounds origin — correct when zoomed in, but at this
+    // camera's zoom (<1, zoomed out so displayHeight > height) it shifts the
+    // valid range away from 0 by a few hundred px instead of `[0, WORLD_H -
+    // visibleWorldH]`. Since that auto-clamp reruns every frame regardless of
+    // what we set manually, it silently snapped the camera back and made
+    // dragging toward the map's top/left edge look broken depending on where
+    // the drag started. Disable the automatic clamp and do it ourselves in
+    // `setupFieldDrag()` with the range we actually want; `_bounds` data
+    // itself is otherwise unused elsewhere in this codebase.
+    this.cameras.main.useBounds = false;
     this.cameras.main.setZoom(FIELD_CAMERA_ZOOM);
     const initialProgress = new URLSearchParams(window.location.search).get("camera") === "central"
       ? CENTRAL_CAPTURE_PROGRESS
@@ -470,7 +475,15 @@ export class LaneBattleScene extends Phaser.Scene {
 
     this.player = createTeamState("player", makeResourceMap(20, 20, 20, 0), PLAYER_BASE_HP);
     this.enemy = createTeamState("enemy", makeResourceMap(20, 20, 20, 0), ENEMY_BASE_HP);
-    this.aiEconomyState = createAiEconomyState();
+    this.aiController = new AiController({
+      getEnemyTeam: () => this.enemy,
+      getElapsedSec: () => this.elapsedSec,
+      getCapturePoints: () => this.capturePoints,
+      getDefenseTowers: () => this.defenseTowers,
+      advanceAge: (team) => this.advanceAge(team),
+      tryUseInstantWaveToken: (team) => this.tryUseInstantWaveToken(team),
+      initializeCaptureBuildingState: (point) => this.initializeCaptureBuildingState(point),
+    });
     this.syncGameplayMusicTheme();
 
     this.drawBattlefield();
@@ -504,7 +517,7 @@ export class LaneBattleScene extends Phaser.Scene {
     const deltaSec = deltaMs / 1000;
     this.elapsedSec += deltaSec;
     this.tickEconomy(deltaSec);
-    this.tickAi(deltaSec);
+    this.aiController.tick(deltaSec);
     this.tickWaves(deltaSec);
     this.tickCombat(deltaSec);
     this.refreshUnitOverlayDensity();
@@ -636,15 +649,16 @@ export class LaneBattleScene extends Phaser.Scene {
     });
     this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
       if (!this.isDraggingField || !pointer.isDown) return;
-      const visibleWorldW = CANVAS_W / this.cameras.main.zoom;
-      const visibleWorldH = CANVAS_H / this.cameras.main.zoom;
-      this.cameras.main.scrollX = Phaser.Math.Clamp(
-        this.cameras.main.scrollX - (pointer.x - pointer.prevPosition.x) / this.cameras.main.zoom,
+      const cam = this.cameras.main;
+      const visibleWorldW = CANVAS_W / cam.zoom;
+      const visibleWorldH = CANVAS_H / cam.zoom;
+      cam.scrollX = Phaser.Math.Clamp(
+        cam.scrollX - (pointer.x - pointer.prevPosition.x) / cam.zoom,
         0,
         Math.max(0, WORLD_W - visibleWorldW),
       );
-      this.cameras.main.scrollY = Phaser.Math.Clamp(
-        this.cameras.main.scrollY - (pointer.y - pointer.prevPosition.y) / this.cameras.main.zoom,
+      cam.scrollY = Phaser.Math.Clamp(
+        cam.scrollY - (pointer.y - pointer.prevPosition.y) / cam.zoom,
         0,
         Math.max(0, WORLD_H - visibleWorldH),
       );
@@ -1613,67 +1627,14 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private tickEconomy(deltaSec: number): void {
-    tickLaneEconomy([this.player, this.enemy], this.workerAccumulator, deltaSec);
-  }
-
-  private tickAi(deltaSec: number): void {
-    tickWaveClock(this.enemy, deltaSec);
-    this.tickAiEconomy();
-    if (this.shouldAiAgeUp()) this.advanceAge(this.enemy);
-    if (shouldAiUseInstantWave(this.enemy, AI_INSTANT_WAVE_MIN_REMAINING_SEC)) {
-      this.tryUseInstantWaveToken(this.enemy);
-    }
-  }
-
-  /**
-   * Grows and rebalances the AI's workforce so its income actually scales
-   * with the ~1.5x-per-age growth in age-up cost, instead of staying frozen
-   * at the 1/1/1/1 starting allocation for the whole match. See
-   * `docs/dev-wiki/ai-economy-design.md` for the full design rationale.
-   */
-  private tickAiEconomy(): void {
-    if (shouldAiHireWorker(this.enemy, this.elapsedSec, this.aiEconomyState)) {
-      payCost(this.enemy.resources, BASE_WORKER_COST);
-      this.enemy.workers.idle += 1;
-      this.aiEconomyState.lastHireAttemptSec = this.elapsedSec;
-    }
-    if (this.enemy.workers.idle > 0) {
-      const target = pickNeediestResourceRole(this.enemy);
-      this.enemy.workers.idle -= 1;
-      this.enemy.workers[target] += 1;
-    }
-    if (shouldAiHireResearchWorker(this.enemy)) {
-      payCost(this.enemy.resources, getResearchWorkerDirectCost(this.enemy.ageId));
-      this.enemy.workers.research += 1;
-    }
-    const rebalance = planAiWorkerRebalance(this.enemy, this.elapsedSec, this.aiEconomyState);
-    if (rebalance) {
-      this.enemy.workers[rebalance.from] -= 1;
-      this.enemy.workers[rebalance.to] += 1;
-      this.aiEconomyState.lastRebalanceSec = this.elapsedSec;
-    }
-  }
-
-  private shouldAiAgeUp(): boolean {
-    // If the AI can afford a building it doesn't have yet at one of its own
-    // capture points, let that cheap (10-18 resource) build claim the spend
-    // this tick instead of always defaulting to the age-up lump sum — this
-    // is the explicit "upgrade my own point, or age up" decision point.
-    if (this.hasAffordableUnbuiltAiCapturePoint()) return false;
-    return shouldAdvanceAiAge(this.enemy, this.elapsedSec);
-  }
-
-  private hasAffordableUnbuiltAiCapturePoint(): boolean {
-    return this.capturePoints.some((point) =>
-      point.owner === "enemy"
-      && point.definition.pointType === "buildable"
-      && !point.buildingId
-      && BUILDING_DEFINITIONS.some((building) =>
-        point.definition.allowedBuildingTypes.includes(building.id)
-        && canAfford(this.enemy.resources, getBuildingCost(building.id, this.enemy.ageId)),
-      ),
+    tickLaneEconomy(
+      [this.player, this.enemy],
+      this.workerAccumulator,
+      deltaSec,
+      (team) => (team.id === "enemy" ? this.difficulty.enemyProductionMultiplier : 1),
     );
   }
+
 
   private tickWaves(deltaSec: number): void {
     const playerClock = tickWaveClock(this.player, deltaSec);
@@ -2228,9 +2189,9 @@ export class LaneBattleScene extends Phaser.Scene {
       if (point.buildingId === "mint") this.tickMint(point, deltaSec);
     });
 
-    this.enemyAutoBuildCapturePoint();
+    this.aiController.autoBuildCapturePoint();
     this.defenseTowers.forEach((tower) => this.tickWatchtower(tower, deltaSec));
-    this.enemyAutoRebuildDefenseTower();
+    this.aiController.autoRebuildDefenseTower();
     this.refreshCapturePointVisuals();
     this.refreshDefenseTowerVisuals();
   }
@@ -2532,36 +2493,6 @@ export class LaneBattleScene extends Phaser.Scene {
     this.refreshCapturePointVisuals();
   }
 
-  private enemyAutoBuildCapturePoint(): void {
-    const target = this.capturePoints.find((point) =>
-      point.owner === "enemy"
-      && point.definition.pointType === "buildable"
-      && !point.buildingId,
-    );
-    if (!target) return;
-    const choices = BUILDING_DEFINITIONS.filter((entry): entry is BuildingDefinition =>
-      target.definition.allowedBuildingTypes.includes(entry.id),
-    );
-    if (choices.length === 0) return;
-    const choice = choices[target.id % choices.length];
-    const cost = getBuildingCost(choice.id, this.enemy.ageId);
-    if (!canAfford(this.enemy.resources, cost)) return;
-    payCost(this.enemy.resources, cost);
-    target.buildingId = choice.id;
-    target.buildingLevel = 1;
-    this.initializeCaptureBuildingState(target);
-  }
-
-  private enemyAutoRebuildDefenseTower(): void {
-    const tower = this.defenseTowers.find((entry) =>
-      entry.owner === "enemy" && !entry.built && entry.buildRemainingSec <= 0,
-    );
-    if (!tower) return;
-    const cost = getDefenseTowerBuildCost(this.enemy.ageId);
-    if (!canAfford(this.enemy.resources, cost)) return;
-    payCost(this.enemy.resources, cost);
-    tower.buildRemainingSec = DEFENSE_TOWER_BUILD_DURATION_SEC;
-  }
 
   private tryDismantleSelectedPoint(): void {
     const point = this.capturePoints.find((entry) => entry.id === this.selectedCapturePointId);
@@ -2744,7 +2675,7 @@ export class LaneBattleScene extends Phaser.Scene {
       const ownerY = pos.y + (this.isPrototypeV2() ? this.cssPxToWorld(18) : 28);
       const buildingY = pos.y + (this.isPrototypeV2() ? this.cssPxToWorld(36) : 46);
       point.label
-        .setText(`건설 거점 ${point.id + 1}`)
+        .setText("건설 거점")
         .setPosition(pos.x, labelY)
         .setDepth(this.getGroundDepth(pos.y, 7))
         .setVisible(selected);
@@ -3111,12 +3042,14 @@ export class LaneBattleScene extends Phaser.Scene {
   private trySpawnWave(team: TeamState, forced: boolean): boolean {
     const plan = createWaveDeploymentPlan(team, PLAYER_OPPONENT_COUNT);
     if (!plan.canDeploy) {
-      if (team.id === "player") this.hud.setInfo("식량 부족으로 웨이브 출전 실패");
+      if (team.id === "player" && shouldAnnounceWaveFoodShortage(team, forced)) this.hud.setInfo("식량이 부족합니다");
       if (team.id === "player") this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "wave:food-shortage" });
-      resetWaveClock(team);
+      team.waveBlockedByFood = true;
+      scheduleWaveRetry(team);
       return false;
     }
 
+    team.waveBlockedByFood = false;
     if (forced) {
       commitForcedWaveDeployment(team, plan.foodCost);
     } else {
@@ -3276,37 +3209,35 @@ export class LaneBattleScene extends Phaser.Scene {
     productionAgeId = team === "player" ? this.player.selectedProductionAgeId : this.enemy.selectedProductionAgeId,
   ): void {
     const researchState = team === "player" ? this.playerResearchState : this.enemyResearchState;
-    const stats = resolveSpawnUnitStats(unitId, productionAgeId, researchState);
+    const researchLevelFloor = team === "enemy" ? this.difficulty.enemyResearchLevelFloor : 0;
+    const stats = resolveSpawnUnitStats(unitId, productionAgeId, researchState, researchLevelFloor);
     const pos = this.progressToScreen(progress, laneRow, laneId);
-    const displaySize = role === "support" ? 86 : 76;
     const initialFacingDirection: UnitFacingDirection = team === "player" ? "e" : "w";
-    const animationPrefix = deriveAnimationPrefix(stats.textureKey);
-    const initialTextureKey = resolveAnimationTextureFromPrefix(unitId, animationPrefix, false, 0, 0, initialFacingDirection)
-      ?? resolveUnitAnimationTexture(unitId, false, 0, 0, initialFacingDirection)
-      ?? stats.textureKey;
     const shadow = this.add.ellipse(pos.x, pos.y + 22, role === "support" ? 56 : 46, role === "support" ? 20 : 16, 0x000000, 0.2)
       .setDepth(this.getGroundDepth(pos.y, -1));
     const selectionRing = this.add.ellipse(pos.x, pos.y, 48, 18, 0x72c8ff, 0.12)
       .setStrokeStyle(3, team === "player" ? 0x8bd7ff : 0xffa0a0, 0.9)
       .setDepth(this.getGroundDepth(pos.y, -2))
       .setVisible(false);
+    const targetVisibleWorldHeight = this.isPrototypeV2()
+      ? this.cssPxToWorld(role === "support" ? this.scaleVisualConfig.supportUnitCssHeight : this.scaleVisualConfig.normalUnitCssHeight)
+      : role === "support" ? 118 : 112;
+    const initialPresentation = resolveAnimatedUnitPresentation(
+      unitId,
+      stats.textureKey,
+      false,
+      0,
+      0,
+      initialFacingDirection,
+      targetVisibleWorldHeight,
+    );
+    const initialTextureKey = initialPresentation.textureKey;
+    const idleFramePresentation = initialPresentation.idleFramePresentation;
     const sprite = this.add.image(
       pos.x,
       pos.y,
       resolveTeamUnitTextureKey(initialTextureKey, team),
     ).setDepth(this.getGroundDepth(pos.y));
-    const frameAspect = sprite.frame.realHeight > 0
-      ? sprite.frame.realWidth / sprite.frame.realHeight
-      : 1;
-    const targetVisibleWorldHeight = this.isPrototypeV2()
-      ? this.cssPxToWorld(role === "support" ? this.scaleVisualConfig.supportUnitCssHeight : this.scaleVisualConfig.normalUnitCssHeight)
-      : role === "support" ? 118 : 112;
-    const idleFramePresentation = resolveUnitFramePresentation(
-      unitId,
-      targetVisibleWorldHeight,
-      frameAspect,
-      initialTextureKey,
-    );
     sprite.setDisplaySize(idleFramePresentation.spriteWidth, idleFramePresentation.spriteHeight);
     const hpBg = this.add.rectangle(pos.x, pos.y - 44, 34, 5, 0x132033, 0.92).setDepth(sprite.depth + 1);
     const hpFill = this.add.rectangle(pos.x - 17, pos.y - 44, 34, 5, team === "player" ? 0x62d4a3 : 0xf06f6f, 1).setOrigin(0, 0.5).setDepth(sprite.depth + 2);
@@ -3352,9 +3283,8 @@ export class LaneBattleScene extends Phaser.Scene {
       manaRegenPerSec: role === "support" ? supportProfile.manaRegenPerSec : 0,
       healManaCost: role === "support" ? supportProfile.healManaCost : 0,
       attrition: 0,
-      displaySize,
+      logicalTextureKey: stats.textureKey,
       bobPhase: Phaser.Math.FloatBetween(0, Math.PI * 2),
-      animationPrefix,
       currentTextureKey: initialTextureKey,
       travelFacingX: team === "player" ? 1 : -1,
       travelFacingDirection: initialFacingDirection,
@@ -3473,7 +3403,12 @@ export class LaneBattleScene extends Phaser.Scene {
         ? this.cssPxToWorld(this.scaleVisualConfig.unitHpWidthCssPx)
         : 34;
       const width = summary ? baseWidth * 1.35 : baseWidth;
-      const hpVisible = !hidden;
+      // HP bars only show for a unit the player has actually touched
+      // (selected/hovered) — the density-clustering system still decides
+      // mana-bar/label visibility below, but showing HP bars for some units
+      // and not others purely based on how crowded the lane looks read as
+      // inconsistent/buggy rather than intentional decluttering.
+      const hpVisible = unit.selected || unit.hovered;
 
       unit.hpBg
         .setVisible(hpVisible)
@@ -3516,20 +3451,25 @@ export class LaneBattleScene extends Phaser.Scene {
       : 0;
     const walkCycleProgress = unit.walkCyclePhase;
     const gait = walkCycleProgress * Math.PI * 2 + unit.bobPhase;
-    const desiredTexture = unit.presentationOverrideTexture ?? resolveAnimationTextureFromPrefix(
+    const frameAspect = unit.sprite.frame.realHeight > 0
+      ? unit.sprite.frame.realWidth / unit.sprite.frame.realHeight
+      : 1;
+    const targetVisibleCssHeight = unit.role === "support"
+      ? this.scaleVisualConfig.supportUnitCssHeight
+      : this.scaleVisualConfig.normalUnitCssHeight;
+    const targetVisibleWorldHeight = this.isPrototypeV2()
+      ? this.cssPxToWorld(targetVisibleCssHeight)
+      : unit.role === "support" ? 118 : 112;
+    const resolvedPresentation = resolveAnimatedUnitPresentation(
       unit.unitId,
-      unit.animationPrefix,
+      unit.logicalTextureKey,
       moving,
       walkCycleProgress,
       attackProgress,
       presentationFacingDirection,
-    ) ?? resolveUnitAnimationTexture(
-      unit.unitId,
-      moving,
-      walkCycleProgress,
-      attackProgress,
-      presentationFacingDirection,
-    ) ?? UNIT_STATS[unit.unitId].textureKey;
+      targetVisibleWorldHeight,
+    );
+    const desiredTexture = unit.presentationOverrideTexture ?? resolvedPresentation.textureKey;
     if (desiredTexture !== unit.currentTextureKey) {
       unit.currentTextureKey = desiredTexture;
       unit.sprite.setTexture(resolveTeamUnitTextureKey(desiredTexture, unit.team));
@@ -3557,61 +3497,12 @@ export class LaneBattleScene extends Phaser.Scene {
       progress: attackProgress,
       facing: presentationFacingX,
     });
-    const legacyScale = unit.role === "support" ? 1.08 : 1;
-    const frameAspect = unit.sprite.frame.realHeight > 0
-      ? unit.sprite.frame.realWidth / unit.sprite.frame.realHeight
-      : 1;
-    const targetVisibleCssHeight = unit.role === "support"
-      ? this.scaleVisualConfig.supportUnitCssHeight
-      : this.scaleVisualConfig.normalUnitCssHeight;
-    const targetVisibleWorldHeight = this.isPrototypeV2()
-      ? this.cssPxToWorld(targetVisibleCssHeight)
-      : unit.role === "support" ? 118 : 112;
-    const idleTextureKey = resolveAnimationTextureFromPrefix(
-      unit.unitId,
-      unit.animationPrefix,
-      false,
-      0,
-      0,
-      presentationFacingDirection,
-    ) ?? resolveUnitAnimationTexture(
-      unit.unitId,
-      false,
-      0,
-      0,
-      presentationFacingDirection,
-    ) ?? UNIT_STATS[unit.unitId].textureKey;
-    const idleFramePresentation = resolveUnitFramePresentation(
-      unit.unitId,
-      targetVisibleWorldHeight,
-      frameAspect,
-      idleTextureKey,
-    );
-    const framePresentation = resolveUnitFramePresentation(
-      unit.unitId,
-      targetVisibleWorldHeight,
-      frameAspect,
-      desiredTexture,
-    );
-    const isMeleePose = this.isMeleeUnit(unit);
-    const widthAllowance = unit.unitId === "pikeman"
-      ? 2.8
-      : isMeleePose ? 1.6 : unit.role === "support" ? 1.2 : 1.35;
-    const widthFrameScale = Math.min(
-      1,
-      (idleFramePresentation.spriteWidth * widthAllowance) / Math.max(1, framePresentation.spriteWidth),
-    );
-    const heightFrameScale = 1;
-    const cappedFrameWidth = framePresentation.spriteWidth * widthFrameScale;
-    const cappedFrameHeight = framePresentation.spriteHeight * heightFrameScale;
-    const unconstrainedSpriteWidth = this.terrainPrototypeEnabled
-      ? cappedFrameWidth
-      : unit.displaySize * legacyScale * widthFrameScale;
-    const maxPoseWidth = idleFramePresentation.spriteWidth * widthAllowance;
-    const spriteWidth = Math.min(unconstrainedSpriteWidth, maxPoseWidth);
-    const spriteHeight = this.terrainPrototypeEnabled
-      ? cappedFrameHeight
-      : unit.displaySize * legacyScale * heightFrameScale;
+    const idleFramePresentation = resolvedPresentation.idleFramePresentation;
+    const framePresentation = unit.presentationOverrideTexture
+      ? resolveUnitFramePresentation(unit.unitId, targetVisibleWorldHeight, frameAspect, desiredTexture)
+      : resolvedPresentation.framePresentation;
+    const spriteWidth = framePresentation.spriteWidth;
+    const spriteHeight = framePresentation.spriteHeight;
     unit.visualOffsetX = Phaser.Math.Linear(unit.visualOffsetX, targetAttackMotion.offsetX, 0.22);
     unit.visualLift = Phaser.Math.Linear(unit.visualLift, targetAttackMotion.lift, 0.2);
     unit.visualRotationRad = Phaser.Math.Linear(
@@ -3739,8 +3630,11 @@ export class LaneBattleScene extends Phaser.Scene {
       this.player.workers.idle -= 1;
       this.player.workers[role] += 1;
     } else {
-      if (this.player.workers[role] <= 0) {
-        this.audio.playSfx("sfx.ui.cancel", { eventKey: `worker:${role}:empty` });
+      // Each base resource keeps a floor of 1 assigned worker at all times —
+      // it can be reassigned once a *replacement* worker is hired/freed
+      // elsewhere, but never dropped to 0 directly from this button.
+      if (this.player.workers[role] <= 1) {
+        this.audio.playSfx("sfx.ui.cancel", { eventKey: `worker:${role}:at-floor` });
         return;
       }
       this.player.workers[role] -= 1;
@@ -3886,27 +3780,30 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private refreshHudActionLabels(): void {
-    this.hud.setStrategicActionLabel("hire-worker", `일꾼 고용\n${this.formatCostShort(BASE_WORKER_COST)}`);
+    this.hud.setStrategicActionLabel("hire-worker", "일꾼 고용");
+    this.hud.setStrategicActionCost("hire-worker", BASE_WORKER_COST);
     this.hud.setStrategicActionEnabled("hire-worker", this.devModeEnabled || canAfford(this.player.resources, BASE_WORKER_COST));
     const researchWorkerCost = getResearchWorkerDirectCost(this.player.ageId);
-    this.hud.setStrategicActionLabel("hire-research-worker", `연구 일꾼\n${this.formatCostShort(researchWorkerCost)}`);
+    this.hud.setStrategicActionLabel("hire-research-worker", "연구 일꾼");
+    this.hud.setStrategicActionCost("hire-research-worker", researchWorkerCost);
     this.hud.setStrategicActionEnabled("hire-research-worker", this.devModeEnabled || canAfford(this.player.resources, researchWorkerCost));
     const ageIndex = AGES.findIndex((age) => age.id === this.player.ageId);
     const ageUpCost = ageIndex >= AGES.length - 1 ? null : getAgeUpCost(ageIndex);
-    this.hud.setStrategicActionLabel(
-      "age-up",
-      ageIndex >= AGES.length - 1
-        ? "시대 업\n최종 시대"
-        : `시대 업\n${this.formatCostShort(ageUpCost ?? {})}`,
-    );
+    this.hud.setStrategicActionLabel("age-up", ageIndex >= AGES.length - 1 ? "시대 업\n최종 시대" : "시대 업");
+    this.hud.setStrategicActionCost("age-up", ageUpCost ?? {});
     this.hud.setStrategicActionEnabled("age-up", this.devModeEnabled || (ageUpCost ? canAfford(this.player.resources, ageUpCost) : true));
     this.hud.setStrategicActionLabel("use-instant-wave", `즉시 웨이브\n토큰 ${this.player.instantWaveTokens}`);
 
-    this.hud.setCaptureActionLabel("rebuild-defense-tower", `타워 재건\n${this.formatCostShort(getDefenseTowerBuildCost(this.player.ageId))}`);
-    this.hud.setCaptureActionLabel("build-defense-tower", `타워\n${this.formatCostShort(getBuildingCost("defense_tower", this.player.ageId))}`);
-    this.hud.setCaptureActionLabel("build-supply-depot", `병참\n${this.formatCostShort(getBuildingCost("supply_depot", this.player.ageId))}`);
-    this.hud.setCaptureActionLabel("build-mint", `조달소\n${this.formatCostShort(getBuildingCost("mint", this.player.ageId))}`);
-    this.hud.setCaptureActionLabel("dismantle", `폐기\n${DISMANTLE_COST_GOLD}G`);
+    this.hud.setCaptureActionLabel("rebuild-defense-tower", "타워 재건");
+    this.hud.setCaptureActionCost("rebuild-defense-tower", getDefenseTowerBuildCost(this.player.ageId));
+    this.hud.setCaptureActionLabel("build-defense-tower", "타워");
+    this.hud.setCaptureActionCost("build-defense-tower", getBuildingCost("defense_tower", this.player.ageId));
+    this.hud.setCaptureActionLabel("build-supply-depot", "병참");
+    this.hud.setCaptureActionCost("build-supply-depot", getBuildingCost("supply_depot", this.player.ageId));
+    this.hud.setCaptureActionLabel("build-mint", "조달소");
+    this.hud.setCaptureActionCost("build-mint", getBuildingCost("mint", this.player.ageId));
+    this.hud.setCaptureActionLabel("dismantle", "폐기");
+    this.hud.setCaptureActionCost("dismantle", { gold: DISMANTLE_COST_GOLD });
   }
 
   private toggleDevMode(): void {
@@ -3928,16 +3825,6 @@ export class LaneBattleScene extends Phaser.Scene {
     this.hud.setInfo(`연구 포인트 +${amount}`);
     this.audio.playSfx("sfx.ui.confirm", { eventKey: `dev-research:${amount}` });
     this.refreshUi();
-  }
-
-  private formatCostShort(cost: Partial<Record<"gold" | "wood" | "food" | "metal" | "research", number>>): string {
-    const parts: string[] = [];
-    if (cost.gold) parts.push(`${Math.round(cost.gold)}G`);
-    if (cost.wood) parts.push(`${Math.round(cost.wood)}W`);
-    if (cost.food) parts.push(`${Math.round(cost.food)}F`);
-    if (cost.metal) parts.push(`${Math.round(cost.metal)}M`);
-    if (cost.research) parts.push(`${Math.round(cost.research)}R`);
-    return parts.join(" ");
   }
 
   private formatResourceShortage(cost: Partial<Record<"gold" | "wood" | "food" | "metal" | "research", number>>): string {

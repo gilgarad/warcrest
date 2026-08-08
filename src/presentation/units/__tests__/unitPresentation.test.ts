@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveUnitFramePresentation } from "../unitPresentation";
+import { resolveAnimatedUnitPresentation, resolveUnitFramePresentation } from "../unitPresentation";
 
 describe("unit frame presentation", () => {
   it("keeps bronze spearman body height stable across idle and attack", () => {
@@ -74,5 +74,32 @@ describe("unit frame presentation", () => {
 
     expect(walk.spriteHeight * (312 / 384)).toBeCloseTo(targetHeight * 0.98);
     expect(attack.spriteHeight * (270 / 384)).toBeCloseTo(targetHeight * 0.98);
+  });
+
+  it("resolves the same authored frame contract the sandbox and battle scene now share", () => {
+    const riflemanWalk = resolveAnimatedUnitPresentation(
+      "rifleman",
+      "rifleman-e-idle",
+      true,
+      0.55,
+      0,
+      "w",
+      96,
+    );
+    const pikemanAttack = resolveAnimatedUnitPresentation(
+      "pikeman",
+      "pikeman-e-idle",
+      false,
+      0,
+      0.25,
+      "w",
+      96,
+    );
+
+    expect(riflemanWalk.textureKey).toBe("rifleman-e-walk-03");
+    expect(riflemanWalk.framePresentation.spriteWidth / riflemanWalk.framePresentation.spriteHeight).toBeCloseTo(1);
+    expect(pikemanAttack.textureKey).toBe("pikeman-e-attack");
+    expect(pikemanAttack.framePresentation.spriteWidth / pikemanAttack.framePresentation.spriteHeight).toBeCloseTo(1024 / 384);
+    expect(pikemanAttack.idleFramePresentation.spriteHeight * (270 / 512)).toBeCloseTo(96);
   });
 });

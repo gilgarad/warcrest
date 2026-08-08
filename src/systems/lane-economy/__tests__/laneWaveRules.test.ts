@@ -5,7 +5,10 @@ import {
   commitWaveDeployment,
   createWaveDeploymentPlan,
   getInstantWaveEligibility,
+  scheduleWaveRetry,
+  shouldAnnounceWaveFoodShortage,
   tickWaveClock,
+  WAVE_RETRY_DELAY_SEC,
 } from "../laneWaveRules";
 
 describe("lane wave rules", () => {
@@ -52,5 +55,22 @@ describe("lane wave rules", () => {
     expect(team.resources.food).toBe(35);
     expect(team.nextWaveInSec).toBe(16);
     expect(team.lastWaveElapsedSec).toBe(0);
+  });
+
+  it("retries a food-blocked scheduled wave quickly instead of resetting the full interval", () => {
+    const team = createTeamState("player", makeResourceMap(0, 0, 0, 0), 400);
+    team.nextWaveInSec = -0.2;
+    team.lastWaveElapsedSec = 19;
+    scheduleWaveRetry(team);
+    expect(team.nextWaveInSec).toBe(WAVE_RETRY_DELAY_SEC);
+    expect(team.lastWaveElapsedSec).toBe(19);
+  });
+
+  it("re-announces food shortage for manual clicks but suppresses duplicate auto-retry spam", () => {
+    const team = createTeamState("player", makeResourceMap(0, 0, 0, 0), 400);
+    expect(shouldAnnounceWaveFoodShortage(team, false)).toBe(true);
+    team.waveBlockedByFood = true;
+    expect(shouldAnnounceWaveFoodShortage(team, false)).toBe(false);
+    expect(shouldAnnounceWaveFoodShortage(team, true)).toBe(true);
   });
 });

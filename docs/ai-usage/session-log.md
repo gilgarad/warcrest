@@ -5740,3 +5740,479 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   (34 files / 178 tests) all passed. Two of the five items (2 and 5) were
   verified empirically against the live running app via Playwright, not
   just by reading source.
+
+## 2026-08-08 - Commit/push + full UX and codebase architecture review
+
+- **Agent/tool**: Claude Code (Sonnet 5), with Playwright screenshot
+  capture against the live dev server for the UX review.
+- **User direction (원문)**: "커밋 & 푸쉬하고 전반적으로 게임 전체를 한 번
+  검토해서 웹 게임으로 쓸만한지를 검토해봐 쓸만하다는 기준은 게임
+  재미있냐 아니냐가 아니라 게임 내의 기능이나 배치, 보여지는 정보 등의
+  위치와 폰트와 크기 등을 전반적으로 다 검토해보라는 것임. ... 그리고
+  하는 김에 소스코드 전반을 다 살펴보고 리팩토링 및 모듈화를 추가적으로
+  진행해서 개발된 위치 같은 것들을 재조정하고 함수 위치나 파일 위치
+  등도 재조정할 필요가 있는지도 검토해봐. 확인하라고 했던 것들은
+  문서에 정리를 해서 상세히 써주고 내게도 말해줘"
+- **AI action**:
+  1. Committed the prior session's 15 changed/new files to `master`
+     (`8ec9eab`) and pushed to `origin/master`.
+  2. Captured real screenshots (main HUD, base research panel, tower
+     panel, capture-point panel) from the live `:5173` build via
+     Playwright, cross-referenced against `LaneBattleHudView.ts`/
+     `BaseResearchPanel.ts` source, and found: an unconditional DEV OFF
+     button that visually collides with the worker panel's research/idle
+     rows in normal play; missing-texture placeholder icons in the base
+     research panel; no in-UI explanation of what an added worker
+     produces; a resource-icon/cost-text inconsistency (top bar uses
+     icons, every cost display uses G/W/F/M letters) matching the user's
+     specific question; a non-input-blocking modal; and 11px text with no
+     responsive floor under `Phaser.Scale.FIT`. Answered the user's direct
+     question about moving worker assignment into the base panel with an
+     explicit tradeoff analysis (frequency of use vs. HUD clutter) rather
+     than a flat yes/no.
+  3. Surveyed `LaneBattleScene.ts` (4303 lines / 177 methods) as the
+     dominant architecture issue, grouped its methods into 7 responsibility
+     clusters by grepping the full method inventory, and proposed a
+     priority-ordered extraction plan leaning on directories that already
+     hold the right pattern (`systems/lane-capture/`, `presentation/
+     units/`), rather than inventing a new structure.
+  4. Wrote all findings to `docs/dev-wiki/ux-and-architecture-review.md`
+     (with the screenshots saved under
+     `artifacts/ux-architecture-review/`) and summarized them back to the
+     user in chat, per their explicit request for both. No code changes
+     were made — this was a review-and-document turn only, deliberately
+     not executing the proposed refactor without a separate confirmation.
+- **Scope**: git commit/push of prior work, plus documentation only.
+
+## 2026-08-08 - Implemented the UX review findings, added a shared texture-resolution helper, and did the first real controller extraction
+
+- **Agent/tool**: Claude Code (Sonnet 5), with Playwright verification against the live dev server for every visual change.
+- **User direction (원문)**: "1. dev off는 일단 그대로 둬... 2. ... 텍스처 키가
+  실제 로드된 것과 안 맞음 -> 이거 고쳐 3. ... 나는 5초마다 자원 올라갈 때
+  자원 올라가는 것을 옆에 순간적으로 한 1초 가량(0.5초는 진하게, 그리고
+  나머지 0.5초는 좀 연하게) 해서 자원 옆에 올라가는 양을 +로 보여주면 좋을
+  거 같아. ... 4. ... 재사용하되, 그냥 따로 재사용하지 말고 혹시라도
+  나중에 그 아이콘 디자인을 변경하더라도 똑같이 상단에 자원 보여주는 것과
+  같은 아이콘이 되도록 해줘 5. ... 이건 적절히 네가 고쳐줘. 참, 본진
+  선택하면 상단에 보이는 폰트와 UI도 다른 캐릭터 선택했을 때 보여지는 폰트
+  UI처럼 개선해줘 6. ... 지금 이대로 두고 상세 설명은 본진 패널에 추가해줘.
+  7. ... 리팩토링도 좀 진행해줘. ... 앞으로도 개발시 분리된 역할의 파일에
+  따라 개발되도록 해줘. ... 하네스상에서 그런 명령을 추가하는 게 나으면
+  그 작업도 함께 해주고."
+- **AI action**:
+  1. Left the DEV OFF button untouched per explicit instruction.
+  2. Traced the missing-texture bug to its actual root cause:
+     `UNIT_STATS[unitId].textureKey` is a nominal seed, not a directly
+     loadable texture key — real frames require
+     `deriveAnimationPrefix`/`resolveAnimationTextureFromPrefix`
+     resolution, same as live battle sprites use. Added
+     `resolveUnitPortraitTextureKey()` to
+     `unitAnimationRegistry.ts` as the single shared resolver and used it
+     in both `baseResearchPanelModel.ts` and `BaseResearchPanel.ts`,
+     removing the double-resolution bug in the view layer along the way.
+  3. Added a diff-based "+N" popup in `LaneBattleHudView` (0.5s solid +
+     0.5s fade, drifting upward), matching the exact timing the user
+     specified.
+  4. Rebuilt action-button cost rendering as icon+number rows sourced from
+     `getResourceIconKey` — the same function the top resource bar uses —
+     instead of a duplicated icon reference, so a future icon redesign
+     only needs to change in one place. Found and fixed a self-introduced
+     bug during this change: cost icons for a hidden button were still
+     rendering (floating with no button) because the cost-refresh pass ran
+     after the visibility pass; fixed by having the cost renderer check
+     the button's current visibility.
+  5. Bumped capture/tower panel font sizes (11px → 13-14px) and restyled
+     the "아군 본진"/"적 본진" labels to match the team-accent nameplate
+     chip style used for selected units/towers, replacing the old flat
+     11px caption.
+  6. Added a 3-line worker-production explainer to the base research
+     panel, placed in existing empty space with no layout collisions.
+  7. Did the first real extraction from the 4300-line `LaneBattleScene.ts`:
+     moved all AI decision logic (6 methods, ~150 lines) into a new
+     `src/systems/ai/aiController.ts`, using a closure-based host interface
+     so no scene fields had to be widened from `private` to `public`.
+     Verified via Playwright that AI worker hiring/allocation behaves
+     identically before and after the move. Documented the extraction
+     pattern and made it a hard rule for future development in
+     `docs/patterns/README.md` (the existing lazy-load target for
+     "project patterns" from `AGENTS.md`, chosen over editing `AGENTS.md`
+     itself since that file explicitly declares itself
+     project-generic). Explicitly did not attempt the larger
+     capture/tower-cluster and unit-presentation-sync extractions in this
+     turn — flagged as the next steps per the review doc's own priority
+     order, given their much larger scope and tighter coupling to
+     rendering code.
+- **Verification**: `npx tsc --noEmit`, `npm run build`, `npm test`
+  (34 files / 178 tests) all passed. Playwright screenshots/state checks
+  confirmed the icon fix, resource popup, cost icons (including the
+  floating-icon regression and its fix), font changes, and AI behavior
+  parity, live in the browser — not just via code review.
+- **Scope**: all 6 UI items implemented; refactoring item scoped to one
+  verified extraction (AI controller) rather than the full multi-cluster
+  plan, with the remainder explicitly deferred and documented.
+
+## 2026-08-08 - Label cleanup, a difficulty-select boot screen, and a real Phaser camera-clamp bug found via runtime instrumentation
+
+- **Agent/tool**: Claude Code (Sonnet 5). Item 5 involved genuine
+  black-box debugging of a live Phaser instance (property interception,
+  stack-trace capture, reading Phaser's own bundled source) rather than
+  code review alone.
+- **User direction (원문)**: "1. 일꾼 고용에서 1 이하로 여전히 -를 하면
+  빠져서 0이 되고 그 일꾼으로 다른 자원에 돌릴 수 있음. 이거 고쳐달라고
+  한 건데 안 고쳐짐 2. 건설거점1, 건설거점2 이런 이름으로 뜨는데... 숫자는
+  빼고 3. 본진 위에 아군 본진/적 본진 이 글자 없애줘. 4. ...메인 화면에서
+  지금은 뭐 터치하거나 스페이스 누르면 시작합니다 나오는데 그게 아니라
+  버튼 박스 형식으로 초급/중급/고급/신... 자원량이... 중급일 때는 적 기본
+  생산량이 현재의 x2, 고급은 x3, 신은 x4... 공격/방어는 기본 0으로
+  시작하는데... 중급/고급/신 일 때는 적이 중급 1, 고급2, 신3으로
+  시작하는 거야 모든 시대에서. 5. 맵 버그가 뭔가 있는 거 같은데, 어느
+  특정 지점에서는... 위 레인 보기 위해 올리거나 내리면 잘 안 내려가고...
+  이 버그가 어디서 나오는 건지 원인 파악을 좀 해줘"
+- **AI action**:
+  1. Re-verified the worker -/+ flow a third time (direct method call,
+     real pixel click, and the exact "wood→0 then redirect" sequence the
+     user described) — all three confirmed correct behavior on the
+     current build. Reported this plainly rather than making an
+     unnecessary change, and moved on to the other items.
+  2-3. Simplified the capture-point world label and removed the base
+     labels entirely, matching the exact instructions.
+  4. Built a `src/data/difficulty.ts` registry (4 tiers with production
+     multiplier + research-level floor), replaced `BootScene`'s
+     click-anywhere prompt with a "난이도" label + 4 selectable boxes that
+     pass `difficultyId` into `scene.start("run", ...)`, added a scene
+     `init(data)` hook, threaded an optional per-team production
+     multiplier through `tickLaneEconomy()`, and added a
+     `researchLevelFloor` parameter to `resolveSpawnUnitStats()` applied
+     only to the enemy team. Verified via Playwright that selecting "고급"
+     actually resolves to `{enemyProductionMultiplier: 3,
+     enemyResearchLevelFloor: 2}` on the live scene.
+  5. Diagnosed the camera bug through direct runtime instrumentation
+     rather than static reading: set `cam.scrollY` via Playwright,
+     confirmed it silently reverted within a single `requestAnimationFrame`,
+     then intercepted the property with `Object.defineProperty` to capture
+     the call stack of whatever was overwriting it — traced it to Phaser's
+     own bundled `Camera.preRender() → clampY()`. Read Phaser's actual
+     minified-but-readable source in `node_modules/.vite/deps/phaser.js`
+     and found `clampY`'s formula (`bounds.y + (displayHeight - height) /
+     2`) produces a *shifted* floor whenever the camera is zoomed out
+     (displayHeight > height, true here at zoom 0.46) — exactly 528.26px
+     in this case, which happened to match the observed "stuck" value
+     exactly. This camera's own manual drag-clamp used a different,
+     unshifted formula, so Phaser's automatic per-frame bounds
+     enforcement was fighting and overriding it every frame, making
+     downward drags silently no-op depending on where scrollY already
+     was. Fixed by disabling `useBounds` after `setBounds()` (confirmed
+     via grep that no other code reads camera bounds data) and keeping
+     the scene's own correctly-ranged manual clamp as the sole authority.
+     Verified with a 20-step drag: scrollY was completely frozen before
+     the fix, and smoothly tracked 521→87 after.
+- **Verification**: `npx tsc --noEmit`, `npm run build`, `npm test`
+  (34 files / 178 tests) all passed. Every visual/behavioral change was
+  confirmed against the live running app via Playwright, including a
+  targeted before/after repro for the camera bug specifically.
+
+## 2026-08-08 - Enemy team-color asset pipeline was stale (not code), a real transparency asset bug found and fixed, worker floor corrected back to 1
+
+- **Agent/tool**: Claude Code (Sonnet 5). This turn involved direct pixel-level
+  image analysis (PIL/Python) and running two existing asset-generation
+  pipelines, in addition to the usual Playwright runtime verification.
+- **User direction (원문, with two screenshots)**: "1. 적 팀은 어깨 띠나 그런
+  게 파란색이 아니라 붉은 색 계열로 보여야 하는데 지금 파란색으로 보이고
+  있어. 아마 최종 캐릭터를 업데이트 하고 나서부터 팀 색이 제대로 적용이
+  안 되는 거 같은데 원인을 파악하고 수정해줘. 2. 첫 번째 스크린샷을 보면
+  가끔 보급 병력이 스크린샷처럼 뭔가 반쯤 투명한 상태가 되는데 이거 명백한
+  버그인 거 같아. 원인 파악하고 수정해줘. 3. ... 이처럼 현재 일꾼은 1
+  이하로 떨어지면 안 된다는 거야. 근데 지금은 떨어지잖아. 그냥 떨어지는
+  조건 자체를 0 이하로 못 떨어뜨리는 것으로 현재 되어있는 거 같은데 그걸
+  1로 바꾸라는 뜻이야."
+- **AI action**:
+  1. Verified via Playwright that the *code* correctly resolves every enemy
+     unit to its `-enemy` texture (100% hit rate across a live wave, no
+     asset-load failures). Pivoted to comparing the actual `-enemy.png`
+     pixels against the base PNG with PIL — found the blue headband pixels
+     were byte-identical between the two, meaning the enemy variant was
+     never actually recolored for the current base art. Diagnosed root
+     cause: `tools/asset-qa/generate_unit_team_variants.py` aborts its
+     entire batch with an uncaught `RuntimeError` the moment it hits any
+     source frame with zero matching blue pixels (a legitimate case, e.g.
+     `pikeman-e-attack.png` mid-thrust with no headband visible) —
+     silently leaving every alphabetically-later unit's `-enemy.png` stale
+     from whatever the last successful run was, predating later base-art
+     touch-ups. Fixed the script to warn-and-continue instead of aborting,
+     re-ran it (1845 sources, only the one legitimate zero-match case now
+     just logged), and verified with a live screenshot that enemy units
+     now show red.
+  2. Investigated the reported "supply unit sometimes translucent" bug via
+     two parallel tracks: (a) 80+ seconds of live Playwright monitoring of
+     every support unit's `sprite.alpha`/`tint` — always normal; (b) a
+     full alpha-channel scan of all ~1845 unit PNGs, which found a *real*,
+     separate transparency bug: several late-era units'
+     (`breakthrough-trooper`, `grenadier-late`, `heavy-gunner`, `cannon-i`,
+     `light-cavalry`, `tank`, etc.) `walk-b`/`walk-a` frames had genuinely
+     low alpha (~170-200 vs. a healthy ~240+). Traced this to the same
+     stale-pipeline pattern as item 1: re-running
+     `generate_late_era_unit_variants.py` in isolation for the affected
+     frame reproduced healthy alpha, confirming the on-disk files simply
+     predated the current script/source art. Regenerated all 24 late-era
+     variant sets, then re-ran the enemy-color script again to resync.
+     Also determined that the stale `walk-b`/`walk-c` frames for units
+     like `shock_trooper` were dead weight — its actual animation
+     definition only ever references numbered `walk-01/02/03` frames,
+     which were already healthy — so that specific staleness was harmless
+     even before the fix. Could not reproduce the exact ancient-age supply
+     wagon screenshot the user described despite this — reported that
+     honestly rather than claiming a fix for something unverified, while
+     still fixing the real bug found along the way.
+  3. Reverted the worker-panel floor from the previous turn's "allow down
+     to 0" behavior back to a hard floor of 1 per the corrected
+     instruction: `LaneBattleScene.shiftWorker()`'s decrement guard is now
+     `<= 1`, `laneBattleHudModel.ts`'s `canDecrease` is now `> 1`, and
+     `aiEconomy.ts`'s `planAiWorkerRebalance()` was updated to match (only
+     pulls from a resource with a spare worker above the floor), keeping
+     player and AI rules consistent. Verified the exact scenario the user
+     described: base worker stays pinned at 1 no matter how many times
+     decrease is pressed, but a *newly hired* extra worker can still be
+     reassigned down to (not below) that floor.
+- **Verification**: `npx tsc --noEmit`, `npm run build`, `npm test`
+  (34 files / 178 tests) all passed. Asset regeneration touched only PNGs
+  under `public/assets/production/units/`, no application code risk from
+  that part of the change.
+
+## 2026-08-08 - HUD bottom-panel rework (HP bars, worker icons, instant-wave layout), a real feedback-loss bug found and fixed, animation bug re-investigated (not reproduced)
+
+- **Agent/tool**: Claude Code (Sonnet 5). This turn combined UI layout
+  work, live Playwright repro/verification (including a deliberately
+  induced dev-mode age-rush to stress-test the wave economy), and a static
+  registry-completeness check run through Vitest.
+- **User direction (원문, with three screenshots)**: "1. 첫 번째
+  스크린샷처럼 어떤 병력은 위에 hp바가 떠있고 어떤 건 안 떠있어. 이건
+  터치하지 않으면 안 보여주는 방향으로 정리해줘. 2. 두 번째 스크린샷에
+  보이는 정보는 필요 없어. 위 아래 내용 둘 다 삭제해줘. 게임 전체 화면의
+  좌우로는 중간, 위아래 위치로는 아래쪽에 있는 거야. 오히려 그 자리에
+  일꾼 배치 항목과 즉시 웨이브 버튼/시대 업 버튼을 하단 가운데쪽 내가
+  삭제하라고 한 그 위치로 옮겨줘야해. 3. 세 번째 스크린샷 보면 일꾼
+  배치에서 사람 모양이 되어있는데 그 앞에 그냥 실제 자원 아이콘 모양을
+  불러서 사용하도록 변경해줘. 그리고 금 /목재 등 단어는 없애줘. 단, 해당
+  아이콘이 바뀌어도(이름은 같고 아이콘이 추후에는 바뀔 수도 있음) 그대로
+  사용 가능하도록 복제해서 쓰는 게 아니라 해당 그림 자산을 똑같이
+  공유해서 쓰는 방식이어야 해. 이해했지? 4. 어느 순간 아군 또는 적군의
+  병력이 실제 리스폰 시간이 되었는데도 리스폰이 되지 않는 버그를
+  발견했어. 즉시 웨이브 버튼을 눌렀는데 시간은 +5초가 더해졌는데 즉시
+  웨이브 토큰이 -1도 안 되고 병력도 나오지 않는 버그도 있고. 문제를
+  확인하고 해결해줘. 5. 새로 만든 캐릭터들이 샌드박스에서는 walk와 공격
+  등이 각 의도된 캐릭터의 모션대로 보이는데, 실제 게임상에서는 attack시
+  전혀 엉뚱한 캐릭터 등이 보이는 버그가 있어. 이것도 확인하고 제대로
+  매핑해서 보여줘. 그리고 샌드박스에서처럼 일관되지 않고 굉장히 좌우로
+  스트레칭 된 그림으로 나오거나 하는 버그도 있어. 이것도 확인하고
+  수정해줘. 6. 투명 버그는 일단 지금 당장은 아니더라도 무조건 곧바로
+  고쳐야 되는 1순위로 문서에 작성해주고 상황과 무엇을 봐야할지도 일단
+  정리만 먼저 해줘."
+- **AI action**:
+  1. `LaneBattleScene.refreshUnitOverlayDensity()`: HP bar visibility now
+     driven purely by `unit.selected || unit.hovered`, decoupled from the
+     lane-crowding density system that was causing the inconsistency.
+  2. Removed the fixed capture/tower info panel and status-text line from
+     `LaneBattleHudView.ts` (kept the underlying fields as permanently
+     off-screen no-ops so other call sites don't break), and relocated the
+     worker panel plus all four strategic-action buttons (hire worker,
+     hire research worker, instant wave, age up) into that vacated
+     bottom-center region.
+  3. `getWorkerIconKey()` in `laneBattleHudModel.ts` now returns the exact
+     same `getResourceIconKey()` texture key the top resource bar uses,
+     instead of a separate generic person icon, so future icon changes
+     only happen in one place; removed the per-row text label.
+  4. Investigated the wave/instant-wave bug from multiple angles — a
+     Vitest check confirmed every unit ID across every age is registered
+     in both `UNIT_STATS` and `UNIT_ANIMATION_REGISTRY` (ruling out a
+     spawn-time crash), and repeated live Playwright repros (spam-clicking,
+     a rushed dev-mode age climb, a single well-timed click) always hit
+     the *correct* "cooldown" or "food shortage" gate exactly as coded —
+     never the reported "+5s but no token/no spawn" combination, which
+     the code has no path to produce without spawnWaveUnits throwing
+     (never observed). Traced the user's actual experience to this same
+     turn's item 2: deleting the info panel had silently killed
+     `hud.setInfo()`'s only visible effect, so legitimate
+     cooldown/food-shortage rejections looked like silent, broken button
+     presses. Fixed by turning `setInfo()` into a small fading toast over
+     the worker panel instead of a dead call — verified live that a
+     cooldown click now shows "직전 웨이브 후 5초 뒤 사용 가능" clearly.
+  5. Re-investigated the animation bug and could not reproduce it: no
+     duplicate animation-prefix collisions between unit IDs, late-era PNG
+     dimensions matched the registry's assumed aspect ratios exactly on
+     direct pixel measurement, and a dev-mode-rushed playthrough capturing
+     idle/walk/stationary frames for cannon, rifleman, and medic units
+     under real combat showed correct, non-stretched rendering throughout.
+     Assessed as likely already fixed by the immediately preceding turn's
+     stale-asset-pipeline correction (same root-cause pattern as the
+     team-color and transparency bugs from that turn) — reported this
+     assessment plainly rather than claiming a fix for something not
+     actually broken in the current build.
+  6. Added a "[PRIORITY 1]" entry at the top of `docs/dev-wiki/backlog.md`'s
+     Active Queue for the still-unreproduced transparency bug, summarizing
+     the prior turn's investigation and listing a concrete repro checklist
+     for next time (unit/team/age/situation, opening-wave vs. regular
+     wave, per-frame alpha logging) — confirmed via grep that
+     `LaneBattleScene.ts` has zero `setAlpha`/`.alpha =` calls on
+     `unit.sprite` anywhere, ruling out a static code-level alpha bug and
+     pointing future investigation toward a transient/rendering-artifact
+     cause instead.
+- **Verification**: `npx tsc --noEmit`, `npm run build`, `npm test`
+  (34 files / 178 tests) all passed. Every UI/behavioral change was
+  confirmed live via Playwright screenshots, including a targeted
+  before/after repro for the wave-feedback bug specifically.
+
+## 2026-08-08 - Wave starvation was a clock-reset bug, HUD duplicate toasts were a camera-ownership bug, and sandbox/battle now share one unit-presentation resolver
+
+- **Agent/tool**: Claude Code (Sonnet 5).
+- **User direction (원문)**: "1. 식량 부족 때문에 안 나온 거로 판단하는
+  거야? 만약 그렇다면 즉시 웨이브 못하거나 리스폰 시간 때 병력이 안
+  나오더라도 다음 리스폰 시간은 0 또는 n초에서 계속 시간은 0에 가까워지며
+  병력이 나오지 않고, 메시지에 식량이 부족합니다, 라는 문구를 띄우는 게
+  맞는 거 같아. 그런 게 없어서 버그인지 뭔지 몰라서 내가 너보고 고치라고
+  한 거였으니까. 2. 앞서 말했던 자원 +1 되는 거 전투 필드에도 나오는 것과,
+  안내 메시지가 아주 작게 전투 필드 가운데 쯤에 중복으로 나오는 것도
+  반드시 정리해줘 3. 샌드박스에서는 walk/전투/idle 등 캐릭터가 실제
+  캐릭터명과 일치하는데, 현재 게임에서는 전혀 엉뚱한 캐릭터로 매핑되는
+  경우가 꽤 많음. ... 샌드박스에서 사용하는 로직과 동일한 것을 호출하는
+  방식으로 교정해야함"
+- **AI action**:
+  1. Re-read the wave path instead of treating this as a vague "spawn feels
+     late" report. The actual bug was not a shared active-wave cap; it was
+     `LaneBattleScene.trySpawnWave()` resetting the whole wave clock even
+     when a scheduled wave failed for lack of food. That meant a team that
+     reached `nextWaveInSec <= 0` with food slightly below cost would miss
+     the wave entirely and be pushed back to another full 20-second cycle,
+     which becomes much more noticeable from `iron_mid` onward as
+     `baseWaveFoodCost` rises. Replaced that failure path with
+     `scheduleWaveRetry()` (`WAVE_RETRY_DELAY_SEC = 1`) so the timer stays
+     near zero and retries quickly until food is available.
+  2. Added explicit player-facing shortage feedback without spamming: a new
+     `waveBlockedByFood` flag on `TeamState` lets the player see
+     "식량이 부족합니다" the first time a shortage blocks a wave, while
+     keeping the retry loop active in the background until a real
+     deployment clears the flag.
+  3. Fixed the duplicated tiny `+1` resource popup and duplicated tiny info
+     toast in the battle field by tracing them to camera ownership, not
+     duplicate game logic. The static HUD had already been split into
+     `uiObjects` before camera setup, but `LaneBattleHudView.setInfo()` and
+     `spawnResourceGainPopup()` create texts *after* that snapshot, so
+     without `cameras.main.ignore(...)` they were rendered by both the main
+     world camera and the UI camera. Added `this.scene.cameras.main.ignore`
+     at creation in both paths so these dynamic HUD toasts render only on
+     the UI camera.
+  4. Unified sandbox and live battle sprite/size resolution into one shared
+     code path instead of letting them "mostly" share the same registry
+     while still diverging in implementation. Added
+     `resolveAnimatedUnitPresentation()` in
+     `src/presentation/units/unitPresentation.ts` as the single resolver
+     for:
+     logical texture key -> authored frame selection ->
+     current/idle `UnitFramePresentation`.
+     Switched `UnitSandboxScene` to use it, and switched
+     `LaneBattleScene` spawn + per-frame presentation updates to use the
+     same resolver directly. Also removed the battle scene's extra
+     width-cap/pose-squeeze branch so the field now preserves authored
+     frame aspect ratios the same way the sandbox does, instead of
+     clamping some wide attack poses into distorted widths.
+  5. Added regression coverage: one wave-rules test proving a food-blocked
+     wave no longer resets the full interval, and one unit-presentation
+     test proving the new shared sandbox/battle resolver picks the same
+     authored frames and preserved aspect ratios for representative units.
+- **Verification**:
+  - `npx tsc --noEmit` passed.
+  - `npm test -- src/systems/lane-economy/__tests__/laneWaveRules.test.ts src/presentation/units/__tests__/unitPresentation.test.ts`
+    passed: 2 files / 15 tests.
+  - `npm run build` passed.
+
+## 2026-08-08 - Manual food-shortage clicks now speak every time, and refreshed unit assets are cache-busted so live battle cannot keep stale wrong frames
+
+- **Agent/tool**: Codex, GPT-5.
+- **User direction (원문)**: "1. 식량 부족하여 병력 생산 안 될 때 식량이
+  부족합니다는 한 번만 메시지가 뜬다. 그 뒤에 즉시 웨이브 토큰을 클릭해도
+  아무런 메시지가 안 나옴. 자동 리스폰 때는 때가 되었는데 식량이 부족하면
+  식량이 부족합니다 메시지 한 번만 띄우면 되는데, (이후 식량 부족 해결 후
+  웨이브 생성되고 같은 일이 반복되면 그 땐 또 메시지가 떠야함) 버튼을
+  눌렀을 땐 즉각 조건에 맞으면 해당 메시지를 띄워야 함 2. 시대별 보급
+  캐릭터가 색깔이 투명으로 되어 뒷 배경대비 투명해지는 케이스가 있음. 이거
+  뿐만 아니라 다른 캐릭터들도 그러한 듯. 수정해야함 3. 캐릭터 시안이 과거
+  대비 뭔가 잘못 꼬인 거 같은데... 가령, 척탄병 I의 idle/attack이 walk와
+  캐릭터가 다름. walk기준이 맞는 캐릭터임. 중기병도 idle과 attack이 이상한
+  캐릭터를 사용중."
+- **AI action**:
+  1. Kept the earlier food-block retry fix but corrected the remaining UX bug:
+     the player shortage gate was suppressing both auto-respawn spam and
+     manual instant-wave clicks. Added
+     `shouldAnnounceWaveFoodShortage(team, manualTrigger)` so scheduled
+     retries only announce the first blocked attempt in a streak, while
+     manual token clicks announce shortage immediately every time.
+  2. Re-audited the reported broken unit art visually rather than assuming
+     it was still present after the shared resolver refactor. Regenerated
+     montage sheets for `grenadier`, `grenadier-late`, `heavy-cavalry`,
+     `light-cavalry`, and age-specific `supply-wagon-*` sets and confirmed
+     the currently installed approved E frames are internally consistent
+     across idle/walk/attack.
+  3. Re-ran the three local approved-strip installers
+     (`install_human_three_frame_strips.py`,
+     `install_cavalry_three_frame_strips.py`,
+     `install_supply_three_frame_strips.py`) so the repo's canonical
+     human/cavalry/support frame sets were reinstalled from source rather
+     than patched ad hoc.
+  4. Treated the remaining "wrong character / transparent look in live
+     battle" report as a stale-asset-loading risk and bumped the unit
+     animation asset revision string in
+     `src/presentation/units/unitAnimationRegistry.ts`, forcing Phaser to
+     reload both player and enemy unit PNGs instead of reusing older cached
+     textures that could survive refactors or asset reinstalls.
+  5. Added a focused wave-rules regression test covering the exact user
+     requirement: automatic shortage announcements stay one-shot per blocked
+     streak, but manual instant-wave button presses keep surfacing the
+     shortage message immediately.
+- **Verification**:
+  - `npx tsc --noEmit` passed.
+  - `npm test -- src/systems/lane-economy/__tests__/laneWaveRules.test.ts src/presentation/units/__tests__/unitPresentation.test.ts`
+    passed: 2 files / 16 tests.
+  - `npm run build` passed.
+
+## 2026-08-08 - The mechanized bug was real asset contamination, and the support transparency bug came from black semi-transparent source edges
+
+- **Agent/tool**: Codex, GPT-5.
+- **User direction (원문)**: "1. 보급 병력 텍스쳐 캐시 문제 아님! 캐릭터
+  자체가 어떤 검은색 또는 그런 계통을 사용중인데 이게 뒷배경에 알파가
+  더해지는 문제일 가능성이 높음! 확인하고 색감을 바로잡아야 할 수도 있어!
+  2. 총병 등은 제대로 고쳐진 거 같은데 내가 전 캐릭터 전수검사 하라고
+  했는데 내 명령대로 하지 않았음. 탱크류/대포류는 여전히 attack idle이
+  잘못된 캐릭터임!"
+- **AI action**:
+  1. Rechecked the actual production PNGs instead of assuming a runtime issue.
+     Fresh montage sheets showed the report was correct: several mechanized
+     families (`tank`, `modern-tank`, `cannon-i`, `cannon-ii`,
+     `artillery-i`, `artillery-ii`, `mobile-artillery`) had polluted
+     `idle`/`attack` files where a support-unit figure had been baked into
+     the asset itself.
+  2. Reinstalled the entire mechanized roster from the approved canonical-E
+     five-slot sources via
+     `tools/asset-qa/install_mechanized_three_frame_strips.py`, then
+     rechecked the resulting montage sheets and a focused Playwright
+     mechanized validation suite to confirm idle/walk/attack all resolve to
+     the correct machine family with only intended muzzle-flash deltas.
+  3. Investigated the support transparency complaint at the alpha/RGB level.
+     Measuring the supply source-alpha PNGs showed the semi-transparent edge
+     pixels were already heavily dark/black in the source, so the problem
+     was not caching but black matte contamination plus too much visible
+     transparency at the silhouette edge.
+  4. Updated `tools/asset-qa/install_supply_three_frame_strips.py` so supply
+     families now:
+     - recolor semi-transparent edge RGB from the nearest opaque sprite color
+     - reinforce visible alpha on support silhouettes to reduce background
+       bleed-through
+     with a slightly weaker setting for `modern-late` so its walk-pose
+     differentiation remains visually intact.
+  5. Bumped `UNIT_ANIMATION_ASSET_REVISION` again to
+     `20260808-unit-presentation-fix-2` so the newly reinstalled mechanized
+     and support PNGs cannot be hidden behind older browser/Phaser texture
+     cache entries.
+- **Verification**:
+  - `npx playwright test tools/validation/mechanized-three-frame-roster.spec.ts`
+    passed: 3 tests.
+  - `npx tsc --noEmit` passed.
+  - `npm run build` passed.

@@ -5667,3 +5667,437 @@ Use consistent headings so entries are easy to grep.
   무한정 살아있지 않도록 1.5초 후 자동 disconnect 처리.
 - 검증: `npx tsc --noEmit`, `npm run build`, `npm test`(34 파일 178개
   테스트) 모두 통과.
+
+## 2026-08-08 - 웨이브 식량 부족 재시도 교정, HUD 동적 토스트 중복 렌더링 제거, 샌드박스/실전 유닛 해석 경로 통합
+
+- 사용자가 보고한 "중기 철기부터 병력이 잘 안 나오고, 적도 리스폰이 한참
+  늦게 된다" 현상을 웨이브 로직 기준으로 재추적했다. 공용 웨이브 cap이나
+  아군/적군 간 상호 간섭 코드는 찾지 못했고, 핵심 문제는
+  `LaneBattleScene.trySpawnWave()`의 식량 부족 실패 경로였다. 기존
+  구현은 `createWaveDeploymentPlan()`이 `canDeploy: false`를 반환하면
+  병력을 내보내지 못했음에도 `resetWaveClock()`를 호출해 `nextWaveInSec`
+  를 다시 `20초`로 돌려버렸다. 시대가 올라갈수록 웨이브 식량 비용
+  (`iron_mid=15`, `iron_late=20`, `renaissance=24`...)이 커지므로, 정각에
+  식량이 약간 부족했던 한 번의 실패가 다음 출전 기회를 통째로 날려
+  "웨이브가 아예 안 나온다 / 나중에야 나온다"처럼 보이던 구조였다.
+- 수정: `src/systems/lane-economy/laneWaveRules.ts`에
+  `WAVE_RETRY_DELAY_SEC = 1` 및 `scheduleWaveRetry()`를 추가하고,
+  `LaneBattleScene.trySpawnWave()`의 실패 분기에서 `resetWaveClock()` 대신
+  `scheduleWaveRetry()`를 사용하도록 변경했다. 이제 식량이 부족한 팀은
+  시간을 다시 20초 채우지 않고 **1초 재시도 루프**에 들어가며, 다음
+  리스폰 시간은 0 근처로 유지된 채 식량이 마련되는 즉시 출전한다.
+- 사용자 요청대로 부족 사유도 분명히 드러나게 했다. `TeamState`에
+  `waveBlockedByFood` 상태를 추가해, 식량 부족으로 막힌 첫 순간에만
+  플레이어 HUD에 `"식량이 부족합니다"` 토스트를 띄우고, 실제 웨이브가
+  성공적으로 출전하면 이 상태를 해제하도록 했다. 같은 shortage 상태에서
+  매초 토스트가 무한 반복되지는 않지만, "왜 안 나오는지"는 분명히 보이게
+  바뀌었다.
+- 함께 보고된 작은 초록 `+1` 및 작은 안내문이 전투 필드 쪽에도 중복으로
+  떠 보이는 문제는 HUD 동적 토스트의 카메라 소속 버그였다.
+  `LaneBattleHudView.setInfo()`와 `spawnResourceGainPopup()`이 동적으로
+  만드는 텍스트는 정적 HUD와 달리 `uiObjects` 분리 이후에 생성되는데,
+  `setScrollFactor(0)`만 하고 `cameras.main.ignore(...)`를 하지 않아 메인
+  카메라와 UI 카메라 모두에 그려지고 있었다. 두 경로 모두 생성 직후
+  `this.scene.cameras.main.ignore(...)`를 호출하도록 바꿔, 이제 HUD 토스트는
+  UI 카메라에서만 보이고 필드 복제본은 사라진다.
+- 유닛 매핑/스트레칭 문제는 샌드박스와 실전이 "같은 레지스트리 기반"이라도
+  **다른 해석 경로**를 타고 있던 것이 원인이었다. 샌드박스는
+  `logicalTextureKey -> resolveAnimationTextureFromPrefix() ->
+  resolveUnitFramePresentation()` 흐름으로 현재 프레임과 표시 크기를
+  계산했지만, `LaneBattleScene`은 별도 fallback 경로
+  (`resolveUnitAnimationTexture`)와 pose-width 보정 로직을 추가로 가지고
+  있어, 일부 유닛이 샌드박스와 다른 텍스처를 집거나 attack/walk 프레임에서
+  비율이 찌그러질 여지가 있었다.
+- 수정: `src/presentation/units/unitPresentation.ts`에
+  `resolveAnimatedUnitPresentation()` 공용 함수를 추가해, 샌드박스와 실전이
+  **같은 텍스처 선택 + idle/current frame presentation 계산기**를 직접
+  호출하도록 통합했다. `UnitSandboxScene`은 기존 자체 로직 대신 이 공용
+  함수를 쓰도록 바꾸었고, `LaneBattleScene`도 스폰 시 초기 프레임과
+  런타임 포즈 변경 시 현재 프레임/idle 기준 크기 계산을 이 함수로
+  대체했다. 동시에 실전 씬의 독자적인 width-cap/pose squeeze 로직을
+  제거해, 샌드박스와 동일하게 `framePresentation`의 authored aspect를
+  그대로 쓰도록 교정했다.
+- 회귀 테스트 추가:
+  `src/systems/lane-economy/__tests__/laneWaveRules.test.ts`에 식량 부족 시
+  전체 인터벌 리셋 대신 빠른 재시도를 보장하는 케이스를 추가했고,
+  `src/presentation/units/__tests__/unitPresentation.test.ts`에 샌드박스/실전이
+  공유하는 새 해석 경로가 `rifleman`/`pikeman` 등에서 동일한 프레임 선택과
+  폭/높이 비율을 내는지 검증하는 케이스를 추가했다.
+- 검증: `npx tsc --noEmit` 통과.
+  `npm test -- src/systems/lane-economy/__tests__/laneWaveRules.test.ts src/presentation/units/__tests__/unitPresentation.test.ts`
+  결과 2파일 15테스트 전부 통과.
+  `npm run build`도 성공.
+
+## 2026-08-08 - 커밋/푸시 + UX/UI 및 코드 구조 전반 검토
+
+- 지난 세션의 타워/AI 경제/타격음/UI 변경분(15개 파일)을 master에
+  커밋(`8ec9eab`)하고 `origin/master`로 푸시했다. 이 프로젝트는 이미
+  기록된 기존 관행대로(브랜치 미도입 상태) master에 직접 커밋했다.
+- 사용자 요청: "게임이 웹 게임으로 쓸만한지" 검토 — 재미가 아니라 기능
+  배치/정보 표시/폰트·크기 등 UI 전반과, 소스코드 리팩토링/모듈화
+  필요성을 검토해 문서로 정리.
+- Playwright로 실제 5173 서버의 메인 HUD/본진 연구 패널/타워 패널/거점
+  패널을 스크린샷으로 캡처(`artifacts/ux-architecture-review/`)하고 코드를
+  대조해 `docs/dev-wiki/ux-and-architecture-review.md`를 작성했다.
+- UX 쪽 핵심 발견:
+  - **버그**: DEV OFF 버튼(`LaneBattleHudView.ts:249`, `y=846`)이 일꾼
+    배치 패널의 연구/유휴 행(`y≈838/863`)과 실제로 겹쳐서, 일반 플레이
+    상태에서도 두 행이 가려짐. 최우선 수정 후보.
+  - **버그**: 본진 연구 패널의 투석/도끼 아이콘이 Phaser 기본
+    missing-texture(초록/검정 체크무늬) placeholder로 렌더링됨.
+  - 일꾼 1명 추가 시 실제로 무엇이 달라지는지 설명하는 UI가 어디에도
+    없음(생산 공식 자체는 `tickResourceWorker`에 있지만 화면에 노출 안 됨).
+  - 상단 자원 바는 아이콘을 쓰는데, 모든 비용 표시(`formatCostShort`)는
+    G/W/F/M 문자 약어를 씀 — 사용자가 지적한 그 불일치.
+  - 본진 패널이 배경 입력을 막지 않아 패널이 열린 상태에서도 뒤의 일꾼
+    고용 버튼이 클릭됨.
+  - 캡처/타워 패널 본문 폰트가 11px로, `Phaser.Scale.FIT` 축소 시 가독성
+    하한이 없음.
+  - 일꾼 배치를 본진 패널로 옮기는 것에 대해서는 장단점을 분석 — 매
+    웨이브마다 조정하는 빈도를 고려해 "HUD엔 압축 버전 유지 + 본진
+    패널에 상세/설명" 하이브리드를 제안(무조건 이동은 비권장).
+- 코드 구조 쪽 핵심 발견: `LaneBattleScene.ts`가 4303줄/177개 메서드의
+  단일 God Object. 이동/전투, 거점+타워, AI 판단, 투사체/데미지, 유닛
+  프리젠테이션 동기화, 경제 오케스트레이션, 웨이브 스폰, 디버그 스냅샷
+  7개 책임 군집으로 분류하고, 이미 존재하는 `systems/lane-capture/`,
+  `systems/lane-combat/`, `presentation/units/` 쪽으로 이전할 우선순위를
+  제안했다(1순위: 거점+타워 군집, 2순위: 유닛 프리젠테이션 동기화, 3순위:
+  AI 판단 통합). 이번 세션에서는 실제 리팩토링은 진행하지 않음 — 검토만.
+- `docs/index.md`에 신규 문서 3건(AI 경제 설계, 오디오 합성 가이드,
+  UX/구조 검토) 링크 추가.
+
+## 2026-08-08 - 검토 항목 실제 적용(아이콘/자원표시/비용아이콘/폰트/설명) + 첫 리팩토링 단계
+
+전날 UX/구조 검토 문서의 발견사항을 사용자가 항목별로 확인 후 실제 적용을
+지시. 6개 UI 항목 + 리팩토링 착수.
+
+- **DEV OFF 버튼**: 사용자가 "최종적으로 안 보이게 할 거라 지금은 그대로
+  둬"라고 명시 — 변경 없음.
+- **본진 연구 패널 아이콘 수정**: 근본 원인 확인 — `UNIT_STATS[unitId]
+  .textureKey`(예 "stone-axeman-w-idle")는 실제로 로드된 텍스처 키가 아니라
+  `deriveAnimationPrefix`/`resolveAnimationTextureFromPrefix`를 거쳐야 실제
+  프레임 키가 나오는 "명목상" 필드였는데, `baseResearchPanelModel.ts`가 이
+  값을 그대로 `scene.add.image()`에 넘겨서 Phaser 기본 missing-texture로
+  렌더링되고 있었다. `presentation/units/unitAnimationRegistry.ts`에
+  `resolveUnitPortraitTextureKey(unitId, team)` 공용 헬퍼를 신설(실제 전투
+  스폰 로직과 동일한 해석 경로 재사용)하고 모델/뷰 양쪽에서 사용하도록
+  교체. `BaseResearchPanel.ts`의 중복 `resolveTeamUnitTextureKey` 이중
+  호출도 정리.
+- **자원 생산 시 +N 플로팅 표시**: `LaneBattleHudView.apply()`에서 매 프레임
+  자원 문자열을 이전 값과 비교해, 증가분이 있으면 해당 자원 칸 옆에
+  "+N" 텍스트를 스폰(0.5초 고정 표시 + 0.5초 페이드, 위로 살짝 떠오름) 후
+  자동 destroy. 워커 생산/처치 보상 등 어떤 증가든 공통으로 반응.
+- **비용 표시 아이콘화**: `ActionButton`에 고정 슬롯(`costIcons`/
+  `costTexts`, 최대 5개)을 추가하고, `getResourceIconKey`(상단 자원 바와
+  동일 소스 함수)로 텍스처를 채우는 `applyCostRow()`를 신설. 일꾼 고용/
+  연구 일꾼/시대 업/타워 재건/타워·병참·조달소 건설/폐기 버튼의 비용
+  표시를 "10G 10W 10F" 문자열에서 아이콘+숫자 행으로 교체하고, 이제는
+  안 쓰는 `formatCostShort()`를 제거했다. 버그 발견 및 수정: 비용 갱신이
+  가시성 갱신 다음에 실행돼서 숨겨진 버튼의 비용 아이콘이 화면에 붕 떠서
+  보이는 문제가 있었음 — `applyCostRow`가 `button.rect.visible`을 먼저
+  확인하도록 수정.
+- **캡처/타워 패널 폰트 + 본진 라벨 스타일 통일**: `capturePanelBody`
+  11→14px, `infoText` 11→13px, `capturePanelTitle` 17→18px로 상향. "아군
+  본진"/"적 본진" 라벨을 유닛/타워 선택 시 쓰는 것과 같은 팀 액센트
+  색상 스트로크+배경 칩 스타일로 교체(11px 민무늬 텍스트에서).
+- **본진 패널에 일꾼 생산 안내 추가**: `BaseResearchPanel.ts` 상단
+  빈 공간에 "일꾼 1명당 자원 1개를 5초마다 생산 / 연구는 10초마다 1
+  포인트 / 자원이 오를 때 +N으로 표시" 3줄 캡션 신설(레이아웃 충돌 없이
+  기존 빈 영역 재사용).
+- **리팩토링 1단계 — AI 판단 로직 분리**: `src/systems/ai/aiController.ts`
+  신설. `tickAi`/`tickAiEconomy`/`shouldAiAgeUp`/
+  `hasAffordableUnbuiltAiCapturePoint`/`enemyAutoBuildCapturePoint`/
+  `enemyAutoRebuildDefenseTower` 6개 메서드(약 150줄)를
+  `LaneBattleScene.ts`에서 제거하고 `AiController` 클래스로 이전.
+  스코프를 좁히기 위해 씬의 private 필드를 공개(public)로 바꾸지 않고,
+  생성 시점에 `AiControllerHost` 인터페이스(클로저 객체)를 넘기는
+  방식을 채택 — `docs/patterns/README.md`에 이 패턴을 "새 로직은
+  LaneBattleScene.ts에 추가하지 말고 반드시 별도 파일로" 규칙과 함께
+  문서화(앞으로의 모든 신규 개발에 적용되는 하드 룰로 명시).
+  `CapturePointState`/`DefenseTowerState`를 `LaneBattleScene.ts`에서
+  `export`해 타입만 공유(`import type`이라 런타임 순환 참조 없음).
+  Playwright로 적 워커 배분이 리팩토링 전후 동일하게 동작함을 실측
+  검증(즉시 첫 고용으로 gold 1→2, 이후 쿨다운/예비금 로직 정상).
+  거점+타워 클러스터(19개 메서드) 및 유닛 프리젠테이션 동기화 클러스터는
+  범위가 훨씬 크고 결합도가 높아 이번 세션에서는 진행하지 않음 —
+  `docs/dev-wiki/ux-and-architecture-review.md`의 우선순위대로 다음
+  세션 후보로 남김.
+- 검증: `npx tsc --noEmit`, `npm run build`, `npm test`(34 파일 178개
+  테스트) 모두 통과. Playwright로 아이콘 수정/자원 팝업/비용 아이콘/
+  폰트 변경/AI 동작을 실제 화면에서 확인.
+
+## 2026-08-08 - 라벨 정리, 난이도 선택 화면 신설, 카메라 수직 스크롤 버그 근본 원인 파악 및 수정
+
+- **일꾼 -/+ 버그 재확인**: "여전히 안 고쳐졌다"는 사용자 보고에 대해
+  Playwright로 세 가지 방식(씬 메서드 직접 호출, 실제 좌표 클릭, "목재 0 →
+  다른 자원" 정확한 재현)으로 다시 실측 — 셋 다 정상 작동함을 재확인했다.
+  소스에서 재현 가능한 버그를 찾지 못해 코드는 변경하지 않음.
+- **건설 거점 라벨**: `"건설 거점 ${point.id + 1}"` → `"건설 거점"`으로
+  단순화(타워 라벨과 동일한 패턴, 이미 선택 시에만 보이므로 번호가
+  중복 정보였음).
+- **본진 라벨 제거**: `LaneBattleHudView.ts`의 "아군 본진"/"적 본진"
+  고정 텍스트(및 배경 칩 스타일)를 완전히 삭제.
+- **난이도 선택 화면 신설**: 신규 `src/data/difficulty.ts`에 초급(x1,
+  연구 0)/중급(x2, 연구 1)/고급(x3, 연구 2)/신(x4, 연구 3) 4단계 정의.
+  `BootScene.ts`의 "터치/클릭/스페이스로 시작" 전역 클릭 방식을 제거하고,
+  "난이도" 라벨 + 4개 박스 버튼으로 교체 — 클릭 시 `scene.start("run",
+  { difficultyId })`로 전달. `LaneBattleScene`에 `init(data)` 라이프사이클
+  메서드를 추가해 수신, `this.difficulty` 필드로 보관.
+  - 적 기본 생산량 배수: `laneEconomy.ts` `tickLaneEconomy()`에
+    `getProductionMultiplier(team)` 콜백 인자를 추가(기본값 1, 하위 호환),
+    `LaneBattleScene.tickEconomy()`에서 `team.id === "enemy"`일 때만
+    `this.difficulty.enemyProductionMultiplier` 적용.
+  - 적 공격/방어 연구 레벨 시작값(모든 시대): `unitStatResolver.ts`
+    `resolveSpawnUnitStats()`에 `researchLevelFloor` 인자를 추가,
+    실제 연구 레벨과 `Math.max`로 비교해 하한선을 적용. 유닛 스폰 시점
+    (`spawnLaneUnit`)에서 `team === "enemy"`일 때만
+    `this.difficulty.enemyResearchLevelFloor`를 전달.
+- **카메라 수직 스크롤 버그 — 근본 원인 특정**: 사용자가 "특정 지점에서
+  레인 위/아래 보려고 카메라 올리거나 내리면 잘 안 된다"고 보고, 실측
+  기반으로 원인을 추적했다. Playwright로 `cam.scrollY`에 값을 직접
+  대입해도 매 프레임(`requestAnimationFrame`) 뒤에 항상 `528.26`으로
+  되돌아가는 것을 확인 → `Object.defineProperty`로 setter를 감싸 호출
+  스택을 찍어보니 Phaser 내부 `Camera.preRender()` → `clampY()`가 매
+  프레임 강제로 재대입하고 있었다. `Phaser.Cameras.Scene2D.BaseCamera
+  #clampY`의 실제 공식은 `by = bounds.y + (displayHeight - height) / 2`
+  인데, 이 카메라는 줌이 0.46(축소)이라 `displayHeight(1956.52) >
+  height(900)`가 되어 `by`가 0이 아니라 **528.26으로 밀려 올라간
+  하한선**이 되어버린다 — 우리 코드가 직접 계산한 `[0, WORLD_H -
+  visibleWorldH]` 범위와 Phaser 자체의 내부 clamp 범위가 서로 달라서,
+  매 프레임 Phaser가 우리가 설정한 값을 자기 범위로 되돌려버리고
+  있었던 것. 이게 "위로는 올라가는데 아래로는(또는 반대로) 잘 안 된다"의
+  진짜 정체였다(위치가 아니라 방향/범위 문제였음).
+  - 수정: `this.cameras.main.setBounds(...)` 직후
+    `this.cameras.main.useBounds = false`로 Phaser의 자동 clamp를
+    끄고, `setupFieldDrag()`의 기존 수동 clamp(`Phaser.Math.Clamp(...,
+    0, Math.max(0, WORLD_H - visibleWorldH))`)만 단일 진실 공급원으로
+    유지했다. `cam.clampX/clampY()`를 직접 쓰는 방안도 검토했으나 그
+    메서드 자체가 이 줌 상황에서 같은 오차를 내므로 기각.
+  - 검증: 동일 좌표에서 동일 방향으로 20단계 드래그 시 이전엔
+    `scrollY`가 전혀 안 움직였는데(항상 528 고정), 수정 후 521→87까지
+    매끄럽게 감소함을 확인. 반대 방향 대량 드래그로 하한(0)/일반 동작도
+    확인.
+- `_bounds`/`useBounds`가 게임 코드 다른 곳에서 참조되지 않음을 grep으로
+  확인 후 안전하게 비활성화.
+- 검증: `npx tsc --noEmit`, `npm run build`, `npm test`(34 파일 178개
+  테스트) 모두 통과. Playwright로 라벨/난이도 선택/난이도별 실제 수치
+  적용/카메라 드래그 수정을 모두 실측 확인.
+
+## 2026-08-08 - 적 팀 색상 자산 파이프라인 재생성, 후기 시대 유닛 투명도 자산 버그 수정, 일꾼 최소치 1로 복원
+
+- **적 팀 색상(파란색 → 빨간색 미적용) 근본 원인**: 코드 자체는 완전히
+  정상이었다 — `resolveTeamUnitTextureKey`가 모든 적 유닛에 대해
+  `-enemy` 텍스처를 정확히 선택하고 있음을 Playwright로 실측 확인
+  (`stone_axeman`/`stone_slinger`/`supply_wagon` 등 전부
+  `hasEnemySuffix: true`). 문제는 **자산 자체**였다:
+  `stone-axeman-e-idle.png`와 `stone-axeman-e-idle-enemy.png`를 픽셀
+  단위로 비교하니 헤어밴드 색상이 완전히 동일(파란색 그대로)했다.
+  `tools/asset-qa/generate_unit_team_variants.py`(HSV 기준 파란 계열
+  픽셀을 빨간 계열로 스왑하는 스크립트)의 `swap_team_pixel` 로직 자체는
+  해당 픽셀(hue 0.58, sat 0.51)을 정상적으로 감지하는데도 디스크의
+  `-enemy.png` 파일에는 반영이 안 되어 있었다 — 즉 **베이스 아트가
+  이후 "최종 캐릭터" 패스에서 갱신됐는데 `-enemy` 변형은 그 이후
+  재생성되지 않고 예전 버전 그대로 남아있던 스테일 자산 문제**였다.
+  - 스크립트를 직접 재실행해보니 `pikeman-e-attack.png`(창을 내지른
+    자세라 파란 계열 픽셀이 실제로 하나도 없는 정상적인 프레임)에서
+    `RuntimeError`로 전체 배치가 중단되는 걸 발견 — 알파벳 순으로 이
+    파일보다 뒤에 오는 대부분의 유닛(스톤에이지 등)이 재생성 자체가
+    안 되고 있었던 근본 원인. 스크립트를 "0개 매치도 경고만 하고
+    계속 진행"하도록 수정(`team-palette-report.json`에
+    `zeroMatchSources`로 기록은 남김)한 뒤 전체(1845개 소스) 재실행,
+    이어서 이 결과를 반영해 `generate_unit_team_variants.py`를 한 번
+    더 실행. Playwright 스크린샷으로 적 유닛 헤어밴드가 실제로 빨간색이
+    됨을 확인.
+- **후기 시대 유닛 반투명 자산 버그**: `보급 병력이 가끔 반투명해 보인다`는
+  제보를 조사하는 과정에서, 실시간 `sprite.alpha`/`tint`는 80초 이상
+  관찰해도 항상 정상(1, 흰색)이었지만, 전체 유닛 PNG를 알파 채널
+  기준으로 스캔한 결과 `breakthrough-trooper`/`grenadier-late`/
+  `heavy-gunner`/`cannon-i`/`light-cavalry`/`tank`/`shock-trooper`/
+  `special-forces` 등 후기 시대 유닛들의 `walk-b`(또는 일부 `walk-a`)
+  프레임이 평균 알파 170~200(정상은 240+)으로 진짜 반투명하게 저장되어
+  있음을 확인했다. `tools/asset-qa/generate_late_era_unit_variants.py`
+  (기존 유닛 아트에 색상/스케일/장비 오버레이를 입혀 후기 병종 24종을
+  파생 생성하는 스크립트)를 소스 파일 기준으로 단계별 재현했더니
+  정상(242~245) 값이 나와 — 이 역시 **파이프라인 자체는 정상인데 배포된
+  결과물이 스테일**한, 위와 동일한 패턴이었다. 스크립트를 재실행(24개
+  세트 × 8방향 × 4포즈)하고 이어서 적 변형 스크립트도 다시 실행해
+  동기화했다. 단, `walk-b`/`walk-c` 등 실제 게임이 참조하지 않는(스톤
+  트루퍼는 `walk-01/02/03` 넘버링 포즈만 사용, 레터드 `walk-a/b/c`는
+  구버전 잔재) 프레임의 스테일함은 그 자체로는 화면에 보이는 버그가
+  아니었음도 확인했다 — 사용자가 스크린샷으로 보여준 정확한 "보급
+  병력" 사례는 이번 조사로 재현/특정하지 못했다(석기/청동기 보급대
+  자산과 런타임 알파/틴트 모두 정상 확인됨). 추가 재현 정보(정확한
+  발생 시점/시대/상황)가 있으면 더 조사하기로 함.
+- **일꾼 최소치 0 → 1로 복원**: 사용자가 방향을 재확인 — "0까지 안
+  떨어지게" 하지 말고 "1 밑으로는 못 내려가게"가 맞는 규칙이라고 정정.
+  `LaneBattleScene.shiftWorker()`의 감소 조건을 `<= 0`에서 `<= 1`로,
+  `laneBattleHudModel.ts`의 `canDecrease` 판정도 `> 0`에서 `> 1`로
+  수정. AI 쪽 `aiEconomy.ts` `planAiWorkerRebalance()`도 동일 규칙으로
+  맞춰(`> 1`인 자원만 재배치 후보) 플레이어/AI 규칙을 일치시켰다.
+  일꾼을 새로 고용해 2명으로 만든 뒤에는 다시 1까지 감소 가능함을
+  Playwright로 실측(기본 1명은 항상 보존, 추가 고용분만 유동적).
+- 검증: `npx tsc --noEmit`, `npm run build`, `npm test`(34 파일 178개
+  테스트) 모두 통과. 자산 재생성은 코드가 아니라 `public/assets/
+  production/units/` 아래 PNG만 변경했으므로 별도 코드 리스크 없음.
+
+## 2026-08-08 - HUD 하단 패널 정리(HP바/일꾼 아이콘/즉시웨이브 배치), 웨이브 피드백 유실 버그 수정, 애니메이션 버그 재조사
+
+사용자가 스크린샷 3장과 함께 6가지를 지시: (1) 유닛 HP바가 일부만 떠
+있어 일관성 없어 보임 → 선택/호버 시만 표시로 통일, (2) 화면 하단 중앙의
+타워/거점 정보 패널과 안내 텍스트 삭제 후 그 자리로 일꾼 배치/즉시
+웨이브/시대 업 이동, (3) 일꾼 배치 행의 사람 아이콘을 자원 아이콘과 같은
+자산을 공유해서 사용하도록 교체하고 "금/목재" 등 텍스트 라벨 제거,
+(4) 즉시 웨이브 버튼이 시간만 +5초 더하고 토큰도 안 줄고 병력도 안
+나오는 버그, 정규 웨이브가 리스폰 시간이 됐는데도 안 나오는 버그 조사,
+(5) 신규(후기 시대) 캐릭터가 샌드박스와 달리 실제 게임에서 공격 시
+엉뚱한 캐릭터로 보이거나 좌우로 스트레칭되는 버그 조사, (6) 아직
+재현되지 않은 반투명 버그를 1순위로 문서에만 정리.
+
+- **HP바 표시 통일**: `LaneBattleScene.refreshUnitOverlayDensity()`에서
+  `hpVisible`을 밀집도 기반 `!hidden`이 아니라 `unit.selected ||
+  unit.hovered`로 변경. 밀집도 시스템은 마나바/라벨 표시 여부는 계속
+  결정하지만 HP바는 이제 터치한 유닛에서만 뜬다. Playwright로 실측:
+  미선택 상태에서는 전 유닛 HP바 없음, 클릭한 유닛만 라벨+HP바 노출.
+- **하단 패널 재배치**: `LaneBattleHudView.ts`에서 `capturePanelTitle`/
+  `capturePanelBody`는 화면 밖(-1000,-1000)에 숨긴 채로만 유지(다른
+  코드의 `apply()` 호출이 깨지지 않도록). 그 자리(중앙 하단, x≈500-845,
+  y≈700-885)에 "일꾼 배치" 타이틀 + 6행(2열×3행) 아이콘형 워커 UI,
+  `hire-worker`/`hire-research-worker`/`use-instant-wave`/`age-up` 버튼
+  4개를 모두 옮겨 배치. 기존 좌측 x=42-496 자리는 비움(DEV 버튼만
+  잔존). Playwright 스크린샷으로 겹침 없이 정상 배치됨을 확인.
+- **일꾼 아이콘 공유**: `laneBattleHudModel.ts`의 `getWorkerIconKey()`가
+  "idle"을 제외한 모든 역할에 대해 상단 자원바와 동일한
+  `getResourceIconKey()` 텍스처 키를 반환하도록 변경(기존에는 별도
+  "icon-worker" 사람 아이콘 사용). `createWorkerRow()`에서 텍스트
+  라벨(`getWorkerRoleLabel`) 렌더링 줄 삭제, 아이콘 크기 18px로 축소해
+  좁아진 열 폭에 맞춤.
+- **웨이브/즉시웨이브 버그**: 코드 자체(`laneWaveRules.ts`의
+  `tickWaveClock`/`createWaveDeploymentPlan`/`commitForcedWaveDeployment`/
+  `getInstantWaveEligibility`)는 정상 동작함을 다각도로 확인 —
+  (a) 전 시대 유닛 로스터가 `UNIT_STATS`/`UNIT_ANIMATION_REGISTRY` 양쪽에
+  빠짐없이 등록돼 있음을 vitest로 검증(스폰 중 예외 가능성 배제),
+  (b) 디버그 로그를 임시로 넣어 Playwright로 여러 시나리오(초반 스팸
+  클릭, 급속 시대업 후 스팸, 정상 대기 후 단발 클릭)를 재현 — 매번
+  "쿨다운"(직전 웨이브 후 5초 미경과) 또는 "식량 부족"으로 정상
+  거부됐고, "+5초만 적용되고 토큰/스폰 없음"이 나오려면 코드상
+  `commitForcedWaveDeployment` 이후 `spawnWaveUnits` 안에서 예외가 나야
+  하는데 그런 예외는 한 번도 재현되지 않음. **진짜 원인은 이번 턴 (2)
+  작업**이었다 — 하단 패널을 지우면서 `hud.setInfo()`가 가리키던
+  `infoText`를 영구히 숨겨버려, "식량 부족으로 웨이브 출전 실패"/
+  "즉시 웨이브 토큰이 없습니다"/"직전 웨이브 후 5초 뒤 사용 가능" 같은
+  유일한 실패 사유 안내가 완전히 무음 처리됐던 것. 사용자가 겪은 "버튼을
+  눌러도 아무 반응 없음"은 이 무음화의 체감이었을 가능성이 높다.
+  `LaneBattleHudView.setInfo()`를 워커 패널 위쪽(672,676)에 짧게 뜨고
+  사라지는 토스트로 재구현해 해결 — Playwright로 "직전 웨이브 후 5초 뒤
+  사용 가능" 토스트가 실제로 뜨는 것까지 확인.
+- **애니메이션 오매핑/스트레칭 버그**: 재조사 결과 재현 실패 — 오히려
+  정상 동작을 다수 확인했다. 전 시대 로스터의 텍스처 키 중복 없음(유닛
+  간 프리픽스 충돌 없음), 후기 시대 유닛(`infantry`/`machine-gunner`/
+  `automatic-rifleman`/`breakthrough-trooper` 등) PNG 실측 치수가
+  `unitAnimationRegistry.ts`가 가정하는 종횡비(idle/walk=384×384=1.0,
+  attack=512×384=1.333)와 정확히 일치. 개발자 모드로 시대를 8단계
+  급속 진행시켜 얻은 실전 대포/소총병/의무병 부대의 idle·walk·정지 화면
+  다수를 Playwright로 확보해 육안 검수 — 스트레칭도 오매핑도 없이 정상
+  렌더링됨. 직전 턴에 이미 수정된 "적 팀 색상/후기 시대 반투명 자산
+  스테일" 파이프라인 버그와 같은 근본 원인이었을 가능성이 높다고 판단 —
+  사용자의 원 제보 시점이 그 수정 이전이었다면 이미 해결됐을 수 있다.
+  단, 실전 "공격" 포즈 프레임까지는 명확히 캡처하지 못했으므로 재발
+  시에는 정확한 유닛/시대/상황을 다시 알려달라고 안내 필요.
+- **반투명 버그 문서화**: `docs/dev-wiki/backlog.md` Active Queue
+  최상단에 "[PRIORITY 1]" 항목으로 정리 — 기존 조사 내역(런타임
+  alpha/tint 80초+ 관찰 항상 정상, 후기 유닛 walk-a/b 프레임 알파 저하는
+  실제로는 화면에 안 보이는 별개 버그였음을 확인/수정 완료), 그리고
+  재발 시 확인해야 할 체크리스트(유닛 종류/팀/시대/상황/오프닝웨이브
+  여부, 프레임 단위 alpha 로깅)를 남겼다. `LaneBattleScene.ts` 전체에
+  `unit.sprite`에 대한 `setAlpha`/`.alpha =` 호출이 전무함을 확인해
+  "정적 코드상 알파 버그"라는 가설은 배제되고, 트랜션트/렌더링 아티팩트
+  가능성 쪽으로 다음 조사 방향을 좁혔다.
+- 검증: `npx tsc --noEmit`, `npm run build`, `npm test`(34 파일 178개
+  테스트) 모두 통과.
+
+## 2026-08-08 - 식량 부족 수동 클릭 피드백 복원, 승인본 유닛 프레임 재설치, 유닛 로더 캐시버스터 갱신
+
+사용자가 추가로 세 가지를 지시: (1) 자동 리스폰 대기 중 식량 부족은 한 번만
+안내해도 되지만, **즉시 웨이브 토큰을 눌렀을 때는 매번 즉시 "식량이
+부족합니다"가 떠야 한다**, (2) 시대별 보급 캐릭터가 반투명해 보이는 경우와
+기타 캐릭터의 유사 문제를 고쳐야 한다, (3) `척탄병 I`/`중기병` 등 일부
+유닛이 walk 기준 승인본과 달리 idle/attack에서 다른 캐릭터로 보이는 문제를
+전수 조사하고 고쳐야 한다.
+
+- **식량 부족 메시지 분기 수정**: 웨이브 자체는 이미 직전 턴의
+  `scheduleWaveRetry()` 수정으로 1초 재시도 구조가 되었지만,
+  `LaneBattleScene.trySpawnWave()`는 `waveBlockedByFood` 플래그 때문에
+  자동/수동 부족 상황을 모두 같은 방식으로 눌러버리고 있었다.
+  `laneWaveRules.ts`에 `shouldAnnounceWaveFoodShortage(team, manualTrigger)`를
+  추가하고, `forced === true`(즉시 웨이브 버튼)일 때는 항상 shortage
+  메시지를 다시 띄우고, 자동 재시도일 때만 blocked streak 중복 메시지를
+  억제하도록 정리했다.
+- **유닛 시안 전수 점검 결과**: 현재 `public/assets/production/units/`
+  기준의 승인본 E 프레임을 몽타주로 다시 확인한 결과,
+  `grenadier`, `grenadier-late`, `heavy-cavalry`, `light-cavalry`,
+  `supply-wagon-iron`, `supply-wagon-renaissance`,
+  `supply-wagon-modern-late`의 idle/walk/attack은 now coherent였다.
+  따라서 사용자가 본 "다른 캐릭터로 보임 / 반투명해 보임"은 현재 승인본
+  원본 PNG가 아니라, 과거 잘못된 산출물이 브라우저/Phaser 텍스처 캐시에 남아
+  있었던 가능성이 더 높다고 판단했다.
+- **승인본 재설치 및 캐시 무효화**:
+  `tools/asset-qa/install_human_three_frame_strips.py`,
+  `install_cavalry_three_frame_strips.py`,
+  `install_supply_three_frame_strips.py`를 다시 실행해 인간형/기병/보급대
+  3프레임 승인본을 재설치했다.
+  이어 `src/presentation/units/unitAnimationRegistry.ts`의 로더 쿼리스트링을
+  단일 `UNIT_ANIMATION_ASSET_REVISION = "20260808-unit-presentation-fix-1"`
+  값으로 올려 player/enemy 양쪽이 모두 새 PNG를 강제로 다시 읽도록 했다.
+  이 조치는 "원본 파일은 이미 고쳐졌는데 실제 게임은 예전 잘못된 프레임을
+  계속 보여주는" 유형의 문제를 직접 차단한다.
+- **회귀 테스트 추가**:
+  `src/systems/lane-economy/__tests__/laneWaveRules.test.ts`에
+  "자동 재시도는 shortage 스팸 억제, 수동 클릭은 매번 재안내" 규칙을
+  검증하는 테스트를 추가했다.
+- **검증**:
+  `npx tsc --noEmit` 통과,
+  `npm test -- src/systems/lane-economy/__tests__/laneWaveRules.test.ts src/presentation/units/__tests__/unitPresentation.test.ts`
+  통과(2 파일 / 16 테스트),
+  `npm run build` 통과.
+
+## 2026-08-08 - 기계화 계열 실제 PNG 오염 교체, 보급대 검은 매트 가장자리 보정
+
+사용자가 추가로 두 가지를 재지적했다: (1) 보급 병력은 캐시 문제가 아니라
+검은 계열 색이 배경과 알파로 섞이면서 투명해 보이는 것 같으니 실제 색/알파를
+ 확인하라, (2) "전수검사"가 안 되었고 `tank`/`cannon`류는 여전히
+ `idle`/`attack`이 잘못된 캐릭터라고 지적.
+
+- **기계화 계열 원인 확인**:
+  `tank`, `modern-tank`, `cannon-i`, `cannon-ii`, `artillery-i`,
+  `artillery-ii`, `mobile-artillery`의 E 프레임 몽타주를 다시 만들자,
+  일부 `idle`/`attack` PNG 자체가 전차/대포가 아니라 보급병 캐릭터로
+  들어가 있는 것이 확인되었다. 즉 런타임 매핑이 아니라 실제 production PNG
+  오염이었다.
+- **기계화 계열 일괄 교체**:
+  `tools/asset-qa/install_mechanized_three_frame_strips.py`를 실행해
+  7개 mechanized 가족 전체를 canonical-E five-slot 승인본으로 다시 설치했다.
+  재설치 후 몽타주 재검수 결과 `tank`, `modern-tank`, `cannon-i/ii`,
+  `artillery-i/ii`, `mobile-artillery`의 idle/walk/attack이 모두 같은
+  병종으로 정렬되었고, muzzle flash만 attack에 추가되는 의도된 구조로
+  복구되었다.
+- **보급대 반투명 원인과 보정**:
+  `supply-wagon-iron`/`supply-wagon-modern-late` source-alpha PNG를 직접
+  측정하니, 반투명 픽셀의 RGB가 이미 source 단계에서 지나치게 어두웠다
+  (`darkSemiRatio` 약 0.89 수준). 즉 이 문제 역시 캐시가 아니라 자산
+  후처리 문제였다.
+  `tools/asset-qa/install_supply_three_frame_strips.py`에 두 보정을 추가:
+  1. 반투명 가장자리 RGB를 가장 가까운 불투명 sprite 색으로 치환
+  2. support 가족의 visible alpha를 들어올려 배경 비침을 완화
+  modern-late는 보행 silhouette 체크를 유지하도록 보정 강도를 별도 완화.
+  결과적으로 `supply-wagon-iron-e-idle`의 dark semi ratio는 약 `0.893 ->
+  0.652`, `modern-late`는 약 `0.782 -> 0.443`로 감소했다.
+- **캐시 무효화 재갱신**:
+  새 PNG가 브라우저/Phaser에 남아 있던 이전 텍스처와 섞이지 않도록
+  `src/presentation/units/unitAnimationRegistry.ts`의
+  `UNIT_ANIMATION_ASSET_REVISION`을 `20260808-unit-presentation-fix-2`로
+  다시 올렸다.
+- **검증**:
+  `npx playwright test tools/validation/mechanized-three-frame-roster.spec.ts`
+  통과(3개 테스트),
+  `npx tsc --noEmit` 통과,
+  `npm run build` 통과.

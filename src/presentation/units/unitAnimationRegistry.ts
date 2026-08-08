@@ -1,7 +1,8 @@
 import { assetUrl } from "../../config/assetUrl";
-import type { LaneUnitId } from "../../systems/lane-units/unitStats";
+import { UNIT_STATS, type LaneUnitId } from "../../systems/lane-units/unitStats";
 
 export const LEGACY_WALK_POSES = ["walk-a", "walk-b", "walk-c"] as const;
+const UNIT_ANIMATION_ASSET_REVISION = "20260808-unit-presentation-fix-2";
 export const LEGACY_PING_PONG_WALK_POSES = [
   "walk-a",
   "walk-b",
@@ -428,11 +429,11 @@ export const UNIT_ANIMATION_ASSETS = Object.values(UNIT_ANIMATION_REGISTRY)
   .concat(EXTRA_UNIT_ANIMATION_PREFIXES.flatMap((prefix) => listAnimationKeysForPrefix(prefix)))
   .filter((key, index, all) => all.indexOf(key) === index)
   .flatMap((key) => [
-    { key, path: assetUrl(`assets/production/units/${key}.png?v=20260807-mechanized3frame-1`) },
+    { key, path: assetUrl(`assets/production/units/${key}.png?v=${UNIT_ANIMATION_ASSET_REVISION}`) },
     ...(hasEnemyVariantForTexture(key)
       ? [{
           key: `${key}-enemy`,
-          path: assetUrl(`assets/production/units/${key}-enemy.png?v=20260807-supply3frame-2`),
+          path: assetUrl(`assets/production/units/${key}-enemy.png?v=${UNIT_ANIMATION_ASSET_REVISION}`),
         }]
       : []),
   ]);
@@ -544,6 +545,24 @@ export function resolveAnimationTextureFromPrefix(
   if (!moving) return `${prefix}-${authoredDirection}-idle`;
   const walkSuffixes = LEGACY_WALK_POSES;
   return `${prefix}-${authoredDirection}-${walkSuffixes[resolveWalkFrameIndex(walkCycleProgress, walkSuffixes.length)]}`;
+}
+
+/**
+ * The single "static portrait" texture key for a unit (idle, facing the
+ * direction that team's units normally face), for UI contexts — like the
+ * base research panel — that show a unit icon without an animated sprite.
+ * Mirrors the resolution `LaneBattleScene.spawnLaneUnit()` uses for a
+ * freshly spawned unit's initial texture, so panel icons and in-battle
+ * sprites can never drift out of sync with each other.
+ */
+export function resolveUnitPortraitTextureKey(unitId: LaneUnitId, team: "player" | "enemy"): string {
+  const stats = UNIT_STATS[unitId];
+  const direction: UnitFacingDirection = team === "player" ? "e" : "w";
+  const animationPrefix = deriveAnimationPrefix(stats.textureKey);
+  const textureKey = resolveAnimationTextureFromPrefix(unitId, animationPrefix, false, 0, 0, direction)
+    ?? resolveUnitAnimationTexture(unitId, false, 0, 0, direction)
+    ?? stats.textureKey;
+  return resolveTeamUnitTextureKey(textureKey, team);
 }
 
 export function resolveTeamUnitTextureKey(textureKey: string, team: "player" | "enemy"): string {
