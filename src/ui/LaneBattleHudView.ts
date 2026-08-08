@@ -109,7 +109,7 @@ export class LaneBattleHudView {
     this.enemyBaseBar.width = 180 * snapshot.enemyBaseRatio;
     this.playerBaseBar.setOrigin(0, 0.5);
     this.enemyBaseBar.setOrigin(0, 0.5);
-    this.rosterText.setText(snapshot.rosterLines);
+    this.rosterText.setVisible(false);
     this.captureActionButtons.forEach((button, action) => this.setActionVisible(button, actions.includes(action)));
     this.capturePanelTitle.setText(snapshot.captureTitle);
     this.capturePanelBody.setText(snapshot.captureLines);
@@ -236,7 +236,7 @@ export class LaneBattleHudView {
     this.strategicActionButtons.set("use-instant-wave", this.createActionButton(1178, 724, 220, 46, "즉시 웨이브", this.callbacks.useInstantWave));
     this.strategicActionButtons.set("age-up", this.createActionButton(1178, 778, 220, 54, "시대 업", this.callbacks.ageUp));
 
-    this.rosterText = this.scene.add.text(530, 714, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#d8e7f6", lineSpacing: 3 }).setDepth(this.depth + 2).setScrollFactor(0);
+    this.rosterText = this.scene.add.text(530, 714, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#d8e7f6", lineSpacing: 3 }).setDepth(this.depth + 2).setScrollFactor(0).setVisible(false);
     this.capturePanelTitle = this.scene.add.text(780, 718, "", { fontFamily: "Georgia, serif", fontSize: "17px", color: "#f4e6c5" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0.5);
     this.capturePanelBody = this.scene.add.text(780, 758, "", { fontFamily: "sans-serif", fontSize: "11px", color: "#d8e7f6", align: "center", lineSpacing: 2 }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0.5);
     this.infoText = this.scene.add.text(780, 870, "", { fontFamily: "sans-serif", fontSize: "11px", color: "#a8bdd7" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0.5);

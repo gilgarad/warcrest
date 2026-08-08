@@ -30,7 +30,9 @@ export interface SynthProfile {
     | "blade"
     | "impact"
     | "grunt"
-    | "healChime";
+    | "healChime"
+    | "metalClang"
+    | "stoneImpact";
   /** Root frequency in Hz. For BGM pads this is the tonic; for SFX it's the pitch center. */
   frequency: number;
   durationMs: number;

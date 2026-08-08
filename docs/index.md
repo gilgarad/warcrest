@@ -37,6 +37,8 @@ first — a maintained snapshot of current status/architecture/next-steps.
 - [Audio Integration Validation](dev-wiki/audio-integration-validation.md)
 - [Era Expansion + Research Panel Plan](dev-wiki/research-era-expansion-plan.md)
 - [Unit Balance Reference](dev-wiki/unit-balance-reference.md)
+- [AI Economy Design](dev-wiki/ai-economy-design.md)
+- [Audio Synthesis Naturalization Guide](dev-wiki/audio-synthesis-naturalization-guide.md)
 - [Codex Prompt Log](dev-wiki/codex-prompt-log.md) — separate from AI Usage Log below; this is where the current session's turns go while it's in prompt-engineering-only mode
 
 ## Patterns

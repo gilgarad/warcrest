@@ -5513,3 +5513,230 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
 - **Focused browser regression**: the new Stone support speed exposed one stale
   absolute-position assertion. Codex changed it to verify actual backward
   displacement from the starting position; both support pursuit tests passed.
+
+## 2026-08-07 - Attack-range verification and attack-speed documentation
+
+- **Agent/tool**: Claude Code (Sonnet 5).
+- **User direction (원문)**: "지금 저 표의 실제 사거리는 지금 이미 적용되어 있는
+  상태의 근접 병종 거리를 상정하고 그거 대비로 거리를 잡은 거야... 저 표에 옆에
+  컬럼을 하나 만들고 현재 적용된 사거리가 1 대비 어느 정도로 되어있는 건지
+  업데이트 후 보여줘", then "이제 공격속도 조절하자... 근거리 원거리 공격속도가
+  모두 동일할 거야. 한 번 확인하고 알려줘", then "그거 문서로는 정리되어 있어?
+  안되어있으면 표에 공격속도 컬럼도 추가해", then "유닛별로 공격 속도를
+  역계산하던지 하드코딩된 정보를 사용하던지 해서 수치화해서 제대로 저장해줘."
+- **AI action**: started the stopped 5173 dev server; cross-checked
+  `unit-balance-reference.md`'s range table against the live source
+  (`rangeRules.ts`, `unitStats.ts`, `towerAttack.ts`) and confirmed exact
+  parity — no drift, no code change needed for range. Reported a computed
+  "근접 baseline(1.5) 대비 배율" column in chat (not persisted, informational).
+  For attack speed, found via grep that the `attackSpeed` stat field (uniform
+  `1` across all units) is defined but never read by gameplay code
+  (`LaneBattleScene.ts`, `towerAttack.ts`) — actual attack pacing is entirely
+  driven by the already-differentiated per-unit `attackCooldownSec`. Added a
+  derived `실제 공격속도(회/초)` (`1 / attackCooldownSec`) column to the balance
+  table plus notes on the unused field and role averages (melee ~1.06s vs
+  ranged ~1.66s cooldown).
+- **Correction handled**: user first proposed asking whether to reflect the
+  finding immediately vs. preview-only; after `AskUserQuestion`, user rejected
+  both preset options and clarified via free text that the actual per-unit
+  cooldown values (already hardcoded in `unitStats.ts`) should be numerically
+  derived and saved into the doc, not just noted qualitatively.
+- **Scope**: documentation only (`docs/dev-wiki/unit-balance-reference.md`,
+  `docs/dev-wiki/log.md`); no runtime/source code changed yet. Actual attack-speed
+  balance adjustment is queued for a follow-up turn pending user confirmation.
+
+## 2026-08-07 - Tower-bypass bug diagnosis, SFX realism scoping, resource/age-up audit
+
+- **Agent/tool**: Claude Code (Sonnet 5).
+- **User direction (원문)**: "1. 적 타워가 있는데 거리가 좀 되니까 안 찾고 그냥
+  넘어가서 적의 후방을 그대로 침투하게 되는 사건이 벌어지더라고. 이거 확인해서
+  어떻게 수정하면 좋을지 방안을 좀 세워봐 2. ... 타격음(공격음/힐 음)을 좀 새로
+  개발해야 할 거 같아. 네가 할 수 있는지도 좀 알려줘. 뭔가 좀 리얼한 소리가
+  나기를 원함. 3. 적을 죽여서 얻게 되는 자원이 너무 많은 거 같은데 현재 어떻게
+  설정되어 있는지 확인해줘. 4. 각 시대별로 시대업 할 때 금액이 어떻게 책정되어
+  있는지도 확인해줘"
+- **AI action (투자 4건, 코드 변경 없음)**:
+  1. Traced `LaneBattleScene.ts` `tickCombat`/`advanceUnit` and found the root
+     cause: no code path treats an undestroyed enemy tower as a lane blocker —
+     `findNearestEnemy()` only searches units, the tower-out-of-range branch
+     calls `advanceUnit(unit, deltaSec)` with no target so it skips all
+     lane-alignment logic, and `progressBetween` uses unsigned distance so a
+     unit that walks past the tower's progress just reads as "moving away"
+     afterward. Proposed a fix (not yet applied): clamp forward progress at a
+     live enemy tower's position inside `advanceUnit()` itself so it becomes a
+     hard blocker regardless of call site.
+  2. Reviewed the existing `docs/dev-wiki/audio-synthesis-naturalization-guide.md`
+     (already written 2026-07-30) and `backend.ts`'s synth `kind` implementations;
+     confirmed noise+oscillator layering is already applied to `blade`/`impact`/
+     `grunt`/`healChime`, but `pitchVariation` randomization, a
+     `DynamicsCompressorNode` glue stage, and formant-style filtering for grunt
+     vocalizations are still missing from all combat SFX except the heal chime.
+     Answered: yes, further realism work is achievable purely as synthesis-code
+     changes (no sample recording available/needed).
+  3. Read `src/data/ages.ts` and confirmed per-age `killGoldBase`
+     (6/9/12/18/27/33/40/48/57/67/78) and the `totalReward = round(killGoldBase)`
+     formula.
+  4. Read `getAgeUpCost()` in `laneEconomy.ts` and computed the actual per-age
+     resource cost from its base-35/20/28-times-1.5-per-step formula.
+- **Scope**: investigation and proposal only; no source files changed. Awaiting
+  user confirmation on which item(s) to implement next.
+
+## 2026-08-07 - Implemented tower-block fix, per-unit weapon SFX, kill-reward rework, unit UI cleanup
+
+- **Agent/tool**: Claude Code (Sonnet 5).
+- **User direction (원문)**: "1. 오케이 그렇게 구현해줘 2. 모든 타격음을 캐릭터/
+  병종/시대에 맞게 좀 변경해줘. 리얼한 음이 좀 더 좋아. 지금처럼 투박한 8비트
+  음이 아니라. 3. 킬 처치당 베이스는 1로 하고, 석기시대 1, 청동기 2, 초기 철기
+  3, 중기 철기 4, 후기철기 6, 르네상스 9, 근대 초기 14, 근대 후기 21, 현대
+  초기 30, 현대 중기 42, 현대 후기 55로 하되 3미만일 때는 gold/wood/food
+  무작위 1, 그 이상일 때는 분배 장식은 지금과 같도록 함. 이렇게 변경해줘.
+  4. 시대업 비용은 일단 오케이. 이거 문서로 정리가 혹시 안 되어있으면 정리
+  좀 해줘 5. 추가 내용: 캐릭터 위에 캐릭터명과 LV가 뜨는데 LV는 없애줘.
+  불필요한 정보임. 그리고 지금 캐릭터 터치시 나오는 이름 칸이라고 해야하나?
+  그게 너무 투박한데 좀 더 이쁘게 변경해줘."
+- **AI implementation**:
+  1. `advanceUnit()` in `LaneBattleScene.ts` now clamps forward progress at
+     a live enemy tower via a new `forwardTowerBlockLimit()` helper, so no
+     movement path (unit-chase, tower-chase, or free advance) can walk past
+     an undestroyed tower anymore.
+  2. Built a per-unit weapon-archetype SFX system: new
+     `src/systems/lane-units/weaponSfx.ts` maps all 33 battle units to 4
+     melee (blunt/blade/polearm/mechanized) and 6 ranged (sling/bow/musket/
+     rifle/cannon/tank) archetypes; added 20 new tuned SFX defs in
+     `assetManifest.ts`; wired the 4 attack/hit trigger sites in
+     `LaneBattleScene.ts` to select by attacker weapon type. Also improved
+     the underlying synthesis in `backend.ts`: added a master
+     `DynamicsCompressorNode` glue stage, filter-cutoff sweeps on
+     impact/blade layers, a 3rd moving formant peak on `grunt`, and a new
+     `metalClang` synth kind for mechanized/armor sounds. Corrected an
+     earlier (inaccurate) finding: `pitchVariation`/`volumeVariation`
+     already defaulted to 0.06/0.08 for every SFX via the `sfx()` helper —
+     no gap there after all.
+  3. Replaced `src/data/ages.ts` `killGoldBase` values with the user's
+     table and rewrote `rollKillResourceReward()` in `LaneBattleScene.ts`
+     so totals under 3 grant a single random resource instead of the
+     1/1/1-plus-remainder split.
+  4. Documented `getAgeUpCost()`'s formula and per-age cost table in
+     `docs/dev-wiki/unit-balance-reference.md` (no code change needed,
+     user confirmed the existing values).
+  5. Removed the always-`Lv.1` suffix from unit nameplates (dead info, no
+     real leveling system exists) and added a dedicated
+     `styleUnitNameplate()` with team-accent-colored stroke/background and
+     selection/hover emphasis, replacing the flat shared tower/point label
+     style for units specifically.
+- **Verification**: `npx tsc --noEmit`, `npm run build`, and `npm test`
+  (33 files / 172 tests) all passed. Dev server on :5173 re-confirmed live.
+- **Scope**: all 5 items implemented in this turn; nothing deferred except
+  tower-fired SFX archetype mapping and heal SFX (explicitly scoped out,
+  reasons recorded in `audio-synthesis-naturalization-guide.md`).
+
+## 2026-08-07 - Fixed a self-introduced tower-stall regression, removed "요새" label, hid roster bar, researched and rebuilt metal/stone SFX
+
+- **Agent/tool**: Claude Code (Sonnet 5), with a `WebSearch` research step.
+- **User direction (원문, with two screenshots)**: "1. 요새에서 공격할 때
+  얻어맞는 쪽에 '요새'라는 단어 떠오르는데 이거 없애줘. 2. 전투 타격음이
+  그대로인 거 같은데 변경된 거 맞아? ... 워크래프트2/3의 병종들 타격음을
+  찾아보고 챙챙 금속 부딪히는 소리나 돌이 어딘가 벽 같은데 맞는 소리 등도
+  검색해서 찾아보고 새로 만들어야 해 3. 첫 번째 스크린샷에 보이는 화면
+  하단에 나오는 저 정보는 없애줘. 4. 두 번째 스크린샷처럼 적이 내 타워
+  앞에 왔는데 그냥 대기만 하고 있는 현상이 있음. 이거 명백히 버그임."
+- **AI action**:
+  1. Removed the "요새"/"타워" toast-label override in `applyDamageToUnit()`
+     so damage numbers always show; dropped the now-unused `label` param.
+  2. Diagnosed item 4 as a regression I introduced in the prior turn: the
+     tower-block progress clamp ignored `laneRow`, but `towerDistance()`
+     factors row offset into its Euclidean check — so off-center melee
+     units could get clamped at a progress boundary that still failed the
+     row-inclusive attack-range test, freezing them forever just short of
+     the tower (exactly the screenshot). Fixed by pulling `laneRow` toward
+     the tower's row (0) while blocked and recomputing the progress budget
+     from the *remaining* range after subtracting row distance
+     (`sqrt(engageRange² − rowDistance²)`); also skip the unrelated
+     enemy-unit row-repositioning call while a tower is blocking, since it
+     was fighting the new centering pull.
+  3. Hid the bottom "생산 시대 / 다음 웨이브 / ..." roster text bar in
+     `LaneBattleHudView.ts` (`setVisible(false)`) without touching the
+     model or its existing test.
+  4. Investigated why the prior round's weapon-archetype SFX didn't read as
+     different: the wiring was correct, but the synthesis itself was still
+     too close to the old character. Ran two `WebSearch` queries (sword
+     clang/metal sound design; procedural stone/rock impact synthesis) and
+     found two concrete, sourced techniques — layered "double clang"
+     transients for metal, and a modal-resonator (inharmonic damped
+     partials + broadband transient noise + lowpass reverberation tail)
+     approach for stone. Reworked `metalClang` to use both, added a new
+     `stoneImpact` synth kind implementing the modal-resonator approach,
+     and re-pointed `meleeHit.blade/.polearm/.mechanized` to `metalClang`
+     and `meleeHit.blunt`/`projectileHit.sling`/`catapultImpact` to
+     `stoneImpact`, with longer durations so the ring/tail is audible.
+- **Verification**: `npx tsc --noEmit`, `npm run build`, `npm test`
+  (33 files / 172 tests) all passed.
+- **Note on my own error**: item 4 was a bug I introduced in the immediately
+  preceding turn's tower-block fix, not a pre-existing issue — recorded
+  plainly rather than glossed over.
+
+## 2026-08-07 - Tower label cleanup, real-browser worker verification, hire-button affordability styling, AI economy redesign, audio re-verification
+
+- **Agent/tool**: Claude Code (Sonnet 5), with real-browser Playwright
+  verification against the live dev server (not just static code reading).
+- **User direction (원문)**: "1. 타워를 선택하면 방어타워1 * 선택 이렇게
+  써있는데 선택이라는 글씨는 없어야 해. 방어타워1 도 아니고 방어타워라고
+  심플하게 이름이 보여야 함 2. 연구 일꾼을 제외한 초기 배정된 일꾼 1은 그
+  아래로 내려갈 수 없어. ... 3. 일꾼 고용 버튼과 연구 일꾼 버튼도 자원량이
+  되지 않을 땐 시대 업 버튼에서 빨간색으로 보여주는 것처럼 빨간색으로
+  보여줘야 해. 4. AI(적)도 이제 좀 효율적으로 자원배분해서 일꾼들을
+  배치하거나 시대업을 할 수 있도록 개선해줘야해. ... 어떻게 하면 좋을지를
+  좀 상세히 상관관계에 따라 파악하고 설계한 뒤 개발해줘. 5. 전투 타격음이
+  아직도 개선되지 않았어. 다시 한 번 검토하고 훨씬 업그레이드 된 버전으로
+  만들어줘"
+- **AI action**:
+  1. Simplified the in-world tower label to a fixed `"방어 타워"` string
+     (it was already selected-only, so the `· 선택` suffix was redundant).
+  2. Item 2 turned out not to be reproducible: re-read `shiftWorker()`/
+     `canDecrease` and found no floor-of-1 logic. Rather than trust static
+     reading alone, launched the actual dev server via Playwright, exposed
+     the scene through `window.__warcrestGame`, and verified two ways —
+     calling `shiftWorker("wood", -1)` directly, and clicking the real
+     minus-button pixel coordinates — that wood correctly goes `1 → 0` and
+     the freed idle worker reassigns to another resource. Reported this
+     back as already-working rather than making an unnecessary change,
+     and suggested a stale browser tab as the likely explanation.
+  3. Found the actual gap for item 3: `refreshHudActionLabels()` only ever
+     called `setStrategicActionEnabled()` for `"age-up"`; `"hire-worker"`
+     and `"hire-research-worker"` had their labels refreshed but never
+     their enabled/red state. Added the missing two calls — the red
+     styling itself already existed in `setStrategicActionEnabled()` and
+     needed no view-layer change.
+  4. Diagnosed the AI's actual problem: `this.enemy.workers` was never
+     touched anywhere after the 1/1/1/1/0 starting allocation, for the
+     entire match, while age-up cost compounds ~1.5x per age — so the
+     AI's frozen income could never keep pace, and the *already-existing*
+     `enemyAutoBuildCapturePoint()`/`enemyAutoRebuildDefenseTower()`
+     opportunistic systems rarely had budget left to fire. Wrote
+     `docs/dev-wiki/ai-economy-design.md` first (per-resource need
+     correlation table: age-up composition drives gold/wood/metal
+     weighting, recurring wave-spawn cost drives food weighting, research
+     is a separate age-gated one-off purchase), then implemented
+     `src/systems/lane-economy/aiEconomy.ts` (hiring with an age-up
+     reserve, need-weighted worker rebalancing, gated research-worker
+     purchase) plus a `hasAffordableUnbuiltAiCapturePoint()` guard in
+     `shouldAiAgeUp()` so an affordable pending building explicitly takes
+     priority over age-up for that tick. Added 6 new unit tests.
+  5. Re-investigated item 5 rather than assuming the prior round's fix was
+     sufficient: confirmed via `tsc`/build/tests that the prior wiring was
+     intact, then used the `window.__audioDebugControl` debug hooks
+     (`playSfx` + `measureOutputSignal`) through Playwright to directly
+     measure and compare the old vs. new SFX waveforms — the new sounds
+     measured meaningfully louder and structurally different (sustained
+     energy vs. an immediate fade), proving the change is live and not a
+     wiring bug. Most likely explanation offered to the user: a stale
+     browser tab from before the previous round's edits. Also shipped one
+     more real upgrade regardless: a short algorithmic delay/feedback
+     "slapback" tap (55-75ms, lowpassed, decaying) on the metalClang/
+     stoneImpact kinds specifically, simulating battlefield/room
+     reflections — with explicit node cleanup after 1.5s so the
+     feedback loop doesn't leak audio nodes per hit.
+- **Verification**: `npx tsc --noEmit`, `npm run build`, `npm test`
+  (34 files / 178 tests) all passed. Two of the five items (2 and 5) were
+  verified empirically against the live running app via Playwright, not
+  just by reading source.

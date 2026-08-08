@@ -93,8 +93,15 @@ import {
 import {
   UNIT_STATS,
   getProjectileKeyForUnit,
+  type LaneUnitId,
 } from "../systems/lane-units/unitStats";
 import { RANGE_TO_PROGRESS } from "../systems/lane-units/rangeRules";
+import {
+  getMeleeAttackSfxKey,
+  getMeleeHitSfxKey,
+  getProjectileHitSfxKey,
+  getRangedFireSfxKey,
+} from "../systems/lane-units/weaponSfx";
 import { createTowerAttackPattern } from "../systems/lane-combat/towerAttack";
 import {
   getAttackTimingProfile,
@@ -133,6 +140,14 @@ import {
   type TeamState,
   type WorkerRole,
 } from "../systems/lane-economy/laneEconomy";
+import {
+  createAiEconomyState,
+  pickNeediestResourceRole,
+  planAiWorkerRebalance,
+  shouldAiHireResearchWorker,
+  shouldAiHireWorker,
+  type AiEconomyState,
+} from "../systems/lane-economy/aiEconomy";
 import {
   adjustDraftResearchLevel,
   applyResearchDraft,
@@ -374,6 +389,7 @@ export class LaneBattleScene extends Phaser.Scene {
   private selectedDefenseTowerId: number | null = null;
   private player!: TeamState;
   private enemy!: TeamState;
+  private aiEconomyState: AiEconomyState = createAiEconomyState();
   private playerResearchState: TeamResearchState = createTeamResearchState();
   private enemyResearchState: TeamResearchState = createTeamResearchState();
   private devModeEnabled = false;
@@ -454,6 +470,7 @@ export class LaneBattleScene extends Phaser.Scene {
 
     this.player = createTeamState("player", makeResourceMap(20, 20, 20, 0), PLAYER_BASE_HP);
     this.enemy = createTeamState("enemy", makeResourceMap(20, 20, 20, 0), ENEMY_BASE_HP);
+    this.aiEconomyState = createAiEconomyState();
     this.syncGameplayMusicTheme();
 
     this.drawBattlefield();
@@ -1601,14 +1618,61 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private tickAi(deltaSec: number): void {
     tickWaveClock(this.enemy, deltaSec);
+    this.tickAiEconomy();
     if (this.shouldAiAgeUp()) this.advanceAge(this.enemy);
     if (shouldAiUseInstantWave(this.enemy, AI_INSTANT_WAVE_MIN_REMAINING_SEC)) {
       this.tryUseInstantWaveToken(this.enemy);
     }
   }
 
+  /**
+   * Grows and rebalances the AI's workforce so its income actually scales
+   * with the ~1.5x-per-age growth in age-up cost, instead of staying frozen
+   * at the 1/1/1/1 starting allocation for the whole match. See
+   * `docs/dev-wiki/ai-economy-design.md` for the full design rationale.
+   */
+  private tickAiEconomy(): void {
+    if (shouldAiHireWorker(this.enemy, this.elapsedSec, this.aiEconomyState)) {
+      payCost(this.enemy.resources, BASE_WORKER_COST);
+      this.enemy.workers.idle += 1;
+      this.aiEconomyState.lastHireAttemptSec = this.elapsedSec;
+    }
+    if (this.enemy.workers.idle > 0) {
+      const target = pickNeediestResourceRole(this.enemy);
+      this.enemy.workers.idle -= 1;
+      this.enemy.workers[target] += 1;
+    }
+    if (shouldAiHireResearchWorker(this.enemy)) {
+      payCost(this.enemy.resources, getResearchWorkerDirectCost(this.enemy.ageId));
+      this.enemy.workers.research += 1;
+    }
+    const rebalance = planAiWorkerRebalance(this.enemy, this.elapsedSec, this.aiEconomyState);
+    if (rebalance) {
+      this.enemy.workers[rebalance.from] -= 1;
+      this.enemy.workers[rebalance.to] += 1;
+      this.aiEconomyState.lastRebalanceSec = this.elapsedSec;
+    }
+  }
+
   private shouldAiAgeUp(): boolean {
+    // If the AI can afford a building it doesn't have yet at one of its own
+    // capture points, let that cheap (10-18 resource) build claim the spend
+    // this tick instead of always defaulting to the age-up lump sum — this
+    // is the explicit "upgrade my own point, or age up" decision point.
+    if (this.hasAffordableUnbuiltAiCapturePoint()) return false;
     return shouldAdvanceAiAge(this.enemy, this.elapsedSec);
+  }
+
+  private hasAffordableUnbuiltAiCapturePoint(): boolean {
+    return this.capturePoints.some((point) =>
+      point.owner === "enemy"
+      && point.definition.pointType === "buildable"
+      && !point.buildingId
+      && BUILDING_DEFINITIONS.some((building) =>
+        point.definition.allowedBuildingTypes.includes(building.id)
+        && canAfford(this.enemy.resources, getBuildingCost(building.id, this.enemy.ageId)),
+      ),
+    );
   }
 
   private tickWaves(deltaSec: number): void {
@@ -1656,7 +1720,7 @@ export class LaneBattleScene extends Phaser.Scene {
         if (unit.attackTimerSec <= 0) {
           unit.attackTimerSec = unit.attackCooldownSec;
           this.playWorldSfx(
-            this.isRangedUnit(unit) ? "sfx.combat.rangedFire" : "sfx.combat.meleeAttack",
+            this.isRangedUnit(unit) ? getRangedFireSfxKey(unit.unitId) : getMeleeAttackSfxKey(unit.unitId),
             unit.sprite.x,
             unit.sprite.y,
             `attack:${unit.id}:tower:${enemyTower.id}:${Math.round(this.elapsedSec * 1000)}`,
@@ -1691,7 +1755,7 @@ export class LaneBattleScene extends Phaser.Scene {
       if (unit.attackTimerSec <= 0) {
         unit.attackTimerSec = unit.attackCooldownSec;
         this.playWorldSfx(
-          this.isRangedUnit(unit) ? "sfx.combat.rangedFire" : "sfx.combat.meleeAttack",
+          this.isRangedUnit(unit) ? getRangedFireSfxKey(unit.unitId) : getMeleeAttackSfxKey(unit.unitId),
           unit.sprite.x,
           unit.sprite.y,
           `attack:${unit.id}:unit:${nearest.id}:${Math.round(this.elapsedSec * 1000)}`,
@@ -1703,14 +1767,14 @@ export class LaneBattleScene extends Phaser.Scene {
           const end = this.getUnitProjectileAnchor(nearest);
           this.startRangedAttack(unit, nearest.sprite.x, nearest.sprite.y, "unit", () => {
             if (!this.units.includes(nearest)) return;
-            this.launchProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToUnit(nearest, damage, unit.team === "player" ? "#ffd67a" : "#ff8f8f"), 1.04);
+            this.launchProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToUnit(nearest, damage, unit.team === "player" ? "#ffd67a" : "#ff8f8f", unit.unitId), 1.04);
           });
         } else {
           this.startMeleeAttack(unit, nearest.sprite.x, nearest.sprite.y, "unit", () => {
             if (!this.units.includes(nearest)) return;
             nearest.hp -= damage;
             this.playWorldSfx(
-              "sfx.combat.meleeHit",
+              getMeleeHitSfxKey(unit.unitId),
               nearest.sprite.x,
               nearest.sprite.y,
               `impact:melee:${unit.id}:${nearest.id}:${Math.round(this.elapsedSec * 1000)}`,
@@ -1909,19 +1973,29 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private advanceUnit(unit: LaneUnit, deltaSec: number, combatTarget?: LaneUnit): void {
     const dir = unit.team === "player" ? 1 : -1;
+    const towerLimit = this.forwardTowerBlockLimit(unit, dir);
     if (combatTarget && this.isMeleeUnit(unit)) {
       const slot = this.findCombatSlot(unit, combatTarget);
       if (slot) {
         this.setUnitTravelFacing(unit, slot.progress, slot.laneRow);
         unit.laneRow = Phaser.Math.Linear(unit.laneRow, slot.laneRow, 0.34);
         const moveStep = unit.speed * UNIT_PROGRESS_SPEED * deltaSec;
-        unit.progress = this.moveToward(unit.progress, slot.progress, moveStep);
+        const nextProgress = this.moveToward(unit.progress, slot.progress, moveStep);
+        unit.progress = towerLimit === undefined
+          ? nextProgress
+          : dir > 0 ? Math.min(nextProgress, towerLimit) : Math.max(nextProgress, towerLimit);
         this.keepUnitInPlayableLane(unit);
         return;
       }
     }
-    const desired = unit.progress + dir * unit.speed * UNIT_PROGRESS_SPEED * deltaSec;
-    const enemyAhead = this.findNearestEnemy(unit);
+    const rawDesired = unit.progress + dir * unit.speed * UNIT_PROGRESS_SPEED * deltaSec;
+    const desired = towerLimit === undefined
+      ? rawDesired
+      : dir > 0 ? Math.min(rawDesired, towerLimit) : Math.max(rawDesired, towerLimit);
+    // While a tower is blocking the path, skip enemy-unit repositioning —
+    // it would fight the tower-row-centering pull above and could strand the
+    // unit oscillating just outside both engagement ranges.
+    const enemyAhead = towerLimit === undefined ? this.findNearestEnemy(unit) : undefined;
     if (enemyAhead) this.repositionTowardCombat(unit, enemyAhead);
     if (enemyAhead && this.unitDistance(unit, enemyAhead) <= ENGAGE_GAP + unit.range * RANGE_TO_PROGRESS * 0.3 && !this.isMeleeUnit(unit)) return;
 
@@ -2098,6 +2172,22 @@ export class LaneBattleScene extends Phaser.Scene {
     return Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
   }
 
+  private forwardTowerBlockLimit(unit: LaneUnit, dir: 1 | -1): number | undefined {
+    const blockingTower = this.defenseTowers
+      .filter((tower) => tower.owner !== unit.team && tower.built && tower.laneId === unit.laneId)
+      .filter((tower) => (dir > 0 ? tower.progress > unit.progress : tower.progress < unit.progress))
+      .sort((a, b) => Math.abs(a.progress - unit.progress) - Math.abs(b.progress - unit.progress))[0];
+    if (!blockingTower) return undefined;
+    // Towers sit at lane row 0 (see towerDistance()); pull the unit toward that
+    // row as it approaches so the row-distance term doesn't strand it just
+    // outside attack range forever once the progress clamp below kicks in.
+    unit.laneRow = Phaser.Math.Linear(unit.laneRow, 0, 0.06);
+    const engageRange = unit.range * RANGE_TO_PROGRESS;
+    const rowDistance = Math.abs(unit.laneRow) * 0.01;
+    const progressBudget = Math.sqrt(Math.max(0, engageRange * engageRange - rowDistance * rowDistance));
+    return dir > 0 ? blockingTower.progress - progressBudget : blockingTower.progress + progressBudget;
+  }
+
   private keepUnitInPlayableLane(unit: LaneUnit): void {
     unit.laneRow = Phaser.Math.Clamp(unit.laneRow, LANE_ROW_MIN, LANE_ROW_MAX);
     this.laneObstacles.forEach((obstacle) => {
@@ -2220,7 +2310,6 @@ export class LaneBattleScene extends Phaser.Scene {
           target,
           spec.perProjectileDamage,
           tower.owner === "player" ? "#8fd2ff" : "#ffb4b4",
-          "요새",
         ),
         1,
       );
@@ -2303,7 +2392,6 @@ export class LaneBattleScene extends Phaser.Scene {
           target,
           spec.perProjectileDamage,
           point.owner === "player" ? "#8fd2ff" : "#ffb4b4",
-          "타워",
         ),
         1,
       );
@@ -2595,6 +2683,24 @@ export class LaneBattleScene extends Phaser.Scene {
       .setPadding(withBackground ? 3 : 0, withBackground ? 1 : 0, withBackground ? 3 : 0, withBackground ? 1 : 0);
   }
 
+  private styleUnitNameplate(unit: LaneUnit, targetCssPx: number): void {
+    const fontWorldPx = Math.max(12, Math.round(this.cssPxToWorld(targetCssPx)));
+    const strokeWorldPx = Math.max(2, Math.round(this.cssPxToWorld(1.15)));
+    const textResolution = Math.max(2, Math.ceil(window.devicePixelRatio * 2));
+    const accent = unit.team === "player" ? "#5fb4ff" : "#ff8a6a";
+    const backgroundTint = unit.team === "player" ? "18, 32, 48" : "42, 20, 20";
+    const emphasized = unit.selected || unit.hovered;
+    unit.label
+      .setFontSize(fontWorldPx)
+      .setFontStyle("bold")
+      .setResolution(textResolution)
+      .setScale(1)
+      .setStroke(emphasized ? accent : "#0a0f16", strokeWorldPx)
+      .setShadow(0, Math.max(1, Math.round(strokeWorldPx * 0.55)), "#000000", emphasized ? 3 : 0, true, true)
+      .setBackgroundColor(`rgba(${backgroundTint}, ${emphasized ? 0.88 : 0.7})`)
+      .setPadding(6, 3, 6, 3);
+  }
+
   private refreshCapturePointVisuals(): void {
     this.capturePoints.forEach((point) => {
       const selected = this.selectedCapturePointId === point.id;
@@ -2724,7 +2830,7 @@ export class LaneBattleScene extends Phaser.Scene {
         .setSize(Math.max(towerWidth, this.cssPxToWorld(96)), Math.max(towerHeight, this.cssPxToWorld(120)))
         .setDepth(this.getGroundDepth(pos.y, -1));
       tower.label.setPosition(pos.x, this.isPrototypeV2() ? towerTop - this.cssPxToWorld(30) : pos.y - 190);
-      tower.label.setText(`방어 타워 ${tower.id + 1}${selected ? " · 선택" : ""}`);
+      tower.label.setText("방어 타워");
       tower.ownerText.setPosition(pos.x, pos.y + (this.isPrototypeV2() ? this.cssPxToWorld(18) : 34));
       tower.statusText
         .setPosition(pos.x, pos.y + (this.isPrototypeV2() ? this.cssPxToWorld(36) : 52))
@@ -2855,11 +2961,11 @@ export class LaneBattleScene extends Phaser.Scene {
     });
   }
 
-  private applyDamageToUnit(target: LaneUnit, damage: number, color: string, label?: string): void {
+  private applyDamageToUnit(target: LaneUnit, damage: number, color: string, attackerUnitId?: LaneUnitId): void {
     if (!this.units.includes(target)) return;
     target.hp -= damage;
     this.playWorldSfx(
-      "sfx.combat.projectileHit",
+      attackerUnitId ? getProjectileHitSfxKey(attackerUnitId) : "sfx.combat.projectileHit",
       target.sprite.x,
       target.sprite.y,
       `impact:projectile:${target.id}:${Math.round(this.elapsedSec * 1000)}`,
@@ -2880,7 +2986,7 @@ export class LaneBattleScene extends Phaser.Scene {
       duration: 160,
       onComplete: () => impact.destroy(),
     });
-    this.spawnToast(label ?? `${damage}`, target.sprite.x, target.sprite.y - 26, color);
+    this.spawnToast(`${damage}`, target.sprite.x, target.sprite.y - 26, color);
     if (target.hp <= 0) this.killUnit(target);
   }
 
@@ -2972,8 +3078,16 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private rollKillResourceReward(ageId: AgeId): { gold: number; wood: number; food: number } {
     const total = Math.round(getAgeBalance(ageId).killGoldBase);
-    const reward = { gold: 1, wood: 1, food: 1 };
-    for (let remaining = Math.max(0, total - 3); remaining > 0; remaining -= 1) {
+    const reward = { gold: 0, wood: 0, food: 0 };
+    if (total < 3) {
+      const soleKey = Phaser.Utils.Array.GetRandom(["gold", "wood", "food"] as const);
+      reward[soleKey] = 1;
+      return reward;
+    }
+    reward.gold = 1;
+    reward.wood = 1;
+    reward.food = 1;
+    for (let remaining = total - 3; remaining > 0; remaining -= 1) {
       const nextKey = Phaser.Utils.Array.GetRandom(["gold", "wood", "food"] as const);
       reward[nextKey] += 1;
     }
@@ -3379,7 +3493,7 @@ export class LaneBattleScene extends Phaser.Scene {
         unit.label.setVisible(false);
       } else {
         unit.label
-          .setText(this.isPrototypeV2() ? `${UNIT_STATS[unit.unitId].label} Lv.1` : UNIT_STATS[unit.unitId].label)
+          .setText(UNIT_STATS[unit.unitId].label)
           .setVisible(!hidden && this.shouldShowV2UnitLabel(unit));
       }
     });
@@ -3592,18 +3706,14 @@ export class LaneBattleScene extends Phaser.Scene {
       .setDepth(this.getGroundDepth(pos.y, 6))
       .setVisible(unit.role === "support");
     unit.label
-      .setText(this.isPrototypeV2() ? `${UNIT_STATS[unit.unitId].label} Lv.1` : UNIT_STATS[unit.unitId].label)
+      .setText(UNIT_STATS[unit.unitId].label)
       .setPosition(pos.x, labelY)
       .setDepth(this.getGroundDepth(pos.y, 7));
     if (this.isPrototypeV2()) {
       const unitFontCssPx = unit.selected || unit.hovered
         ? this.scaleVisualConfig.selectedUnitFontCssPx
         : this.scaleVisualConfig.unitFontCssPx;
-      this.styleV2WorldText(
-        unit.label,
-        unitFontCssPx,
-        true,
-      );
+      this.styleUnitNameplate(unit, unitFontCssPx);
       unit.label.setVisible(this.shouldShowV2UnitLabel(unit));
     } else {
       unit.label
@@ -3777,7 +3887,10 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private refreshHudActionLabels(): void {
     this.hud.setStrategicActionLabel("hire-worker", `일꾼 고용\n${this.formatCostShort(BASE_WORKER_COST)}`);
-    this.hud.setStrategicActionLabel("hire-research-worker", `연구 일꾼\n${this.formatCostShort(getResearchWorkerDirectCost(this.player.ageId))}`);
+    this.hud.setStrategicActionEnabled("hire-worker", this.devModeEnabled || canAfford(this.player.resources, BASE_WORKER_COST));
+    const researchWorkerCost = getResearchWorkerDirectCost(this.player.ageId);
+    this.hud.setStrategicActionLabel("hire-research-worker", `연구 일꾼\n${this.formatCostShort(researchWorkerCost)}`);
+    this.hud.setStrategicActionEnabled("hire-research-worker", this.devModeEnabled || canAfford(this.player.resources, researchWorkerCost));
     const ageIndex = AGES.findIndex((age) => age.id === this.player.ageId);
     const ageUpCost = ageIndex >= AGES.length - 1 ? null : getAgeUpCost(ageIndex);
     this.hud.setStrategicActionLabel(

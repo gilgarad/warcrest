@@ -5469,3 +5469,201 @@ Use consistent headings so entries are easy to grep.
   reference.
 - Updated the support pursuit Playwright assertion to compare against its
   starting position rather than a `speed = 1`-specific absolute threshold.
+
+## 2026-08-07 - 사거리/공격속도 문서 대조 및 공격속도 문서 보강
+
+- 5173 개발 서버를 재기동하고, 병력 표(`unit-balance-reference.md`)의
+  사거리 수치가 실제 소스(`src/systems/lane-units/unitStats.ts`,
+  `rangeRules.ts`, `towerAttack.ts`)와 완전히 일치함을 확인했다(변경 없음).
+- 근접 baseline(`1.5`) 대비 실제 사거리 배율을 채팅으로 정리해 공유했다.
+- 공격속도 조정 착수 전 확인: `attackSpeed` 필드(전 유닛 `1`)는 게임 로직
+  어디서도 참조되지 않는 미사용 placeholder이고, 실제 공격 빈도는 유닛별
+  `attackCooldownSec`가 이미 개별 운용 중임을 확인했다(근접 12종 평균 약
+  `1.06`초, 원거리 21종 평균 약 `1.66`초).
+- `unit-balance-reference.md` 병력 표에 `실제 공격속도(회/초)`
+  (`1 / attackCooldownSec` 역산값) 컬럼을 추가하고, 기준/비고 섹션에
+  `attackSpeed` 미사용 사실과 역산 출처를 명시했다. 런타임 코드는
+  변경하지 않았다(문서 정리 전용 턴, 다음 턴에서 실제 공격속도 조정 예정).
+
+## 2026-08-07 - 타워 침투 버그 원인 조사 + 사운드/자원/시대업 현황 조사
+
+- 사용자 제보: 원거리에 있는 적 타워를 유닛이 지나쳐서 적 후방까지 침투하는
+  사건 확인 요청. `LaneBattleScene.ts` `tickCombat`/`advanceUnit`을 추적해
+  근본 원인을 특정했다: `advanceUnit()`은 어떤 호출 경로에서도 타워를
+  이동 차단 요소로 취급하지 않는다. 적 유닛을 쫓는 동안에는
+  `findNearestEnemy()`가 유닛만 검색하고 타워는 전혀 고려하지 않으며,
+  타워가 사거리 밖에 있어 이동만 하는 분기(1651~1654행)는
+  `advanceUnit(unit, deltaSec)`을 대상 없이 호출해 레인 정렬/차단 로직을
+  타지 않는다. `progressBetween`이 부호 없는 절대 거리라 유닛이 타워
+  progress를 그냥 지나쳐도 다시 멀어질 뿐 걸리는 지점이 없다. 근접 대상이
+  있을 때 넘기는 `advanceUnit(unit, deltaSec, nearest)` 경로도 타워를
+  전혀 참조하지 않아, 적 유닛을 쫓는 도중에도 타워를 그냥 통과할 수 있다.
+  수정 방안(미적용, 확인 대기): 살아 있는 적 타워를 레인의 하드 블로커로
+  취급해 `advanceUnit()` 진입 시 전진 목표 progress를 타워 사거리 직전으로
+  clamp하는 방식을 제안했다.
+- 사운드 재검토: 기존 `docs/dev-wiki/audio-synthesis-naturalization-guide.md`
+  (2026-07-30 작성)가 이미 절차적 합성 개선안을 문서화해 두었고,
+  `backend.ts`에 blade/impact/grunt/healChime 노이즈+오실레이터 레이어링이
+  일부 적용되어 있음을 확인했다. 다만 `pitchVariation`은 `sfx.support.heal`
+  에만 있고 나머지 전투 SFX(근접/원거리/피격/사망/타워 관련)에는 없으며,
+  `DynamicsCompressorNode` 기반 글루 압축과 grunt의 포먼트 필터링은 아직
+  미구현임을 확인했다. 실제 오디오 레코딩/샘플은 이 프로젝트에 도구가 없어
+  불가하다는 기존 제약을 재확인했다.
+- 처치 보상: `src/data/ages.ts`의 시대별 `killGoldBase`(6/9/12/18/27/33/40/
+  48/57/67/78)와 `totalReward = round(killGoldBase)` 공식을 재확인, 표로
+  정리해 공유했다.
+- 시대업 비용: `src/systems/lane-economy/laneEconomy.ts` `getAgeUpCost()`가
+  기준값 gold35/wood20/metal28에서 시대 인덱스만큼 `*1.5`를 반복 적용(매
+  단계 반올림)하는 공식임을 확인, 단계별 실제 비용을 계산해 공유했다.
+- 이번 턴은 조사/방안 수립만 진행했고 코드 변경은 없다. 사용자 컨펌 후
+  다음 턴에서 실제 수정 착수 예정.
+
+## 2026-08-07 - 타워 침투 수정, 병종별 타격음 분화, 처치 보상 개편, LV 제거/이름표 개선
+
+- **타워 침투 버그 수정** (`src/scenes/LaneBattleScene.ts`)
+  - `advanceUnit()`에 `forwardTowerBlockLimit()` 헬퍼를 추가해, 살아 있는
+    (파괴 안 된) 적 타워를 레인의 하드 블로커로 취급하도록 변경. 전진
+    목표 progress를 타워 사거리 직전으로 clamp해서, 유닛-추적 경로/타워-
+    추적 경로/자유 이동 경로 어디서든 타워를 지나쳐 후방으로 침투하는
+    경로가 구조적으로 막히게 했다.
+- **병종/시대별 타격음 분화** (`src/systems/audio/backend.ts`,
+  `src/systems/audio/assetManifest.ts`, 신규
+  `src/systems/lane-units/weaponSfx.ts`)
+  - `backend.ts`: 모든 합성 SFX 신호가 지나가는 마스터 체인에
+    `DynamicsCompressorNode` 글루 스테이지 추가. `impact`/`blade` 노이즈
+    레이어에 필터 컷오프 스윕(`endFrequency`, 시간에 따라 밝기가 자연스럽게
+    감쇠)을 적용. `grunt`에 3번째 포먼트 밴드패스 오실레이터를 추가하고
+    세 포먼트 피크 모두 재생 중 중심 주파수가 이동하도록 변경. 근대
+    돌격/기계화 계열을 위한 신규 `metalClang` 합성 kind 추가(인하모닉
+    배음비의 밴드패스 삼각파/사인파 레이어로 금속성 표현).
+  - `weaponSfx.ts`: 33종 전투 유닛을 근접 4종(둔기/도검/폴암/근대 돌격)·
+    원거리 6종(투석/활/화승총/소총·기관총/대포·포병/전차) 무기 아키타입으로
+    매핑하고, 유닛별 공격음/피격음 SFX 키를 반환하는 헬퍼 4종을 노출.
+  - `assetManifest.ts`: 위 10개 아키타입에 대한 공격/피격 SFX 20종을
+    새로 등록(시대에 맞는 주파수/지속시간으로 개별 튜닝). 기존 generic
+    ID(`sfx.combat.meleeAttack` 등)는 매핑 실패 시 폴백으로 유지.
+  - `LaneBattleScene.ts`의 근접/원거리 공격·피격 트리거 4곳을 새 매핑
+    함수 호출로 교체. `applyDamageToUnit()`에 `attackerUnitId` 선택
+    인자를 추가해 투사체 피격음도 발사한 유닛의 무기 종류를 반영하도록
+    했다.
+  - 재검토 결과 `pitchVariation`/`volumeVariation`은 `sfx()` 헬퍼가 기본값
+    `0.06`/`0.08`을 모든 SFX에 이미 부여하고 있어 추가 조치가 필요 없었음
+    (이전 조사 턴의 "heal에만 있음" 기록은 부정확했음, 정정함).
+  - 범위 밖으로 남긴 것: 방어 타워 발사음(`sfx.combat.towerAttack`/
+    `towerHit`)과 보급대 힐 사운드는 이번 라운드에서 손대지 않음
+    (`docs/dev-wiki/audio-synthesis-naturalization-guide.md`에 사유 기록).
+- **처치 보상 공식 개편** (`src/data/ages.ts`, `LaneBattleScene.ts`
+  `rollKillResourceReward()`)
+  - 시대별 `killGoldBase`를 사용자 지정값(석기1/청동기2/초기철기3/중기철기4/
+    후기철기6/르네상스9/근대초기14/근대후기21/현대초기30/현대중기42/
+    현대후기55)으로 교체.
+  - `totalReward < 3`이면 gold/wood/food 중 무작위 하나에만 `1` 지급(단일
+    자원), `>= 3`이면 기존처럼 1/1/1 기준 + 잔여분 무작위 분배를 유지.
+- **시대업 비용**: 사용자 컨펌 완료. `getAgeUpCost()` 공식과 단계별 실제
+  비용 표를 `docs/dev-wiki/unit-balance-reference.md`에 정리(코드 변경
+  없음, 기존 공식 유지).
+- **유닛 표시 개선** (`LaneBattleScene.ts`)
+  - 유닛 이름표에서 항상 `1`로 고정돼 있던 `Lv.1` 표시를 제거(레벨 시스템이
+    실제로 없어 정보 가치가 없었음).
+  - 신규 `styleUnitNameplate()`로 이름표 스타일 교체: 팀별 액센트 색상
+    (플레이어 파랑/적 주황) 스트로크, 팀 톤 배경, 선택/hover 시 더 강조되는
+    글로우·배경 알파. 기존 `styleV2WorldText()`(타워/거점 라벨과 공용)는
+    그대로 두고 유닛 전용 스타일만 분리했다.
+- 검증: `npx tsc --noEmit`, `npm run build`, `npm test`(33 파일 172개
+  테스트 전부 통과) 모두 통과. 5173 dev 서버 재확인.
+
+## 2026-08-07 - 요새 라벨 제거, 타워 정체 버그 수정(라인 정렬 결함), 하단 로스터 바 숨김, 타격음 금속/석재 질감 강화
+
+- **"요새"/"타워" 토스트 텍스트 제거** (`LaneBattleScene.ts`
+  `applyDamageToUnit()`): 데미지를 입을 때 데미지 숫자 대신 "요새"/"타워"
+  문자열이 뜨던 동작을 제거하고 항상 데미지 숫자를 표시하도록 통일.
+  `label` 매개변수 자체를 제거하고 두 타워 호출부를 정리.
+- **타워 인게이지 정체(대기만 함) 버그 수정** — 직전 턴에 추가한
+  `forwardTowerBlockLimit()`의 결함을 발견해 고쳤다. clamp가 progress만
+  제한하고 laneRow는 그대로 둬서, `towerDistance()`가 실제로는 row
+  거리까지 포함해 계산하는데(비어 있는 row일수록 필요 거리가 커짐) 사거리가
+  짧은 근접 유닛이 row 오프셋 때문에 progress 경계에서도 영원히
+  공격범위 밖으로 남는 경우가 있었다 — 이게 "적이 타워 앞에서 그냥
+  대기만 하는" 신규 회귀였다. 수정: 타워가 앞을 막고 있을 때 유닛의
+  laneRow를 타워의 기준 row(0)로 서서히 당기고, 남은 row 거리를 고려해
+  progress 예산을 `sqrt(engageRange² - rowDistance²)`로 재계산하도록
+  변경. 또한 이 상태에서는 `repositionTowardCombat()`(다른 적 유닛
+  쪽으로 row를 당기는 로직)를 건너뛰어 두 정렬 로직이 서로 충돌해
+  진동하지 않도록 했다.
+- **하단 로스터 정보 바 숨김** (`LaneBattleHudView.ts`): "생산 시대 / 다음
+  웨이브 / 보급대 포함 / 웨이브 식량·연구·시대업" 4줄을 그리던
+  `rosterText`를 항상 `setVisible(false)` 처리. 모델(`laneBattleHudModel.ts`
+  `rosterLines`)과 관련 테스트는 그대로 둬서 회귀 없이 화면 표시만 껐다.
+- **타격음 금속/석재 질감 강화** — 사용자가 이전 라운드 타격음이 "여전히
+  투박하다"고 지적, 워크래프트 2/3류 게임의 금속 클랑/돌 충돌음 설계
+  레퍼런스를 웹 검색해 반영:
+  - 금속 클랑: 저음 펀더멘털 + 배음비가 정수가 아닌(inharmonic) 중/고음
+    밴드패스 파트셜 2개를 겹치고, 트랜지언트를 살짝 어긋난 두 번의
+    노이즈 버스트로 쪼개는 "더블 클랑" 기법(영화 격투 편집에서 쓰는
+    이중 타격감 기법)을 반영해 `metalClang` kind를 재작업. 지속시간도
+    140~180ms에서 250~320ms로 늘려 "챙~" 울림 꼬리가 들리게 했다.
+  - 돌 충돌: 모달 리조네이터 방식(비조화 배음의 감쇠 사인/삼각파 몇 개 +
+    브로드밴드 노이즈 트랜지언트 + 저역통과 노이즈 잔향 꼬리)을 반영한
+    신규 `stoneImpact` kind 추가.
+  - `sfx.combat.meleeHit.blade`/`.polearm`/`.mechanized`를 `blade`에서
+    `metalClang`으로 교체(칼날-방패/갑주 충돌은 스윙 소리가 아니라
+    금속음이어야 함). `sfx.combat.meleeHit.blunt`, `projectileHit.sling`,
+    `catapultImpact`는 신규 `stoneImpact`로 교체.
+  - `backend.ts`의 `types.ts` `SynthProfile.kind`에 `stoneImpact` 추가.
+  - 웹 검색 근거: sword clang 관련 사운드 디자인 자료(레이어링·이중
+    타격 기법), impact/rock 합성 관련 연구 자료(모달 리조네이터 +
+    트랜지언트 노이즈 모델링).
+- 검증: `npx tsc --noEmit`, `npm run build`, `npm test`(33 파일 172개
+  테스트) 모두 통과.
+
+## 2026-08-07 - 타워 라벨 단순화, 일꾼 최소치 재검증, 고용 버튼 빨간 표시, AI 경제 설계, 타격음 에코/실측 검증
+
+- **타워 선택 라벨 단순화** (`LaneBattleScene.ts`): 타워 위 월드 라벨을
+  `방어 타워 ${id+1}${선택 ? " · 선택" : ""}`에서 고정 문자열 `"방어 타워"`
+  로 교체. 이미 `selected`일 때만 보이므로 "선택" 문구 자체가 중복이었다.
+- **일꾼 최소 1명 제한 재검증**: 소스 코드(`shiftWorker`,
+  `canDecrease` 계산)를 다시 읽어도 최소 1명 강제 로직이 없었다.
+  Playwright로 실제 5173 서버를 띄우고 (a) 씬 메서드를 직접 호출, (b) 실제
+  픽셀 좌표를 클릭하는 두 가지 방식으로 목재 일꾼 감소를 실측 검증 —
+  둘 다 `wood: 1 → 0`, `idle: 1`로 정상 전환되고 다른 자원으로 재배치도
+  성공했다. 현재 소스에는 재현 가능한 버그가 없음을 확인, 코드는
+  변경하지 않았다(사용자에게 브라우저 하드 리프레시 권장).
+- **고용/연구 버튼 자원 부족 시 빨간 표시**: `refreshHudActionLabels()`에서
+  `age-up`만 `setStrategicActionEnabled()`를 호출하고 있었고
+  `hire-worker`/`hire-research-worker`는 라벨만 갱신할 뿐 활성/비활성
+  상태를 절대 넘기지 않던 누락을 발견, 두 버튼에도 동일한 호출을 추가했다
+  (기존 `setStrategicActionEnabled`가 이미 비활성 시 빨간 배경/테두리/
+  텍스트로 렌더링하므로 뷰 쪽 변경은 불필요했다).
+- **AI 경제 설계 및 구현**: 신규 `docs/dev-wiki/ai-economy-design.md`에
+  상관관계 분석(자원별 실제 용도 vs 일꾼 배치 근거)을 먼저 정리한 뒤
+  `src/systems/lane-economy/aiEconomy.ts`를 신설했다. AI(`enemy`)의
+  `workers`가 시작값(1/1/1/1/0)에서 전체 대전 내내 한 번도 안 바뀌던 게
+  근본 원인이었음을 확인 — 시대업 비용은 단계마다 1.5배씩 복리 성장하는데
+  수입은 고정이라, 이미 있던 `enemyAutoBuildCapturePoint()`/
+  `enemyAutoRebuildDefenseTower()`(거점 자동 건설/타워 재건)가 예산
+  부족으로 거의 발동하지 못했던 것. `shouldAiHireWorker`(예비금 남기고
+  쿨다운마다 고용)/`pickNeediestResourceRole`/`planAiWorkerRebalance`(자원별
+  필요 가중치 기반 일꾼 재배치)/`shouldAiHireResearchWorker`(연구 시대
+  진입 후 1회 구매)를 추가하고 `LaneBattleScene.ts`의 `tickAi()`가 매 틱
+  `tickAiEconomy()`를 돌리도록 연결했다. `shouldAiAgeUp()`에는
+  `hasAffordableUnbuiltAiCapturePoint()` 가드를 추가해, 미건설 거점을
+  지금 지을 여유가 있으면 그 턴은 시대업 대신 건설이 먼저 자원을 가져가게
+  했다 — 사용자가 요청한 "거점 업그레이드 vs 시대업" 판단 지점을 명시적으로
+  만든 부분.
+  - 신규 테스트: `src/systems/lane-economy/__tests__/aiEconomy.test.ts`
+    (6개 케이스: 고용 쿨다운/예비금, 연구 일꾼 시대 게이트+1회 제한, 필요
+    자원 배정, 재배치 임계값+쿨다운, 마지막 일꾼 박탈 방지).
+- **전투 타격음 재검토**: 사용자가 "여전히 개선 안 됐다"고 재차 지적,
+  코드 재확인 결과 지난 턴 변경사항 자체는 정상이었다(타입 체크/빌드/
+  테스트 모두 통과 상태였음). `window.__audioDebugControl`
+  (`playSfx`/`measureOutputSignal`)을 Playwright로 직접 호출해 신규
+  `meleeHit.blade`(peak 0.33→0.37, 지속 프레임 내내 감쇠 안 함)와 기존
+  `meleeHit`(peak 0.16→0.26, 두 번째 프레임에서 급격히 죽음)의 파형을
+  실측 비교 — 신규 사운드가 실제로 더 크고 구조적으로 다름을 확인,
+  코드/배선 결함이 아니라 브라우저 캐시(핫리로드 누적) 문제일 가능성이
+  큼을 확인했다. 추가로 `backend.ts`에 metalClang/stoneImpact 전용
+  딜레이+피드백 슬랩백(전장 울림 시뮬레이션, 55~75ms 탭 + 저역통과
+  + 지수 감쇠)을 추가해 한 단계 더 업그레이드했다. 피드백 루프 노드가
+  무한정 살아있지 않도록 1.5초 후 자동 disconnect 처리.
+- 검증: `npx tsc --noEmit`, `npm run build`, `npm test`(34 파일 178개
+  테스트) 모두 통과.

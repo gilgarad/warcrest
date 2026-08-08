@@ -110,6 +110,24 @@ one-shot SFX case, not to invent a new synthesis approach.
   the same kind of per-note/per-layer randomization and analog-emulation
   imperfection) is in scope, per the user's own framing ("질감만 다듬어라").
 
+## Status (2026-08-07 업데이트)
+
+- 적용 완료: `backend.ts`에 마스터 `DynamicsCompressorNode` 글루 스테이지 추가
+  (기법 5), `impact`/`blade` 노이즈 레이어에 필터 컷오프 스윕(`endFrequency`)
+  적용(기법 3), `grunt`에 3번째 포먼트 밴드패스 피크 추가 + 세 피크 모두
+  재생 중 중심 주파수가 이동하도록 변경(기법 6), 병종/시대별 무기 아키타입
+  (`src/systems/lane-units/weaponSfx.ts`)에 따라 근접(둔기/도검/폴암/근대
+  돌격)·원거리(투석/활/화승총/소총/대포/전차) 타격음을 분화해 매핑.
+- `pitchVariation`/`volumeVariation`(기법 4)은 재확인 결과 `assetManifest.ts`
+  의 `sfx()` 헬퍼가 기본값 `0.06`/`0.08`을 모든 SFX에 이미 부여하고
+  있었음 — 이전 세션 기록의 "heal에만 있음"은 부정확했고, 실제로는 전투
+  SFX가 heal(override `0.025`)보다 더 큰 기본 변주를 이미 받고 있었다.
+  정정: 추가 조치 불필요.
+- 남은 항목: `sfx.combat.towerAttack`/`towerHit`(방어 타워 발사음)과
+  `sfx.support.heal`은 이번 라운드에서 손대지 않음 — 타워는 참조 유닛
+  아키타입 매핑이 아직 안 걸려 있고, 힐 사운드는 사용자가 이미 만족한
+  BGM과 유사한 레이어링 기법을 쓰고 있어 우선순위가 낮다고 판단.
+
 ## Sources
 
 - [Procedural Audio On the Web: Part One — Medium/Nemisindo](https://medium.com/@nemisindo/procedural-audio-on-the-web-part-one-77c6d464378e)

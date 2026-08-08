@@ -28,6 +28,9 @@ export interface OfflineArrangementMeasurement {
 
 type ArrangementLayer = "percussion" | "bass" | "harmony" | "lowColor" | "lead" | "counterline";
 
+/** Biquad filter spec for a synth layer; `endFrequency` ramps cutoff across the layer's duration for a natural, non-static timbre. */
+type LayerFilter = { type: BiquadFilterType; frequency: number; endFrequency?: number; q?: number };
+
 interface ArrangementProfile {
   assetId: "bgm.menu" | "bgm.preparation" | "bgm.battle.low" | "bgm.battle.high";
   root: number;
@@ -949,11 +952,46 @@ export class WebAudioBackend implements AudioBackend {
   ): VoiceHandle {
     const durationS = Math.max(0.05, profile.durationMs / 1000);
     const master = ctx.createGain();
+    const glue = ctx.createDynamicsCompressor();
+    glue.threshold.value = -20;
+    glue.knee.value = 14;
+    glue.ratio.value = 4;
+    glue.attack.value = 0.003;
+    glue.release.value = 0.16;
     const panner = ctx.createStereoPanner();
     panner.pan.value = pan;
     master.gain.value = Math.max(0, volume * (profile.gain ?? 1));
-    master.connect(panner);
+    master.connect(glue);
+    glue.connect(panner);
     panner.connect(this.getOutputDestination(ctx));
+
+    // Short algorithmic slapback for metal/stone impacts: a couple of
+    // decaying, lowpassed delay taps read as "hit landed in an open
+    // battlefield/room" instead of a dry, boxed-in synth blip — the same
+    // reason real combat foley in RTS games is rarely recorded fully dry.
+    let echoTapNodes: AudioNode[] | null = null;
+    if (profile.kind === "metalClang" || profile.kind === "stoneImpact") {
+      const send = ctx.createGain();
+      send.gain.value = 0.3;
+      const tapFilter = ctx.createBiquadFilter();
+      tapFilter.type = "lowpass";
+      tapFilter.frequency.value = profile.kind === "metalClang" ? 3200 : 1400;
+      const delay = ctx.createDelay(0.5);
+      delay.delayTime.value = profile.kind === "metalClang" ? 0.055 : 0.075;
+      const feedback = ctx.createGain();
+      feedback.gain.value = profile.kind === "metalClang" ? 0.34 : 0.26;
+      master.connect(send);
+      send.connect(delay);
+      delay.connect(tapFilter);
+      tapFilter.connect(feedback);
+      feedback.connect(delay);
+      tapFilter.connect(glue);
+      echoTapNodes = [send, tapFilter, delay, feedback];
+      // The delay->feedback loop keeps "running" (at a fast-decaying level)
+      // indefinitely unless explicitly torn down — disconnect once the tail
+      // is well below audibility instead of leaking nodes on every hit.
+      setTimeout(() => echoTapNodes?.forEach((node) => node.disconnect()), 1500);
+    }
     const baseFreq = profile.frequency * pitchMultiplier;
     const t0 = ctx.currentTime;
     const sources = new Set<AudioScheduledSourceNode>();
@@ -965,7 +1003,7 @@ export class WebAudioBackend implements AudioBackend {
       startAt: number,
       stopAt: number,
       attackS: number,
-      filter?: { type: BiquadFilterType; frequency: number; q?: number },
+      filter?: LayerFilter,
     ): void => {
       const layerGain = ctx.createGain();
       layerGain.gain.setValueAtTime(0.0001, startAt);
@@ -974,7 +1012,10 @@ export class WebAudioBackend implements AudioBackend {
       if (filter) {
         const node = ctx.createBiquadFilter();
         node.type = filter.type;
-        node.frequency.value = filter.frequency;
+        node.frequency.setValueAtTime(Math.max(20, filter.frequency), startAt);
+        if (filter.endFrequency !== undefined) {
+          node.frequency.exponentialRampToValueAtTime(Math.max(20, filter.endFrequency), stopAt);
+        }
         node.Q.value = filter.q ?? 0.7;
         source.connect(node);
         node.connect(layerGain);
@@ -997,7 +1038,7 @@ export class WebAudioBackend implements AudioBackend {
       startOffsetS = 0,
       layerDurationS = durationS,
       attackS = 0.008,
-      filter?: { type: BiquadFilterType; frequency: number; q?: number },
+      filter?: LayerFilter,
     ): void => {
       const osc = ctx.createOscillator();
       const startAt = t0 + startOffsetS;
@@ -1012,7 +1053,7 @@ export class WebAudioBackend implements AudioBackend {
       gainValue: number,
       startOffsetS = 0,
       layerDurationS = durationS,
-      filter: { type: BiquadFilterType; frequency: number; q?: number } = {
+      filter: LayerFilter = {
         type: "bandpass",
         frequency: baseFreq,
       },
@@ -1032,23 +1073,62 @@ export class WebAudioBackend implements AudioBackend {
 
     switch (profile.kind) {
       case "blade":
-        scheduleNoise(0.62, 0, durationS * 0.72, { type: "highpass", frequency: baseFreq * 2.4, q: 0.5 });
-        scheduleNoise(0.34, 0.018, durationS * 0.9, { type: "bandpass", frequency: baseFreq * 4.6, q: 2.4 });
+        scheduleNoise(0.62, 0, durationS * 0.72, { type: "highpass", frequency: baseFreq * 3.2, endFrequency: baseFreq * 1.8, q: 0.5 });
+        scheduleNoise(0.34, 0.018, durationS * 0.9, { type: "bandpass", frequency: baseFreq * 4.6, endFrequency: baseFreq * 3.4, q: 2.4 });
         scheduleOsc("triangle", baseFreq * 2.1, baseFreq * 0.62, 0.26, 0, durationS * 0.64, 0.003);
         break;
       case "impact":
-        scheduleNoise(0.46, 0, durationS * 0.7, { type: "lowpass", frequency: baseFreq * 5.4, q: 0.8 });
+        scheduleNoise(0.46, 0, durationS * 0.7, { type: "lowpass", frequency: baseFreq * 7, endFrequency: baseFreq * 2.1, q: 0.8 });
         scheduleOsc("sine", baseFreq * 1.5, baseFreq * 0.42, 0.78, 0, durationS, 0.002);
         scheduleOsc("triangle", baseFreq * 2.6, baseFreq * 0.7, 0.2, 0.008, durationS * 0.52, 0.002);
         break;
+      case "stoneImpact":
+        // Modal-resonator approach for rock-on-rock/wall hits: a sharp
+        // broadband crack at the transient, a few detuned/inharmonic damped
+        // partials for the dull "body" (not a clean harmonic stack — real
+        // stone doesn't ring true), and a longer lowpassed noise tail standing
+        // in for scattering gravel/debris.
+        scheduleNoise(0.58, 0, durationS * 0.16, { type: "highpass", frequency: baseFreq * 4, endFrequency: baseFreq * 2, q: 0.6 });
+        scheduleOsc("sine", baseFreq, baseFreq * 0.88, 0.5, 0, durationS * 0.85, 0.002, {
+          type: "lowpass", frequency: baseFreq * 2.2, q: 1.2,
+        });
+        scheduleOsc("triangle", baseFreq * 1.83, baseFreq * 1.55, 0.26, 0.004, durationS * 0.65, 0.003, {
+          type: "lowpass", frequency: baseFreq * 3, q: 1.4,
+        });
+        scheduleOsc("sine", baseFreq * 2.61, baseFreq * 2.2, 0.14, 0.006, durationS * 0.5, 0.004, {
+          type: "lowpass", frequency: baseFreq * 4, q: 1.6,
+        });
+        scheduleNoise(0.22, 0.02, durationS * 0.85, { type: "lowpass", frequency: baseFreq * 1.6, endFrequency: baseFreq * 0.7, q: 0.7 });
+        break;
       case "grunt":
         scheduleOsc("sawtooth", baseFreq * 1.16, baseFreq * 0.64, 0.42, 0, durationS, 0.018, {
-          type: "bandpass", frequency: 520 * pitchMultiplier, q: 3.2,
+          type: "bandpass", frequency: 520 * pitchMultiplier, endFrequency: 640 * pitchMultiplier, q: 3.2,
         });
         scheduleOsc("triangle", baseFreq * 0.92, baseFreq * 0.52, 0.46, 0.012, durationS * 0.92, 0.012, {
-          type: "bandpass", frequency: 920 * pitchMultiplier, q: 4.1,
+          type: "bandpass", frequency: 920 * pitchMultiplier, endFrequency: 760 * pitchMultiplier, q: 4.1,
+        });
+        scheduleOsc("sawtooth", baseFreq * 1.02, baseFreq * 0.58, 0.15, 0.006, durationS * 0.8, 0.014, {
+          type: "bandpass", frequency: 1450 * pitchMultiplier, endFrequency: 1180 * pitchMultiplier, q: 5,
         });
         scheduleNoise(0.1, 0.03, durationS * 0.6, { type: "bandpass", frequency: 680, q: 1.8 });
+        break;
+      case "metalClang":
+        // Doubled, slightly-offset transient bursts (fight-choreography "double
+        // clang" trick) instead of one clean hit, plus a low fundamental thunk,
+        // a mid body ring, and two high inharmonic partials for a long
+        // metal-on-metal tail rather than a short synth beep.
+        scheduleNoise(0.5, 0, durationS * 0.22, { type: "highpass", frequency: baseFreq * 3, endFrequency: baseFreq * 1.6, q: 0.6 });
+        scheduleNoise(0.24, 0.022, durationS * 0.16, { type: "highpass", frequency: baseFreq * 2.5, endFrequency: baseFreq * 1.3, q: 0.6 });
+        scheduleOsc("sine", baseFreq, baseFreq * 0.9, 0.42, 0, durationS * 1.3, 0.004);
+        scheduleOsc("sine", baseFreq * 1.98, baseFreq * 1.88, 0.2, 0.006, durationS * 1.1, 0.003, {
+          type: "bandpass", frequency: baseFreq * 2, q: 5,
+        });
+        scheduleOsc("triangle", baseFreq * 3.02, baseFreq * 2.9, 0.32, 0, durationS * 1.2, 0.002, {
+          type: "bandpass", frequency: baseFreq * 3, q: 6.5,
+        });
+        scheduleOsc("sine", baseFreq * 4.51, baseFreq * 4.32, 0.2, 0.004, durationS, 0.003, {
+          type: "bandpass", frequency: baseFreq * 4.5, q: 7.5,
+        });
         break;
       case "healChime": {
         const notes = [1, 1.25, 1.5, 2];
@@ -1112,6 +1192,8 @@ export class WebAudioBackend implements AudioBackend {
             // already stopped
           }
         });
+        echoTapNodes?.forEach((node) => node.disconnect());
+        echoTapNodes = null;
       },
     };
   }
