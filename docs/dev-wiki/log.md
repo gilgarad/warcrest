@@ -6101,3 +6101,45 @@ Use consistent headings so entries are easy to grep.
   통과(3개 테스트),
   `npx tsc --noEmit` 통과,
   `npm run build` 통과.
+
+## 2026-08-08 - 보급대 뒤걸음 방지, 같은 편 최소 간격 보정, 자원 아이콘 리디자인
+
+사용자가 체크포인트 커밋/푸쉬 후 추가로 3가지를 지시:
+(1) 보급 병력이 이동 방향과 캐릭터 방향이 어긋나 "뒤로 걷는 듯한" 모습이
+나오면 안 된다,
+(2) 같은 편 유닛끼리 거의 겹쳐 걷는 경우를 없애고 최소 간격을 공격범위 1
+이상으로 유지해야 한다,
+(3) 금/목재/식량/금속/연구 아이콘을 더 읽히는 모양으로 바꾸되 기존
+이미지명을 유지해야 한다.
+
+- **보급대 방향 보정**:
+  `LaneBattleScene.moveSupportTowardAlly()`는 ally-relative 목적지를 기준으로
+  facing을 갱신하고 있었지만, support는 row 보정과 heal-cast 이후 이동이
+  섞이면서 travel facing이 한 tick 이상 stale로 남는 경우가 있었다.
+  `setSupportTravelFacing()`를 추가해 support는 실제 `targetProgress`
+  부호를 우선으로 `travelFacingX / travelFacingDirection`을 갱신하게 바꿨다.
+  이제 보급대가 ally 뒤로 재정렬될 때 진행 방향과 캐릭터 방향이 즉시 맞는다.
+- **같은 편 최소 간격 보정**:
+  기존 `FRIENDLY_GAP`은 `0.011`로, 사용자가 요구한 "공격범위 1"보다 작았다.
+  `MIN_FRIENDLY_SPACING_PROGRESS = RANGE_TO_PROGRESS`를 추가하고,
+  `tickCombat()` 말미에 `enforceFriendlySpacing()` 후처리를 넣었다.
+  같은 팀/같은 레인에서 lane row 차이가 작은 유닛들은 최소
+  `max(FRIENDLY_GAP, RANGE_TO_PROGRESS)` 이상 progress 간격을 유지하도록
+  강제해 marching 중 거의 겹쳐 보이는 상황을 줄였다.
+- **자원 아이콘 리디자인**:
+  외부 파일 교체가 아니라 `LaneBattleScene.createUiIconTextures()`의
+  generated texture 계약을 그대로 유지한 채 드로잉만 교체했다.
+  `icon-gold`는 코인 스택, `icon-wood`는 통나무 단면 2개,
+  `icon-food`는 곡식 이삭, `icon-metal`은 금속 주괴, `icon-research`는
+  플라스크/스파크 형태로 다시 그렸다.
+  키 이름은 그대로라서 HUD/버튼/비용행 전부 추가 연동 수정 없이 즉시
+  새 디자인을 사용한다.
+- **체크포인트**:
+  작업 시작 전에 지금까지 변경분을
+  `Fix wave feedback and refresh unit presentation assets`
+  커밋으로 먼저 `master`에 push했다.
+- **검증**:
+  `npx tsc --noEmit` 통과,
+  `npm run build` 통과,
+  `npx playwright test tools/validation/mechanized-three-frame-roster.spec.ts`
+  통과(3개 테스트).

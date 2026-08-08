@@ -6216,3 +6216,37 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
     passed: 3 tests.
   - `npx tsc --noEmit` passed.
   - `npm run build` passed.
+
+## 2026-08-08 - Support travel-facing now follows movement direction, same-team spacing is clamped, and resource icons were redrawn in-place under the same texture keys
+
+- **Agent/tool**: Codex, GPT-5.
+- **User direction (원문)**: "1. 스크린샷처럼 보급 병력이 뒤로 걷는 듯한
+  상황이 있음. 걷는 방향과 모션 방향은 무조건 같아야 함. ... 2. 아군
+  캐릭터들/적군 캐릭터들이 각 같은 편일 때 거의 겹쳐서 걷는 경우가 있는데,
+  지금 공격 범위 1에 해당하는 공간 만큼은 떨어져 있도록 해야함. ... 3.
+  금/목재/식량/금속/연구 아이콘을 좀 더 금화 모양 같이 하거나 ... 기존
+  이미지명을 그대로 쓰되 내용만 바꿔치기 되도록 해줘야해."
+- **AI action**:
+  1. Made the requested checkpoint first: committed and pushed the prior wave /
+     asset-fix batch to `master` as
+     `Fix wave feedback and refresh unit presentation assets`.
+  2. Corrected support movement facing at the gameplay-logic level instead of
+     tweaking animation assets. Added `setSupportTravelFacing()` so supply
+     units derive `travelFacingX` and `travelFacingDirection` directly from
+     signed `targetProgress`, preventing the stale facing state that could
+     leave a support unit visually "backpedaling" while re-forming behind an
+     ally.
+  3. Added `enforceFriendlySpacing()` as a post-movement lane pass so same-team
+     units in the same lane and near the same lane row cannot compress below
+     `RANGE_TO_PROGRESS` (the requested attack-range-1 floor). This fixes the
+     near-overlap marching cases more reliably than adjusting one local gap
+     constant, because the compression came from multiple movement paths.
+  4. Redrew the resource HUD textures in place, preserving the existing keys
+     (`icon-gold`, `icon-wood`, `icon-food`, `icon-metal`, `icon-research`)
+     so no UI wiring changed. The new shapes are coin stack, cut logs, grain
+     stalk, metal ingot, and flask/spark respectively.
+- **Verification**:
+  - `npx tsc --noEmit` passed.
+  - `npm run build` passed.
+  - `npx playwright test tools/validation/mechanized-three-frame-roster.spec.ts`
+    passed: 3 tests.

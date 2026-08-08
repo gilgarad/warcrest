@@ -193,6 +193,7 @@ const LANE_ROW_SPACING = 62;
 // Baseline lane progress per second before per-unit speed multipliers are applied.
 const UNIT_PROGRESS_SPEED = 0.02;
 const FRIENDLY_GAP = 0.011;
+const MIN_FRIENDLY_SPACING_PROGRESS = RANGE_TO_PROGRESS;
 const ENGAGE_GAP = 0.022;
 const FIELD_CAMERA_ZOOM = 0.46;
 const TOWER_W = 148;
@@ -535,29 +536,72 @@ export class LaneBattleScene extends Phaser.Scene {
       {
         key: "icon-gold",
         draw: (g) => {
-          g.fillStyle(0xe8c14e, 1).fillCircle(16, 16, 10);
-          g.lineStyle(2, 0xffefab, 1).strokeCircle(16, 16, 10);
+          g.fillStyle(0xb07a1f, 1).fillEllipse(12, 18, 14, 8);
+          g.fillStyle(0xd89d2d, 1).fillEllipse(20, 15, 14, 8);
+          g.fillStyle(0xf0c75a, 1).fillEllipse(16, 12, 14, 8);
+          g.lineStyle(2, 0xfff1a8, 0.9);
+          g.strokeEllipse(12, 18, 14, 8);
+          g.strokeEllipse(20, 15, 14, 8);
+          g.strokeEllipse(16, 12, 14, 8);
+          g.lineStyle(1, 0xfff8d2, 0.8).strokeEllipse(16, 12, 6, 3);
         },
       },
       {
         key: "icon-wood",
         draw: (g) => {
-          g.fillStyle(0x8c5e34, 1).fillRoundedRect(6, 10, 20, 12, 4);
-          g.lineStyle(2, 0xcaa07a, 1).strokeRoundedRect(6, 10, 20, 12, 4);
+          g.fillStyle(0x7a4b24, 1).fillRoundedRect(7, 11, 18, 8, 4);
+          g.fillStyle(0x8f5c2e, 1).fillRoundedRect(10, 15, 16, 8, 4);
+          g.fillStyle(0xd8b27d, 1).fillCircle(8, 15, 4);
+          g.fillStyle(0xd8b27d, 1).fillCircle(23, 19, 4);
+          g.lineStyle(2, 0x5b3414, 0.9);
+          g.strokeRoundedRect(7, 11, 18, 8, 4);
+          g.strokeRoundedRect(10, 15, 16, 8, 4);
+          g.lineStyle(1, 0x9f7041, 0.9).strokeCircle(8, 15, 2);
+          g.lineStyle(1, 0x9f7041, 0.9).strokeCircle(23, 19, 2);
         },
       },
       {
         key: "icon-food",
         draw: (g) => {
-          g.fillStyle(0xd9b15d, 1).fillEllipse(16, 18, 18, 12);
-          g.lineStyle(2, 0xf4e2a0, 1).beginPath().moveTo(16, 6).lineTo(16, 14).strokePath();
+          g.lineStyle(2, 0x8fb54d, 1).beginPath().moveTo(11, 24).lineTo(15, 9).strokePath();
+          g.lineStyle(2, 0x8fb54d, 1).beginPath().moveTo(16, 24).lineTo(19, 8).strokePath();
+          g.fillStyle(0xe7c765, 1);
+          [[14, 10], [12, 13], [11, 16], [10, 19], [18, 10], [20, 13], [21, 16], [22, 19]].forEach(([x, y]) => {
+            g.fillEllipse(x, y, 6, 4);
+          });
+          g.lineStyle(1, 0xfff1a5, 0.7);
+          [[14, 10], [12, 13], [11, 16], [10, 19], [18, 10], [20, 13], [21, 16], [22, 19]].forEach(([x, y]) => {
+            g.strokeEllipse(x, y, 6, 4);
+          });
         },
       },
       {
         key: "icon-metal",
         draw: (g) => {
-          g.fillStyle(0xa9bfd2, 1).fillRoundedRect(7, 8, 18, 16, 3);
-          g.lineStyle(2, 0xe6f3ff, 1).strokeRoundedRect(7, 8, 18, 16, 3);
+          g.fillStyle(0x7e8fa0, 1).fillPoints([
+            new Phaser.Geom.Point(8, 19),
+            new Phaser.Geom.Point(12, 11),
+            new Phaser.Geom.Point(25, 11),
+            new Phaser.Geom.Point(21, 19),
+          ], true);
+          g.fillStyle(0xb4c7d7, 1).fillPoints([
+            new Phaser.Geom.Point(12, 11),
+            new Phaser.Geom.Point(15, 8),
+            new Phaser.Geom.Point(28, 8),
+            new Phaser.Geom.Point(25, 11),
+          ], true);
+          g.fillStyle(0x95a8b9, 1).fillPoints([
+            new Phaser.Geom.Point(21, 19),
+            new Phaser.Geom.Point(25, 11),
+            new Phaser.Geom.Point(28, 8),
+            new Phaser.Geom.Point(24, 16),
+          ], true);
+          g.lineStyle(2, 0xe7f3ff, 0.9).strokePoints([
+            new Phaser.Geom.Point(8, 19),
+            new Phaser.Geom.Point(12, 11),
+            new Phaser.Geom.Point(25, 11),
+            new Phaser.Geom.Point(21, 19),
+          ], true);
         },
       },
       {
@@ -570,9 +614,13 @@ export class LaneBattleScene extends Phaser.Scene {
       {
         key: "icon-research",
         draw: (g) => {
-          g.fillStyle(0xcfdfff, 1).fillCircle(16, 9, 5);
-          g.fillRoundedRect(10, 14, 12, 14, 5);
-          g.lineStyle(2, 0x7ba1ff, 1).beginPath().moveTo(16, 14).lineTo(16, 28).strokePath();
+          g.fillStyle(0x8ad8ff, 0.95).fillCircle(16, 12, 6);
+          g.fillStyle(0xbef1ff, 0.95).fillRoundedRect(11, 15, 10, 10, 4);
+          g.fillStyle(0x5f86c9, 1).fillRect(13, 24, 6, 4);
+          g.lineStyle(2, 0xe9fdff, 0.9).strokeCircle(16, 12, 6);
+          g.lineStyle(2, 0x6fa0ff, 0.9).strokeRoundedRect(11, 15, 10, 10, 4);
+          g.lineStyle(2, 0xcff8ff, 0.9).beginPath().moveTo(23, 8).lineTo(26, 5).strokePath();
+          g.beginPath().moveTo(26, 8).lineTo(23, 5).strokePath();
         },
       },
       {
@@ -1748,6 +1796,7 @@ export class LaneBattleScene extends Phaser.Scene {
       }
     });
 
+    this.enforceFriendlySpacing();
     this.units.forEach((unit) => this.syncUnitVisual(unit, deltaSec));
     this.checkBasePressure(deltaSec);
   }
@@ -1816,9 +1865,17 @@ export class LaneBattleScene extends Phaser.Scene {
     // delta is below the flip dead zone and previously left support walking backward.
     this.setUnitTravelFacing(unit, desiredProgress, desiredLaneRow);
     const moveStep = unit.speed * UNIT_PROGRESS_SPEED * deltaSec;
+    this.setSupportTravelFacing(unit, desiredProgress);
     unit.progress = this.moveToward(unit.progress, desiredProgress, moveStep);
     unit.laneRow = Phaser.Math.Linear(unit.laneRow, desiredLaneRow, Math.min(1, deltaSec * 4.2));
     this.keepUnitInPlayableLane(unit);
+  }
+
+  private setSupportTravelFacing(unit: LaneUnit, targetProgress: number): void {
+    const progressDelta = targetProgress - unit.progress;
+    if (Math.abs(progressDelta) <= SUPPORT_ARRIVAL_EPSILON_PROGRESS) return;
+    unit.travelFacingX = progressDelta >= 0 ? 1 : -1;
+    unit.travelFacingDirection = progressDelta >= 0 ? "e" : "w";
   }
 
   private applySupportHeal(unit: LaneUnit): void {
@@ -2088,6 +2145,29 @@ export class LaneBattleScene extends Phaser.Scene {
   private moveToward(current: number, target: number, maxDelta: number): number {
     if (Math.abs(target - current) <= maxDelta) return target;
     return current + Math.sign(target - current) * maxDelta;
+  }
+
+  private enforceFriendlySpacing(): void {
+    const minGap = Math.max(FRIENDLY_GAP, MIN_FRIENDLY_SPACING_PROGRESS);
+    const laneKeys = new Set(this.units.map((unit) => `${unit.team}:${unit.laneId}`));
+    laneKeys.forEach((laneKey) => {
+      const [team, laneId] = laneKey.split(":");
+      const laneUnits = this.units
+        .filter((unit) => unit.team === team && unit.laneId === laneId)
+        .sort((a, b) => a.progress - b.progress);
+      for (let index = 1; index < laneUnits.length; index += 1) {
+        const previous = laneUnits[index - 1];
+        const current = laneUnits[index];
+        if (Math.abs(current.laneRow - previous.laneRow) >= 0.58) continue;
+        const gap = current.progress - previous.progress;
+        if (gap >= minGap) continue;
+        const separatedProgress = Phaser.Math.Clamp(previous.progress + minGap, 0.01, 0.99);
+        current.progress = Math.max(current.progress, separatedProgress);
+        if (current.progress >= 0.99 && previous.progress > 0.01) {
+          previous.progress = Phaser.Math.Clamp(current.progress - minGap, 0.01, 0.99);
+        }
+      }
+    });
   }
 
   private setUnitTravelFacing(unit: LaneUnit, targetProgress: number, targetLaneRow: number): void {
