@@ -22,7 +22,7 @@
       },
       "pass": true,
       "heightRatio": 1.0112,
-      "walkSilhouetteDifference": 0.0398,
+      "walkSilhouetteDifference": 0.0395,
       "walkLowerBodyDifference": 0.0512,
       "boxes": {
         "idle": [
@@ -72,8 +72,8 @@
       },
       "pass": true,
       "heightRatio": 1.0189,
-      "walkSilhouetteDifference": 0.0256,
-      "walkLowerBodyDifference": 0.0259,
+      "walkSilhouetteDifference": 0.025,
+      "walkLowerBodyDifference": 0.0255,
       "boxes": {
         "idle": [
           180,
@@ -122,8 +122,8 @@
       },
       "pass": true,
       "heightRatio": 1.0112,
-      "walkSilhouetteDifference": 0.0332,
-      "walkLowerBodyDifference": 0.0392,
+      "walkSilhouetteDifference": 0.0324,
+      "walkLowerBodyDifference": 0.0388,
       "boxes": {
         "idle": [
           180,
@@ -172,8 +172,8 @@
       },
       "pass": true,
       "heightRatio": 1.0075,
-      "walkSilhouetteDifference": 0.0179,
-      "walkLowerBodyDifference": 0.0245,
+      "walkSilhouetteDifference": 0.0175,
+      "walkLowerBodyDifference": 0.0241,
       "boxes": {
         "idle": [
           184,
@@ -222,8 +222,8 @@
       },
       "pass": true,
       "heightRatio": 1.0189,
-      "walkSilhouetteDifference": 0.0265,
-      "walkLowerBodyDifference": 0.0296,
+      "walkSilhouetteDifference": 0.0257,
+      "walkLowerBodyDifference": 0.029,
       "boxes": {
         "idle": [
           189,
@@ -272,8 +272,8 @@
       },
       "pass": true,
       "heightRatio": 1.0305,
-      "walkSilhouetteDifference": 0.0195,
-      "walkLowerBodyDifference": 0.0165,
+      "walkSilhouetteDifference": 0.0181,
+      "walkLowerBodyDifference": 0.0156,
       "boxes": {
         "idle": [
           198,

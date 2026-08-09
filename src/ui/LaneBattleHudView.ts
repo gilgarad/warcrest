@@ -13,9 +13,10 @@ import {
 } from "./laneBattleHudModel";
 
 interface WorkerUiRow {
+  chip: Phaser.GameObjects.Rectangle;
+  icon: Phaser.GameObjects.Image;
   value: Phaser.GameObjects.Text;
-  plus: Phaser.GameObjects.Arc;
-  minus: Phaser.GameObjects.Arc;
+  role: WorkerRole;
 }
 
 interface ActionButton {
@@ -33,8 +34,6 @@ type StrategicActionId = "hire-worker" | "hire-research-worker" | "use-instant-w
 const HUD_SOURCE_WIDTH = 1672;
 const HUD_TOP_SOURCE_HEIGHT = 160;
 const HUD_BOTTOM_SOURCE_HEIGHT = 220;
-const RESOURCE_BAR_XS = [448, 638, 828, 1018, 1208];
-
 export interface LaneBattleHudCallbacks {
   hireWorker: () => void;
   hireResearchWorker: () => void;
@@ -54,6 +53,7 @@ export interface LaneBattleHudCallbacks {
 export class LaneBattleHudView {
   private readonly resourceTexts = new Map<string, Phaser.GameObjects.Text>();
   private readonly resourceLabelTexts = new Map<string, Phaser.GameObjects.Text>();
+  private readonly resourceBarXs: number[] = [];
   private readonly workerRows = new Map<WorkerRole, WorkerUiRow>();
   private readonly captureActionButtons = new Map<CapturePointAction | DefenseTowerAction, ActionButton>();
   private readonly strategicActionButtons = new Map<StrategicActionId, ActionButton>();
@@ -66,6 +66,8 @@ export class LaneBattleHudView {
   private capturePanelBody!: Phaser.GameObjects.Text;
   private playerBaseBar!: Phaser.GameObjects.Rectangle;
   private enemyBaseBar!: Phaser.GameObjects.Rectangle;
+  private workerSummaryText!: Phaser.GameObjects.Text;
+  private researchSummaryText!: Phaser.GameObjects.Text;
   private audioDebugText?: Phaser.GameObjects.Text;
   private audioSettingsPanel!: AudioSettingsPanel;
   private devToggleButton?: ActionButton;
@@ -96,10 +98,10 @@ export class LaneBattleHudView {
     if (!text) return;
     const toast = this.scene.add.text(672, 676, text, {
       fontFamily: "sans-serif",
-      fontSize: "13px",
+      fontSize: "20px",
       color: "#f4e6c5",
       stroke: "#132033",
-      strokeThickness: 3,
+      strokeThickness: 4,
       align: "center",
     }).setOrigin(0.5, 1).setDepth(this.depth + 30).setScrollFactor(0);
     this.scene.cameras.main.ignore(toast);
@@ -138,9 +140,13 @@ export class LaneBattleHudView {
     this.workerRows.forEach((row, role) => {
       const worker = snapshot.workers[role];
       row.value.setText(worker.value);
-      row.plus.setFillStyle(worker.canIncrease ? 0x324a73 : 0x1d2634, 0.96);
-      row.minus.setFillStyle(worker.canDecrease ? 0x324a73 : 0x1d2634, 0.96);
+      const active = role === "research"
+        ? 0x5a4730
+        : worker.canIncrease || worker.canDecrease ? 0x324a73 : 0x1d2634;
+      row.chip.setFillStyle(active, 0.96);
     });
+    this.workerSummaryText.setText(`${snapshot.assignedWorkersText} / ${snapshot.idleWorkersText}`);
+    this.researchSummaryText.setText(`연구 ${snapshot.researchWorkersText}`);
     this.playerBaseBar.width = 180 * snapshot.playerBaseRatio;
     this.enemyBaseBar.width = 180 * snapshot.enemyBaseRatio;
     this.playerBaseBar.setOrigin(0, 0.5);
@@ -159,12 +165,13 @@ export class LaneBattleHudView {
    * Holds at full strength for 0.5s, then fades over the next 0.5s.
    */
   private spawnResourceGainPopup(resourceId: ResourceId, index: number, delta: number): void {
-    const popup = this.scene.add.text(RESOURCE_BAR_XS[index] + 46, 64, `+${delta}`, {
+    const x = this.resourceBarXs[index] ?? (this.canvasWidth / 2);
+    const popup = this.scene.add.text(x + 62, 72, `+${delta}`, {
       fontFamily: "Georgia, serif",
-      fontSize: "19px",
+      fontSize: "25px",
       color: resourceId === "research" ? "#9df2ff" : "#8dffa8",
       stroke: "#08150c",
-      strokeThickness: 3,
+      strokeThickness: 4,
     }).setOrigin(0, 0.5).setDepth(this.depth + 6).setScrollFactor(0);
     this.scene.cameras.main.ignore(popup);
     this.scene.tweens.add({ targets: popup, y: popup.y - 16, duration: 1000, ease: "Cubic.Out" });
@@ -246,49 +253,57 @@ export class LaneBattleHudView {
   private create(audioDebugEnabled: boolean): void {
     const hudScale = this.canvasWidth / HUD_SOURCE_WIDTH;
     const bottomHeight = HUD_BOTTOM_SOURCE_HEIGHT * hudScale;
+    const centerX = this.canvasWidth / 2;
     this.scene.add.image(0, 0, "war-table-hud").setOrigin(0, 0).setScale(hudScale).setCrop(0, 0, HUD_SOURCE_WIDTH, HUD_TOP_SOURCE_HEIGHT).setDepth(this.depth).setScrollFactor(0).setAlpha(0.18);
     this.scene.add.image(0, this.canvasHeight - bottomHeight, "war-table-hud").setOrigin(0, 0).setScale(hudScale).setCrop(0, 721, HUD_SOURCE_WIDTH, HUD_BOTTOM_SOURCE_HEIGHT).setDepth(this.depth).setScrollFactor(0);
-    this.scene.add.rectangle(this.canvasWidth / 2, 74, this.canvasWidth - 36, 126, 0x081119, 0.84)
+    this.scene.add.rectangle(centerX, 82, this.canvasWidth - 32, 148, 0x081119, 0.84)
       .setStrokeStyle(2, 0x233448, 0.54)
       .setDepth(this.depth + 1)
       .setScrollFactor(0);
-    this.scene.add.rectangle(this.canvasWidth / 2, 24, this.canvasWidth - 80, 2, 0x557aa6, 0.28)
+    this.scene.add.rectangle(centerX, 28, this.canvasWidth - 72, 2, 0x557aa6, 0.28)
       .setDepth(this.depth + 2)
       .setScrollFactor(0);
-    this.scene.add.rectangle(this.canvasWidth / 2, 124, this.canvasWidth - 80, 2, 0xd0b073, 0.16)
+    this.scene.add.rectangle(centerX, 136, this.canvasWidth - 72, 2, 0xd0b073, 0.16)
       .setDepth(this.depth + 2)
       .setScrollFactor(0);
-    this.scene.add.rectangle(152, 74, 236, 112, 0x0b1621, 0.86)
+    this.scene.add.rectangle(184, 82, 290, 124, 0x0b1621, 0.86)
       .setStrokeStyle(2, 0x476786, 0.42)
       .setDepth(this.depth + 2)
       .setScrollFactor(0);
-    this.scene.add.text(42, 18, "전선 지휘", { fontFamily: "Georgia, serif", fontSize: "24px", color: "#eef5ff", stroke: "#101b28", strokeThickness: 3 }).setDepth(this.depth + 3).setScrollFactor(0);
-    this.ageText = this.scene.add.text(42, 48, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
-    this.waveText = this.scene.add.text(42, 69, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
-    this.baseText = this.scene.add.text(42, 90, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
-    this.tokensText = this.scene.add.text(42, 111, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#f1d891" }).setDepth(this.depth + 3).setScrollFactor(0);
+    this.scene.add.text(54, 24, "전선 지휘", { fontFamily: "Georgia, serif", fontSize: "38px", color: "#eef5ff", stroke: "#101b28", strokeThickness: 4 }).setDepth(this.depth + 3).setScrollFactor(0);
+    this.ageText = this.scene.add.text(54, 66, "", { fontFamily: "sans-serif", fontSize: "19px", color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
+    this.waveText = this.scene.add.text(54, 90, "", { fontFamily: "sans-serif", fontSize: "19px", color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
+    this.baseText = this.scene.add.text(54, 114, "", { fontFamily: "sans-serif", fontSize: "19px", color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
+    this.tokensText = this.scene.add.text(54, 138, "", { fontFamily: "sans-serif", fontSize: "19px", color: "#f1d891" }).setDepth(this.depth + 3).setScrollFactor(0);
 
-    this.scene.add.rectangle(this.canvasWidth / 2 + 60, 72, 1018, 82, 0x09131d, 0.64)
+    this.scene.add.rectangle(centerX + 98, 82, 1088, 92, 0x09131d, 0.64)
       .setStrokeStyle(1, 0x3f556f, 0.3)
       .setDepth(this.depth + 2)
       .setScrollFactor(0);
+    const resourceBoxWidth = 190;
+    const resourceGap = 18;
+    const resourceTotalWidth = resourceBoxWidth * MVP_ACTIVE_RESOURCE_IDS.length + resourceGap * (MVP_ACTIVE_RESOURCE_IDS.length - 1);
+    const resourceStartX = centerX + 90 - resourceTotalWidth / 2 + resourceBoxWidth / 2;
+    this.resourceBarXs.length = 0;
     MVP_ACTIVE_RESOURCE_IDS.forEach((resourceId, index) => {
-      this.scene.add.rectangle(RESOURCE_BAR_XS[index], 72, 172, 58, 0x101c28, 0.84)
+      const resourceX = resourceStartX + index * (resourceBoxWidth + resourceGap);
+      this.resourceBarXs.push(resourceX);
+      this.scene.add.rectangle(resourceX, 82, resourceBoxWidth, 72, 0x101c28, 0.84)
         .setStrokeStyle(1, resourceId === "research" ? 0x63a9bb : 0x5c6f88, 0.42)
         .setDepth(this.depth + 3)
         .setScrollFactor(0);
-      this.scene.add.image(RESOURCE_BAR_XS[index] - 54, 72, getResourceIconKey(resourceId)).setDisplaySize(28, 28).setAlpha(0.98).setDepth(this.depth + 4).setScrollFactor(0);
+      this.scene.add.image(resourceX - 60, 82, getResourceIconKey(resourceId)).setDisplaySize(36, 36).setAlpha(0.98).setDepth(this.depth + 4).setScrollFactor(0);
       this.resourceLabelTexts.set(
         resourceId,
-        this.scene.add.text(RESOURCE_BAR_XS[index] - 8, 50, getResource(resourceId).label, {
+        this.scene.add.text(resourceX - 2, 58, getResource(resourceId).label, {
           fontFamily: "sans-serif",
-          fontSize: "13px",
+          fontSize: "18px",
           color: resourceId === "research" ? "#b9f2ff" : "#aac1db",
         }).setDepth(this.depth + 4).setScrollFactor(0).setOrigin(0.5, 0.5),
       );
-      this.resourceTexts.set(resourceId, this.scene.add.text(RESOURCE_BAR_XS[index] + 2, 80, "", {
+      this.resourceTexts.set(resourceId, this.scene.add.text(resourceX + 6, 94, "", {
         fontFamily: "Georgia, serif",
-        fontSize: resourceId === "research" ? "30px" : "33px",
+        fontSize: resourceId === "research" ? "38px" : "42px",
         color: resourceId === "research" ? "#d2fbff" : "#f5fbff",
       }).setDepth(this.depth + 4).setScrollFactor(0).setOrigin(0.5, 0.5));
     });
@@ -298,22 +313,39 @@ export class LaneBattleHudView {
     // that panel was removed as redundant (the same info is available by
     // touching the structure directly), so this space now hosts the actions
     // the player needs most often instead of sitting empty.
-    this.scene.add.text(672, 700, "일꾼 배치", { fontFamily: "Georgia, serif", fontSize: "16px", color: "#f4e6c5" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0);
-    const workerGrid: [WorkerRole, WorkerRole][] = [
-      ["gold", "wood"],
-      ["food", "metal"],
-      ["research", "idle"],
-    ];
-    workerGrid.forEach(([left, right], row) => {
-      const y = 724 + row * 24;
-      this.workerRows.set(left, this.createWorkerRow(left, 548, y));
-      this.workerRows.set(right, this.createWorkerRow(right, 748, y));
+    const bottomPanelY = this.canvasHeight - 102;
+    this.scene.add.rectangle(centerX, bottomPanelY, 860, 232, 0x09131d, 0.88)
+      .setStrokeStyle(2, 0x3f556f, 0.42)
+      .setDepth(this.depth + 1)
+      .setScrollFactor(0);
+    const workerTitleX = centerX - 318;
+    const workerTitleY = this.canvasHeight - 192;
+    this.scene.add.text(workerTitleX, workerTitleY, "일꾼 배치", {
+      fontFamily: "Georgia, serif",
+      fontSize: "30px",
+      color: "#f4e6c5",
+    }).setDepth(this.depth + 3).setScrollFactor(0).setOrigin(0, 0.5);
+    const workerChipStartX = workerTitleX + 192;
+    const workerChipGap = 98;
+    (["gold", "wood", "food", "metal"] as WorkerRole[]).forEach((role, index) => {
+      this.workerRows.set(role, this.createWorkerRow(role, workerChipStartX + index * workerChipGap, workerTitleY));
     });
+    this.workerSummaryText = this.scene.add.text(centerX + 294, workerTitleY, "0 / 0", {
+      fontFamily: "Georgia, serif",
+      fontSize: "28px",
+      color: "#fff6dd",
+    }).setOrigin(1, 0.5).setDepth(this.depth + 3).setScrollFactor(0);
+    this.researchSummaryText = this.scene.add.text(workerTitleX, workerTitleY + 40, "연구 0", {
+      fontFamily: "sans-serif",
+      fontSize: "20px",
+      color: "#d6f5ff",
+    }).setOrigin(0, 0.5).setDepth(this.depth + 3).setScrollFactor(0);
+    this.workerRows.set("research", this.createWorkerRow("research", workerTitleX + 110, workerTitleY + 40));
 
-    this.strategicActionButtons.set("hire-worker", this.createActionButton(500, 794, 164, 36, "일꾼 고용", this.callbacks.hireWorker));
-    this.strategicActionButtons.set("hire-research-worker", this.createActionButton(681, 794, 164, 44, "연구 일꾼", this.callbacks.hireResearchWorker));
-    this.strategicActionButtons.set("use-instant-wave", this.createActionButton(500, 844, 164, 36, "즉시 웨이브", this.callbacks.useInstantWave));
-    this.strategicActionButtons.set("age-up", this.createActionButton(681, 844, 164, 44, "시대 업", this.callbacks.ageUp));
+    this.strategicActionButtons.set("hire-worker", this.createActionButton(centerX - 252, this.canvasHeight - 144, 238, 58, "일꾼 고용", this.callbacks.hireWorker));
+    this.strategicActionButtons.set("hire-research-worker", this.createActionButton(centerX + 14, this.canvasHeight - 144, 238, 58, "연구 일꾼", this.callbacks.hireResearchWorker));
+    this.strategicActionButtons.set("use-instant-wave", this.createActionButton(centerX - 252, this.canvasHeight - 74, 238, 58, "즉시 웨이브", this.callbacks.useInstantWave));
+    this.strategicActionButtons.set("age-up", this.createActionButton(centerX + 14, this.canvasHeight - 74, 238, 58, "시대 업", this.callbacks.ageUp));
 
     // capturePanelTitle/capturePanelBody/rosterText are kept alive but never
     // shown on screen — `apply()` is still called from LaneBattleScene and
@@ -345,30 +377,35 @@ export class LaneBattleHudView {
   }
 
   private createWorkerRow(role: WorkerRole, x: number, y: number): WorkerUiRow {
-    // No text label here — the icon is the same shared texture the top
-    // resource bar uses for this resource, so it identifies the row on its
-    // own without needing a redundant "금"/"목재"/etc. word next to it.
-    this.scene.add.image(x, y, getWorkerIconKey(role)).setDisplaySize(18, 18).setDepth(this.depth + 2).setScrollFactor(0);
-    const value = this.scene.add.text(x + 14, y, "0", { fontFamily: "monospace", fontSize: "13px", color: "#fff6dd" }).setOrigin(0, 0.5).setDepth(this.depth + 2).setScrollFactor(0);
-    const minus = this.scene.add.circle(x + 42, y, 9, 0x283a55, 0.95).setStrokeStyle(1, 0x7ea0c9).setDepth(this.depth + 2).setScrollFactor(0);
-    const plus = this.scene.add.circle(x + 64, y, 9, 0x283a55, 0.95).setStrokeStyle(1, 0x7ea0c9).setDepth(this.depth + 2).setScrollFactor(0);
-    this.scene.add.text(minus.x, minus.y - 1, "-", { fontFamily: "sans-serif", fontSize: "12px", color: "#ffffff" }).setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
-    this.scene.add.text(plus.x, plus.y - 1, "+", { fontFamily: "sans-serif", fontSize: "12px", color: "#ffffff" }).setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
+    const chip = this.scene.add.rectangle(x + 38, y, 74, 34, 0x283a55, 0.95)
+      .setStrokeStyle(1, 0x7ea0c9, 0.82)
+      .setDepth(this.depth + 2)
+      .setScrollFactor(0);
+    const icon = this.scene.add.image(x + 18, y, getWorkerIconKey(role))
+      .setDisplaySize(22, 22)
+      .setDepth(this.depth + 3)
+      .setScrollFactor(0);
+    const value = this.scene.add.text(x + 34, y, "0", {
+      fontFamily: "monospace",
+      fontSize: "20px",
+      color: "#fff6dd",
+    }).setOrigin(0, 0.5).setDepth(this.depth + 3).setScrollFactor(0);
     if (role !== "research" && role !== "idle") {
-      minus.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.callbacks.shiftWorker(role, -1));
-      plus.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.callbacks.shiftWorker(role, 1));
+      chip.setInteractive({ useHandCursor: true }).on("pointerdown", (pointer: Phaser.Input.Pointer) => {
+        this.callbacks.shiftWorker(role, pointer.rightButtonDown() ? -1 : 1);
+      });
     }
-    return { value, plus, minus };
+    return { chip, icon, value, role };
   }
 
   private createActionButton(x: number, y: number, width: number, height: number, label: string, onClick: () => void): ActionButton {
     const rect = this.scene.add.rectangle(x + width / 2, y + height / 2, width, height, 0x1d2d47, 0.95).setStrokeStyle(2, 0xd6b979, 0.65).setDepth(this.depth + 2).setScrollFactor(0);
-    const text = this.scene.add.text(rect.x, rect.y - height * 0.2, label, { fontFamily: "sans-serif", fontSize: "12px", color: "#f3f7fb", align: "center" }).setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
+    const text = this.scene.add.text(rect.x, rect.y - height * 0.18, label, { fontFamily: "sans-serif", fontSize: "20px", color: "#f3f7fb", align: "center" }).setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
     const costIcons: Phaser.GameObjects.Image[] = [];
     const costTexts: Phaser.GameObjects.Text[] = [];
     for (let i = 0; i < MAX_COST_ITEMS; i += 1) {
-      costIcons.push(this.scene.add.image(0, 0, "icon-gold").setDisplaySize(17, 17).setDepth(this.depth + 3).setScrollFactor(0).setVisible(false));
-      costTexts.push(this.scene.add.text(0, 0, "", { fontFamily: "monospace", fontSize: "11px", color: "#d8e7f6" }).setOrigin(0, 0.5).setDepth(this.depth + 3).setScrollFactor(0).setVisible(false));
+      costIcons.push(this.scene.add.image(0, 0, "icon-gold").setDisplaySize(20, 20).setDepth(this.depth + 3).setScrollFactor(0).setVisible(false));
+      costTexts.push(this.scene.add.text(0, 0, "", { fontFamily: "monospace", fontSize: "15px", color: "#d8e7f6" }).setOrigin(0, 0.5).setDepth(this.depth + 3).setScrollFactor(0).setVisible(false));
     }
     rect.setInteractive({ useHandCursor: true });
     rect.on("pointerover", () => {
@@ -400,10 +437,10 @@ export class LaneBattleHudView {
     const entries = button.rect.visible
       ? (Object.entries(cost) as [ResourceId, number][]).filter(([, amount]) => (amount ?? 0) > 0)
       : [];
-    const itemWidth = 34;
+    const itemWidth = 42;
     const rowWidth = entries.length * itemWidth;
     const startX = button.rect.x - rowWidth / 2 + itemWidth / 2;
-    const y = button.rect.y + button.rect.height / 2 - 11;
+    const y = button.rect.y + button.rect.height / 2 - 14;
     button.costIcons.forEach((icon, i) => {
       const costText = button.costTexts[i];
       const entry = entries[i];

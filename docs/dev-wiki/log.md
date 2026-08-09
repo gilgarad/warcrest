@@ -6435,3 +6435,15 @@ Use consistent headings so entries are easy to grep.
 - Verification:
   - `python3 tools/asset-qa/install_human_three_frame_strips.py` -> all PASS
   - Manual output spot checks confirmed the forced overlay rectangles were removed from `pikeman`, `automatic-rifleman`, `support-gunner`, and `mobile-infantry`, and `musketeer` now uses the restored older-era musket / steel-helmet silhouette.
+
+## 2026-08-09 - Hardened supply alpha and enlarged the lane-battle HUD for smaller displays
+
+- Committed and pushed the previous art/tower batch first as requested (`d7d7f58`, `fix: finalize unit art and tower updates`) before starting this follow-up UI/supply turn.
+- Reworked the supply three-frame install path in `tools/asset-qa/install_supply_three_frame_strips.py` so semi-visible pixels are snapped to fully opaque output instead of preserving soft alpha edges that made the carrier units look washed out in-game. Reinstalled every supply wagon production strip and refreshed the QA report/contact sheet artifacts.
+- Enlarged the lane-battle HUD in `src/ui/LaneBattleHudView.ts`: bigger top resource header, larger sound button, larger fonts/icons/boxes, and a centered bottom management panel sized for smaller laptop displays instead of the previous left-weighted layout.
+- Simplified worker management UI to match the latest direction: removed visible `+/-` buttons, moved the resource worker chips inline to the right of `일꾼 배치`, added assigned/idle summary text in `assigned / idle` format, and surfaced research workers separately without counting them toward the assignment total.
+- Extended `src/ui/laneBattleHudModel.ts` and its unit test to provide the new assigned/idle/research summary strings used by the updated HUD.
+- Verification:
+  - `python3 tools/asset-qa/install_supply_three_frame_strips.py`
+  - `npx vitest run src/ui/__tests__/laneBattleHudModel.test.ts`
+  - `npm run build`

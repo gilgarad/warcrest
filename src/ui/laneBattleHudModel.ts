@@ -45,6 +45,9 @@ export interface LaneBattleHudSnapshot {
   tokensText: string;
   resources: Record<ResourceId, string>;
   workers: Record<WorkerRole, { value: string; canIncrease: boolean; canDecrease: boolean }>;
+  assignedWorkersText: string;
+  idleWorkersText: string;
+  researchWorkersText: string;
   playerBaseRatio: number;
   enemyBaseRatio: number;
   rosterLines: string[];
@@ -110,6 +113,10 @@ export function createLaneBattleHudSnapshot(input: LaneBattleHudInput): LaneBatt
     canIncrease: role !== "idle" && role !== "research" && input.player.workers.idle > 0,
     canDecrease: role !== "idle" && role !== "research" && input.player.workers[role] > 1,
   }])) as LaneBattleHudSnapshot["workers"];
+  const assignedWorkers = input.player.workers.gold
+    + input.player.workers.wood
+    + input.player.workers.food
+    + input.player.workers.metal;
   const selected = input.selectedCapturePoint;
   const selectedTower = input.selectedDefenseTower;
 
@@ -122,6 +129,9 @@ export function createLaneBattleHudSnapshot(input: LaneBattleHudInput): LaneBatt
     tokensText: `즉시 웨이브 토큰 ${input.player.instantWaveTokens}`,
     resources,
     workers,
+    assignedWorkersText: String(assignedWorkers),
+    idleWorkersText: String(input.player.workers.idle),
+    researchWorkersText: String(input.player.workers.research),
     playerBaseRatio: clampRatio(input.player.baseHp / input.playerBaseMaxHp),
     enemyBaseRatio: clampRatio(input.enemy.baseHp / input.enemyBaseMaxHp),
     rosterLines: [

@@ -101,14 +101,14 @@ export class AudioSettingsPanel {
     });
     this.root.add([...reset, ...test]);
 
-    this.openRect = scene.add.rectangle(width - 82, 84, 86, 36, 0x162a42, 0.94)
+    this.openRect = scene.add.rectangle(width - 102, 86, 116, 50, 0x162a42, 0.94)
       .setStrokeStyle(2, 0xd0ad63, 0.72)
       .setDepth(options.depth)
       .setScrollFactor(0)
       .setInteractive({ useHandCursor: true });
     this.openText = scene.add.text(this.openRect.x, this.openRect.y, "소리", {
       fontFamily: "sans-serif",
-      fontSize: "14px",
+      fontSize: "22px",
       color: "#f4e7c8",
     }).setOrigin(0.5).setDepth(options.depth + 1).setScrollFactor(0);
     this.openRect.on("pointerover", () => {

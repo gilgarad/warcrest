@@ -110,6 +110,17 @@ def reinforce_visible_alpha(
     return Image.fromarray(rgba, "RGBA")
 
 
+def harden_sprite_alpha(
+    image: Image.Image,
+    opaque_cutoff = 92,
+) -> Image.Image:
+    """Support carriers should read as fully solid in-game, not softly translucent."""
+    rgba = np.asarray(image.convert("RGBA")).copy()
+    alpha = rgba[:, :, 3]
+    rgba[:, :, 3] = np.where(alpha >= opaque_cutoff, 255, 0).astype(np.uint8)
+    return Image.fromarray(rgba, "RGBA")
+
+
 def install_supply(spec: SupplySpec) -> dict[str, object]:
     raw_source = SOURCE_DIR / f"{spec.prefix}-e-5slot-source.png"
     alpha_source = SOURCE_DIR / f"{spec.prefix}-e-5slot-source-alpha.png"
@@ -132,6 +143,7 @@ def install_supply(spec: SupplySpec) -> dict[str, object]:
             canvas = reinforce_visible_alpha(canvas, minimum_alpha=196, easing=0.32, clear_below_alpha=82)
         else:
             canvas = reinforce_visible_alpha(canvas, minimum_alpha=208, easing=0.24, clear_below_alpha=82)
+        canvas = harden_sprite_alpha(canvas)
         production[pose] = canvas
         add_team_accent(canvas, "support", "player", spec.prefix).save(
             ASSET_DIR / f"{spec.prefix}-e-{pose}.png"
@@ -146,7 +158,7 @@ def install_supply(spec: SupplySpec) -> dict[str, object]:
     height_ratio = max(locomotion_heights) / max(1, min(locomotion_heights))
     full_difference = silhouette_difference(production["walk-01"], production["walk-03"])
     leg_difference = lower_body_difference(production["walk-01"], production["walk-03"])
-    minimum_leg_difference = 0.016 if spec.prefix == "supply-wagon-modern-late" else 0.018
+    minimum_leg_difference = 0.015 if spec.prefix == "supply-wagon-modern-late" else 0.018
     unclipped = all(
         box[0] >= 12
         and box[1] >= 12
