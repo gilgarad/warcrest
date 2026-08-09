@@ -6250,3 +6250,24 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - `npm run build` passed.
   - `npx playwright test tools/validation/mechanized-three-frame-roster.spec.ts`
     passed: 3 tests.
+
+## 2026-08-09 - Resource icon redraw pass using the same texture keys but more literal silhouettes
+
+- **Agent/tool**: Codex, GPT-5.
+- **User direction (원문)**: "1. 금 등 자원 아이콘 크기를 좀 더 키워줘. 2.
+  금 아이콘 새 거는 마음에 든다. 목재는 첫 번째 스크린샷처럼 이런 통나무
+  모양의 그림을 만들어달라고 했던 거야. ... 3. 식량도 내가 밀 이삭처럼
+  만들어달라고 했는데 ... 4. 금속은 ... 철괴 형태로 다시 그려서
+  만들어줘 5. 마지막 연구는 비커 모양에 색깔은 초록색이 들어가도록 해줘."
+- **AI action**:
+  1. Kept the existing generated-texture contract instead of introducing new
+     files, so every existing `icon-*` texture key in the HUD and action-cost
+     rows still resolves without any wiring changes.
+  2. Redrew `icon-wood`, `icon-food`, `icon-metal`, and `icon-research` to be
+     more literal to the user's references: angled log cross-sections, clearer
+     wheat ear, trapezoidal ingot, and green-liquid beaker.
+  3. Increased the visible resource icon sizes in the HUD itself, not just the
+     icon art, by enlarging the top-bar icons and cost-row icons.
+- **Verification**:
+  - `npx tsc --noEmit` passed.
+  - `npm run build` passed.

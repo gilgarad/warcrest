@@ -549,59 +549,63 @@ export class LaneBattleScene extends Phaser.Scene {
       {
         key: "icon-wood",
         draw: (g) => {
-          g.fillStyle(0x7a4b24, 1).fillRoundedRect(7, 11, 18, 8, 4);
-          g.fillStyle(0x8f5c2e, 1).fillRoundedRect(10, 15, 16, 8, 4);
-          g.fillStyle(0xd8b27d, 1).fillCircle(8, 15, 4);
-          g.fillStyle(0xd8b27d, 1).fillCircle(23, 19, 4);
-          g.lineStyle(2, 0x5b3414, 0.9);
-          g.strokeRoundedRect(7, 11, 18, 8, 4);
-          g.strokeRoundedRect(10, 15, 16, 8, 4);
-          g.lineStyle(1, 0x9f7041, 0.9).strokeCircle(8, 15, 2);
-          g.lineStyle(1, 0x9f7041, 0.9).strokeCircle(23, 19, 2);
+          g.fillStyle(0x6c421e, 1).fillEllipse(12, 16, 11, 15);
+          g.fillStyle(0x875127, 1).fillEllipse(18, 14, 11, 15);
+          g.fillStyle(0xa86b39, 1).fillRect(10, 9, 12, 13);
+          g.lineStyle(2, 0x4a2d12, 0.95);
+          g.strokeEllipse(12, 16, 11, 15);
+          g.strokeEllipse(18, 14, 11, 15);
+          g.lineStyle(1, 0xe0c39a, 0.8).strokeEllipse(12, 16, 4, 5);
+          g.lineStyle(1, 0xd2b186, 0.8).strokeEllipse(18, 14, 4, 5);
+          g.lineStyle(1, 0x533114, 0.8);
+          [11, 14, 17, 20].forEach((x) => {
+            g.beginPath().moveTo(x, 10).lineTo(x - 1, 21).strokePath();
+          });
         },
       },
       {
         key: "icon-food",
         draw: (g) => {
-          g.lineStyle(2, 0x8fb54d, 1).beginPath().moveTo(11, 24).lineTo(15, 9).strokePath();
-          g.lineStyle(2, 0x8fb54d, 1).beginPath().moveTo(16, 24).lineTo(19, 8).strokePath();
-          g.fillStyle(0xe7c765, 1);
-          [[14, 10], [12, 13], [11, 16], [10, 19], [18, 10], [20, 13], [21, 16], [22, 19]].forEach(([x, y]) => {
-            g.fillEllipse(x, y, 6, 4);
+          g.lineStyle(2, 0x8cab47, 1).beginPath().moveTo(10, 25).lineTo(14, 8).strokePath();
+          g.lineStyle(2, 0x8cab47, 1).beginPath().moveTo(14, 25).lineTo(18, 7).strokePath();
+          g.fillStyle(0xe0b24e, 1);
+          [[17, 8], [19, 11], [20, 14], [21, 17], [14, 10], [13, 13], [12, 16], [11, 19]].forEach(([x, y]) => {
+            g.fillEllipse(x, y, 7, 4);
           });
-          g.lineStyle(1, 0xfff1a5, 0.7);
-          [[14, 10], [12, 13], [11, 16], [10, 19], [18, 10], [20, 13], [21, 16], [22, 19]].forEach(([x, y]) => {
-            g.strokeEllipse(x, y, 6, 4);
+          g.lineStyle(1, 0xf7de8c, 0.9);
+          [[17, 8], [19, 11], [20, 14], [21, 17], [14, 10], [13, 13], [12, 16], [11, 19]].forEach(([x, y]) => {
+            g.strokeEllipse(x, y, 7, 4);
           });
         },
       },
       {
         key: "icon-metal",
         draw: (g) => {
-          g.fillStyle(0x7e8fa0, 1).fillPoints([
-            new Phaser.Geom.Point(8, 19),
-            new Phaser.Geom.Point(12, 11),
-            new Phaser.Geom.Point(25, 11),
-            new Phaser.Geom.Point(21, 19),
+          g.fillStyle(0x51575e, 1).fillPoints([
+            new Phaser.Geom.Point(7, 20),
+            new Phaser.Geom.Point(11, 11),
+            new Phaser.Geom.Point(24, 11),
+            new Phaser.Geom.Point(28, 20),
           ], true);
-          g.fillStyle(0xb4c7d7, 1).fillPoints([
-            new Phaser.Geom.Point(12, 11),
-            new Phaser.Geom.Point(15, 8),
-            new Phaser.Geom.Point(28, 8),
-            new Phaser.Geom.Point(25, 11),
+          g.fillStyle(0x6d737a, 1).fillPoints([
+            new Phaser.Geom.Point(11, 11),
+            new Phaser.Geom.Point(16, 7),
+            new Phaser.Geom.Point(28, 7),
+            new Phaser.Geom.Point(24, 11),
           ], true);
-          g.fillStyle(0x95a8b9, 1).fillPoints([
-            new Phaser.Geom.Point(21, 19),
-            new Phaser.Geom.Point(25, 11),
-            new Phaser.Geom.Point(28, 8),
+          g.fillStyle(0x3e444a, 1).fillPoints([
+            new Phaser.Geom.Point(24, 11),
+            new Phaser.Geom.Point(28, 7),
+            new Phaser.Geom.Point(28, 20),
             new Phaser.Geom.Point(24, 16),
           ], true);
-          g.lineStyle(2, 0xe7f3ff, 0.9).strokePoints([
-            new Phaser.Geom.Point(8, 19),
-            new Phaser.Geom.Point(12, 11),
-            new Phaser.Geom.Point(25, 11),
-            new Phaser.Geom.Point(21, 19),
+          g.lineStyle(2, 0x9da3ab, 0.9).strokePoints([
+            new Phaser.Geom.Point(7, 20),
+            new Phaser.Geom.Point(11, 11),
+            new Phaser.Geom.Point(24, 11),
+            new Phaser.Geom.Point(28, 20),
           ], true);
+          g.lineStyle(1, 0xc7ccd2, 0.7).beginPath().moveTo(14, 10).lineTo(22, 10).strokePath();
         },
       },
       {
@@ -614,13 +618,27 @@ export class LaneBattleScene extends Phaser.Scene {
       {
         key: "icon-research",
         draw: (g) => {
-          g.fillStyle(0x8ad8ff, 0.95).fillCircle(16, 12, 6);
-          g.fillStyle(0xbef1ff, 0.95).fillRoundedRect(11, 15, 10, 10, 4);
-          g.fillStyle(0x5f86c9, 1).fillRect(13, 24, 6, 4);
-          g.lineStyle(2, 0xe9fdff, 0.9).strokeCircle(16, 12, 6);
-          g.lineStyle(2, 0x6fa0ff, 0.9).strokeRoundedRect(11, 15, 10, 10, 4);
-          g.lineStyle(2, 0xcff8ff, 0.9).beginPath().moveTo(23, 8).lineTo(26, 5).strokePath();
-          g.beginPath().moveTo(26, 8).lineTo(23, 5).strokePath();
+          g.fillStyle(0xe7f7f1, 1).fillEllipse(16, 10, 10, 4);
+          g.fillStyle(0xf5fffb, 0.96).fillPoints([
+            new Phaser.Geom.Point(12, 10),
+            new Phaser.Geom.Point(20, 10),
+            new Phaser.Geom.Point(24, 25),
+            new Phaser.Geom.Point(8, 25),
+          ], true);
+          g.fillStyle(0x22a86a, 0.95).fillPoints([
+            new Phaser.Geom.Point(10, 20),
+            new Phaser.Geom.Point(22, 20),
+            new Phaser.Geom.Point(24, 25),
+            new Phaser.Geom.Point(8, 25),
+          ], true);
+          g.lineStyle(2, 0xdffef4, 0.95).strokePoints([
+            new Phaser.Geom.Point(12, 10),
+            new Phaser.Geom.Point(20, 10),
+            new Phaser.Geom.Point(24, 25),
+            new Phaser.Geom.Point(8, 25),
+          ], true);
+          g.lineStyle(2, 0xdffef4, 0.95).strokeEllipse(16, 10, 10, 4);
+          g.lineStyle(1, 0xffffff, 0.7).beginPath().moveTo(14, 12).lineTo(12, 22).strokePath();
         },
       },
       {

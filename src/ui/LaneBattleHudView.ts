@@ -2,14 +2,13 @@ import Phaser from "phaser";
 import { MVP_ACTIVE_RESOURCE_IDS } from "../data/balance";
 import type { CapturePointAction } from "../data/capturePointDefinitions";
 import type { DefenseTowerAction } from "../data/defenseTowerDefinitions";
-import { getResource } from "../data/resources";
+import { getResource, type ResourceId } from "../data/resources";
 import type { AudioSystem } from "../systems/audio/audioSystem";
 import type { WorkerRole } from "../systems/lane-economy/laneEconomy";
 import { AudioSettingsPanel } from "./AudioSettingsPanel";
 import {
   getResourceIconKey,
   getWorkerIconKey,
-  getWorkerRoleLabel,
   type LaneBattleHudSnapshot,
 } from "./laneBattleHudModel";
 
@@ -22,13 +21,19 @@ interface WorkerUiRow {
 interface ActionButton {
   rect: Phaser.GameObjects.Rectangle;
   text: Phaser.GameObjects.Text;
+  costIcons: Phaser.GameObjects.Image[];
+  costTexts: Phaser.GameObjects.Text[];
 }
+
+/** Max distinct resources shown in a single button's cost row (gold/wood/food/metal/research). */
+const MAX_COST_ITEMS = 5;
 
 type StrategicActionId = "hire-worker" | "hire-research-worker" | "use-instant-wave" | "age-up";
 
 const HUD_SOURCE_WIDTH = 1672;
 const HUD_TOP_SOURCE_HEIGHT = 160;
 const HUD_BOTTOM_SOURCE_HEIGHT = 220;
+const RESOURCE_BAR_XS = [448, 638, 828, 1018, 1208];
 
 export interface LaneBattleHudCallbacks {
   hireWorker: () => void;
@@ -57,7 +62,6 @@ export class LaneBattleHudView {
   private baseText!: Phaser.GameObjects.Text;
   private tokensText!: Phaser.GameObjects.Text;
   private rosterText!: Phaser.GameObjects.Text;
-  private infoText!: Phaser.GameObjects.Text;
   private capturePanelTitle!: Phaser.GameObjects.Text;
   private capturePanelBody!: Phaser.GameObjects.Text;
   private playerBaseBar!: Phaser.GameObjects.Rectangle;
@@ -66,6 +70,7 @@ export class LaneBattleHudView {
   private audioSettingsPanel!: AudioSettingsPanel;
   private devToggleButton?: ActionButton;
   private devResearchButton?: ActionButton;
+  private readonly lastResourceValues = new Map<ResourceId, number>();
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -79,8 +84,33 @@ export class LaneBattleHudView {
     this.create(audioDebugEnabled);
   }
 
+  /**
+   * Momentary action feedback (wave dispatched, food shortage, instant-wave
+   * on cooldown, etc.) — the old fixed info panel that always showed this
+   * text was removed as clutter, but the messages themselves are still the
+   * only way a player learns *why* a button press did nothing, so they now
+   * surface as a floating toast over the worker/action panel instead of a
+   * static line that's either empty or stale.
+   */
   setInfo(text: string): void {
-    this.infoText.setText(text);
+    if (!text) return;
+    const toast = this.scene.add.text(672, 676, text, {
+      fontFamily: "sans-serif",
+      fontSize: "13px",
+      color: "#f4e6c5",
+      stroke: "#132033",
+      strokeThickness: 3,
+      align: "center",
+    }).setOrigin(0.5, 1).setDepth(this.depth + 30).setScrollFactor(0);
+    this.scene.cameras.main.ignore(toast);
+    this.scene.tweens.add({
+      targets: toast,
+      y: toast.y - 14,
+      alpha: 0,
+      delay: 700,
+      duration: 500,
+      onComplete: () => toast.destroy(),
+    });
   }
 
   openAudioSettings(): void {
@@ -96,8 +126,14 @@ export class LaneBattleHudView {
     this.waveText.setText(snapshot.waveText);
     this.baseText.setText(snapshot.baseText);
     this.tokensText.setText(snapshot.tokensText);
-    MVP_ACTIVE_RESOURCE_IDS.forEach((resourceId) => {
+    MVP_ACTIVE_RESOURCE_IDS.forEach((resourceId, index) => {
       this.resourceTexts.get(resourceId)?.setText(snapshot.resources[resourceId]);
+      const current = Number(snapshot.resources[resourceId]);
+      const previous = this.lastResourceValues.get(resourceId);
+      if (previous !== undefined && current > previous) {
+        this.spawnResourceGainPopup(resourceId, index, current - previous);
+      }
+      this.lastResourceValues.set(resourceId, current);
     });
     this.workerRows.forEach((row, role) => {
       const worker = snapshot.workers[role];
@@ -113,6 +149,32 @@ export class LaneBattleHudView {
     this.captureActionButtons.forEach((button, action) => this.setActionVisible(button, actions.includes(action)));
     this.capturePanelTitle.setText(snapshot.captureTitle);
     this.capturePanelBody.setText(snapshot.captureLines);
+  }
+
+  /**
+   * A momentary "+N" next to a resource number whenever it goes up (worker
+   * production tick, kill reward, etc.) — the game had no way to see what a
+   * worker actually produces, so this makes each production tick visible
+   * where it happens instead of requiring a separate explainer screen.
+   * Holds at full strength for 0.5s, then fades over the next 0.5s.
+   */
+  private spawnResourceGainPopup(resourceId: ResourceId, index: number, delta: number): void {
+    const popup = this.scene.add.text(RESOURCE_BAR_XS[index] + 46, 64, `+${delta}`, {
+      fontFamily: "Georgia, serif",
+      fontSize: "19px",
+      color: resourceId === "research" ? "#9df2ff" : "#8dffa8",
+      stroke: "#08150c",
+      strokeThickness: 3,
+    }).setOrigin(0, 0.5).setDepth(this.depth + 6).setScrollFactor(0);
+    this.scene.cameras.main.ignore(popup);
+    this.scene.tweens.add({ targets: popup, y: popup.y - 16, duration: 1000, ease: "Cubic.Out" });
+    this.scene.tweens.add({
+      targets: popup,
+      alpha: 0,
+      delay: 500,
+      duration: 500,
+      onComplete: () => popup.destroy(),
+    });
   }
 
   getVisibleCaptureActions(): (CapturePointAction | DefenseTowerAction)[] {
@@ -131,6 +193,10 @@ export class LaneBattleHudView {
     button.text.setText(label);
   }
 
+  setStrategicActionCost(actionId: StrategicActionId, cost: Partial<Record<ResourceId, number>>): void {
+    this.applyCostRow(this.strategicActionButtons.get(actionId), cost);
+  }
+
   setStrategicActionEnabled(actionId: StrategicActionId, enabled: boolean): void {
     const button = this.strategicActionButtons.get(actionId);
     if (!button) return;
@@ -143,6 +209,10 @@ export class LaneBattleHudView {
     const button = this.captureActionButtons.get(actionId);
     if (!button) return;
     button.text.setText(label);
+  }
+
+  setCaptureActionCost(actionId: CapturePointAction | DefenseTowerAction, cost: Partial<Record<ResourceId, number>>): void {
+    this.applyCostRow(this.captureActionButtons.get(actionId), cost);
   }
 
   setDevMode(active: boolean): void {
@@ -202,44 +272,56 @@ export class LaneBattleHudView {
       .setStrokeStyle(1, 0x3f556f, 0.3)
       .setDepth(this.depth + 2)
       .setScrollFactor(0);
-    const resourceXs = [448, 638, 828, 1018, 1208];
     MVP_ACTIVE_RESOURCE_IDS.forEach((resourceId, index) => {
-      this.scene.add.rectangle(resourceXs[index], 72, 172, 58, 0x101c28, 0.84)
+      this.scene.add.rectangle(RESOURCE_BAR_XS[index], 72, 172, 58, 0x101c28, 0.84)
         .setStrokeStyle(1, resourceId === "research" ? 0x63a9bb : 0x5c6f88, 0.42)
         .setDepth(this.depth + 3)
         .setScrollFactor(0);
-      this.scene.add.image(resourceXs[index] - 54, 72, getResourceIconKey(resourceId)).setDisplaySize(24, 24).setAlpha(0.96).setDepth(this.depth + 4).setScrollFactor(0);
+      this.scene.add.image(RESOURCE_BAR_XS[index] - 54, 72, getResourceIconKey(resourceId)).setDisplaySize(28, 28).setAlpha(0.98).setDepth(this.depth + 4).setScrollFactor(0);
       this.resourceLabelTexts.set(
         resourceId,
-        this.scene.add.text(resourceXs[index] - 8, 50, getResource(resourceId).label, {
+        this.scene.add.text(RESOURCE_BAR_XS[index] - 8, 50, getResource(resourceId).label, {
           fontFamily: "sans-serif",
           fontSize: "13px",
           color: resourceId === "research" ? "#b9f2ff" : "#aac1db",
         }).setDepth(this.depth + 4).setScrollFactor(0).setOrigin(0.5, 0.5),
       );
-      this.resourceTexts.set(resourceId, this.scene.add.text(resourceXs[index] + 2, 80, "", {
+      this.resourceTexts.set(resourceId, this.scene.add.text(RESOURCE_BAR_XS[index] + 2, 80, "", {
         fontFamily: "Georgia, serif",
         fontSize: resourceId === "research" ? "30px" : "33px",
         color: resourceId === "research" ? "#d2fbff" : "#f5fbff",
       }).setDepth(this.depth + 4).setScrollFactor(0).setOrigin(0.5, 0.5));
     });
 
-    this.scene.add.text(64, 704, "일꾼 배치", { fontFamily: "Georgia, serif", fontSize: "20px", color: "#f4e6c5" }).setDepth(this.depth + 2).setScrollFactor(0);
-    let workerY = 738;
-    (["gold", "wood", "food", "metal", "research", "idle"] as WorkerRole[]).forEach((role) => {
-      this.workerRows.set(role, this.createWorkerRow(role, workerY));
-      workerY += 25;
+    // Worker panel + hire/instant-wave/age-up buttons live in the bottom-center
+    // zone that used to show the tower/capture info panel and status text —
+    // that panel was removed as redundant (the same info is available by
+    // touching the structure directly), so this space now hosts the actions
+    // the player needs most often instead of sitting empty.
+    this.scene.add.text(672, 700, "일꾼 배치", { fontFamily: "Georgia, serif", fontSize: "16px", color: "#f4e6c5" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0);
+    const workerGrid: [WorkerRole, WorkerRole][] = [
+      ["gold", "wood"],
+      ["food", "metal"],
+      ["research", "idle"],
+    ];
+    workerGrid.forEach(([left, right], row) => {
+      const y = 724 + row * 24;
+      this.workerRows.set(left, this.createWorkerRow(left, 548, y));
+      this.workerRows.set(right, this.createWorkerRow(right, 748, y));
     });
 
-    this.strategicActionButtons.set("hire-worker", this.createActionButton(308, 724, 188, 46, "일꾼 고용", this.callbacks.hireWorker));
-    this.strategicActionButtons.set("hire-research-worker", this.createActionButton(308, 778, 188, 54, "연구 일꾼", this.callbacks.hireResearchWorker));
-    this.strategicActionButtons.set("use-instant-wave", this.createActionButton(1178, 724, 220, 46, "즉시 웨이브", this.callbacks.useInstantWave));
-    this.strategicActionButtons.set("age-up", this.createActionButton(1178, 778, 220, 54, "시대 업", this.callbacks.ageUp));
+    this.strategicActionButtons.set("hire-worker", this.createActionButton(500, 794, 164, 36, "일꾼 고용", this.callbacks.hireWorker));
+    this.strategicActionButtons.set("hire-research-worker", this.createActionButton(681, 794, 164, 44, "연구 일꾼", this.callbacks.hireResearchWorker));
+    this.strategicActionButtons.set("use-instant-wave", this.createActionButton(500, 844, 164, 36, "즉시 웨이브", this.callbacks.useInstantWave));
+    this.strategicActionButtons.set("age-up", this.createActionButton(681, 844, 164, 44, "시대 업", this.callbacks.ageUp));
 
-    this.rosterText = this.scene.add.text(530, 714, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#d8e7f6", lineSpacing: 3 }).setDepth(this.depth + 2).setScrollFactor(0).setVisible(false);
-    this.capturePanelTitle = this.scene.add.text(780, 718, "", { fontFamily: "Georgia, serif", fontSize: "17px", color: "#f4e6c5" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0.5);
-    this.capturePanelBody = this.scene.add.text(780, 758, "", { fontFamily: "sans-serif", fontSize: "11px", color: "#d8e7f6", align: "center", lineSpacing: 2 }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0.5);
-    this.infoText = this.scene.add.text(780, 870, "", { fontFamily: "sans-serif", fontSize: "11px", color: "#a8bdd7" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(0.5, 0.5);
+    // capturePanelTitle/capturePanelBody/rosterText are kept alive but never
+    // shown on screen — `apply()` is still called from LaneBattleScene and
+    // writes into them, so the objects must keep existing as harmless no-ops
+    // rather than forcing every call site to change.
+    this.rosterText = this.scene.add.text(-1000, -1000, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#d8e7f6" }).setVisible(false);
+    this.capturePanelTitle = this.scene.add.text(-1000, -1000, "", { fontFamily: "Georgia, serif", fontSize: "18px", color: "#f4e6c5" }).setVisible(false);
+    this.capturePanelBody = this.scene.add.text(-1000, -1000, "", { fontFamily: "sans-serif", fontSize: "14px", color: "#d8e7f6" }).setVisible(false);
 
     this.captureActionButtons.set("rebuild-defense-tower", this.createActionButton(920, 708, 150, 32, "타워 재건", this.callbacks.rebuildDefenseTower));
     this.captureActionButtons.set("build-defense-tower", this.createActionButton(920, 748, 150, 32, "타워", this.callbacks.buildDefenseTower));
@@ -255,9 +337,6 @@ export class LaneBattleHudView {
     this.enemyBaseBar = this.scene.add.rectangle(1116, 140, 180, 10, 0xff7b7b, 1).setOrigin(0, 0.5).setDepth(this.depth + 3);
     this.scene.add.rectangle(304, 140, 180, 10, 0x000000, 0.14).setOrigin(0, 0.5).setStrokeStyle(2, 0x9cb1c8, 0.34).setDepth(this.depth + 2);
     this.scene.add.rectangle(1116, 140, 180, 10, 0x000000, 0.14).setOrigin(0, 0.5).setStrokeStyle(2, 0x9cb1c8, 0.34).setDepth(this.depth + 2);
-    this.scene.add.text(304, 121, "아군 본진", { fontFamily: "sans-serif", fontSize: "11px", color: "#c7e5ff" }).setDepth(this.depth + 3);
-    this.scene.add.text(1116, 121, "적 본진", { fontFamily: "sans-serif", fontSize: "11px", color: "#ffd0d0" }).setDepth(this.depth + 3);
-
     this.audioSettingsPanel = new AudioSettingsPanel(this.scene, { depth: this.depth + 60, onVisibilityChange: this.callbacks.onAudioSettingsVisibilityChange });
     if (audioDebugEnabled) {
       this.audioDebugText = this.scene.add.text(1160, 116, "", { fontFamily: "monospace", fontSize: "11px", color: "#d9f2ff", backgroundColor: "rgba(4, 13, 22, 0.84)", padding: { x: 9, y: 7 }, lineSpacing: 2 }).setDepth(this.depth + 50).setScrollFactor(0);
@@ -265,12 +344,14 @@ export class LaneBattleHudView {
     this.setDevMode(false);
   }
 
-  private createWorkerRow(role: WorkerRole, y: number): WorkerUiRow {
-    this.scene.add.image(72, y + 10, getWorkerIconKey(role)).setDisplaySize(22, 22).setDepth(this.depth + 2).setScrollFactor(0);
-    this.scene.add.text(92, y, getWorkerRoleLabel(role), { fontFamily: "sans-serif", fontSize: "13px", color: "#e6dcc5" }).setDepth(this.depth + 2).setScrollFactor(0);
-    const value = this.scene.add.text(198, y, "0", { fontFamily: "monospace", fontSize: "13px", color: "#fff6dd" }).setDepth(this.depth + 2).setScrollFactor(0).setOrigin(1, 0);
-    const minus = this.scene.add.circle(224, y + 10, 10, 0x283a55, 0.95).setStrokeStyle(1, 0x7ea0c9).setDepth(this.depth + 2).setScrollFactor(0);
-    const plus = this.scene.add.circle(252, y + 10, 10, 0x283a55, 0.95).setStrokeStyle(1, 0x7ea0c9).setDepth(this.depth + 2).setScrollFactor(0);
+  private createWorkerRow(role: WorkerRole, x: number, y: number): WorkerUiRow {
+    // No text label here — the icon is the same shared texture the top
+    // resource bar uses for this resource, so it identifies the row on its
+    // own without needing a redundant "금"/"목재"/etc. word next to it.
+    this.scene.add.image(x, y, getWorkerIconKey(role)).setDisplaySize(18, 18).setDepth(this.depth + 2).setScrollFactor(0);
+    const value = this.scene.add.text(x + 14, y, "0", { fontFamily: "monospace", fontSize: "13px", color: "#fff6dd" }).setOrigin(0, 0.5).setDepth(this.depth + 2).setScrollFactor(0);
+    const minus = this.scene.add.circle(x + 42, y, 9, 0x283a55, 0.95).setStrokeStyle(1, 0x7ea0c9).setDepth(this.depth + 2).setScrollFactor(0);
+    const plus = this.scene.add.circle(x + 64, y, 9, 0x283a55, 0.95).setStrokeStyle(1, 0x7ea0c9).setDepth(this.depth + 2).setScrollFactor(0);
     this.scene.add.text(minus.x, minus.y - 1, "-", { fontFamily: "sans-serif", fontSize: "12px", color: "#ffffff" }).setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
     this.scene.add.text(plus.x, plus.y - 1, "+", { fontFamily: "sans-serif", fontSize: "12px", color: "#ffffff" }).setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
     if (role !== "research" && role !== "idle") {
@@ -282,7 +363,13 @@ export class LaneBattleHudView {
 
   private createActionButton(x: number, y: number, width: number, height: number, label: string, onClick: () => void): ActionButton {
     const rect = this.scene.add.rectangle(x + width / 2, y + height / 2, width, height, 0x1d2d47, 0.95).setStrokeStyle(2, 0xd6b979, 0.65).setDepth(this.depth + 2).setScrollFactor(0);
-    const text = this.scene.add.text(rect.x, rect.y, label, { fontFamily: "sans-serif", fontSize: "12px", color: "#f3f7fb", align: "center" }).setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
+    const text = this.scene.add.text(rect.x, rect.y - height * 0.2, label, { fontFamily: "sans-serif", fontSize: "12px", color: "#f3f7fb", align: "center" }).setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
+    const costIcons: Phaser.GameObjects.Image[] = [];
+    const costTexts: Phaser.GameObjects.Text[] = [];
+    for (let i = 0; i < MAX_COST_ITEMS; i += 1) {
+      costIcons.push(this.scene.add.image(0, 0, "icon-gold").setDisplaySize(17, 17).setDepth(this.depth + 3).setScrollFactor(0).setVisible(false));
+      costTexts.push(this.scene.add.text(0, 0, "", { fontFamily: "monospace", fontSize: "11px", color: "#d8e7f6" }).setOrigin(0, 0.5).setDepth(this.depth + 3).setScrollFactor(0).setVisible(false));
+    }
     rect.setInteractive({ useHandCursor: true });
     rect.on("pointerover", () => {
       rect.setFillStyle(0x274165, 0.98);
@@ -294,12 +381,51 @@ export class LaneBattleHudView {
       this.scene.time.delayedCall(100, () => rect.setFillStyle(0x1d2d47, 0.95));
       onClick();
     });
-    return { rect, text };
+    return { rect, text, costIcons, costTexts };
+  }
+
+  /**
+   * Renders a cost as a row of icon+number pairs using the exact same
+   * `getResourceIconKey` texture lookup as the top resource bar, instead of
+   * a "10G 10W 10F" letter-abbreviation string — so a future icon redesign
+   * only has to happen in one place and both stay in sync automatically.
+   */
+  private applyCostRow(button: ActionButton | undefined, cost: Partial<Record<ResourceId, number>>): void {
+    if (!button) return;
+    // Cost rows are refreshed on a separate pass from button visibility
+    // (`refreshHudActionLabels()` runs after `apply()`), so re-check the
+    // button's own visibility here instead of unconditionally showing —
+    // otherwise a hidden capture-action button's cost icons would still
+    // render, floating with no button behind them.
+    const entries = button.rect.visible
+      ? (Object.entries(cost) as [ResourceId, number][]).filter(([, amount]) => (amount ?? 0) > 0)
+      : [];
+    const itemWidth = 34;
+    const rowWidth = entries.length * itemWidth;
+    const startX = button.rect.x - rowWidth / 2 + itemWidth / 2;
+    const y = button.rect.y + button.rect.height / 2 - 11;
+    button.costIcons.forEach((icon, i) => {
+      const costText = button.costTexts[i];
+      const entry = entries[i];
+      if (!entry) {
+        icon.setVisible(false);
+        costText.setVisible(false);
+        return;
+      }
+      const [resourceId, amount] = entry;
+      const itemX = startX + i * itemWidth;
+      icon.setTexture(getResourceIconKey(resourceId)).setPosition(itemX - 9, y).setVisible(true);
+      costText.setText(String(Math.round(amount))).setPosition(itemX + 1, y).setVisible(true);
+    });
   }
 
   private setActionVisible(button: ActionButton, visible: boolean): void {
     button.rect.setVisible(visible);
     button.text.setVisible(visible);
+    if (!visible) {
+      button.costIcons.forEach((icon) => icon.setVisible(false));
+      button.costTexts.forEach((costText) => costText.setVisible(false));
+    }
     if (visible) {
       button.rect.setInteractive({ useHandCursor: true });
       button.text.disableInteractive();

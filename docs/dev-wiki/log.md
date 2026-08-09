@@ -6143,3 +6143,22 @@ Use consistent headings so entries are easy to grep.
   `npm run build` 통과,
   `npx playwright test tools/validation/mechanized-three-frame-roster.spec.ts`
   통과(3개 테스트).
+
+## 2026-08-09 - 자원 아이콘 실루엣 재수정 및 표시 크기 확대
+
+사용자가 자원 아이콘 5종에 대해 세부 참조를 다시 제시했다:
+금은 유지하되 더 크게, 목재는 잘린 통나무 단면이 보이는 비스듬한 모양,
+식량은 윤곽이 더 또렷한 밀 이삭, 금속은 철괴, 연구는 초록 액체가 든 비커
+형태로 다시 그리라고 요청.
+
+- `LaneBattleScene.createUiIconTextures()`에서 기존 키
+  (`icon-gold`, `icon-wood`, `icon-food`, `icon-metal`, `icon-research`)는
+  유지한 채 드로잉만 다시 교체했다.
+  - `icon-wood`: 둥근 단면이 보이는 기울어진 통나무 2개
+  - `icon-food`: 밀 이삭 실루엣을 더 분명하게 한 곡식송이
+  - `icon-metal`: 사다리꼴 상단면이 보이는 철괴
+  - `icon-research`: 초록 액체가 들어간 비커
+- `LaneBattleHudView.ts`에서 상단 자원바 아이콘을 `24px -> 28px`로 키우고,
+  버튼 비용행 아이콘도 `14px -> 17px`로 확대해 "금 등 자원 아이콘 크기를
+  좀 더 키워달라"는 요구를 반영했다.
+- 검증: `npx tsc --noEmit` 통과, `npm run build` 통과.
