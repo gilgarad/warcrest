@@ -7,10 +7,10 @@ import {
 } from "../laneOccupancy";
 
 describe("lane occupancy", () => {
-  it("creates three legible rows and three staggered fronts per target", () => {
+  it("creates a wider five-row combat band with four staggered fronts per target", () => {
     const rows = createLaneRowCandidates(0, COMBAT_ROW_REACH, COMBAT_ROW_STEP);
-    expect(rows).toEqual([0, -1, 1]);
-    expect(rows.length * COMBAT_PROGRESS_OFFSETS.length).toBe(9);
+    expect(rows).toEqual([0, -1, 1, -2, 2]);
+    expect(rows.length * COMBAT_PROGRESS_OFFSETS.length).toBe(20);
   });
 
   it("keeps rows inside the playable lane", () => {

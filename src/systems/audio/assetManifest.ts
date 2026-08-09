@@ -205,7 +205,8 @@ function sfx(
     synth,
     licenseNote: missingAsset
       ? NO_ASSET_YET
-      : "절차적 합성 오프라인 렌더링 (tools/audio-synth/render_combat_sfx.py), 무료/자체 생성, 라이선스 제약 없음",
+      : "Kenney CC0 녹음(tools/audio-synth/vendor/)을 분석만 하고 직접 파형은 사용하지 않는 " +
+        "분석 기반 재합성 (tools/audio-synth/render_combat_sfx.py) — 원본과 파형 비동일, 라이선스 제약 없음",
   };
 }
 

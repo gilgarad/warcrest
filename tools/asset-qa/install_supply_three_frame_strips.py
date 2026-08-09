@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageChops, ImageDraw
+from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFilter
 from scipy import ndimage
 
 from generate_pose_board_production_assets import (
@@ -121,6 +121,29 @@ def harden_sprite_alpha(
     return Image.fromarray(rgba, "RGBA")
 
 
+def strengthen_supply_presence(image: Image.Image) -> Image.Image:
+    """Make carriers read as fully solid against the battlefield, not washed out."""
+    alpha = image.getchannel("A")
+    rgb = ImageEnhance.Color(image).enhance(1.22)
+    rgb = ImageEnhance.Contrast(rgb).enhance(1.18)
+    rgb = ImageEnhance.Brightness(rgb).enhance(0.88)
+    rgb = ImageEnhance.Sharpness(rgb).enhance(1.2)
+    rgb.putalpha(alpha)
+    return rgb
+
+
+def add_support_outline(image: Image.Image, color = (24, 16, 10, 255)) -> Image.Image:
+    alpha = image.getchannel("A")
+    expanded = alpha.filter(ImageFilter.MaxFilter(3))
+    outline_alpha = ImageChops.subtract(expanded, alpha)
+    outline = Image.new("RGBA", image.size, color)
+    outline.putalpha(outline_alpha)
+    out = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    out.alpha_composite(outline)
+    out.alpha_composite(image)
+    return out
+
+
 def install_supply(spec: SupplySpec) -> dict[str, object]:
     raw_source = SOURCE_DIR / f"{spec.prefix}-e-5slot-source.png"
     alpha_source = SOURCE_DIR / f"{spec.prefix}-e-5slot-source-alpha.png"
@@ -144,6 +167,8 @@ def install_supply(spec: SupplySpec) -> dict[str, object]:
         else:
             canvas = reinforce_visible_alpha(canvas, minimum_alpha=208, easing=0.24, clear_below_alpha=82)
         canvas = harden_sprite_alpha(canvas)
+        canvas = strengthen_supply_presence(canvas)
+        canvas = add_support_outline(canvas)
         production[pose] = canvas
         add_team_accent(canvas, "support", "player", spec.prefix).save(
             ASSET_DIR / f"{spec.prefix}-e-{pose}.png"

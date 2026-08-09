@@ -20,7 +20,7 @@ describe("production structure registry", () => {
     expect(getDefenseTowerFamily("stone")).toBe("palisade");
     expect(getDefenseTowerFamily("industrial_early")).toBe("bastion");
     expect(getDefenseTowerTexture("modern_late", "construction", "enemy")).toBe("defense-tower-missile-construction-enemy");
-    expect(getDefenseTowerVisibleHeightRatio("iron_late", "ruins")).toBeCloseTo(260 / 512);
+    expect(getDefenseTowerVisibleHeightRatio("iron_late", "ruins")).toBeCloseTo(280 / 512);
     expect(getMainBaseTexture("enemy")).toBe("main-base-enemy");
     expect(getCaptureMarkerTexture("neutral")).toBe("capture-marker-neutral");
   });

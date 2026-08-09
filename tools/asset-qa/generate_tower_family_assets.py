@@ -218,7 +218,7 @@ def overlay_damage(base: Image.Image, severity: str) -> Image.Image:
     return out
 
 
-def build_construction(base: Image.Image) -> Image.Image:
+def build_construction(base: Image.Image, family: str) -> Image.Image:
     bbox = alpha_bbox(base)
     left, top, right, bottom = bbox
     width = right - left
@@ -244,21 +244,107 @@ def build_construction(base: Image.Image) -> Image.Image:
     draw_ground_shadow(out, max(180, round(width * 0.66)), 44, 52)
     out.alpha_composite(body)
 
-    scaffold = Image.new("RGBA", CANVAS, (0, 0, 0, 0))
-    draw = ImageDraw.Draw(scaffold)
-    wood = (126, 88, 48, 255)
-    rope = (166, 136, 88, 255)
-    for ratio in (0.16, 0.34, 0.58, 0.8):
-        x = round(left + width * ratio)
-        draw.rectangle((x, round(top + height * 0.1), x + 10, bottom), fill=wood)
-    for ratio in (0.22, 0.4, 0.58, 0.76):
-        y = round(top + height * ratio)
-        draw.rectangle((round(left - width * 0.02), y, round(right + width * 0.02), y + 8), fill=wood)
-    draw.line((round(left + width * 0.06), bottom - 14, round(right - width * 0.06), round(top + height * 0.18)), fill=rope, width=7)
-    draw.line((round(left + width * 0.14), round(top + height * 0.12), round(right - width * 0.02), bottom - 20), fill=rope, width=6)
-    draw.rectangle((round(left + width * 0.48), round(top - 8), round(left + width * 0.5), round(top + height * 0.18)), fill=(118, 90, 62, 255))
-    draw.line((round(left + width * 0.49), round(top + height * 0.02), round(left + width * 0.56), round(top + height * 0.12)), fill=(126, 98, 68, 255), width=4)
-    out.alpha_composite(scaffold)
+    overlay = Image.new("RGBA", CANVAS, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+    wood = (132, 94, 54, 255)
+    wood_light = (174, 132, 82, 255)
+    rope = (176, 146, 96, 255)
+    stone = (154, 146, 134, 255)
+    concrete = (126, 132, 138, 255)
+    metal = (112, 122, 132, 255)
+
+    if family == "palisade":
+        left_frame_x = round(left + width * 0.16)
+        right_frame_x = round(right - width * 0.14)
+        top_y = round(top + height * 0.2)
+        mid_y = round(top + height * 0.46)
+        for x in (left_frame_x, right_frame_x):
+            draw.rounded_rectangle((x, top_y, x + 10, bottom - 10), radius=4, fill=wood)
+        draw.line((left_frame_x + 4, bottom - 16, left_frame_x + 54, top_y + 36), fill=rope, width=6)
+        draw.line((left_frame_x + 52, bottom - 18, left_frame_x + 4, top_y + 34), fill=rope, width=6)
+        draw.line((right_frame_x + 4, bottom - 16, right_frame_x - 42, top_y + 30), fill=rope, width=6)
+        draw.line((right_frame_x - 38, bottom - 18, right_frame_x + 4, top_y + 34), fill=rope, width=6)
+        draw.rounded_rectangle(
+            (round(left + width * 0.26), round(top + height * 0.18), round(right - width * 0.24), round(top + height * 0.24)),
+            radius=4,
+            fill=wood_light,
+        )
+        draw.rounded_rectangle(
+            (round(left + width * 0.3), mid_y, round(right - width * 0.28), mid_y + 8),
+            radius=4,
+            fill=wood_light,
+        )
+        draw.line(
+            (round(left + width * 0.18), bottom - 18, round(left + width * 0.28), round(top + height * 0.26)),
+            fill=rope,
+            width=6,
+        )
+        draw.line(
+            (round(right - width * 0.12), bottom - 14, round(right - width * 0.26), round(top + height * 0.24)),
+            fill=rope,
+            width=6,
+        )
+        draw.line(
+            (round(right - width * 0.12), bottom - 18, round(right - width * 0.02), round(top + height * 0.58)),
+            fill=wood,
+            width=8,
+        )
+        for offset, plank_w in ((0.0, 60), (0.06, 50), (0.11, 42)):
+            x0 = round(left + width * (0.18 + offset))
+            y0 = bottom - 16 - round(offset * 120)
+            draw.rounded_rectangle((x0, y0, x0 + plank_w, y0 + 10), radius=4, fill=wood_light)
+        draw.ellipse((round(left + width * 0.22), bottom - 34, round(left + width * 0.34), bottom - 16), fill=(92, 68, 42, 180))
+    else:
+        material = concrete if family == "missile" else stone
+        accent = metal if family == "missile" else wood_light
+        # Side scaffolding rather than a screen-wide grid.
+        side_platforms = (
+            (round(left + width * 0.08), round(top + height * 0.22), round(left + width * 0.26), bottom - 10),
+            (round(right - width * 0.24), round(top + height * 0.18), round(right - width * 0.08), bottom - 14),
+        )
+        for x0, y0, x1, y1 in side_platforms:
+            for post_x in (x0 + 4, x1 - 10):
+                draw.rounded_rectangle((post_x, y0, post_x + 8, y1), radius=4, fill=wood)
+            for ratio in (0.18, 0.42, 0.66):
+                y = round(y0 + (y1 - y0) * ratio)
+                draw.rounded_rectangle((x0, y, x1, y + 7), radius=4, fill=accent)
+        draw.line(
+            (round(left + width * 0.14), bottom - 14, round(left + width * 0.26), round(top + height * 0.28)),
+            fill=rope,
+            width=5,
+        )
+        draw.line(
+            (round(right - width * 0.12), bottom - 16, round(right - width * 0.24), round(top + height * 0.24)),
+            fill=rope,
+            width=5,
+        )
+        # Partial upper ring / block stacks under assembly.
+        block_y = round(top + height * 0.28)
+        block_h = 22 if family == "bastion" else 18
+        block_w = 30 if family == "bastion" else 24
+        for ratio in (0.32, 0.42, 0.52, 0.62):
+            x = round(left + width * ratio)
+            draw.rounded_rectangle((x, block_y, x + block_w, block_y + block_h), radius=5, fill=material)
+        draw.rounded_rectangle(
+            (round(left + width * 0.38), round(top + height * 0.18), round(left + width * 0.56), round(top + height * 0.24)),
+            radius=4,
+            fill=accent,
+        )
+        draw.line(
+            (round(left + width * 0.47), round(top + height * 0.18), round(left + width * 0.62), round(top + height * 0.06)),
+            fill=accent,
+            width=5,
+        )
+        draw.ellipse((round(right - width * 0.34), bottom - 34, round(right - width * 0.22), bottom - 16), fill=(82, 88, 96, 172))
+        if family == "missile":
+            draw.rounded_rectangle(
+                (round(left + width * 0.44), round(top + height * 0.3), round(left + width * 0.58), round(top + height * 0.4)),
+                radius=5,
+                fill=(88, 112, 126, 255),
+            )
+
+    overlay = overlay.filter(ImageFilter.GaussianBlur(radius=0.25))
+    out.alpha_composite(overlay)
     return out
 
 
@@ -309,7 +395,7 @@ def build_family_state(family: str, state: str, team: str) -> Image.Image:
     if state == "critical":
         return overlay_damage(full, "critical")
     if state == "construction":
-        return build_construction(full)
+        return build_construction(full, family)
     if state == "ruins":
         return build_ruins(full, family)
     raise ValueError(f"unsupported state: {state}")
