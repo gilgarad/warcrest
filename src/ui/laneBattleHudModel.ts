@@ -75,9 +75,13 @@ export function getResourceIconKey(resourceId: ResourceId): string {
 }
 
 export function getWorkerIconKey(role: WorkerRole): string {
-  if (role === "research") return "icon-research";
+  // Reuse the exact same texture key the top resource bar uses for every
+  // resource-backed role (gold/wood/food/metal/research), instead of a
+  // separate generic "person" icon — one shared asset, so a future icon
+  // redesign only needs to happen in one place. "idle" has no matching
+  // resource, so it keeps its own dedicated icon.
   if (role === "idle") return "icon-idle";
-  return "icon-worker";
+  return getResourceIconKey(role);
 }
 
 export function getWorkerRoleLabel(role: WorkerRole): string {
@@ -104,7 +108,7 @@ export function createLaneBattleHudSnapshot(input: LaneBattleHudInput): LaneBatt
   const workers = Object.fromEntries(WORKER_ROLES.map((role) => [role, {
     value: String(input.player.workers[role]),
     canIncrease: role !== "idle" && role !== "research" && input.player.workers.idle > 0,
-    canDecrease: role !== "idle" && role !== "research" && input.player.workers[role] > 0,
+    canDecrease: role !== "idle" && role !== "research" && input.player.workers[role] > 1,
   }])) as LaneBattleHudSnapshot["workers"];
   const selected = input.selectedCapturePoint;
   const selectedTower = input.selectedDefenseTower;

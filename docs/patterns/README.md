@@ -3,6 +3,58 @@
 Recurring implementation approaches for `game_project1`. Stack: Phaser 3 +
 TypeScript + Vite.
 
+> Note (2026-08-08): several entries below (`DungeonScene`, `Squad`,
+> `systems/combat.ts`, `chibi.ts`, `iso.ts`) describe an earlier dungeon-crawler
+> prototype that the project has since moved on from — the live game is the
+> `LaneBattleScene` lane-siege build. Left in place as implementation-technique
+> history rather than rewritten, since the *techniques* (data registries,
+> UI-free systems, headless visual verification) are still the house style;
+> just don't go looking for `DungeonScene` in the current source tree.
+
+## Mandatory: extract new gameplay logic into its own file, not into `LaneBattleScene.ts`
+
+`LaneBattleScene.ts` grew to 4300+ lines / 177 methods by having every new
+mechanic added as another private method directly on the scene, across many
+sessions. See `docs/dev-wiki/ux-and-architecture-review.md` (Part 2) for the
+full audit and `docs/dev-wiki/ai-economy-design.md` /
+`src/systems/ai/aiController.ts` for a completed example of pulling one
+responsibility cluster back out.
+
+**Going forward, this is a hard rule, not a suggestion**: when adding a new
+piece of gameplay logic (a new system, a new AI behavior, a new economy rule,
+a new presentation/animation concern), it goes into its own file under
+`src/systems/<domain>/` (or `src/presentation/`, `src/ui/` for
+view/presentation concerns) — never as a new private method appended to
+`LaneBattleScene.ts`. The scene's job is to be the Phaser-object-creation and
+per-frame orchestration glue that composes these modules, not to contain the
+domain logic itself.
+
+Concrete shape to copy (see `aiController.ts`):
+
+- The extracted module exports a class (or, for stateless logic, plain
+  functions — see `systems/lane-economy/aiEconomy.ts`) that takes a small
+  `Host` interface of exactly the accessors/callbacks it needs (e.g.
+  `getEnemyTeam(): TeamState`), not the whole scene.
+- The scene constructs it once (typically in `create()`) by passing an
+  object literal of closures back into scene state — this keeps the scene's
+  private fields genuinely private (no widening `private` to `public` just
+  to satisfy an external module) while still letting the extracted module
+  read/write what it needs.
+- Types that both sides need (e.g. `CapturePointState`, `DefenseTowerState`)
+  get `export`ed from wherever they're canonically defined (today, still
+  `LaneBattleScene.ts` for those two — a further improvement would be moving
+  them to a shared types module) and imported with `import type` on the
+  extracted-module side, so there's no runtime circular dependency.
+- The scene's own method shrinks to a one-line delegation
+  (`this.aiController.tick(deltaSec)`) or is deleted entirely if nothing
+  else needs the old private method name.
+
+If a change is small enough to be a genuine one-off (a single Phaser object
+tweak, a one-line constant change), it's fine inline. The line to watch for:
+if you're writing more than ~15-20 lines of decision logic (branching on game
+state to decide what should happen, not just how to draw it), it belongs in
+its own file.
+
 ## Established So Far
 
 - **Programmer-art placeholders via `Phaser.GameObjects.Graphics.generateTexture`**:

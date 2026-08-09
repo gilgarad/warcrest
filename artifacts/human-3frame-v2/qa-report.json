@@ -338,21 +338,21 @@
         "attack_source_has_safe_margin": true
       },
       "pass": true,
-      "heightRatio": 1.0385,
-      "walkSilhouetteDifference": 0.047,
+      "heightRatio": 1.0305,
+      "walkSilhouetteDifference": 0.0053,
       "widths": {
-        "idle": 201,
-        "walk-01": 232,
-        "walk-02": 197,
-        "walk-03": 212,
+        "idle": 145,
+        "walk-01": 166,
+        "walk-02": 154,
+        "walk-03": 167,
         "attack": 289
       },
       "heights": {
         "idle": 270,
-        "walk-01": 260,
-        "walk-02": 264,
+        "walk-01": 262,
+        "walk-02": 267,
         "walk-03": 262,
-        "attack": 262
+        "attack": 251
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 4528,
@@ -386,20 +386,20 @@
         "attack_source_has_safe_margin": true
       },
       "pass": true,
-      "heightRatio": 1.0443,
-      "walkSilhouetteDifference": 0.0228,
+      "heightRatio": 1.0242,
+      "walkSilhouetteDifference": 0.1018,
       "widths": {
-        "idle": 75,
-        "walk-01": 276,
-        "walk-02": 75,
-        "walk-03": 270,
+        "idle": 101,
+        "walk-01": 255,
+        "walk-02": 204,
+        "walk-03": 282,
         "attack": 771
       },
       "heights": {
         "idle": 424,
-        "walk-01": 406,
+        "walk-01": 424,
         "walk-02": 424,
-        "walk-03": 408,
+        "walk-03": 414,
         "attack": 270
       },
       "diagnosticLegIdentity": {
@@ -430,20 +430,20 @@
       },
       "pass": true,
       "heightRatio": 1.042,
-      "walkSilhouetteDifference": 0.0371,
+      "walkSilhouetteDifference": 0.0392,
       "widths": {
         "idle": 105,
         "walk-01": 156,
         "walk-02": 103,
-        "walk-03": 163,
-        "attack": 235
+        "walk-03": 164,
+        "attack": 233
       },
       "heights": {
         "idle": 270,
         "walk-01": 268,
         "walk-02": 273,
         "walk-03": 262,
-        "attack": 252
+        "attack": 253
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 7641,
@@ -473,17 +473,17 @@
       },
       "pass": true,
       "heightRatio": 1.0385,
-      "walkSilhouetteDifference": 0.0049,
+      "walkSilhouetteDifference": 0.0063,
       "widths": {
         "idle": 132,
         "walk-01": 147,
         "walk-02": 129,
-        "walk-03": 147,
+        "walk-03": 148,
         "attack": 190
       },
       "heights": {
         "idle": 270,
-        "walk-01": 260,
+        "walk-01": 261,
         "walk-02": 265,
         "walk-03": 260,
         "attack": 251
@@ -516,11 +516,11 @@
       },
       "pass": true,
       "heightRatio": 1.0112,
-      "walkSilhouetteDifference": 0.0106,
+      "walkSilhouetteDifference": 0.0111,
       "widths": {
-        "idle": 112,
+        "idle": 111,
         "walk-01": 158,
-        "walk-02": 109,
+        "walk-02": 110,
         "walk-03": 169,
         "attack": 258
       },
@@ -558,21 +558,21 @@
         "attack_source_has_safe_margin": true
       },
       "pass": true,
-      "heightRatio": 1.0189,
-      "walkSilhouetteDifference": 0.0109,
+      "heightRatio": 1.0226,
+      "walkSilhouetteDifference": 0.0132,
       "widths": {
         "idle": 126,
-        "walk-01": 172,
-        "walk-02": 126,
+        "walk-01": 171,
+        "walk-02": 125,
         "walk-03": 172,
         "attack": 200
       },
       "heights": {
         "idle": 270,
         "walk-01": 265,
-        "walk-02": 270,
+        "walk-02": 271,
         "walk-03": 265,
-        "attack": 252
+        "attack": 251
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 4219,
@@ -602,20 +602,20 @@
       },
       "pass": true,
       "heightRatio": 1.0112,
-      "walkSilhouetteDifference": 0.0184,
+      "walkSilhouetteDifference": 0.019,
       "widths": {
-        "idle": 170,
+        "idle": 169,
         "walk-01": 200,
-        "walk-02": 171,
-        "walk-03": 210,
-        "attack": 233
+        "walk-02": 170,
+        "walk-03": 209,
+        "attack": 232
       },
       "heights": {
         "idle": 270,
         "walk-01": 267,
         "walk-02": 269,
-        "walk-03": 267,
-        "attack": 249
+        "walk-03": 268,
+        "attack": 248
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 5766,
@@ -645,20 +645,20 @@
       },
       "pass": true,
       "heightRatio": 1.0112,
-      "walkSilhouetteDifference": 0.0213,
+      "walkSilhouetteDifference": 0.0193,
       "widths": {
         "idle": 150,
-        "walk-01": 185,
+        "walk-01": 184,
         "walk-02": 151,
-        "walk-03": 192,
+        "walk-03": 191,
         "attack": 205
       },
       "heights": {
         "idle": 270,
-        "walk-01": 269,
-        "walk-02": 270,
+        "walk-01": 268,
+        "walk-02": 269,
         "walk-03": 267,
-        "attack": 258
+        "attack": 257
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 7363,
@@ -687,21 +687,21 @@
         "attack_source_has_safe_margin": true
       },
       "pass": true,
-      "heightRatio": 1.0305,
-      "walkSilhouetteDifference": 0.0122,
+      "heightRatio": 1.0465,
+      "walkSilhouetteDifference": 0.0284,
       "widths": {
-        "idle": 126,
-        "walk-01": 166,
-        "walk-02": 126,
-        "walk-03": 168,
-        "attack": 185
+        "idle": 107,
+        "walk-01": 139,
+        "walk-02": 103,
+        "walk-03": 148,
+        "attack": 189
       },
       "heights": {
         "idle": 270,
-        "walk-01": 263,
-        "walk-02": 270,
-        "walk-03": 262,
-        "attack": 253
+        "walk-01": 262,
+        "walk-02": 265,
+        "walk-03": 258,
+        "attack": 254
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 8327,
@@ -730,21 +730,21 @@
         "attack_source_has_safe_margin": true
       },
       "pass": true,
-      "heightRatio": 1.0037,
-      "walkSilhouetteDifference": 0.0058,
+      "heightRatio": 1.0584,
+      "walkSilhouetteDifference": 0.049,
       "widths": {
-        "idle": 187,
-        "walk-01": 207,
-        "walk-02": 184,
-        "walk-03": 207,
-        "attack": 221
+        "idle": 128,
+        "walk-01": 154,
+        "walk-02": 119,
+        "walk-03": 150,
+        "attack": 201
       },
       "heights": {
         "idle": 270,
-        "walk-01": 269,
-        "walk-02": 270,
-        "walk-03": 269,
-        "attack": 257
+        "walk-01": 257,
+        "walk-02": 272,
+        "walk-03": 263,
+        "attack": 253
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 5323,
@@ -773,21 +773,21 @@
         "attack_source_has_safe_margin": true
       },
       "pass": true,
-      "heightRatio": 1.0112,
-      "walkSilhouetteDifference": 0.0182,
+      "heightRatio": 1.0463,
+      "walkSilhouetteDifference": 0.0207,
       "widths": {
-        "idle": 146,
-        "walk-01": 180,
-        "walk-02": 141,
-        "walk-03": 186,
-        "attack": 246
+        "idle": 111,
+        "walk-01": 168,
+        "walk-02": 111,
+        "walk-03": 177,
+        "attack": 205
       },
       "heights": {
         "idle": 270,
-        "walk-01": 271,
-        "walk-02": 272,
-        "walk-03": 269,
-        "attack": 265
+        "walk-01": 259,
+        "walk-02": 271,
+        "walk-03": 259,
+        "attack": 248
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 4221,
@@ -816,21 +816,21 @@
         "attack_source_has_safe_margin": true
       },
       "pass": true,
-      "heightRatio": 1.0265,
-      "walkSilhouetteDifference": 0.0115,
+      "heightRatio": 1.0385,
+      "walkSilhouetteDifference": 0.035,
       "widths": {
-        "idle": 141,
-        "walk-01": 163,
-        "walk-02": 135,
-        "walk-03": 160,
-        "attack": 191
+        "idle": 128,
+        "walk-01": 166,
+        "walk-02": 125,
+        "walk-03": 183,
+        "attack": 190
       },
       "heights": {
         "idle": 270,
-        "walk-01": 264,
-        "walk-02": 271,
-        "walk-03": 264,
-        "attack": 259
+        "walk-01": 261,
+        "walk-02": 267,
+        "walk-03": 260,
+        "attack": 260
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 8082,
@@ -860,20 +860,20 @@
       },
       "pass": true,
       "heightRatio": 1.0037,
-      "walkSilhouetteDifference": 0.0365,
+      "walkSilhouetteDifference": 0.0374,
       "widths": {
-        "idle": 173,
+        "idle": 174,
         "walk-01": 187,
-        "walk-02": 155,
-        "walk-03": 195,
+        "walk-02": 156,
+        "walk-03": 196,
         "attack": 233
       },
       "heights": {
         "idle": 270,
-        "walk-01": 269,
-        "walk-02": 270,
+        "walk-01": 270,
+        "walk-02": 271,
         "walk-03": 270,
-        "attack": 269
+        "attack": 270
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 5805,
@@ -903,20 +903,20 @@
       },
       "pass": true,
       "heightRatio": 1.0037,
-      "walkSilhouetteDifference": 0.0241,
+      "walkSilhouetteDifference": 0.0233,
       "widths": {
-        "idle": 156,
-        "walk-01": 196,
+        "idle": 155,
+        "walk-01": 194,
         "walk-02": 156,
-        "walk-03": 200,
-        "attack": 256
+        "walk-03": 199,
+        "attack": 255
       },
       "heights": {
         "idle": 270,
-        "walk-01": 271,
-        "walk-02": 271,
-        "walk-03": 270,
-        "attack": 264
+        "walk-01": 270,
+        "walk-02": 270,
+        "walk-03": 271,
+        "attack": 262
       },
       "diagnosticLegIdentity": {
         "slot2RedPixels": 3384,

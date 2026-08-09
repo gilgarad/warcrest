@@ -15,3 +15,7 @@ dist/
 build/
 node_modules/
 test-results/
+
+# Python bytecode cache from tools/asset-qa/*.py runs
+__pycache__/
+*.pyc

@@ -53,7 +53,7 @@ test("renders all five tower states at one stable visible height", async ({ page
       }).__terrainPrototypeControl.prepareTowerStateProbe(nextState, nextOwner);
     }, { nextState: state, nextOwner: owner });
     const tower = (await snapshot(page)).verification.presentation.captureTowers[0];
-    expect(tower.textureKey).toBe(`defense-tower-${state}${owner === "enemy" ? "-enemy" : ""}`);
+    expect(tower.textureKey).toBe(`defense-tower-palisade-${state}${owner === "enemy" ? "-enemy" : ""}`);
     expect(tower.cssVisibleHeight).toBeCloseTo(144, 0);
     expect(tower.originY).toBe(0.875);
     results.push({ state, textureKey: tower.textureKey, cssVisibleHeight: tower.cssVisibleHeight });

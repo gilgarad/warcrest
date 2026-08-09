@@ -82,10 +82,10 @@ def install_unit(spec: CavalrySpec) -> dict[str, object]:
             anchor_y = 336
         canvas = normalize_to_canvas(frame, canvas_size, reference_scale, anchor_y)
         production[pose] = canvas
-        add_team_accent(canvas, "cavalry", "player").save(
+        add_team_accent(canvas, "cavalry", "player", spec.prefix).save(
             ASSET_DIR / f"{spec.prefix}-e-{pose}.png"
         )
-        add_team_accent(canvas, "cavalry", "enemy").save(
+        add_team_accent(canvas, "cavalry", "enemy", spec.prefix).save(
             ASSET_DIR / f"{spec.prefix}-e-{pose}-enemy.png"
         )
 

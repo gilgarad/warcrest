@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { getDefenseTowerTexture } from "../../presentation/structures/productionStructureRegistry";
 import { createTeamState, makeResourceMap } from "../../systems/lane-economy/laneEconomy";
 import { adjustDraftResearchLevel } from "../../systems/lane-economy/researchRules";
 import { createTeamResearchState } from "../../systems/lane-economy/researchState";
@@ -50,5 +51,6 @@ describe("base research panel model", () => {
       "현대 전차",
       "방어 타워",
     ]);
+    expect(snapshot.rows[snapshot.rows.length - 1]?.iconTextureKey).toBe(getDefenseTowerTexture("modern_late", "full", "player"));
   });
 });

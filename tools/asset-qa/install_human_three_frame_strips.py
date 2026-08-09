@@ -262,8 +262,8 @@ def install_unit(spec: BipedSpec) -> dict[str, object]:
         )
         canvas = normalize_to_canvas(frame, canvas_size, pose_scale, anchor_y)
         production[pose] = canvas
-        player = add_team_accent(canvas, "infantry", "player")
-        enemy = add_team_accent(canvas, "infantry", "enemy")
+        player = add_team_accent(canvas, "infantry", "player", spec.prefix)
+        enemy = add_team_accent(canvas, "infantry", "enemy", spec.prefix)
         player.save(ASSET_DIR / f"{spec.prefix}-e-{pose}.png")
         enemy.save(ASSET_DIR / f"{spec.prefix}-e-{pose}-enemy.png")
 

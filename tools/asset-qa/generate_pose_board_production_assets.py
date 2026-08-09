@@ -927,7 +927,62 @@ def transform_for_direction(image: Image.Image, direction: str) -> Image.Image:
     return out.crop(bbox) if bbox else out
 
 
-def add_team_accent(canvas: Image.Image, role: str, team: Literal["player", "enemy"] = "player") -> Image.Image:
+AUTHORED_SASH_PREFIXES = {
+    "knight",
+    "heavy-cavalry",
+    "light-cavalry",
+    "cavalry",
+    "musketeer",
+    "pikeman",
+    "grenadier",
+    "rifleman-late",
+    "grenadier-late",
+    "infantry",
+    "machine-gunner",
+    "shock-trooper",
+    "automatic-rifleman",
+    "support-gunner",
+    "mobile-infantry",
+    "special-forces",
+    "heavy-gunner",
+    "breakthrough-trooper",
+}
+
+AUTHORED_TEAM_COLOR_SOURCE_PREFIXES = {
+    "knight",
+    "heavy-cavalry",
+    "light-cavalry",
+    "cavalry",
+    "musketeer",
+    "pikeman",
+    "grenadier",
+    "rifleman-late",
+    "grenadier-late",
+    "infantry",
+    "machine-gunner",
+    "shock-trooper",
+    "automatic-rifleman",
+    "support-gunner",
+    "mobile-infantry",
+    "special-forces",
+    "heavy-gunner",
+    "breakthrough-trooper",
+    "cannon-i",
+    "cannon-ii",
+    "artillery-i",
+    "artillery-ii",
+    "tank",
+    "mobile-artillery",
+    "modern-tank",
+}
+
+
+def add_team_accent(
+    canvas: Image.Image,
+    role: str,
+    team: Literal["player", "enemy"] = "player",
+    accent_subject: str | None = None,
+) -> Image.Image:
     bbox = canvas.getchannel("A").getbbox()
     if bbox is None:
         return canvas
@@ -941,49 +996,135 @@ def add_team_accent(canvas: Image.Image, role: str, team: Literal["player", "ene
     width = max(1, right - left)
     height = max(1, bottom - top)
 
-    def draw_sash(start_x_ratio: float, start_y_ratio: float, end_x_ratio: float, end_y_ratio: float, band_width: int) -> None:
-        start = (
-            round(left + width * start_x_ratio),
-            round(top + height * start_y_ratio),
-        )
-        end = (
-            round(left + width * end_x_ratio),
-            round(top + height * end_y_ratio),
-        )
-        draw.line((start, end), fill=primary_fill, width=band_width)
-        draw.line((start, end), fill=secondary_fill, width=max(2, round(band_width * 0.42)))
-        cap_radius = max(2, round(band_width * 0.28))
-        for x, y in (start, end):
-            draw.ellipse((x - cap_radius, y - cap_radius, x + cap_radius, y + cap_radius), fill=primary_fill)
+    def swap_team_pixel(pixel: tuple[int, int, int, int]) -> tuple[int, int, int, int]:
+        red, green, blue, alpha = pixel
+        if alpha == 0:
+            return pixel
+        hue, saturation, value = colorsys.rgb_to_hsv(red / 255, green / 255, blue / 255)
+        if not (0.48 <= hue <= 0.72 and saturation >= 0.38 and value >= 0.22):
+            return pixel
+        swapped = colorsys.hsv_to_rgb(0.985, min(1, saturation * 0.94), value)
+        return tuple(round(channel * 255) for channel in swapped) + (alpha,)
 
-    def draw_vehicle_stripe(x_ratio: float, y_ratio: float, stripe_width_ratio: float, stripe_height_ratio: float) -> None:
-        x0 = round(left + width * x_ratio)
-        y0 = round(top + height * y_ratio)
-        stripe_w = max(18, round(width * stripe_width_ratio))
-        stripe_h = max(8, round(height * stripe_height_ratio))
-        draw.rounded_rectangle((x0, y0, x0 + stripe_w, y0 + stripe_h), radius=max(2, stripe_h // 4), fill=primary_fill)
-        inset = max(2, round(stripe_h * 0.2))
-        draw.rounded_rectangle(
-            (x0 + inset, y0 + inset, x0 + stripe_w - inset, y0 + stripe_h - inset),
-            radius=max(1, stripe_h // 5),
-            fill=secondary_fill,
+    if accent_subject in AUTHORED_TEAM_COLOR_SOURCE_PREFIXES:
+        if team == "player":
+            return out
+        out.putdata([swap_team_pixel(pixel) for pixel in out.getdata()])
+        return out
+
+    def draw_shaded_band(points: list[tuple[int, int]]) -> None:
+        draw.polygon(points, fill=primary_fill)
+        inset = []
+        center_x = sum(x for x, _ in points) / max(1, len(points))
+        center_y = sum(y for _, y in points) / max(1, len(points))
+        for x, y in points:
+            inset.append((round((x * 0.82) + center_x * 0.18), round((y * 0.82) + center_y * 0.18)))
+        draw.polygon(inset, fill=secondary_fill)
+        outline = (36, 52, 86, 200) if team == "player" else (98, 42, 42, 200)
+        draw.line(points + [points[0]], fill=outline, width=2)
+
+    def add_authored_humanoid_sash() -> None:
+        if accent_subject not in AUTHORED_SASH_PREFIXES:
+            return
+        sash = [
+            (round(left + width * 0.455), round(top + height * 0.15)),
+            (round(left + width * 0.535), round(top + height * 0.15)),
+            (round(left + width * 0.63), round(top + height * 0.58)),
+            (round(left + width * 0.57), round(top + height * 0.61)),
+            (round(left + width * 0.505), round(top + height * 0.36)),
+            (round(left + width * 0.44), round(top + height * 0.18)),
+        ]
+        shoulder_pad = [
+            (round(left + width * 0.395), round(top + height * 0.135)),
+            (round(left + width * 0.505), round(top + height * 0.12)),
+            (round(left + width * 0.55), round(top + height * 0.19)),
+            (round(left + width * 0.45), round(top + height * 0.22)),
+        ]
+        belt = [
+            (round(left + width * 0.54), round(top + height * 0.56)),
+            (round(left + width * 0.665), round(top + height * 0.555)),
+            (round(left + width * 0.655), round(top + height * 0.61)),
+            (round(left + width * 0.53), round(top + height * 0.615)),
+        ]
+        draw_shaded_band(sash)
+        draw_shaded_band(shoulder_pad)
+        draw_shaded_band(belt)
+        buckle_fill = (214, 196, 112, 220) if team == "player" else (226, 186, 164, 220)
+        buckle = (
+            round(left + width * 0.585),
+            round(top + height * 0.565),
+            round(left + width * 0.625),
+            round(top + height * 0.607),
         )
+        draw.rounded_rectangle(buckle, radius=2, fill=buckle_fill)
+        tassel_x = round(left + width * 0.61)
+        tassel_y = round(top + height * 0.607)
+        tassel_h = max(8, round(height * 0.06))
+        draw.rectangle((tassel_x - 1, tassel_y, tassel_x + 3, tassel_y + tassel_h), fill=primary_fill)
+        draw.line((tassel_x + 1, tassel_y, tassel_x + 1, tassel_y + tassel_h), fill=secondary_fill, width=1)
+
+    if role not in {"vehicle", "artillery"}:
+        add_authored_humanoid_sash()
+        accent.putalpha(ImageChops.multiply(accent.getchannel("A"), canvas.getchannel("A")))
+        out.alpha_composite(accent)
+        if team == "player":
+            return out
+        source_pixels = list(out.getdata())
+        out.putdata([swap_team_pixel(pixel) for pixel in source_pixels])
+        return out
+
+    def draw_vehicle_panel(points: list[tuple[int, int]]) -> None:
+        draw_shaded_band(points)
+        rivet = (232, 238, 244, 160) if team == "player" else (255, 228, 228, 160)
+        for x, y in points[::2]:
+            draw.ellipse((x - 2, y - 2, x + 2, y + 2), fill=rivet)
 
     if role in {"vehicle", "artillery"}:
-        draw_vehicle_stripe(0.22, 0.34, 0.26, 0.07)
-        draw_vehicle_stripe(0.5, 0.22, 0.24, 0.06)
-    elif role == "support":
-        draw_sash(0.46, 0.16, 0.58, 0.72, max(10, round(width * 0.05)))
-        badge_x = round(left + width * 0.53)
-        badge_y = round(top + height * 0.28)
-        badge_r = max(5, round(min(width, height) * 0.035))
-        draw.ellipse((badge_x - badge_r, badge_y - badge_r, badge_x + badge_r, badge_y + badge_r), fill=primary_fill)
-        draw.ellipse((badge_x - badge_r + 2, badge_y - badge_r + 2, badge_x + badge_r - 2, badge_y + badge_r - 2), fill=secondary_fill)
-    elif role == "cavalry":
-        draw_sash(0.43, 0.18, 0.56, 0.46, max(11, round(width * 0.04)))
-        draw_vehicle_stripe(0.33, 0.52, 0.18, 0.055)
-    else:
-        draw_sash(0.43, 0.15, 0.57, 0.62, max(10, round(width * 0.045)))
+        if accent_subject in {"cannon-i", "cannon-ii", "artillery-i", "artillery-ii"}:
+            shield = [
+                (round(left + width * 0.23), round(top + height * 0.385)),
+                (round(left + width * 0.31), round(top + height * 0.365)),
+                (round(left + width * 0.355), round(top + height * 0.415)),
+                (round(left + width * 0.275), round(top + height * 0.455)),
+                (round(left + width * 0.215), round(top + height * 0.435)),
+            ]
+            carriage = [
+                (round(left + width * 0.43), round(top + height * 0.292)),
+                (round(left + width * 0.555), round(top + height * 0.286)),
+                (round(left + width * 0.552), round(top + height * 0.315)),
+                (round(left + width * 0.445), round(top + height * 0.326)),
+            ]
+            side_rail = [
+                (round(left + width * 0.36), round(top + height * 0.46)),
+                (round(left + width * 0.465), round(top + height * 0.455)),
+                (round(left + width * 0.475), round(top + height * 0.49)),
+                (round(left + width * 0.37), round(top + height * 0.498)),
+            ]
+            draw_vehicle_panel(shield)
+            draw_vehicle_panel(carriage)
+            draw_vehicle_panel(side_rail)
+        else:
+            turret = [
+                (round(left + width * 0.315), round(top + height * 0.315)),
+                (round(left + width * 0.495), round(top + height * 0.312)),
+                (round(left + width * 0.475), round(top + height * 0.35)),
+                (round(left + width * 0.31), round(top + height * 0.355)),
+            ]
+            bustle = [
+                (round(left + width * 0.24), round(top + height * 0.345)),
+                (round(left + width * 0.31), round(top + height * 0.338)),
+                (round(left + width * 0.31), round(top + height * 0.382)),
+                (round(left + width * 0.235), round(top + height * 0.39)),
+            ]
+            hull = [
+                (round(left + width * 0.19), round(top + height * 0.448)),
+                (round(left + width * 0.355), round(top + height * 0.44)),
+                (round(left + width * 0.365), round(top + height * 0.472)),
+                (round(left + width * 0.205), round(top + height * 0.484)),
+            ]
+            draw_vehicle_panel(turret)
+            draw_vehicle_panel(bustle)
+            draw_vehicle_panel(hull)
     # Wide attack silhouettes can shift the bbox-derived marker away from the
     # body. Clip the team accent to opaque sprite pixels so it never floats.
     accent.putalpha(ImageChops.multiply(accent.getchannel("A"), canvas.getchannel("A")))
@@ -1174,8 +1315,8 @@ def save_unit_assets(spec: UnitSpec, board_cells_cache: dict[str, list[list[Imag
             canvas_size = canvas_for_pose(spec, pose)
             scale = wide_scale if canvas_size == WIDE_CANVAS else standard_scale
             canvas = normalize_to_canvas(directional_poses[direction][pose], canvas_size, scale)
-            player_final = add_team_accent(canvas, spec.role, "player")
-            enemy_final = add_team_accent(canvas, spec.role, "enemy")
+            player_final = add_team_accent(canvas, spec.role, "player", spec.prefix)
+            enemy_final = add_team_accent(canvas, spec.role, "enemy", spec.prefix)
             player_final.save(ASSET_DIR / f"{spec.prefix}-{direction}-{pose}.png")
             enemy_final.save(ASSET_DIR / f"{spec.prefix}-{direction}-{pose}-enemy.png")
             if alias_direction and direction == alias_direction:

@@ -12,6 +12,7 @@ export function resolveSpawnUnitStats(
   unitId: LaneUnitId,
   productionAgeId: AgeId,
   researchState: TeamResearchState,
+  researchLevelFloor = 0,
 ): UnitStatDef {
   const baseStats = unitId === "supply_wagon"
     ? (() => {
@@ -31,9 +32,11 @@ export function resolveSpawnUnitStats(
     })()
     : UNIT_STATS[unitId];
   const levels = getAppliedResearchLevels(researchState, productionAgeId, unitId);
+  const attackLevel = Math.max(levels.attackLevel, researchLevelFloor);
+  const defenseLevel = Math.max(levels.defenseLevel, researchLevelFloor);
   return {
     ...baseStats,
-    attack: resolveResearchedUnitValue(baseStats.attack, clampResearchLevel(productionAgeId, levels.attackLevel)),
-    defense: resolveResearchedUnitValue(baseStats.defense, clampResearchLevel(productionAgeId, levels.defenseLevel)),
+    attack: resolveResearchedUnitValue(baseStats.attack, clampResearchLevel(productionAgeId, attackLevel)),
+    defense: resolveResearchedUnitValue(baseStats.defense, clampResearchLevel(productionAgeId, defenseLevel)),
   };
 }

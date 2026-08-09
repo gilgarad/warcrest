@@ -17,6 +17,8 @@ import {
   type TeamResearchState,
 } from "../systems/lane-economy/researchState";
 import { UNIT_STATS } from "../systems/lane-units/unitStats";
+import { getDefenseTowerTexture } from "../presentation/structures/productionStructureRegistry";
+import { resolveUnitPortraitTextureKey } from "../presentation/units/unitAnimationRegistry";
 
 export interface BaseResearchPanelRow {
   subjectId: ResearchSubjectId;
@@ -101,7 +103,7 @@ export function createBaseResearchPanelSnapshot(input: BaseResearchPanelInput): 
     input.viewedAgeId,
     unitId,
     UNIT_STATS[unitId].label,
-    UNIT_STATS[unitId].textureKey,
+    resolveUnitPortraitTextureKey(unitId, "player"),
   ));
   if (input.viewedAgeId === input.team.ageId) {
     rows.push(createResearchRow(
@@ -109,7 +111,7 @@ export function createBaseResearchPanelSnapshot(input: BaseResearchPanelInput): 
       input.viewedAgeId,
       TOWER_RESEARCH_SUBJECT_ID,
       "방어 타워",
-      "tower-player",
+      getDefenseTowerTexture(input.team.ageId, "full", "player"),
     ));
   }
   const applyCost = getDraftResearchApplyCost(input.researchState, input.viewedAgeId);

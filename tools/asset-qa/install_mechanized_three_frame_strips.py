@@ -109,10 +109,10 @@ def install_unit(spec: MechanizedSpec) -> dict[str, object]:
         for pose, frame in zip(POSES, frames)
     }
     for pose, canvas in production.items():
-        add_team_accent(canvas, spec.role, "player").save(
+        add_team_accent(canvas, spec.role, "player", spec.prefix).save(
             ASSET_DIR / f"{spec.prefix}-e-{pose}.png"
         )
-        add_team_accent(canvas, spec.role, "enemy").save(
+        add_team_accent(canvas, spec.role, "enemy", spec.prefix).save(
             ASSET_DIR / f"{spec.prefix}-e-{pose}-enemy.png"
         )
 

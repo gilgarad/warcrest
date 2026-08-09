@@ -194,6 +194,7 @@ const LANE_ROW_SPACING = 62;
 const UNIT_PROGRESS_SPEED = 0.02;
 const FRIENDLY_GAP = 0.011;
 const MIN_FRIENDLY_SPACING_PROGRESS = RANGE_TO_PROGRESS;
+const MIN_TOWER_STANDOFF_PROGRESS = MIN_FRIENDLY_SPACING_PROGRESS;
 const ENGAGE_GAP = 0.022;
 const FIELD_CAMERA_ZOOM = 0.46;
 const TOWER_W = 148;
@@ -695,6 +696,34 @@ export class LaneBattleScene extends Phaser.Scene {
         key: "projectile-shot",
         color: 0xfff2b0,
         draw: (g) => g.fillStyle(0xfff2b0, 1).fillCircle(10, 10, 4),
+      },
+      {
+        key: "projectile-cannonball",
+        color: 0x6d7480,
+        draw: (g) => {
+          g.fillStyle(0x1e2128, 0.9).fillCircle(12, 12, 9);
+          g.fillStyle(0x7f8793, 1).fillCircle(10, 10, 7);
+          g.fillStyle(0xcbd2dc, 0.68).fillCircle(7, 7, 2);
+        },
+      },
+      {
+        key: "projectile-shell",
+        color: 0xd1bd7a,
+        draw: (g) => {
+          g.fillStyle(0x4e545e, 0.96).fillEllipse(12, 12, 9, 18);
+          g.fillStyle(0xc8b36c, 1).fillEllipse(12, 8, 9, 8);
+          g.fillStyle(0xe9dbab, 0.74).fillEllipse(10, 7, 3, 3);
+        },
+      },
+      {
+        key: "projectile-missile",
+        color: 0xe3ecef,
+        draw: (g) => {
+          g.fillStyle(0xd9e7eb, 1).fillRoundedRect(4, 7, 14, 8, 3);
+          g.fillStyle(0xeb6060, 1).fillTriangle(18, 7, 23, 11, 18, 15);
+          g.fillStyle(0x5ea8ff, 1).fillTriangle(6, 6, 2, 11, 6, 16);
+          g.fillStyle(0x5ea8ff, 1).fillTriangle(10, 6, 7, 11, 10, 16);
+        },
       },
     ];
     projectileDefs.forEach(({ key, draw }) => {
@@ -1494,7 +1523,11 @@ export class LaneBattleScene extends Phaser.Scene {
       const progress = socket?.progress ?? definition.progress;
       const laneId = socket?.laneRef.laneId ?? this.primaryLaneSpec.id;
       const pos = this.progressToScreen(progress, 0, laneId);
-      const sprite = this.add.image(pos.x, pos.y + STRUCTURE_SOCKET_ATTACH_Y, getDefenseTowerTexture("full", definition.owner))
+      const sprite = this.add.image(
+        pos.x,
+        pos.y + STRUCTURE_SOCKET_ATTACH_Y,
+        getDefenseTowerTexture(this.getStructureOwnerAge(definition.owner), "full", definition.owner),
+      )
         .setDisplaySize(TOWER_W, TOWER_H)
         .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
         .setDepth(this.getGroundDepth(pos.y));
@@ -1738,7 +1771,7 @@ export class LaneBattleScene extends Phaser.Scene {
       }
       if (enemyTower && (!nearest || this.towerDistance(unit, enemyTower) < this.unitDistance(unit, nearest))) {
         const towerDistance = this.towerDistance(unit, enemyTower);
-        const attackRange = unit.range * RANGE_TO_PROGRESS;
+        const attackRange = Math.max(unit.range * RANGE_TO_PROGRESS, MIN_TOWER_STANDOFF_PROGRESS);
         if (towerDistance > attackRange) {
           this.advanceUnit(unit, deltaSec);
           return;
@@ -2219,6 +2252,10 @@ export class LaneBattleScene extends Phaser.Scene {
       .sort((a, b) => this.towerDistance(unit, a) - this.towerDistance(unit, b))[0];
   }
 
+  private getStructureOwnerAge(owner: TeamId | "neutral"): AgeId {
+    return owner === "enemy" ? this.enemy.ageId : this.player.ageId;
+  }
+
   private unitDistance(a: LaneUnit, b: LaneUnit): number {
     const progressDistance = progressBetween(a.progress, b.progress);
     const rowDistance = Math.abs(a.laneRow - b.laneRow) * 0.01;
@@ -2241,7 +2278,7 @@ export class LaneBattleScene extends Phaser.Scene {
     // row as it approaches so the row-distance term doesn't strand it just
     // outside attack range forever once the progress clamp below kicks in.
     unit.laneRow = Phaser.Math.Linear(unit.laneRow, 0, 0.06);
-    const engageRange = unit.range * RANGE_TO_PROGRESS;
+    const engageRange = Math.max(unit.range * RANGE_TO_PROGRESS, MIN_TOWER_STANDOFF_PROGRESS);
     const rowDistance = Math.abs(unit.laneRow) * 0.01;
     const progressBudget = Math.sqrt(Math.max(0, engageRange * engageRange - rowDistance * rowDistance));
     return dir > 0 ? blockingTower.progress - progressBudget : blockingTower.progress + progressBudget;
@@ -2754,10 +2791,10 @@ export class LaneBattleScene extends Phaser.Scene {
         .setVisible(!structuredPoint || selected);
       const showingTower = point.buildingId === "defense_tower";
       const markerHeight = showingTower
-        ? this.cssPxToWorld(this.scaleVisualConfig.captureTowerCssHeight / getDefenseTowerVisibleHeightRatio("full"))
+        ? this.cssPxToWorld(this.scaleVisualConfig.captureTowerCssHeight / getDefenseTowerVisibleHeightRatio(this.getStructureOwnerAge(point.owner), "full"))
         : this.cssPxToWorld(96 / CAPTURE_MARKER_VISIBLE_HEIGHT_RATIO);
       point.marker
-        .setTexture(showingTower ? getDefenseTowerTexture("full", point.owner === "enemy" ? "enemy" : "player") : getCaptureMarkerTexture(point.owner))
+        .setTexture(showingTower ? getDefenseTowerTexture(this.getStructureOwnerAge(point.owner), "full", point.owner === "enemy" ? "enemy" : "player") : getCaptureMarkerTexture(point.owner))
         .setPosition(pos.x, pos.y + STRUCTURE_SOCKET_ATTACH_Y)
         .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
         .setDisplaySize(markerHeight, markerHeight)
@@ -2825,7 +2862,8 @@ export class LaneBattleScene extends Phaser.Scene {
       const pos = this.isPrototypeV2() ? this.snapWorldPointToCanvasPixel(rawPos.x, rawPos.y) : rawPos;
       const selectedScale = this.isPrototypeV2() ? 1 : selected ? 1.04 : 1;
       const visualState = this.getDefenseTowerVisualState(tower);
-      const visibleHeightRatio = getDefenseTowerVisibleHeightRatio(visualState);
+      const towerAgeId = this.getStructureOwnerAge(tower.owner);
+      const visibleHeightRatio = getDefenseTowerVisibleHeightRatio(towerAgeId, visualState);
       const towerHeight = this.isPrototypeV2()
         ? this.cssPxToWorld(this.scaleVisualConfig.captureTowerCssHeight / visibleHeightRatio) * selectedScale
         : TOWER_H * selectedScale;
@@ -2833,7 +2871,7 @@ export class LaneBattleScene extends Phaser.Scene {
         ? towerHeight * (tower.sprite.frame.realWidth / tower.sprite.frame.realHeight)
         : TOWER_W * selectedScale;
       const hpRatio = tower.maxHp > 0 ? tower.hp / tower.maxHp : 0;
-      const texture = getDefenseTowerTexture(visualState, tower.owner === "enemy" ? "enemy" : "player");
+      const texture = getDefenseTowerTexture(towerAgeId, visualState, tower.owner === "enemy" ? "enemy" : "player");
       tower.sprite
         .setTexture(texture)
         .setPosition(pos.x, pos.y + STRUCTURE_SOCKET_ATTACH_Y)
@@ -2934,7 +2972,10 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private getTowerProjectileAnchor(point: DefenseTowerState, launch: boolean): Phaser.Math.Vector2 {
-    const visibleHeightRatio = getDefenseTowerVisibleHeightRatio(this.getDefenseTowerVisualState(point));
+    const visibleHeightRatio = getDefenseTowerVisibleHeightRatio(
+      this.getStructureOwnerAge(point.owner),
+      this.getDefenseTowerVisualState(point),
+    );
     return new Phaser.Math.Vector2(
       point.sprite.x,
       point.sprite.y - (
@@ -2947,7 +2988,7 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private getCapturePointProjectileAnchor(point: CapturePointState, launch: boolean): Phaser.Math.Vector2 {
     const visibleHeightRatio = point.buildingId === "defense_tower"
-      ? getDefenseTowerVisibleHeightRatio("full")
+      ? getDefenseTowerVisibleHeightRatio(this.getStructureOwnerAge(point.owner), "full")
       : CAPTURE_MARKER_VISIBLE_HEIGHT_RATIO;
     return new Phaser.Math.Vector2(
       point.marker.x,
@@ -2970,7 +3011,13 @@ export class LaneBattleScene extends Phaser.Scene {
       ? { width: 26, height: 9 }
       : textureKey === "projectile-shot"
         ? { width: 14, height: 14 }
-        : { width: 18, height: 18 };
+        : textureKey === "projectile-cannonball"
+          ? { width: 18, height: 18 }
+          : textureKey === "projectile-shell"
+            ? { width: 15, height: 26 }
+            : textureKey === "projectile-missile"
+              ? { width: 28, height: 14 }
+              : { width: 18, height: 18 };
     launchLaneProjectile({
       scene: this,
       start,
@@ -4189,7 +4236,7 @@ export class LaneBattleScene extends Phaser.Scene {
               * this.cameras.main.zoom
               * this.getCanvasCssScale(),
             cssVisibleHeight: point.sprite.displayHeight
-              * getDefenseTowerVisibleHeightRatio(this.getDefenseTowerVisualState(point))
+              * getDefenseTowerVisibleHeightRatio(this.getStructureOwnerAge(point.owner), this.getDefenseTowerVisualState(point))
               * this.cameras.main.zoom
               * this.getCanvasCssScale(),
             originY: point.sprite.originY,
@@ -4203,7 +4250,7 @@ export class LaneBattleScene extends Phaser.Scene {
               cssFrameWidth: point.sprite.displayWidth * this.cameras.main.zoom * this.getCanvasCssScale(),
               cssFrameHeight: point.sprite.displayHeight * this.cameras.main.zoom * this.getCanvasCssScale(),
               cssVisibleHeight: point.sprite.displayHeight
-                * getDefenseTowerVisibleHeightRatio(this.getDefenseTowerVisualState(point))
+                * getDefenseTowerVisibleHeightRatio(this.getStructureOwnerAge(point.owner), this.getDefenseTowerVisualState(point))
                 * this.cameras.main.zoom
                 * this.getCanvasCssScale(),
               originY: point.sprite.originY,

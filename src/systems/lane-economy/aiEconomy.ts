@@ -119,7 +119,11 @@ export function planAiWorkerRebalance(
   });
 
   const best = gaps.reduce((a, b) => (b.gap > a.gap ? b : a));
-  const removable = gaps.filter((entry) => team.workers[entry.role] > 0);
+  // Each base resource keeps a floor of 1 assigned worker, same as the
+  // player's own worker panel — only a role with a *spare* worker above
+  // that floor is eligible to be pulled from.
+  const removable = gaps.filter((entry) => team.workers[entry.role] > 1);
+  if (removable.length === 0) return null;
   const worst = removable.reduce((a, b) => (b.gap < a.gap ? b : a));
 
   if (best.role === worst.role) return null;

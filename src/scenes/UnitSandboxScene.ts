@@ -4,17 +4,21 @@ import { assetUrl } from "../config/assetUrl";
 import {
   ACTIVE_UNIT_FACING_DIRECTIONS,
   UNIT_ANIMATION_ASSETS,
-  deriveAnimationPrefix,
   getUnitAnimationDefinition,
   isMechanizedUnit,
-  resolveAnimationTextureFromPrefix,
   resolveHorizontalPresentationDirection,
   resolveTeamUnitTextureKey,
   shouldFlipUnitFrame,
   type UnitFacingDirection,
 } from "../presentation/units/unitAnimationRegistry";
 import { resolveWalkMotion } from "../presentation/units/combatPresentation";
-import { resolveUnitFramePresentation } from "../presentation/units/unitPresentation";
+import { resolveAnimatedUnitPresentation } from "../presentation/units/unitPresentation";
+import {
+  PRODUCTION_STRUCTURE_ASSETS,
+  STRUCTURE_GROUND_ORIGIN,
+  getDefenseTowerTexture,
+  getDefenseTowerVisibleHeightRatio,
+} from "../presentation/structures/productionStructureRegistry";
 import {
   getSupportWagonAgeStats,
   UNIT_STATS,
@@ -70,6 +74,8 @@ const SANDBOX_BG_KEY = "unit-sandbox-bg";
 const PREVIEW_CENTER_X = 870;
 const PREVIEW_CENTER_Y = 470;
 const DIRECTION_RING_RADIUS = 118;
+const TOWER_PREVIEW_X = 1378;
+const TOWER_PREVIEW_Y = 724;
 
 function clampPhase(value: number): number {
   return Phaser.Math.Clamp(value, 0, 1);
@@ -106,6 +112,8 @@ export class UnitSandboxScene extends Phaser.Scene {
   private sprite!: Phaser.GameObjects.Image;
   private shadow!: Phaser.GameObjects.Ellipse;
   private groundRing!: Phaser.GameObjects.Ellipse;
+  private towerSprite!: Phaser.GameObjects.Image;
+  private towerShadow!: Phaser.GameObjects.Ellipse;
   private infoText!: Phaser.GameObjects.Text;
   private helpText!: Phaser.GameObjects.Text;
   private phaseText!: Phaser.GameObjects.Text;
@@ -121,6 +129,11 @@ export class UnitSandboxScene extends Phaser.Scene {
       this.load.image(SANDBOX_BG_KEY, assetUrl("assets/battle/lane-battlefield-object-base-v4-prototype-v2.png"));
     }
     UNIT_ANIMATION_ASSETS.forEach((asset) => {
+      if (!this.textures.exists(asset.key)) {
+        this.load.image(asset.key, asset.path);
+      }
+    });
+    PRODUCTION_STRUCTURE_ASSETS.forEach((asset) => {
       if (!this.textures.exists(asset.key)) {
         this.load.image(asset.key, asset.path);
       }
@@ -196,6 +209,9 @@ export class UnitSandboxScene extends Phaser.Scene {
     this.groundRing = this.add.ellipse(PREVIEW_CENTER_X, PREVIEW_CENTER_Y + 8, 126, 34, 0x6fcaff, 0.08)
       .setStrokeStyle(2, 0x8fd9ff, 0.72);
     this.sprite = this.add.image(PREVIEW_CENTER_X, PREVIEW_CENTER_Y, resolveTeamUnitTextureKey("stone-slinger-w-idle", "player"));
+    this.towerShadow = this.add.ellipse(TOWER_PREVIEW_X, TOWER_PREVIEW_Y + 26, 168, 36, 0x05080d, 0.3);
+    this.towerSprite = this.add.image(TOWER_PREVIEW_X, TOWER_PREVIEW_Y, getDefenseTowerTexture("stone", "full", "player"))
+      .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y);
     this.phaseText = this.add.text(1118, 846, "", {
       fontFamily: "monospace",
       fontSize: "16px",
@@ -310,6 +326,11 @@ export class UnitSandboxScene extends Phaser.Scene {
       lineSpacing: 6,
       wordWrap: { width: 320 },
     });
+    this.add.text(1218, 640, "현재 시대 타워", {
+      fontFamily: "sans-serif",
+      fontSize: "18px",
+      color: "#f2f6ff",
+    });
   }
 
   private bindKeyboard(): void {
@@ -410,44 +431,21 @@ export class UnitSandboxScene extends Phaser.Scene {
 
   private updatePresentation(): void {
     const logicalTextureKey = this.resolveLogicalTextureKey();
-    const prefix = deriveAnimationPrefix(logicalTextureKey);
     const phase = this.state.autoplay ? (this.elapsed * 0.8) % 1 : this.state.manualPhase;
     const attackProgress = this.state.mode === "attack" ? phase : 0;
     const moving = this.state.mode === "walk";
-    const textureKey = resolveAnimationTextureFromPrefix(
+    const targetVisibleWorldHeight = this.state.unitId === "supply_wagon" ? 118 : 112;
+    const resolved = resolveAnimatedUnitPresentation(
       this.state.unitId,
-      prefix,
+      logicalTextureKey,
       moving,
       phase,
       attackProgress,
       this.state.direction,
-    ) ?? logicalTextureKey;
+      targetVisibleWorldHeight,
+    );
+    const { textureKey, framePresentation, idleFramePresentation } = resolved;
     this.sprite.setTexture(resolveTeamUnitTextureKey(textureKey, this.state.team));
-
-    const frameAspect = this.sprite.frame.realHeight > 0
-      ? this.sprite.frame.realWidth / this.sprite.frame.realHeight
-      : 1;
-    const targetVisibleWorldHeight = this.state.unitId === "supply_wagon" ? 118 : 112;
-    const framePresentation = resolveUnitFramePresentation(
-      this.state.unitId,
-      targetVisibleWorldHeight,
-      frameAspect,
-      textureKey,
-    );
-    const idleTextureKey = resolveAnimationTextureFromPrefix(
-      this.state.unitId,
-      prefix,
-      false,
-      0,
-      0,
-      this.state.direction,
-    ) ?? logicalTextureKey;
-    const idleFramePresentation = resolveUnitFramePresentation(
-      this.state.unitId,
-      targetVisibleWorldHeight,
-      frameAspect,
-      idleTextureKey,
-    );
 
     const facing = directionVector(this.state.direction);
     const flipX = shouldFlipUnitFrame(this.state.unitId, facing.x, this.state.direction);
@@ -483,22 +481,35 @@ export class UnitSandboxScene extends Phaser.Scene {
       .setPosition(PREVIEW_CENTER_X, PREVIEW_CENTER_Y + 8)
       .setSize(Math.max(64, shadowWidth * 1.18), Math.max(18, shadowHeight * 1.4))
       .setStrokeStyle(2, this.state.team === "player" ? 0x8fd9ff : 0xffa2a2, 0.82);
+
+    const towerTexture = getDefenseTowerTexture(this.state.ageId, "full", this.state.team);
+    const visibleHeightRatio = getDefenseTowerVisibleHeightRatio(this.state.ageId, "full");
+    const towerVisibleHeight = 158;
+    const towerHeight = towerVisibleHeight / visibleHeightRatio;
+    this.towerSprite
+      .setTexture(towerTexture)
+      .setPosition(TOWER_PREVIEW_X, TOWER_PREVIEW_Y + 6)
+      .setDisplaySize(towerHeight, towerHeight);
+    this.towerShadow
+      .setPosition(TOWER_PREVIEW_X, TOWER_PREVIEW_Y + 28)
+      .setFillStyle(0x05080d, 0.26)
+      .setSize(Math.max(120, towerHeight * 0.68), 30);
   }
 
   private updateText(): void {
     const logicalTextureKey = this.resolveLogicalTextureKey();
-    const prefix = deriveAnimationPrefix(logicalTextureKey);
     const phase = this.state.autoplay ? (this.elapsed * 0.8) % 1 : this.state.manualPhase;
     const attackProgress = this.state.mode === "attack" ? phase : 0;
     const moving = this.state.mode === "walk";
-    const textureKey = resolveAnimationTextureFromPrefix(
+    const textureKey = resolveAnimatedUnitPresentation(
       this.state.unitId,
-      prefix,
+      logicalTextureKey,
       moving,
       phase,
       attackProgress,
       this.state.direction,
-    ) ?? logicalTextureKey;
+      this.state.unitId === "supply_wagon" ? 118 : 112,
+    ).textureKey;
 
     const definition = getUnitAnimationDefinition(this.state.unitId);
     const unitStats = UNIT_STATS[this.state.unitId];
@@ -518,6 +529,7 @@ export class UnitSandboxScene extends Phaser.Scene {
       `flipX: ${this.sprite.flipX ? "true" : "false"}`,
       `공격 ${unitStats.attack} / 방어 ${unitStats.defense}`,
       `HP ${unitStats.hp} / 사거리 ${unitStats.rangeMultiplier}`,
+      `타워: ${getDefenseTowerTexture(this.state.ageId, "full", this.state.team)}`,
     ].join("\n"));
 
     this.helpText.setText([
@@ -533,6 +545,7 @@ export class UnitSandboxScene extends Phaser.Scene {
       "검수 기준",
       "- walk: 제자리 프레임 전환",
       "- attack: 제자리 전진/리코일",
+      "- 우측 하단: 현재 시대/팀 타워 프리뷰",
       "- 실제 경로 이동은 표시하지 않음",
       "",
       "콘솔",
@@ -561,18 +574,18 @@ export class UnitSandboxScene extends Phaser.Scene {
 
   private snapshot(): UnitSandboxSnapshot {
     const logicalTextureKey = this.resolveLogicalTextureKey();
-    const prefix = deriveAnimationPrefix(logicalTextureKey);
     const phase = this.state.autoplay ? (this.elapsed * 0.8) % 1 : this.state.manualPhase;
     const attackProgress = this.state.mode === "attack" ? phase : 0;
     const moving = this.state.mode === "walk";
-    const textureKey = resolveAnimationTextureFromPrefix(
+    const textureKey = resolveAnimatedUnitPresentation(
       this.state.unitId,
-      prefix,
+      logicalTextureKey,
       moving,
       phase,
       attackProgress,
       this.state.direction,
-    ) ?? logicalTextureKey;
+      this.state.unitId === "supply_wagon" ? 118 : 112,
+    ).textureKey;
     return {
       ...this.state,
       textureKey,

@@ -135,26 +135,26 @@ export const SFX_ASSETS: SfxAssetDef[] = [
   sfx("sfx.combat.projectileHit", "투사체 충돌", "combat", { kind: "impact", frequency: 150, durationMs: 180 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.64 }),
 
   // -- combat / 병종·시대별 무기 SFX 변형 (weaponSfx.ts 매핑으로 선택) --
-  sfx("sfx.combat.meleeAttack.blunt", "근접 공격 - 둔기(석기)", "combat", { kind: "blade", frequency: 300, durationMs: 150 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.55 }),
-  sfx("sfx.combat.meleeAttack.blade", "근접 공격 - 도검", "combat", { kind: "blade", frequency: 430, durationMs: 130 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.55 }),
-  sfx("sfx.combat.meleeAttack.polearm", "근접 공격 - 창(찌르기)", "combat", { kind: "blade", frequency: 560, durationMs: 105 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.53 }),
-  sfx("sfx.combat.meleeAttack.mechanized", "근접 공격 - 근대 돌격", "combat", { kind: "metalClang", frequency: 260, durationMs: 140 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.56 }),
-  sfx("sfx.combat.meleeHit.blunt", "근접 타격 - 둔기(석기)", "combat", { kind: "stoneImpact", frequency: 165, durationMs: 260 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.64 }),
-  sfx("sfx.combat.meleeHit.blade", "근접 타격 - 도검(칼날-방패/갑주 충돌)", "combat", { kind: "metalClang", frequency: 340, durationMs: 300 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.66 }),
-  sfx("sfx.combat.meleeHit.polearm", "근접 타격 - 창(관통음 + 금속 접촉)", "combat", { kind: "metalClang", frequency: 430, durationMs: 250 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.62 }),
-  sfx("sfx.combat.meleeHit.mechanized", "근접 타격 - 근대 돌격(총검/장비 충돌)", "combat", { kind: "metalClang", frequency: 300, durationMs: 320 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.66 }),
-  sfx("sfx.combat.rangedFire.sling", "원거리 발사 - 투석", "combat", { kind: "pluck", frequency: 300, durationMs: 110 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.5 }),
-  sfx("sfx.combat.rangedFire.bow", "원거리 발사 - 활", "combat", { kind: "pluck", frequency: 640, durationMs: 85 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.5 }),
-  sfx("sfx.combat.rangedFire.musket", "원거리 발사 - 화승총/대포 초기", "combat", { kind: "noiseHit", frequency: 900, durationMs: 120 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.62 }),
-  sfx("sfx.combat.rangedFire.rifle", "원거리 발사 - 소총/기관총", "combat", { kind: "noiseHit", frequency: 1250, durationMs: 75 }, { cooldownMs: 55, maxSimultaneous: 8, baseVolume: 0.58 }),
-  sfx("sfx.combat.rangedFire.cannon", "원거리 발사 - 대포/포병", "combat", { kind: "sweepDown", frequency: 150, durationMs: 260 }, { cooldownMs: 150, maxSimultaneous: 3, baseVolume: 0.72 }),
-  sfx("sfx.combat.rangedFire.tank", "원거리 발사 - 전차", "combat", { kind: "impact", frequency: 92, durationMs: 300 }, { cooldownMs: 150, maxSimultaneous: 3, baseVolume: 0.76 }),
-  sfx("sfx.combat.projectileHit.sling", "투사체 충돌 - 투석(돌이 방패/벽에 맞는 소리)", "combat", { kind: "stoneImpact", frequency: 145, durationMs: 240 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.62 }),
-  sfx("sfx.combat.projectileHit.bow", "투사체 충돌 - 화살", "combat", { kind: "impact", frequency: 175, durationMs: 130 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.58 }),
-  sfx("sfx.combat.projectileHit.musket", "투사체 충돌 - 화승총 탄", "combat", { kind: "impact", frequency: 130, durationMs: 160 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.66 }),
-  sfx("sfx.combat.projectileHit.rifle", "투사체 충돌 - 소총/기관총 탄", "combat", { kind: "impact", frequency: 155, durationMs: 120 }, { cooldownMs: 50, maxSimultaneous: 8, baseVolume: 0.6 }),
-  sfx("sfx.combat.projectileHit.cannon", "투사체 충돌 - 포탄", "combat", { kind: "impact", frequency: 75, durationMs: 320 }, { cooldownMs: 150, maxSimultaneous: 3, baseVolume: 0.78 }),
-  sfx("sfx.combat.projectileHit.tank", "투사체 충돌 - 전차포", "combat", { kind: "impact", frequency: 65, durationMs: 360 }, { cooldownMs: 150, maxSimultaneous: 3, baseVolume: 0.82 }),
+  sfx("sfx.combat.meleeAttack.blunt", "근접 공격 - 둔기(석기)", "combat", { kind: "blade", frequency: 300, durationMs: 150 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.55, missingAsset: false }),
+  sfx("sfx.combat.meleeAttack.blade", "근접 공격 - 도검", "combat", { kind: "blade", frequency: 430, durationMs: 130 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.55, missingAsset: false }),
+  sfx("sfx.combat.meleeAttack.polearm", "근접 공격 - 창(찌르기)", "combat", { kind: "blade", frequency: 560, durationMs: 105 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.53, missingAsset: false }),
+  sfx("sfx.combat.meleeAttack.mechanized", "근접 공격 - 근대 돌격", "combat", { kind: "metalClang", frequency: 260, durationMs: 140 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.56, missingAsset: false }),
+  sfx("sfx.combat.meleeHit.blunt", "근접 타격 - 둔기(석기)", "combat", { kind: "stoneImpact", frequency: 165, durationMs: 260 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.64, missingAsset: false }),
+  sfx("sfx.combat.meleeHit.blade", "근접 타격 - 도검(칼날-방패/갑주 충돌)", "combat", { kind: "metalClang", frequency: 340, durationMs: 300 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.66, missingAsset: false }),
+  sfx("sfx.combat.meleeHit.polearm", "근접 타격 - 창(관통음 + 금속 접촉)", "combat", { kind: "metalClang", frequency: 430, durationMs: 250 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.62, missingAsset: false }),
+  sfx("sfx.combat.meleeHit.mechanized", "근접 타격 - 근대 돌격(총검/장비 충돌)", "combat", { kind: "metalClang", frequency: 300, durationMs: 320 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.66, missingAsset: false }),
+  sfx("sfx.combat.rangedFire.sling", "원거리 발사 - 투석", "combat", { kind: "pluck", frequency: 300, durationMs: 110 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.5, missingAsset: false }),
+  sfx("sfx.combat.rangedFire.bow", "원거리 발사 - 활", "combat", { kind: "pluck", frequency: 640, durationMs: 85 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.5, missingAsset: false }),
+  sfx("sfx.combat.rangedFire.musket", "원거리 발사 - 화승총/대포 초기", "combat", { kind: "noiseHit", frequency: 900, durationMs: 120 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.62, missingAsset: false }),
+  sfx("sfx.combat.rangedFire.rifle", "원거리 발사 - 소총/기관총", "combat", { kind: "noiseHit", frequency: 1250, durationMs: 75 }, { cooldownMs: 55, maxSimultaneous: 8, baseVolume: 0.58, missingAsset: false }),
+  sfx("sfx.combat.rangedFire.cannon", "원거리 발사 - 대포/포병", "combat", { kind: "sweepDown", frequency: 150, durationMs: 260 }, { cooldownMs: 150, maxSimultaneous: 3, baseVolume: 0.72, missingAsset: false }),
+  sfx("sfx.combat.rangedFire.tank", "원거리 발사 - 전차", "combat", { kind: "impact", frequency: 92, durationMs: 300 }, { cooldownMs: 150, maxSimultaneous: 3, baseVolume: 0.76, missingAsset: false }),
+  sfx("sfx.combat.projectileHit.sling", "투사체 충돌 - 투석(돌이 방패/벽에 맞는 소리)", "combat", { kind: "stoneImpact", frequency: 145, durationMs: 240 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.62, missingAsset: false }),
+  sfx("sfx.combat.projectileHit.bow", "투사체 충돌 - 화살", "combat", { kind: "impact", frequency: 175, durationMs: 130 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.58, missingAsset: false }),
+  sfx("sfx.combat.projectileHit.musket", "투사체 충돌 - 화승총 탄", "combat", { kind: "impact", frequency: 130, durationMs: 160 }, { cooldownMs: 60, maxSimultaneous: 6, baseVolume: 0.66, missingAsset: false }),
+  sfx("sfx.combat.projectileHit.rifle", "투사체 충돌 - 소총/기관총 탄", "combat", { kind: "impact", frequency: 155, durationMs: 120 }, { cooldownMs: 50, maxSimultaneous: 8, baseVolume: 0.6, missingAsset: false }),
+  sfx("sfx.combat.projectileHit.cannon", "투사체 충돌 - 포탄", "combat", { kind: "impact", frequency: 75, durationMs: 320 }, { cooldownMs: 150, maxSimultaneous: 3, baseVolume: 0.78, missingAsset: false }),
+  sfx("sfx.combat.projectileHit.tank", "투사체 충돌 - 전차포", "combat", { kind: "impact", frequency: 65, durationMs: 360 }, { cooldownMs: 150, maxSimultaneous: 3, baseVolume: 0.82, missingAsset: false }),
   sfx("sfx.combat.catapultFire", "투석기 발사", "combat", { kind: "sweepDown", frequency: 180, durationMs: 250 }, { cooldownMs: 300, maxSimultaneous: 2 }),
   sfx("sfx.combat.catapultImpact", "투석기 충돌", "combat", { kind: "stoneImpact", frequency: 78, durationMs: 420 }, { cooldownMs: 300, maxSimultaneous: 2, baseVolume: 0.72 }),
   sfx("sfx.combat.unitHit", "유닛 피격", "combat", { kind: "grunt", frequency: 165, durationMs: 190 }, { cooldownMs: 40, maxSimultaneous: 8, baseVolume: 0.48 }),
@@ -186,8 +186,9 @@ function sfx(
   label: string,
   category: SfxAssetDef["category"],
   synth: SfxAssetDef["synth"],
-  overrides: Partial<Pick<SfxAssetDef, "cooldownMs" | "maxSimultaneous" | "priority" | "pitchVariation" | "volumeVariation" | "spatial" | "baseVolume">> = {}
+  overrides: Partial<Pick<SfxAssetDef, "cooldownMs" | "maxSimultaneous" | "priority" | "pitchVariation" | "volumeVariation" | "spatial" | "baseVolume" | "missingAsset">> = {}
 ): SfxAssetDef {
+  const missingAsset = overrides.missingAsset ?? true;
   return {
     id,
     label,
@@ -200,9 +201,11 @@ function sfx(
     pitchVariation: overrides.pitchVariation ?? 0.06,
     volumeVariation: overrides.volumeVariation ?? 0.08,
     spatial: overrides.spatial ?? false,
-    missingAsset: true,
+    missingAsset,
     synth,
-    licenseNote: NO_ASSET_YET,
+    licenseNote: missingAsset
+      ? NO_ASSET_YET
+      : "절차적 합성 오프라인 렌더링 (tools/audio-synth/render_combat_sfx.py), 무료/자체 생성, 라이선스 제약 없음",
   };
 }
 

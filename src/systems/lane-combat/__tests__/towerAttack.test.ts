@@ -43,6 +43,8 @@ describe("tower attack pattern", () => {
   it("switches to artillery-scale tower range in late eras", () => {
     const industrial = createTowerAttackPattern("industrial_early");
     const modernLate = createTowerAttackPattern("modern_late");
+    expect(industrial.projectileKey).toBe("projectile-cannonball");
+    expect(modernLate.projectileKey).toBe("projectile-missile");
     expect(industrial.perProjectileDamage).toBe(UNIT_STATS.cannon_i.attack);
     expect(modernLate.perProjectileDamage).toBe(UNIT_STATS.mobile_artillery.attack);
     expect(modernLate.rangeProgress).toBeGreaterThan(industrial.rangeProgress);

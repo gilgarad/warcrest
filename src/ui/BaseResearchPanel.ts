@@ -1,7 +1,7 @@
 import Phaser from "phaser";
-import { resolveTeamUnitTextureKey } from "../presentation/units/unitAnimationRegistry";
+import { resolveUnitPortraitTextureKey } from "../presentation/units/unitAnimationRegistry";
 import type { ResearchStatKey } from "../systems/lane-economy/researchRules";
-import { TOWER_RESEARCH_SUBJECT_ID, type ResearchSubjectId } from "../systems/lane-economy/researchSubjects";
+import type { ResearchSubjectId } from "../systems/lane-economy/researchSubjects";
 import type { BaseResearchPanelSnapshot } from "./baseResearchPanelModel";
 
 interface PanelRowView {
@@ -92,11 +92,7 @@ export class BaseResearchPanel {
         button.text.setVisible(visible);
       });
       if (!row) return;
-      rowView.icon.setTexture(
-        row.subjectId === TOWER_RESEARCH_SUBJECT_ID
-          ? row.iconTextureKey
-          : resolveTeamUnitTextureKey(row.iconTextureKey, "player"),
-      );
+      rowView.icon.setTexture(row.iconTextureKey);
       rowView.label.setText(row.label);
       rowView.attackValue.setText(String(row.attackLevel));
       rowView.attackMeta.setText(`${row.attackMultiplierText} · 기본 ${row.appliedAttackLevel}`);
@@ -142,6 +138,20 @@ export class BaseResearchPanel {
       fontSize: "13px",
       color: "#9ec2df",
     }).setDepth(this.depth + 2).setScrollFactor(0);
+    // Worker-production explainer: the HUD's worker panel only shows an
+    // icon/count/+-, with no indication anywhere of what an extra worker
+    // actually produces — this is the one detailed explanation for it.
+    const workerInfoTitle = this.scene.add.text(700, 296, "일꾼 생산 안내", {
+      fontFamily: "Georgia, serif",
+      fontSize: "14px",
+      color: "#f1e4c3",
+    }).setDepth(this.depth + 2).setScrollFactor(0);
+    const workerInfoBody = this.scene.add.text(700, 318, "일꾼 1명당 자원 1개를 5초마다 생산합니다.\n연구는 일꾼 1명당 1포인트를 10초마다 생산합니다.\n자원이 오를 때 상단 자원 칸 옆에 잠깐 +N으로 표시됩니다.", {
+      fontFamily: "sans-serif",
+      fontSize: "12px",
+      color: "#aac1db",
+      lineSpacing: 3,
+    }).setDepth(this.depth + 2).setScrollFactor(0);
     this.prevButton = this.createButton(1030, 320, 44, 40, "<", () => this.callbacks.browseAge(-1));
     this.nextButton = this.createButton(1086, 320, 44, 40, ">", () => this.callbacks.browseAge(1));
     const unitHeader = this.scene.add.text(522, 424, "병력", { fontFamily: "sans-serif", fontSize: "15px", color: "#a6bfdc" }).setDepth(this.depth + 2).setScrollFactor(0);
@@ -163,6 +173,8 @@ export class BaseResearchPanel {
       this.title,
       this.ageLabel,
       this.productionHint,
+      workerInfoTitle,
+      workerInfoBody,
       this.researchText,
       this.capText,
       unitHeader,
@@ -200,7 +212,7 @@ export class BaseResearchPanel {
 
   private createRow(y: number): PanelRowView {
     const rowBackground = this.scene.add.rectangle(800, y, 712, 66, 0x142234, 0.66).setDepth(this.depth + 1).setScrollFactor(0);
-    const icon = this.scene.add.image(538, y + 2, resolveTeamUnitTextureKey("stone-axeman-w-idle", "player"))
+    const icon = this.scene.add.image(538, y + 2, resolveUnitPortraitTextureKey("stone_axeman", "player"))
       .setDisplaySize(66, 66)
       .setDepth(this.depth + 2)
       .setScrollFactor(0);

@@ -27,21 +27,41 @@ def swap_team_pixel(pixel: tuple[int, int, int, int]) -> tuple[int, int, int, in
 def main() -> None:
     sources = sorted(path for path in ASSET_DIR.glob("*.png") if not path.stem.endswith("-enemy"))
     report = []
+    zero_match_sources: list[str] = []
     for source in sources:
         image = Image.open(source).convert("RGBA")
         source_pixels = list(image.getdata())
         swapped_pixels = [swap_team_pixel(pixel) for pixel in source_pixels]
         changed_pixels = sum(before != after for before, after in zip(source_pixels, swapped_pixels))
         if changed_pixels == 0:
-            raise RuntimeError(f"no authored team-color pixels found in {source}")
+            # Some frames (e.g. a weapon-heavy attack pose) legitimately have
+            # no blue team-color pixel in view. Previously this raised and
+            # aborted the whole batch, silently leaving every alphabetically
+            # later file (most of the roster) with a stale/never-regenerated
+            # `-enemy.png` — which is why enemy units drifted back to
+            # player-blue after later art passes touched the base frames.
+            # Warn and continue instead so one frame without a team marker
+            # can't block the rest of the roster from getting a real update.
+            zero_match_sources.append(str(source))
+            print(f"WARNING: no authored team-color pixels found in {source} (enemy variant unchanged from base)")
         image.putdata(swapped_pixels)
         image.save(source.with_name(f"{source.stem}-enemy.png"))
         report.append({"key": source.stem, "changedPixels": changed_pixels})
     (ASSET_DIR / "team-palette-report.json").write_text(
-        json.dumps({"passed": True, "assetCount": len(report), "results": report}, indent=2) + "\n",
+        json.dumps(
+            {
+                "passed": len(zero_match_sources) == 0,
+                "assetCount": len(report),
+                "zeroMatchCount": len(zero_match_sources),
+                "zeroMatchSources": zero_match_sources,
+                "results": report,
+            },
+            indent=2,
+        )
+        + "\n",
         encoding="utf-8",
     )
-    print(f"generated {len(sources)} enemy team variants")
+    print(f"generated {len(sources)} enemy team variants ({len(zero_match_sources)} with no team-color pixels found)")
 
 
 if __name__ == "__main__":

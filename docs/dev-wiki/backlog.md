@@ -14,6 +14,51 @@ GitHub Issues own task status. This file owns planning context.
 
 ## Active Queue
 
+- **[PRIORITY 1 — fix as soon as reproduced] Unit sprite semi-transparency
+  bug** — user-reported, screenshot-confirmed: a friendly/enemy unit
+  (originally described as a supply/보급 unit) sometimes renders visibly
+  translucent in actual play, at an unspecified moment/age/situation. This
+  is flagged by the user as something that "무조건 곧바로 고쳐야 되는"
+  (must be fixed the moment it's reproducible), ranked above normal queue
+  order once repro info exists — treat the next report of this as
+  drop-everything priority, not routine backlog.
+  - **Investigated 2026-08-08, not yet reproduced.** Two tracks were run:
+    (a) 80+ seconds of live Playwright monitoring of every support unit's
+    `sprite.alpha`/`sprite.tint` during real combat — always normal (alpha
+    1, no tint) the whole time; (b) a full alpha-channel scan of all
+    ~1845 unit PNGs under `public/assets/production/units/`, which found a
+    *different*, real bug: several late-era units' (`breakthrough-trooper`,
+    `grenadier-late`, `heavy-gunner`, `cannon-i`, `light-cavalry`, `tank`,
+    `shock-trooper`, `special-forces`) `walk-a`/`walk-b` frames had
+    genuinely low alpha (~170-200 vs a healthy ~240+), caused by
+    `tools/asset-qa/generate_late_era_unit_variants.py` output going stale
+    relative to later base-art updates. That was fixed (script re-run,
+    frames regenerated, confirmed healthy) — see `docs/dev-wiki/log.md`
+    2026-08-08 "적 팀 색상 자산 파이프라인 재생성..." entry — but it is
+    **not** the bug the user's screenshot showed: those stale frames are
+    `walk-a`/`walk-b`, and the shipped animation registry
+    (`src/presentation/units/unitAnimationRegistry.ts`) only ever
+    references numbered `walk-01/02/03` poses for these units, so the
+    stale frames were never actually visible on screen.
+  - **What to check next, when it recurs**: capture (in order of ease) —
+    (1) the exact unit type and team (player/enemy), (2) the age/시대 at
+    the time, (3) what the unit was doing (idle/walking/attacking/just
+    spawned/just died/being healed), (4) whether it's the "opening wave"
+    right at battle start vs. a later regular/instant wave, (5) if
+    possible, a Playwright repro script with `sprite.alpha`/`sprite.tint`
+    logged every frame for a few seconds around the moment, since this
+    turn's monitoring found runtime alpha/tint always normal — meaning if
+    it's real, it's not a static per-unit `alpha` bug like the one just
+    fixed — a repo-wide grep found **zero** `setAlpha(`/`.alpha =` calls on
+    `unit.sprite` anywhere in `LaneBattleScene.ts` (2026-08-08), so nothing
+    in this scene's code currently touches unit sprite alpha at all. That
+    points toward something more transient/environmental: a single-frame
+    render artifact during a texture swap, GPU/driver blending quirk (the
+    dev console has repeatedly logged "GPU stall due to ReadPixels"
+    warnings from the WebGL driver during testing), or a browser/hardware-
+    specific compositing issue that a static code read won't surface —
+    which is exactly why a fresh repro (screenshot + the checklist above)
+    matters more than more code archaeology at this point.
 - **Concept pivot planning: lane siege / hiring / tech / fortress economy game** —
   the user has now clarified that the target is no longer a dungeon squad
   action roguelite. The new target is a mobile-friendly lane-based siege game

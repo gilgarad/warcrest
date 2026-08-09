@@ -18,23 +18,23 @@
         "opposite_horse_leg_silhouettes": true
       },
       "pass": true,
-      "strideDifference": 0.031,
-      "legDifference": 0.0477,
+      "strideDifference": 0.0312,
+      "legDifference": 0.0479,
       "boxes": {
         "idle": [
           130,
           66,
-          381,
+          382,
           336
         ],
         "walk-01": [
           124,
           73,
-          388,
+          389,
           336
         ],
         "walk-02": [
-          126,
+          125,
           70,
           387,
           336
@@ -42,11 +42,11 @@
         "walk-03": [
           126,
           73,
-          386,
+          387,
           336
         ],
         "attack": [
-          118,
+          117,
           81,
           395,
           336
@@ -65,35 +65,35 @@
         "opposite_horse_leg_silhouettes": true
       },
       "pass": true,
-      "strideDifference": 0.0309,
-      "legDifference": 0.0389,
+      "strideDifference": 0.0328,
+      "legDifference": 0.0449,
       "boxes": {
         "idle": [
           119,
-          57,
+          56,
           393,
           448
         ],
         "walk-01": [
           110,
-          78,
-          402,
+          79,
+          403,
           448
         ],
         "walk-02": [
           104,
-          96,
-          407,
+          95,
+          408,
           448
         ],
         "walk-03": [
-          105,
+          104,
           103,
           407,
           448
         ],
         "attack": [
-          191,
+          190,
           66,
           577,
           336
@@ -112,19 +112,19 @@
         "opposite_horse_leg_silhouettes": true
       },
       "pass": true,
-      "strideDifference": 0.0408,
-      "legDifference": 0.0723,
+      "strideDifference": 0.0405,
+      "legDifference": 0.0715,
       "boxes": {
         "idle": [
-          133,
+          134,
           66,
           379,
           336
         ],
         "walk-01": [
-          128,
+          129,
           70,
-          384,
+          383,
           336
         ],
         "walk-02": [
@@ -134,15 +134,15 @@
           336
         ],
         "walk-03": [
-          131,
-          75,
+          132,
+          76,
           381,
           336
         ],
         "attack": [
           104,
-          81,
-          409,
+          82,
+          408,
           336
         ]
       }
@@ -159,17 +159,17 @@
         "opposite_horse_leg_silhouettes": true
       },
       "pass": true,
-      "strideDifference": 0.0308,
-      "legDifference": 0.0608,
+      "strideDifference": 0.0305,
+      "legDifference": 0.0607,
       "boxes": {
         "idle": [
-          136,
+          135,
           66,
           377,
           336
         ],
         "walk-01": [
-          130,
+          131,
           71,
           381,
           336
@@ -188,7 +188,7 @@
         ],
         "attack": [
           117,
-          39,
+          40,
           395,
           336
         ]

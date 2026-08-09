@@ -21,34 +21,34 @@
       },
       "pass": true,
       "widths": {
-        "idle": 332,
-        "walk-01": 332,
-        "walk-02": 330,
-        "walk-03": 333,
-        "attack": 407
+        "idle": 305,
+        "walk-01": 329,
+        "walk-02": 303,
+        "walk-03": 302,
+        "attack": 370
       },
       "heights": {
         "idle": 250,
-        "walk-01": 250,
-        "walk-02": 251,
-        "walk-03": 248,
-        "attack": 250
+        "walk-01": 241,
+        "walk-02": 248,
+        "walk-03": 242,
+        "attack": 242
       },
       "alphaCentersX": {
-        "idle": 387.0,
-        "walk-01": 387.0,
-        "walk-02": 387.0,
-        "walk-03": 386.5,
-        "attack": 408.5
+        "idle": 385.5,
+        "walk-01": 378.5,
+        "walk-02": 387.5,
+        "walk-03": 386.0,
+        "attack": 379.0
       },
       "wheelTrackRgbDifferences": {
-        "01-02": 14.958,
-        "02-03": 20.437,
-        "03-01": 19.163
+        "01-02": 33.444,
+        "02-03": 29.163,
+        "03-01": 38.286
       },
       "walkSilhouetteDifferences": {
-        "01-02": 0.0072,
-        "02-03": 0.012
+        "01-02": 0.0322,
+        "02-03": 0.0452
       }
     },
     {
@@ -59,42 +59,42 @@
       "checks": {
         "five_frames": true,
         "not_clipped": true,
-        "locomotion_height_consistent": true,
+        "locomotion_height_consistent": false,
         "locomotion_width_consistent": true,
         "wheel_or_track_phases_distinct": true,
         "attack_height_consistent": true,
         "attack_body_anchor_consistent": true
       },
-      "pass": true,
+      "pass": false,
       "widths": {
-        "idle": 517,
-        "walk-01": 518,
-        "walk-02": 517,
-        "walk-03": 517,
-        "attack": 557
+        "idle": 426,
+        "walk-01": 427,
+        "walk-02": 396,
+        "walk-03": 404,
+        "attack": 511
       },
       "heights": {
         "idle": 250,
-        "walk-01": 250,
-        "walk-02": 251,
-        "walk-03": 250,
-        "attack": 250
+        "walk-01": 223,
+        "walk-02": 249,
+        "walk-03": 245,
+        "attack": 256
       },
       "alphaCentersX": {
-        "idle": 387.5,
-        "walk-01": 388.0,
-        "walk-02": 387.5,
-        "walk-03": 386.5,
-        "attack": 401.5
+        "idle": 365.0,
+        "walk-01": 362.5,
+        "walk-02": 373.0,
+        "walk-03": 365.0,
+        "attack": 368.5
       },
       "wheelTrackRgbDifferences": {
-        "01-02": 19.998,
-        "02-03": 16.88,
-        "03-01": 20.279
+        "01-02": 26.17,
+        "02-03": 28.345,
+        "03-01": 33.579
       },
       "walkSilhouetteDifferences": {
-        "01-02": 0.0101,
-        "02-03": 0.0066
+        "01-02": 0.0399,
+        "02-03": 0.0304
       }
     },
     {
@@ -113,34 +113,34 @@
       },
       "pass": true,
       "widths": {
-        "idle": 433,
-        "walk-01": 420,
-        "walk-02": 421,
-        "walk-03": 420,
-        "attack": 463
+        "idle": 423,
+        "walk-01": 401,
+        "walk-02": 393,
+        "walk-03": 389,
+        "attack": 514
       },
       "heights": {
         "idle": 250,
-        "walk-01": 249,
-        "walk-02": 249,
-        "walk-03": 249,
-        "attack": 249
+        "walk-01": 251,
+        "walk-02": 251,
+        "walk-03": 250,
+        "attack": 265
       },
       "alphaCentersX": {
-        "idle": 371.5,
-        "walk-01": 374.0,
-        "walk-02": 372.5,
-        "walk-03": 373.0,
-        "attack": 391.5
+        "idle": 358.5,
+        "walk-01": 373.5,
+        "walk-02": 370.5,
+        "walk-03": 377.5,
+        "attack": 372.0
       },
       "wheelTrackRgbDifferences": {
-        "01-02": 16.481,
-        "02-03": 16.188,
-        "03-01": 20.24
+        "01-02": 26.568,
+        "02-03": 32.672,
+        "03-01": 25.865
       },
       "walkSilhouetteDifferences": {
-        "01-02": 0.0082,
-        "02-03": 0.0073
+        "01-02": 0.0267,
+        "02-03": 0.034
       }
     },
     {
@@ -159,34 +159,34 @@
       },
       "pass": true,
       "widths": {
-        "idle": 497,
-        "walk-01": 497,
-        "walk-02": 500,
+        "idle": 482,
+        "walk-01": 485,
+        "walk-02": 467,
         "walk-03": 501,
-        "attack": 565
+        "attack": 574
       },
       "heights": {
         "idle": 250,
-        "walk-01": 258,
-        "walk-02": 258,
-        "walk-03": 258,
-        "attack": 258
+        "walk-01": 251,
+        "walk-02": 249,
+        "walk-03": 250,
+        "attack": 276
       },
       "alphaCentersX": {
-        "idle": 379.5,
-        "walk-01": 380.5,
-        "walk-02": 381.0,
-        "walk-03": 381.5,
-        "attack": 406.5
+        "idle": 373.0,
+        "walk-01": 368.5,
+        "walk-02": 373.5,
+        "walk-03": 368.5,
+        "attack": 388.0
       },
       "wheelTrackRgbDifferences": {
-        "01-02": 17.439,
-        "02-03": 12.856,
-        "03-01": 13.93
+        "01-02": 33.93,
+        "02-03": 35.414,
+        "03-01": 21.857
       },
       "walkSilhouetteDifferences": {
-        "01-02": 0.0058,
-        "02-03": 0.0047
+        "01-02": 0.0255,
+        "02-03": 0.0372
       }
     },
     {
@@ -205,34 +205,34 @@
       },
       "pass": true,
       "widths": {
-        "idle": 358,
-        "walk-01": 365,
-        "walk-02": 358,
+        "idle": 357,
+        "walk-01": 363,
+        "walk-02": 357,
         "walk-03": 364,
-        "attack": 421
+        "attack": 420
       },
       "heights": {
         "idle": 250,
         "walk-01": 255,
-        "walk-02": 250,
+        "walk-02": 251,
         "walk-03": 252,
         "attack": 254
       },
       "alphaCentersX": {
-        "idle": 382.0,
-        "walk-01": 381.5,
-        "walk-02": 381.0,
+        "idle": 381.5,
+        "walk-01": 380.5,
+        "walk-02": 381.5,
         "walk-03": 381.0,
-        "attack": 397.5
+        "attack": 397.0
       },
       "wheelTrackRgbDifferences": {
-        "01-02": 36.213,
-        "02-03": 30.58,
-        "03-01": 28.72
+        "01-02": 35.435,
+        "02-03": 29.342,
+        "03-01": 28.418
       },
       "walkSilhouetteDifferences": {
-        "01-02": 0.0101,
-        "02-03": 0.006
+        "01-02": 0.0096,
+        "02-03": 0.0062
       }
     },
     {
@@ -251,34 +251,34 @@
       },
       "pass": true,
       "widths": {
-        "idle": 429,
-        "walk-01": 428,
-        "walk-02": 428,
-        "walk-03": 424,
+        "idle": 431,
+        "walk-01": 429,
+        "walk-02": 427,
+        "walk-03": 427,
         "attack": 498
       },
       "heights": {
         "idle": 250,
         "walk-01": 250,
-        "walk-02": 251,
-        "walk-03": 252,
-        "attack": 251
+        "walk-02": 250,
+        "walk-03": 251,
+        "attack": 250
       },
       "alphaCentersX": {
-        "idle": 418.5,
-        "walk-01": 418.0,
-        "walk-02": 419.0,
-        "walk-03": 418.0,
+        "idle": 419.5,
+        "walk-01": 418.5,
+        "walk-02": 419.5,
+        "walk-03": 417.5,
         "attack": 443.0
       },
       "wheelTrackRgbDifferences": {
-        "01-02": 16.917,
-        "02-03": 20.459,
-        "03-01": 19.714
+        "01-02": 16.664,
+        "02-03": 21.242,
+        "03-01": 20.17
       },
       "walkSilhouetteDifferences": {
-        "01-02": 0.0062,
-        "02-03": 0.009
+        "01-02": 0.006,
+        "02-03": 0.0086
       }
     },
     {
@@ -297,34 +297,34 @@
       },
       "pass": true,
       "widths": {
-        "idle": 558,
-        "walk-01": 560,
-        "walk-02": 558,
-        "walk-03": 556,
-        "attack": 575
+        "idle": 562,
+        "walk-01": 562,
+        "walk-02": 560,
+        "walk-03": 560,
+        "attack": 578
       },
       "heights": {
         "idle": 250,
         "walk-01": 249,
-        "walk-02": 250,
-        "walk-03": 250,
-        "attack": 251
+        "walk-02": 249,
+        "walk-03": 249,
+        "attack": 250
       },
       "alphaCentersX": {
-        "idle": 417.0,
-        "walk-01": 418.0,
-        "walk-02": 417.0,
-        "walk-03": 417.0,
-        "attack": 413.5
+        "idle": 418.0,
+        "walk-01": 417.0,
+        "walk-02": 419.0,
+        "walk-03": 418.0,
+        "attack": 412.0
       },
       "wheelTrackRgbDifferences": {
-        "01-02": 13.834,
-        "02-03": 13.711,
-        "03-01": 14.099
+        "01-02": 13.435,
+        "02-03": 14.49,
+        "03-01": 13.184
       },
       "walkSilhouetteDifferences": {
-        "01-02": 0.005,
-        "02-03": 0.004
+        "01-02": 0.0041,
+        "02-03": 0.0048
       }
     }
   ]

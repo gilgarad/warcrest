@@ -1,27 +1,27 @@
 [
   {
     "state": "full",
-    "textureKey": "defense-tower-full",
+    "textureKey": "defense-tower-palisade-full",
     "cssVisibleHeight": 144
   },
   {
     "state": "damaged",
-    "textureKey": "defense-tower-damaged-enemy",
+    "textureKey": "defense-tower-palisade-damaged-enemy",
     "cssVisibleHeight": 144
   },
   {
     "state": "critical",
-    "textureKey": "defense-tower-critical",
-    "cssVisibleHeight": 143.99999999999997
+    "textureKey": "defense-tower-palisade-critical",
+    "cssVisibleHeight": 144
   },
   {
     "state": "ruins",
-    "textureKey": "defense-tower-ruins-enemy",
-    "cssVisibleHeight": 143.99999999999997
+    "textureKey": "defense-tower-palisade-ruins-enemy",
+    "cssVisibleHeight": 144
   },
   {
     "state": "construction",
-    "textureKey": "defense-tower-construction",
+    "textureKey": "defense-tower-palisade-construction",
     "cssVisibleHeight": 144
   }
 ]

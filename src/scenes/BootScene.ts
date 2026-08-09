@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { assetUrl } from "../config/assetUrl";
 import { parseTerrainRenderMode } from "../config/prototypeVisualConfig";
+import { DIFFICULTIES, type DifficultyId } from "../data/difficulty";
 import { GAME_SUBTITLE, GAME_TAGLINE, GAME_TITLE } from "../data/gameMeta";
 import { createParallaxBackground, type ParallaxBackground } from "../gfx/parallax";
 import { areLaneBattleAssetsReady, queueLaneBattleAssets } from "./laneBattleAssetPreload";
@@ -13,7 +14,10 @@ export class BootScene extends Phaser.Scene {
   private autoStart = false;
   private progressText?: Phaser.GameObjects.Text;
   private promptText?: Phaser.GameObjects.Text;
-  private startBattle?: () => Promise<void>;
+  private loadingBox?: Phaser.GameObjects.Rectangle;
+  private difficultyLabel?: Phaser.GameObjects.Text;
+  private difficultyButtons: { rect: Phaser.GameObjects.Rectangle; text: Phaser.GameObjects.Text }[] = [];
+  private startBattle?: (difficultyId: DifficultyId) => Promise<void>;
 
   constructor() {
     super("boot");
@@ -33,7 +37,11 @@ export class BootScene extends Phaser.Scene {
       this.scene.start("unit-sandbox");
       return;
     }
-    this.autoStart = params.get("autostart") === "1";
+    if (params.get("sandbox") === "2") {
+      this.scene.start("audio-lab");
+      return;
+    }
+    this.autoStart = params.get("autostart") === "1" || params.get("scenario") === "visual-validation";
     const { width, height } = this.scale;
     const audio = getAudioSystem();
     void audio.initialize();
@@ -46,7 +54,7 @@ export class BootScene extends Phaser.Scene {
     this.cameras.main.fadeIn(300, 8, 10, 18);
 
     this.add.rectangle(width / 2, height / 2, width, height, 0x081018, 0.68);
-    this.add.rectangle(width / 2, height / 2, 560, 324, 0x0b1421, 0.86).setStrokeStyle(2, 0xcfa75f, 0.28);
+    this.add.rectangle(width / 2, height / 2 + 15, 560, 420, 0x0b1421, 0.86).setStrokeStyle(2, 0xcfa75f, 0.28);
     this.add.rectangle(width / 2, height / 2 - 104, 420, 1, 0xd2ab65, 0.34);
 
     const crest = this.add.container(width / 2, height / 2 - 82);
@@ -82,7 +90,7 @@ export class BootScene extends Phaser.Scene {
       wordWrap: { width: 440 },
     }).setOrigin(0.5, 0);
 
-    this.add
+    this.loadingBox = this.add
       .rectangle(width / 2, height / 2 + 166, 320, 62, 0x101a28, 0.92)
       .setStrokeStyle(2, 0xd39f3f, 0.62);
     this.promptText = this.add
@@ -101,30 +109,56 @@ export class BootScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5);
     this.tweens.add({ targets: this.promptText, alpha: 0.45, duration: 750, yoyo: true, repeat: -1 });
 
+    this.difficultyLabel = this.add
+      .text(width / 2, height / 2 + 130, "난이도", {
+        fontFamily: "Georgia, serif",
+        fontSize: "17px",
+        color: "#f1e4c3",
+      })
+      .setOrigin(0.5, 0.5)
+      .setVisible(false);
+
+    const boxWidth = 128;
+    const boxHeight = 76;
+    const gap = 14;
+    const totalWidth = DIFFICULTIES.length * boxWidth + (DIFFICULTIES.length - 1) * gap;
+    const startX = width / 2 - totalWidth / 2 + boxWidth / 2;
+    const rowY = height / 2 + 178;
+    this.difficultyButtons = DIFFICULTIES.map((difficulty, index) => {
+      const x = startX + index * (boxWidth + gap);
+      const rect = this.add
+        .rectangle(x, rowY, boxWidth, boxHeight, 0x101a28, 0.92)
+        .setStrokeStyle(2, 0xd39f3f, 0.62)
+        .setVisible(false);
+      const text = this.add
+        .text(x, rowY, difficulty.label, { fontFamily: "sans-serif", fontSize: "20px", color: "#f7d46c" })
+        .setOrigin(0.5, 0.5)
+        .setVisible(false);
+      rect.on("pointerover", () => rect.setFillStyle(0x1c2d44, 0.96));
+      rect.on("pointerout", () => rect.setFillStyle(0x101a28, 0.92));
+      rect.on("pointerdown", () => void this.startBattle?.(difficulty.id));
+      return { rect, text };
+    });
+
     let starting = false;
-    this.startBattle = async () => {
+    this.startBattle = async (difficultyId: DifficultyId) => {
       if (starting) return;
       if (!this.battleAssetsReady) {
         this.pendingStart = true;
-        this.promptText?.setText("전장 준비 중...");
         return;
       }
       starting = true;
       if (!this.autoStart) {
         await audio.unlock();
-        audio.playSfx("sfx.ui.confirm", { eventKey: "boot:start" });
+        audio.playSfx("sfx.ui.confirm", { eventKey: `boot:start:${difficultyId}` });
       }
       audio.resetDirector("preparation");
       this.scene.stop("gameover");
       this.scene.stop("run");
-      this.scene.start("run");
+      this.scene.start("run", { difficultyId });
     };
 
-    this.input.keyboard?.on("keydown-SPACE", () => void this.startBattle?.());
-    this.input.on("pointerdown", () => void this.startBattle?.());
     this.events.once("shutdown", () => {
-      this.input.keyboard?.off("keydown-SPACE");
-      this.input.off("pointerdown");
       this.load.off("progress");
       this.load.off("complete");
     });
@@ -159,15 +193,21 @@ export class BootScene extends Phaser.Scene {
 
   private markBattleAssetsReady(): void {
     this.battleAssetsReady = true;
-    this.promptText?.setText("터치 / 클릭 / 스페이스바로 시작");
-    this.progressText?.setText("전장 준비 완료");
+    this.loadingBox?.setVisible(false);
+    this.promptText?.setVisible(false);
+    this.progressText?.setVisible(false);
+    this.difficultyLabel?.setVisible(true);
+    this.difficultyButtons.forEach(({ rect, text }) => {
+      rect.setVisible(true).setInteractive({ useHandCursor: true });
+      text.setVisible(true);
+    });
     if (this.autoStart) {
-      this.time.delayedCall(60, () => void this.startBattle?.());
+      this.time.delayedCall(60, () => void this.startBattle?.(DIFFICULTIES[0].id));
       return;
     }
     if (this.pendingStart) {
       this.pendingStart = false;
-      this.time.delayedCall(60, () => void this.startBattle?.());
+      this.time.delayedCall(60, () => void this.startBattle?.(DIFFICULTIES[0].id));
     }
   }
 }

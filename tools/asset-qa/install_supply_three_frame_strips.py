@@ -133,10 +133,10 @@ def install_supply(spec: SupplySpec) -> dict[str, object]:
         else:
             canvas = reinforce_visible_alpha(canvas, minimum_alpha=208, easing=0.24, clear_below_alpha=82)
         production[pose] = canvas
-        add_team_accent(canvas, "support", "player").save(
+        add_team_accent(canvas, "support", "player", spec.prefix).save(
             ASSET_DIR / f"{spec.prefix}-e-{pose}.png"
         )
-        add_team_accent(canvas, "support", "enemy").save(
+        add_team_accent(canvas, "support", "enemy", spec.prefix).save(
             ASSET_DIR / f"{spec.prefix}-e-{pose}-enemy.png"
         )
 

@@ -177,13 +177,6 @@ export function getProjectileKeyForUnit(unitId: LaneUnitId): string {
     "stone_slinger",
     "grenadier",
     "grenadier_late",
-    "cannon_i",
-    "cannon_ii",
-    "artillery_i",
-    "artillery_ii",
-    "mobile_artillery",
-    "tank",
-    "modern_tank",
   ].includes(unitId)) return "projectile-stone";
   if (unitId === "archer") return "projectile-arrow";
   if ([
@@ -197,5 +190,16 @@ export function getProjectileKeyForUnit(unitId: LaneUnitId): string {
     "special_forces",
     "heavy_gunner",
   ].includes(unitId)) return "projectile-shot";
+  if ([
+    "cannon_i",
+    "cannon_ii",
+  ].includes(unitId)) return "projectile-cannonball";
+  if ([
+    "artillery_i",
+    "artillery_ii",
+    "mobile_artillery",
+    "tank",
+    "modern_tank",
+  ].includes(unitId)) return "projectile-shell";
   return "projectile-stone";
 }

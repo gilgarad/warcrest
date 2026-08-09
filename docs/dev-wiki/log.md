@@ -6196,3 +6196,242 @@ Use consistent headings so entries are easy to grep.
   `python3 tools/asset-qa/install_cavalry_three_frame_strips.py` 통과,
   `python3 tools/asset-qa/install_supply_three_frame_strips.py` 통과,
   `python3 tools/asset-qa/install_mechanized_three_frame_strips.py` 통과.
+
+## 2026-08-09 - 타워 근접 거리, 시대별 타워 외형/탄종, 실제 복장 팀색 치환 복원
+
+사용자가 추가로 네 가지를 지적했다:
+타워를 때릴 때 유닛이 구조물 위에 겹쳐 보이는 문제, 시대가 바뀌어도 타워
+투사체가 석기 돌처럼 보이는 문제, 도끼병 등에서 실제 어깨띠 색이 아닌
+덧칠 줄이 적용된 문제, 그리고 타워 외형이 중세 돌탑 하나로 고정된 문제다.
+
+- `LaneBattleScene.ts`에서 타워 교전 최소 거리를
+  `MIN_FRIENDLY_SPACING_PROGRESS`와 같은 값으로 맞췄다.
+  타워 사거리 판정과 전진 clamp 둘 다 같은 최소 stand-off를 쓰게 해서,
+  근접 유닛이 타워 기둥 바로 위까지 파고드는 그림을 줄였다.
+- `src/systems/lane-units/unitStats.ts`에서 포/전차 계열의 발사체 키를
+  `projectile-stone`에서 분리했다.
+  - `cannon_*` → `projectile-cannonball`
+  - `artillery_*`, `mobile_artillery`, `tank`, `modern_tank` → `projectile-shell`
+- `src/systems/lane-combat/towerAttack.ts`에 시대별 타워 투사체 매핑을 따로
+  뒀다.
+  - 석기/청동기: 돌
+  - 초기/중기 철기: 화살
+  - 후기 철기/르네상스: 탄환
+  - 산업기: 포탄
+  - 근대/현대 초중기: 중포탄
+  - 현대 후기: 미사일
+- `LaneBattleScene.ts`의 런타임 생성 투사체 텍스처에
+  `projectile-cannonball`, `projectile-shell`, `projectile-missile`을 추가했다.
+- 팀색 파이프라인은 다시 정리했다.
+  `tools/asset-qa/generate_pose_board_production_assets.py`의
+  `add_team_accent()`가 사람형/기병/보급에 임의 줄을 덧칠하지 않고,
+  플레이어 원본 PNG 안의 실제 파란 복장 픽셀만 적색으로 바꾸는 방식으로
+  돌아가게 했다. 그래서 `stone-axeman`은 다시 실제 어깨 천 색만
+  파랑/빨강으로 바뀐다. 차량/포병만 식별 줄이 부족한 경우를 대비해
+  차체 줄을 에셋 단계에서 계속 굽는다.
+- `tools/asset-qa/generate_tower_family_assets.py`를 추가해
+  시대군별 타워 PNG 40장을 생성했다.
+  - `palisade`: 석기/청동기
+  - `stone`: 철기~르네상스
+  - `bastion`: 산업기
+  - `missile`: 근현대
+  각 family마다 `full/damaged/critical/ruins/construction` + 적군 variant를
+  생성한다.
+- `src/presentation/structures/productionStructureRegistry.ts`를
+  시대군 기반 registry로 바꿨다. 전장과 샌드박스 모두
+  `getDefenseTowerTexture(ageId, state, team)`을 공용 사용한다.
+- `UnitSandboxScene.ts` 오른쪽 패널에 현재 시대/팀 기준 타워 프리뷰를
+  추가했다. 이제 유닛 샌드박스에서 시대를 바꾸면 해당 시대 타워 외형도
+  함께 확인할 수 있다.
+- `BootScene.ts`는 `scenario=visual-validation`일 때 자동으로 전장에
+  진입하게 바꿨다. 구조물 에셋 종류가 늘면서 로딩 직전 클릭이 무시되어
+  구조물 Playwright 검증이 멈추던 문제를 같이 해결한 것이다.
+
+- 검증:
+  `npx tsc --noEmit` 통과,
+  `npm run build` 통과,
+  `npx vitest run src/presentation/structures/__tests__/productionStructureRegistry.test.ts src/systems/lane-combat/__tests__/towerAttack.test.ts src/ui/__tests__/baseResearchPanelModel.test.ts` 통과,
+  `npx playwright test tools/validation/day5-structures.spec.ts --workers=1` 통과.
+
+## 2026-08-08 - 무기 아키타입별 타격음을 절차적 오프라인 합성 mp3 파일로 전환
+
+사용자가 다른 세션에서 게임 마무리 작업을 진행하는 동안 타격음 개선을
+요청. 원문 요지: "지금 너무 8비트 게임음 같고 자연스럽지 못한 타격음으로
+주로 되어있음. 특히 돌도끼는 딱! 퍽! 같은 느낌의 소리가 나야하고, 검병
+창병 같은 경우는 챙 챙 소리 같은 게 나야하고, 소총병 등은 탕탕! 총소리가
+나야하는데 전혀 적용이 안 된 거 같음. 일단 타격음쪽 확인하고 적용이 안
+된 건지 아니면 같은 타격음을 그냥 돌려쓰는 구조로 되어있는지(시대별로)
+확인부터 해주고 내게 보고해줘." 조사 후 컨펌을 받고서야 개선 진행.
+
+- **조사 결과 보고**: `src/systems/lane-units/weaponSfx.ts`에 무기
+  아키타입별 키 분화(blunt/blade/polearm/mechanized,
+  sling/bow/musket/rifle/cannon/tank)가 이미 존재하고
+  `LaneBattleScene.ts`에서 정상 호출됨을 확인 — "같은 소리 돌려쓰기"는
+  아니었다. 진짜 원인은 `src/systems/audio/assetManifest.ts`의 모든
+  타격음이 실제 오디오 파일 없이 `synth: { kind, frequency, durationMs }`
+  로만 정의돼 있고 `backend.ts`가 재생 시점에 Web Audio 오실레이터+노이즈
+  버퍼로 그 자리에서 합성한다는 점 — 특히 소총 계열은 대역통과 노이즈
+  버스트(`noiseHit`) 하나뿐이라 총성 특유의 크랙/바디/테일 구조가 아예
+  없었음을 확인해 보고, 사용자 컨펌을 받았다(오디오 파일 전환 + 절차적
+  합성의 오프라인 렌더링 방식으로 확정).
+- **구현**: `tools/audio-synth/render_combat_sfx.py` 신설 — numpy/scipy로
+  노이즈 버스트, 필터링 오실레이터, 인하모닉 다중 파셜(금속 클랑),
+  딜레이 탭 기반 알고리즘 리버브 테일 등을 조합해 무기 아키타입 20종
+  (근접 공격/타격 4종 × 2, 원거리 발사/투사체 충돌 6종 × 2)의 사운드를
+  개별 설계 후 `lameenc`로 mp3 인코딩, `public/assets/audio/sfx/`에
+  `combat-<event>-<archetype>.mp3` 이름으로 저장(기존 `sfx()` 헬퍼의
+  파일 경로 규칙과 정확히 일치해 코드 쪽 이름 변경 불필요). 돌도끼는
+  스윙(휙, 낮은 대역 노이즈 스윕)과 타격(딱 크랙 + 퍽 저음 바디)을
+  분리 설계, 검/창은 다중 파셜 금속 클랑 + 리버브 테일로 "챙" 느낌,
+  소총/기관총은 크랙 트랜지언트+저음 바디+짧은 리버브로 "탕" 총성
+  구조를 새로 구현. `assetManifest.ts`의 `sfx()` 헬퍼에 `missingAsset`
+  오버라이드를 추가하고 해당 20개 항목만 `missingAsset: false`로
+  전환(나머지 UI/웨이브/점령 등 사운드는 기존 합성 폴백 유지).
+- **검증**: `npx tsc --noEmit`/`npm test`(181개)/`npm run build` 모두
+  통과. Playwright로 실전 전투 30초 관찰 — 신규 mp3 4종
+  (`combat-meleeAttack-blunt`/`combat-meleeHit-blunt`/
+  `combat-rangedFire-sling`/`combat-projectileHit-sling`)이 실제로
+  200 OK로 fetch/decode되어 재생됨을 네트워크 로그로 확인, 콘솔/페이지
+  에러 0건. 단, AI는 소리를 직접 들을 수 없으므로 "자연스러움" 자체는
+  사용자 청취 확인이 필요 — 피드백 받아 반복 튜닝할 준비.
+
+## 2026-08-09 - Human sash integration and mechanized team-marking naturalization
+
+사용자 지시: 장창병부터 소총병, 현대 사람형 병력까지는 현재 캐릭터 시안을
+유지한 채 "실제 옷/장비의 띠"가 보이도록 바꾸고, 대포/전차류도 기존처럼
+강제로 덧씌운 선이 아니라 차체 구조 안에 자연스럽게 들어간 팀 식별 부위로
+교정하라고 요청했다.
+
+- `tools/asset-qa/generate_pose_board_production_assets.py`
+  - `AUTHORED_SASH_PREFIXES`에 `knight`, `heavy-cavalry`,
+    `light-cavalry`, `cavalry`를 추가해, 중세 기병 rider도 같은
+    팀 색상 규칙으로 처리되게 했다.
+  - 사람형 띠 생성 로직을 넓은 단일 띠에서 `어깨 패드 + 대각선 띠 +
+    허리 벨트 + 작은 버클/술` 조합으로 바꿨다. 폭도 줄여서 옷 위에
+    입힌 장비처럼 읽히게 했고, 기존 체형/포즈는 유지했다.
+  - 기계 병력은 넓은 면 도색 대신 더 작은 비정형 패널/레일로 분해했다.
+    포/곡사포 계열은 방패판/포가 차대의 패널처럼, 전차류는 포탑/버슬/
+    차체 측면 띠처럼 보이도록 다듬었다.
+- 재생성:
+  - `python3 tools/asset-qa/install_human_three_frame_strips.py`
+  - `python3 tools/asset-qa/install_mechanized_three_frame_strips.py`
+  - `python3 tools/asset-qa/install_cavalry_three_frame_strips.py`
+  - `python3 tools/asset-qa/install_supply_three_frame_strips.py`
+  를 다시 실행해 관련 생산 자산과 컨택트 시트를 전부 갱신했다.
+- 육안 점검:
+  - `tmp/strap-review-sheet-2.png`로 `pikeman`, `knight`, `musketeer`,
+    `rifleman-late`, `infantry`, `mobile-infantry`, `special-forces`,
+    `cannon-i`, `artillery-i`, `tank`, `mobile-artillery`, `modern-tank`
+    의 player/enemy idle 시안을 직접 확인했다.
+  - 결과는 기존의 "덧그린 선"보다 훨씬 자연스럽고, 적군은 동일 위치의
+    장비/패널이 빨간 계열로 바뀌는 형태로 유지됨을 확인했다.
+- 검증:
+  - 생성 QA: 인간형/기계/기병/보급 전부 PASS
+  - `npx tsc --noEmit` 통과
+  - `npm run build` 통과
+
+## 2026-08-09 - Tower family art regeneration with legacy stone tower restoration
+
+사용자 피드백: 가족 분기 후 생성된 타워 시안이 게임과 맞지 않으며, 특히
+중세 stone 계열은 "기존 사용하던 시안"으로 돌아가야 한다고 지적했다.
+요구는 `목책 / 타워요새(기존 stone 원본 유지) / 성형요새 / 현대 미사일포대`
+4계열을 다시 만들라는 것이었다.
+
+- 확인:
+  - `defense-tower-full.png` / `defense-tower-full-enemy.png`를 열어,
+    분기 이전의 레거시 stone 타워가 현재 게임 톤과 가장 잘 맞는 원본임을
+    확인했다.
+  - 현재 `defense-tower-palisade-*`, `-bastion-*`, `-missile-*`는
+    절차 드로잉 기반이라 사용자 지적대로 지나치게 단순했다.
+- 생성:
+  - 내장 이미지 생성 도구를 사용해 레거시 stone 타워를 스타일 기준으로만
+    참조한 새 원화 3장을 만들었다.
+    - `palisade`: 선사/청동기용 목책 감시탑
+    - `bastion`: 산업기 성형요새
+    - `missile`: 현대 미사일 방어 포대
+  - 생성 결과는 `#ff00ff` 크로마 배경으로 받고,
+    `remove_chroma_key.py`로 투명 배경 PNG로 정리했다.
+  - 정리된 원본은 `art-source/structures/tower-family-v2/` 아래에 저장했다.
+- 구현:
+  - `tools/asset-qa/generate_tower_family_assets.py`를 전면 교체했다.
+  - 이제 stone 계열은 더 이상 도형으로 다시 그리지 않고, 레거시
+    `defense-tower-{state}[ -enemy].png` 원본을 그대로
+    `defense-tower-stone-{state}[ -enemy].png`로 복사/사용한다.
+  - `palisade`, `bastion`, `missile` 계열은 새 원화를 읽어 512 캔버스에
+    정규화하고, enemy는 파란 팀색만 빨간색으로 치환한다.
+  - 손상/치명/공사/폐허 상태는 이 새 원화를 기준으로 오버레이/알파 칩핑/
+    공사 비계/하부 잔해 파생으로 생성한다.
+- 결과 확인:
+  - `defense-tower-palisade-full.png`: 목재 결/로프/목책 실루엣이 보이는
+    실제 RTS 자산 톤으로 교체.
+  - `defense-tower-stone-full.png`: 기존 상세 stone 타워 원본으로 복원.
+  - `defense-tower-bastion-full.png`: 포문이 있는 성형요새로 교체.
+  - `defense-tower-missile-full.png`: 콘크리트+강철 기반의 미사일 포대로
+    교체.
+- 검증:
+  - `python3 -m py_compile tools/asset-qa/generate_tower_family_assets.py`
+  - `python3 tools/asset-qa/generate_tower_family_assets.py`
+  - `npx tsc --noEmit`
+  - `npm run build`
+  모두 통과.
+
+## 2026-08-08 - `?sandbox=2` 오디오 랩(SFX/BGM 미리듣기)을 실제 게임에 연결
+
+사용자 지시: "sandbox=1은 현재 샌드박스에서 캐릭터 중심으로 보여주고
+있다. sandbox=2는 음악 종류를 들을 수 있도록 만들어줘. 아마 음악/타격음
+등을 들을 수 있는 내부 페이지가 별도로 있을 수도 있는데 그걸 개선해서
+연결하도록 해줘." — 찾아보니 정확히 `tools/audio-lab/index.html` +
+`tools/audio-lab/main.ts`가 그 "내부 페이지"였다: `src/systems/audio`
+모듈을 그대로 재사용하는 독립 Vite 페이지로, "LaneBattleScene/main.ts와
+무관, 실제 게임에는 연결되어 있지 않음"이라고 스스로 명시하고 있었다.
+`vite.config.ts`에 멀티 페이지 빌드 설정(`rollupOptions.input`)이 없어
+`npm run build` 결과물(`dist/`)에는 애초에 포함되지 않는 dev-only
+프로토타입이었다 — 배포된 빌드에서는 `sandbox=2`로 접근할 방법이
+없었다는 뜻.
+
+- **구현**: `src/scenes/AudioLabScene.ts` 신설 — `tools/audio-lab`와 동일한
+  기능(SFX 카테고리별 미리듣기, BGM 개별 재생, AudioDirector 상황별
+  전환, 볼륨/음소거/전투효과음모드 설정, 오디오 언락 버튼, 실시간 상태
+  진단 표시)을 실제 Phaser Scene으로 포팅해 `main.ts`의 씬 목록과
+  `src/main.ts`에 등록했다. `UnitSandboxScene`(`?sandbox=1`)와 동일한
+  패턴으로 `BootScene.create()`에 `params.get("sandbox") === "2"` 분기를
+  추가해 `audio-lab` 씬으로 라우팅. 두 씬 모두 `src/systems/audio`의
+  진짜 `AudioSystem` 싱글턴을 그대로 사용하므로(가짜/중복 로직 없음),
+  이 SFX 개선 세션에서 새로 붙인 무기 아키타입 mp3 20종이 여기서도
+  "합성" 배지 없이(🔧 없음) 바로 재생 가능함을 확인.
+  - `tools/audio-lab/`는 그대로 남겨뒀다(독립 dev 도구로서 여전히
+    유효), 다만 실제 게임에서 듣고 싶을 땐 이제 `?sandbox=2`만 있으면
+    되므로 사실상 대체됐다.
+- **검증**: `npx tsc --noEmit`/`npm test`(181)/`npm run build` 모두
+  통과. Playwright로 `?sandbox=2` 실측 — 언락 버튼 클릭 후
+  `unlocked=true` 확인, 합성 전용 버튼("버튼 hover")과 실제 mp3 버튼
+  ("근접 공격 - 둔기(석기)") 둘 다 클릭 → 후자만
+  `combat-meleeAttack-blunt.mp3`가 200 OK로 실제 fetch됨을 네트워크
+  로그로 확인, 콘솔/페이지 에러 0건. 레이아웃 겹침 버그(AudioDirector
+  패널 y좌표를 볼륨 패널 하드코딩 값으로 잡아서 "설정 초기화" 버튼과
+  겹침) 1건을 스크린샷 검수로 발견해 각 패널이 이전 패널의 실제 종료
+  y좌표를 반환받아 이어붙이는 방식으로 수정.
+## 2026-08-09 - Remaining human gunner / modern infantry authored team-color pass completed
+
+- Continued the authored team-color replacement pass for the remaining human gunner and modern infantry units so they no longer rely on painted-on overlay bands.
+- Replaced source strips in `docs/dev-wiki/visual-drafts/human-3frame-v2/` for `musketeer`, `pikeman`, `machine-gunner`, `shock-trooper`, `automatic-rifleman`, `support-gunner`, `mobile-infantry`, and `special-forces` with new five-pose source sheets that include natural built-in blue shoulder sash / harness details.
+- Re-ran `python3 tools/asset-qa/install_human_three_frame_strips.py`; all human strip installs passed, including the previously failing `special-forces`.
+- Verification: `python3 -m py_compile tools/asset-qa/generate_pose_board_production_assets.py tools/asset-qa/install_human_three_frame_strips.py` and `python3 tools/asset-qa/install_human_three_frame_strips.py`.
+
+## 2026-08-09 - Follow-up pass for still-missing team-color units
+
+- After in-engine spot checks, replaced another batch of authored source strips for units the user said still looked unpatched: `musketeer`, `automatic-rifleman`, `support-gunner`, `mobile-infantry`, `cannon-i`, `cannon-ii`, `artillery-i`, and `artillery-ii`.
+- The new human sources push the team-color treatment into more explicit integrated sash / harness designs. The new cannon / artillery sources replace flat-looking carriage bands with painted trim and shield-edge detailing authored directly into the source art.
+- Re-ran both installers:
+  - `python3 tools/asset-qa/install_human_three_frame_strips.py` -> all PASS
+  - `python3 tools/asset-qa/install_mechanized_three_frame_strips.py` -> `cannon-i`, `artillery-i`, `artillery-ii` PASS; `cannon-ii` still writes updated production assets but fails the locomotion height consistency QA check.
+
+## 2026-08-09 - Removed remaining forced team-color overlays from authored human units and restored musketeer identity
+
+- Audited the human authored-team-color path after the user's report that units like `mobile-infantry` / `support-gunner` still showed straight painted bands.
+- Found the root cause in `tools/asset-qa/generate_pose_board_production_assets.py`: several human prefixes were present in `AUTHORED_SASH_PREFIXES` but missing from `AUTHORED_TEAM_COLOR_SOURCE_PREFIXES`, so the final production pass was still drawing the old rectangular overlay on top of newly authored art.
+- Added the missing prefixes to the authored-source bypass set: `musketeer`, `pikeman`, `machine-gunner`, `shock-trooper`, `automatic-rifleman`, `support-gunner`, and `mobile-infantry`.
+- Replaced `musketeer-e-5slot-source.png` again using the older steel-helmet / musket visual identity preserved under `art-source/second-cycle/day3/musketeer/`, then rebuilt the human production strips.
+- Verification:
+  - `python3 tools/asset-qa/install_human_three_frame_strips.py` -> all PASS
+  - Manual output spot checks confirmed the forced overlay rectangles were removed from `pikeman`, `automatic-rifleman`, `support-gunner`, and `mobile-infantry`, and `musketeer` now uses the restored older-era musket / steel-helmet silhouette.

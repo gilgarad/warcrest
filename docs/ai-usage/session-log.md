@@ -6291,3 +6291,206 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   - `python3 tools/asset-qa/install_cavalry_three_frame_strips.py` passed.
   - `python3 tools/asset-qa/install_supply_three_frame_strips.py` passed.
   - `python3 tools/asset-qa/install_mechanized_three_frame_strips.py` passed.
+
+## 2026-08-09 - Tower family rollout, projectile correction, and authored team-color restoration
+
+- **Agent/tool**: Codex, GPT-5.
+- **User direction (원문)**: "타워도 사람처럼 가까이 다가갈 수 있는 거리를 사람간의 최소거리만큼... 시대가 변하면 타워의 공격력과 공격 거리가 ... 실제 타워에서 나가는 그림은 투석으로 고정... 도끼병 ... 실제 어깨에 띠가 있음 ... 지금처럼 강제로 색깔 줄을 덧입히지 말고 ... 타워도 샌드박스에 추가하고 ..."
+- **AI action**:
+  1. Restored authored team-color behavior for humanoid/cavalry/support outputs by changing `add_team_accent()` so those families no longer get an extra overpainted sash. Player frames now stay as-authored, and enemy frames are produced by swapping the authored blue clothing pixels to red. This restores cases like `stone-axeman` where the shoulder cloth itself changes color instead of a separate line being drawn on top.
+  2. Kept vehicle/artillery identification stripes only for families that still need a durable faction cue baked into the generated asset.
+  3. Added new projectile visuals and mappings so cannon/artillery/tank classes no longer reuse the stone projectile silhouette:
+     `projectile-cannonball`, `projectile-shell`, and `projectile-missile`.
+  4. Split tower projectile mapping away from unit mapping in `towerAttack.ts`, so each era family uses an appropriate tower shot visual while still inheriting range/cooldown/damage from its reference ranged unit.
+  5. Added a generated tower-family asset pipeline in `tools/asset-qa/generate_tower_family_assets.py` and produced four tower families across all five damage/build states with enemy variants:
+     palisade, stone tower, bastion, missile base.
+  6. Reworked `productionStructureRegistry.ts` so tower textures and visible-height ratios are resolved from `(ageId, state, team)` instead of a single static medieval tower key.
+  7. Added a tower preview to `UnitSandboxScene` so changing age/team in sandbox now also previews the current era's tower family.
+  8. Matched tower melee stand-off to the same minimum spacing budget used between units, reducing cases where melee units appeared to stand on top of the tower sprite while attacking.
+  9. Updated BootScene so `scenario=visual-validation` auto-enters the battlefield once assets are ready; this was needed because the expanded structure asset set made the old validation click race against loading and left Playwright waiting forever for `__terrainPrototypeControl`.
+- **Verification**:
+  - `python3 -m py_compile tools/asset-qa/generate_tower_family_assets.py tools/asset-qa/generate_pose_board_production_assets.py` passed.
+  - `python3 tools/asset-qa/generate_tower_family_assets.py` passed.
+  - `python3 tools/asset-qa/install_human_three_frame_strips.py && python3 tools/asset-qa/install_cavalry_three_frame_strips.py && python3 tools/asset-qa/install_supply_three_frame_strips.py && python3 tools/asset-qa/install_mechanized_three_frame_strips.py` passed.
+  - `npx vitest run src/presentation/structures/__tests__/productionStructureRegistry.test.ts src/systems/lane-combat/__tests__/towerAttack.test.ts src/ui/__tests__/baseResearchPanelModel.test.ts` passed.
+  - `npm run build` passed.
+  - `npx playwright test tools/validation/day5-structures.spec.ts --workers=1` passed.
+
+## 2026-08-08 - Combat hit-sound overhaul: investigated first, confirmed direction, then rendered real audio files offline
+
+- **Agent/tool**: Claude Code (Sonnet 5), running in parallel with another
+  session doing gameplay polish. This turn combined a code-architecture
+  investigation, a user confirmation checkpoint (`AskUserQuestion`), and
+  offline DSP synthesis in Python (numpy/scipy + `lameenc` for MP3
+  encoding) rather than any Web-based tool.
+- **User direction (원문)**: "지금 다른 세션에서 게임의 마무리 고침
+  작업을 계속 진행중임. 진행하는 동안 너는 음악, 더 정확히는 타격음과
+  관련된 작업을 다시 전부 해주기를 원함. 타격음을 새로 만들고 같은
+  이름으로 만들어서 기존 타격음을 덮어쓰기 하는 형식이 되기를 원함. 일단
+  지금 너무 8비트 게임음 같고 자연스럽지 못한 타격음으로 주로 되어있음.
+  특히 돌도끼는 딱! 퍽! 같은 느낌의 소리가 나야하고, 검병 창병 같은
+  경우는 챙 챙 소리 같은 게 나야하고, 소총병 등은 탕탕! 총소리가 나야하는데
+  전혀 적용이 안 된 거 같음. 일단 타격음쪽 확인하고 적용이 안 된 건지
+  아니면 같은 타격음을 그냥 돌려쓰는 구조로 되어있는지(시대별로) 확인부터
+  해주고 내게 보고해줘. 내 컨펌 받고 개선은 진행해야 할 거 같아. 그리고
+  어떻게 개선할 건지도 좀 알려줘." — explicitly asked for investigation
+  and a report *before* any change, then confirmation of approach.
+- **AI action**:
+  1. Investigated and reported honestly that the per-weapon-archetype key
+     system (`weaponSfx.ts`, `LaneBattleScene.ts`) was already correctly
+     wired — the actual problem was that every combat sfx in
+     `assetManifest.ts` is a live Web Audio procedural synthesis recipe
+     (`synth: { kind, frequency, durationMs }`) with zero real audio
+     files anywhere in the project; `backend.ts` builds the waveform from
+     oscillators/noise at play time. Called out the rifle/musket case
+     specifically: it's a single bandpass noise burst with no crack/body/
+     tail structure, which is exactly why gunfire "didn't sound applied."
+  2. Asked two `AskUserQuestion` prompts to lock the approach before
+     writing any code: file-based real audio vs. tuning the live synth
+     further (user picked files), and how to source those files (user
+     picked offline procedural rendering over licensed sample libraries).
+  3. Implemented `tools/audio-synth/render_combat_sfx.py`: a from-scratch
+     offline synthesis toolkit (noise-burst layers, filtered oscillator
+     bursts, multi-partial inharmonic "metallic clang" bank, a tap-delay
+     algorithmic reverb tail) with 20 hand-designed per-archetype recipes
+     — e.g. blunt axe swing (low noise whoosh) kept deliberately separate
+     from its hit (crack + low thump, not the same "blade" whoosh the
+     live synth had been reusing), rifle/machine-gun fire built as crack
+     transient + body + short field-echo tail instead of one noise burst.
+     Rendered all 20 to MP3 via `lameenc`, landing exactly on the
+     filenames `assetManifest.ts`'s `sfx()` helper already expects
+     (`combat-<event>-<archetype>.mp3`), so this really is "overwrite
+     under the same name" — no code-side renaming needed. Added a
+     `missingAsset` override to the `sfx()` helper and flipped it to
+     `false` for those 20 entries only, leaving every other sfx (UI,
+     wave, capture, unit death/hit, tower) on the existing synth fallback
+     untouched.
+  4. Explicitly told the user in-chat that an AI cannot judge "natural"
+     sound by listening — verification here means the files decode and
+     play without error, not that they sound right; asked for listening
+     feedback before further tuning.
+- **Verification**: `npx tsc --noEmit`, `npm test` (181 tests), `npm run
+  build` all passed. Live Playwright combat run (30s) confirmed all four
+  stone-age combat sfx files it triggered
+  (`combat-meleeAttack-blunt`/`combat-meleeHit-blunt`/
+  `combat-rangedFire-sling`/`combat-projectileHit-sling`) were fetched
+  with `200 OK` and played with zero console/page errors — the pipeline
+  is wired correctly end to end; audio *character* is pending the user's
+  own listen.
+
+## 2026-08-09 - Naturalized sash/team-marking regeneration for humanoids and mechanized units
+
+- **User ask**: "장창병부터 소총병, 그리고 현대의 사람형 병력들도 띠를 가지고 있도록 시안을 좀 변경해줘. 지금 시안 그대로 사용하되 거기에 띠가 있도록 해서 생성하면 아마 크게 틀어지지 않고 내가 원하는대로 나올 가능성이 높다고 생각해. ... 대포/전차류도 여전히 네가 강제로 덧씌운 선에 색깔이 입혀진 구조야. 자연스러운 게임 캐릭터내 띠가 있는 그림이 아니라고. 이것도 개선해줘야해."
+- **What changed**
+  1. Reworked `tools/asset-qa/generate_pose_board_production_assets.py`
+     so humanoid team accents are authored as smaller clothing/equipment
+     pieces instead of one broad overpaint: shoulder pad, diagonal sash,
+     waist belt, buckle, and short tassel.
+  2. Expanded the authored-sash target set to include mounted human
+     units (`knight`, `heavy-cavalry`, `light-cavalry`, `cavalry`) in
+     addition to the gunpowder/modern humanoids already being regenerated.
+  3. Reworked mechanized accents from big color fills into smaller
+     irregular chassis/turret panels so cannon/artillery/tank team colors
+     read as built-in painted parts rather than a flat stripe pasted over
+     the sprite.
+  4. Re-ran the production installers for human, mechanized, cavalry,
+     and supply strips so the actual shipped PNGs under
+     `public/assets/production/units/` were regenerated from the new
+     accent rules.
+  5. Built `tmp/strap-review-sheet-2.png` and visually checked paired
+     player/enemy samples across pike, knight, musketeer, rifleman,
+     modern infantry, special-forces, cannon, artillery, tank,
+     mobile-artillery, and modern-tank before stopping.
+- **Verification**
+  - `python3 -m py_compile tools/asset-qa/generate_pose_board_production_assets.py tools/asset-qa/install_human_three_frame_strips.py tools/asset-qa/install_mechanized_three_frame_strips.py tools/asset-qa/install_cavalry_three_frame_strips.py tools/asset-qa/install_supply_three_frame_strips.py`
+  - `python3 tools/asset-qa/install_human_three_frame_strips.py`
+  - `python3 tools/asset-qa/install_mechanized_three_frame_strips.py`
+  - `python3 tools/asset-qa/install_cavalry_three_frame_strips.py`
+  - `python3 tools/asset-qa/install_supply_three_frame_strips.py`
+  - All generator QA checks printed `PASS`
+  - `npx tsc --noEmit` passed
+  - `npm run build` passed
+
+## 2026-08-09 - Replaced crude tower-family art with generated source art and restored legacy stone tower
+
+- **User ask**: "타워가 기존 사용하던 시안은 게임과 굉장히 잘 어울리는 디자인에 그림이었는데, 지금은 완전 무슨 어린애가 디자인 한 듯한 모습으로 바뀌었어. ... 목책/타워요새(이건 지금 새로 만든 시안 말고 기존 시안 사용)/성형요새/현대 미사일포대 같은 걸로 다시 그림을 생성하도록 해줘."
+- **What changed**
+  1. Opened the current family assets plus the pre-family legacy tower assets and verified the user's point: the current procedural `palisade` / `bastion` / `missile` outputs were flat and toy-like, while the old standalone stone tower art was the correct quality bar.
+  2. Used the built-in `image_gen` tool with the legacy stone tower as a style reference to generate three new project-bound structure source paintings on a magenta chroma-key background:
+     - ancient wooden palisade watchtower
+     - industrial bastion / star-fort tower
+     - modern missile-defense emplacement
+  3. Removed the chroma-key backgrounds locally with the installed `remove_chroma_key.py` helper and saved the cleaned tower source PNGs into `art-source/structures/tower-family-v2/`.
+  4. Replaced `tools/asset-qa/generate_tower_family_assets.py` entirely. It no longer draws crude geometric towers. Instead:
+     - `stone` family reuses the old high-quality legacy tower files directly for all five states and both teams.
+     - `palisade`, `bastion`, and `missile` load the new generated source art, normalize it into the 512 px production canvas, derive enemy variants by swapping blue team-color pixels to red, and then derive damaged / critical / construction / ruins states from the authored art.
+  5. Regenerated all 40 family assets under `public/assets/production/structures/`.
+- **Verification**
+  - `python3 -m py_compile tools/asset-qa/generate_tower_family_assets.py`
+  - `python3 tools/asset-qa/generate_tower_family_assets.py`
+  - Visually checked:
+    - `defense-tower-palisade-full.png`
+    - `defense-tower-stone-full.png`
+    - `defense-tower-bastion-full.png`
+    - `defense-tower-missile-full.png`
+    - `defense-tower-palisade-construction.png`
+    - `defense-tower-missile-critical-enemy.png`
+  - `npx tsc --noEmit` passed
+  - `npm run build` passed
+
+## 2026-08-08 - Connected the standalone audio-listening prototype into the real game via `?sandbox=2`
+
+- **Agent/tool**: Claude Code (Sonnet 5).
+- **User direction (원문)**: "sandbox=1은 현재 샌드박스에서 캐릭터 중심으로
+  보여주고 있다. sandbox=2는 음악 종류를 들을 수 있도록 만들어줘. 아마
+  음악/타격음 등을 들을 수 있는 내부 페이지가 별도로 있을 수도 있는데
+  그걸 개선해서 연결하도록 해줘."
+- **AI action**: Found the "internal page" the user suspected existed —
+  `tools/audio-lab/` — a standalone Vite HTML entry that reuses the real
+  `src/systems/audio` module but, by its own comment, is "not connected to
+  the actual game" and isn't in `vite.config.ts`'s build inputs, so it
+  never ships in `dist/`. Ported its functionality (SFX preview by
+  category, individual BGM playback, AudioDirector state switching,
+  volume/mute/combat-sfx-mode settings, an unlock button, live state
+  diagnostics) into a real `Phaser.Scene` (`src/scenes/AudioLabScene.ts`),
+  registered it in `main.ts`, and wired `?sandbox=2` in `BootScene`
+  exactly like the existing `?sandbox=1` → `UnitSandboxScene` route. Both
+  scenes share the same real `AudioSystem` singleton, so the 20 new
+  weapon-archetype mp3s from the earlier combat-sfx-overhaul turn show up
+  here already playable (no "synthesized" badge). Left `tools/audio-lab/`
+  in place as a still-valid standalone dev tool, but it's effectively
+  superseded for in-game listening now that `?sandbox=2` works in both
+  dev and the production build.
+- **Verification**: `npx tsc --noEmit`, `npm test` (181), `npm run build`
+  all passed. Live Playwright pass on `?sandbox=2`: clicked unlock →
+  `unlocked=true`; clicked a synth-only button (no network request, as
+  expected) and a real-file combat button → confirmed
+  `combat-meleeAttack-blunt.mp3` fetched with `200 OK`, zero console/page
+  errors. Caught and fixed one layout bug via screenshot review: the
+  AudioDirector panel used a hardcoded y-coordinate that collided with the
+  settings panel's "설정 초기화" button; each panel-builder method now
+  returns its actual end y so the next panel stacks correctly regardless
+  of how tall the settings panel ends up being.
+## 2026-08-09 - Finished the remaining authored team-color infantry replacements
+
+- **Agent/tool**: Codex (GPT-5), built-in `image_gen`, local asset install scripts.
+- **User direction (원문)**: "소총병 I/대포 I/ 소총병 II/ 돌파병/대포 II/척탄병 II/특수보병/중화기병 등 적용 안 된 애들이 많아. 이것도 다시 해줘" and then "그래 끝까지 더 해줘"
+- **AI action**: Continued the already-approved "natural built-in sash / stripe" method instead of painted overlays. Generated and installed new five-pose authored source sheets for the remaining human gunner / modern infantry set: `musketeer`, `pikeman`, `machine-gunner`, `shock-trooper`, `automatic-rifleman`, `support-gunner`, `mobile-infantry`, and a cleaned `special-forces`. Copied those sources into `docs/dev-wiki/visual-drafts/human-3frame-v2/` and rebuilt the production unit strips through `tools/asset-qa/install_human_three_frame_strips.py`.
+- **Notable outcome**: The prior `special-forces` strip had stray artifact pixels and failed the height check; regenerating a cleaner source resolved it without changing the install logic.
+- **Verification**: `python3 -m py_compile tools/asset-qa/generate_pose_board_production_assets.py tools/asset-qa/install_human_three_frame_strips.py` passed, then `python3 tools/asset-qa/install_human_three_frame_strips.py` passed for all human units.
+
+## 2026-08-09 - User-reported still-unpatched units got a second targeted art pass
+
+- **Agent/tool**: Codex (GPT-5), built-in `image_gen`, local strip installers.
+- **User direction (원문)**: "진짜 많이 개선되었는데 아직도 적용 안 된 캐릭터들이 많이 있다. 확인하고 계속 수정해줘. 또한 소총병 II는 적용되었는데, 소총병 I도 적용 안 되었고, 포병 I / II 전부 적용 안 되었고, 기동병/지원화기병/자동소총병 등 적용 안 된 것들이 많이 있어."
+- **AI action**: Audited the production outputs against the current source strips and confirmed the user's cited units still needed another pass. Regenerated authored source sheets for `musketeer`, `automatic-rifleman`, `support-gunner`, `mobile-infantry`, `cannon-i`, `cannon-ii`, `artillery-i`, and `artillery-ii`, with prompts that explicitly required the team-color element to be integrated into the clothing / carriage paint rather than looking like a post-process overlay. Reinstalled both the human and mechanized production strips afterward.
+- **Notable outcome**: Human strip QA passed across the board after the targeted rerun. Mechanized QA passed for `cannon-i`, `artillery-i`, and `artillery-ii`; `cannon-ii` still outputs the new art but remains over the locomotion-height consistency threshold, so that specific source may need one more motion-consistency pass.
+- **Verification**: `python3 tools/asset-qa/install_human_three_frame_strips.py` all PASS. `python3 tools/asset-qa/install_mechanized_three_frame_strips.py` PASS except `cannon-ii` locomotion height consistency.
+
+## 2026-08-09 - Fixed authored human units that still reintroduced the old rectangular overlay in the final output
+
+- **Agent/tool**: Codex (GPT-5), built-in `image_gen`, local asset QA scripts.
+- **User direction (원문)**: "기동병/지원화기병 등은 기존에 네가 강제로 덧칠한 것들이 있어. ... 그런 뒤 모든 캐릭터 검수해서 네가 과거 강제로 덧씌웠던 띠 ... 지워줘" and "총병이 musketeer 그림이 아니라 거의 라이플맨(소총병) 수준의 시대의 그림인 걸 눈치챘음. ... 복구한 뒤 복구한 그림으로 띠를 넣어 적용시켜야해"
+- **AI action**: Traced the remaining straight overlay bands to a code-path mismatch: `AUTHORED_SASH_PREFIXES` already listed several human units, but `AUTHORED_TEAM_COLOR_SOURCE_PREFIXES` did not, so the production export still applied the old synthetic band on top of the new authored art. Added the missing human prefixes to the authored-source bypass set, then regenerated `musketeer` from the older steel-helmet / musket reference art kept in `art-source/second-cycle/day3/musketeer/` so it matched the intended earlier-era identity instead of the later rifleman-like look. Reinstalled the human strip outputs afterward.
+- **Notable outcome**: This resolved the visible rectangular overlays on `pikeman`, `automatic-rifleman`, `support-gunner`, and `mobile-infantry` while also restoring `musketeer` to the older musket-bearing silhouette the user expected.
+- **Verification**: `python3 tools/asset-qa/install_human_three_frame_strips.py` all PASS; manual spot checks on `musketeer`, `pikeman`, `automatic-rifleman`, `support-gunner`, and `mobile-infantry` production PNGs confirmed the old hard-painted overlay was gone.
