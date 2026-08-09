@@ -937,23 +937,53 @@ def add_team_accent(canvas: Image.Image, role: str, team: Literal["player", "ene
     left, top, right, bottom = bbox
     primary_fill = (72, 126, 220, 255) if team == "player" else (196, 88, 88, 255)
     secondary_fill = (108, 168, 255, 255) if team == "player" else (244, 134, 134, 255)
-    if role in {"vehicle", "artillery"}:
-        x0 = round(left + (right - left) * 0.58)
-        y0 = round(top + (bottom - top) * 0.26)
-        draw.rounded_rectangle((x0, y0, x0 + 16, y0 + 10), radius=2, fill=primary_fill)
-        draw.rectangle((x0 + 3, y0 + 3, x0 + 12, y0 + 7), fill=secondary_fill)
-    elif role == "support":
-        x0 = round(left + (right - left) * 0.56)
-        y0 = round(top + (bottom - top) * 0.22)
-        draw.ellipse((x0, y0, x0 + 12, y0 + 12), fill=primary_fill)
-        draw.ellipse((x0 + 3, y0 + 3, x0 + 8, y0 + 8), fill=secondary_fill)
-    else:
-        x0 = round(left + (right - left) * 0.48)
-        y0 = round(top + (bottom - top) * 0.18)
-        draw.polygon(
-            [(x0, y0), (x0 + 13, y0 + 4), (x0 + 8, y0 + 11), (x0 - 4, y0 + 7)],
-            fill=primary_fill,
+
+    width = max(1, right - left)
+    height = max(1, bottom - top)
+
+    def draw_sash(start_x_ratio: float, start_y_ratio: float, end_x_ratio: float, end_y_ratio: float, band_width: int) -> None:
+        start = (
+            round(left + width * start_x_ratio),
+            round(top + height * start_y_ratio),
         )
+        end = (
+            round(left + width * end_x_ratio),
+            round(top + height * end_y_ratio),
+        )
+        draw.line((start, end), fill=primary_fill, width=band_width)
+        draw.line((start, end), fill=secondary_fill, width=max(2, round(band_width * 0.42)))
+        cap_radius = max(2, round(band_width * 0.28))
+        for x, y in (start, end):
+            draw.ellipse((x - cap_radius, y - cap_radius, x + cap_radius, y + cap_radius), fill=primary_fill)
+
+    def draw_vehicle_stripe(x_ratio: float, y_ratio: float, stripe_width_ratio: float, stripe_height_ratio: float) -> None:
+        x0 = round(left + width * x_ratio)
+        y0 = round(top + height * y_ratio)
+        stripe_w = max(18, round(width * stripe_width_ratio))
+        stripe_h = max(8, round(height * stripe_height_ratio))
+        draw.rounded_rectangle((x0, y0, x0 + stripe_w, y0 + stripe_h), radius=max(2, stripe_h // 4), fill=primary_fill)
+        inset = max(2, round(stripe_h * 0.2))
+        draw.rounded_rectangle(
+            (x0 + inset, y0 + inset, x0 + stripe_w - inset, y0 + stripe_h - inset),
+            radius=max(1, stripe_h // 5),
+            fill=secondary_fill,
+        )
+
+    if role in {"vehicle", "artillery"}:
+        draw_vehicle_stripe(0.22, 0.34, 0.26, 0.07)
+        draw_vehicle_stripe(0.5, 0.22, 0.24, 0.06)
+    elif role == "support":
+        draw_sash(0.46, 0.16, 0.58, 0.72, max(10, round(width * 0.05)))
+        badge_x = round(left + width * 0.53)
+        badge_y = round(top + height * 0.28)
+        badge_r = max(5, round(min(width, height) * 0.035))
+        draw.ellipse((badge_x - badge_r, badge_y - badge_r, badge_x + badge_r, badge_y + badge_r), fill=primary_fill)
+        draw.ellipse((badge_x - badge_r + 2, badge_y - badge_r + 2, badge_x + badge_r - 2, badge_y + badge_r - 2), fill=secondary_fill)
+    elif role == "cavalry":
+        draw_sash(0.43, 0.18, 0.56, 0.46, max(11, round(width * 0.04)))
+        draw_vehicle_stripe(0.33, 0.52, 0.18, 0.055)
+    else:
+        draw_sash(0.43, 0.15, 0.57, 0.62, max(10, round(width * 0.045)))
     # Wide attack silhouettes can shift the bbox-derived marker away from the
     # body. Clip the team accent to opaque sprite pixels so it never floats.
     accent.putalpha(ImageChops.multiply(accent.getchannel("A"), canvas.getchannel("A")))

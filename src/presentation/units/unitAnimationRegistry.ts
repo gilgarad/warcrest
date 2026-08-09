@@ -2,7 +2,7 @@ import { assetUrl } from "../../config/assetUrl";
 import { UNIT_STATS, type LaneUnitId } from "../../systems/lane-units/unitStats";
 
 export const LEGACY_WALK_POSES = ["walk-a", "walk-b", "walk-c"] as const;
-const UNIT_ANIMATION_ASSET_REVISION = "20260808-unit-presentation-fix-2";
+const UNIT_ANIMATION_ASSET_REVISION = "20260809-unit-team-accent-fix-1";
 export const LEGACY_PING_PONG_WALK_POSES = [
   "walk-a",
   "walk-b",

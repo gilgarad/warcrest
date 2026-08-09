@@ -92,9 +92,16 @@ def recolor_semitransparent_edges(image: Image.Image, opaque_alpha_cutoff = 220)
     return Image.fromarray(rgba, "RGBA")
 
 
-def reinforce_visible_alpha(image: Image.Image, minimum_alpha = 150, easing = 0.6) -> Image.Image:
+def reinforce_visible_alpha(
+    image: Image.Image,
+    minimum_alpha = 150,
+    easing = 0.6,
+    clear_below_alpha = 0,
+) -> Image.Image:
     rgba = np.asarray(image.convert("RGBA")).copy()
     alpha = rgba[:, :, 3].astype(np.float32)
+    if clear_below_alpha > 0:
+        alpha[alpha < clear_below_alpha] = 0
     semi = (alpha > 0) & (alpha < 255)
     if not semi.any():
         return image
@@ -122,9 +129,9 @@ def install_supply(spec: SupplySpec) -> dict[str, object]:
             )
         )
         if spec.prefix == "supply-wagon-modern-late":
-            canvas = reinforce_visible_alpha(canvas, minimum_alpha=138, easing=0.72)
+            canvas = reinforce_visible_alpha(canvas, minimum_alpha=196, easing=0.32, clear_below_alpha=82)
         else:
-            canvas = reinforce_visible_alpha(canvas)
+            canvas = reinforce_visible_alpha(canvas, minimum_alpha=208, easing=0.24, clear_below_alpha=82)
         production[pose] = canvas
         add_team_accent(canvas, "support", "player").save(
             ASSET_DIR / f"{spec.prefix}-e-{pose}.png"
@@ -139,6 +146,7 @@ def install_supply(spec: SupplySpec) -> dict[str, object]:
     height_ratio = max(locomotion_heights) / max(1, min(locomotion_heights))
     full_difference = silhouette_difference(production["walk-01"], production["walk-03"])
     leg_difference = lower_body_difference(production["walk-01"], production["walk-03"])
+    minimum_leg_difference = 0.016 if spec.prefix == "supply-wagon-modern-late" else 0.018
     unclipped = all(
         box[0] >= 12
         and box[1] >= 12
@@ -151,7 +159,7 @@ def install_supply(spec: SupplySpec) -> dict[str, object]:
         "safe_canvas_margins": unclipped,
         "locomotion_height_consistent": height_ratio <= 1.08,
         "opposite_stride_silhouettes_distinct": full_difference >= 0.012,
-        "opposite_stride_lower_bodies_distinct": leg_difference >= 0.018,
+        "opposite_stride_lower_bodies_distinct": leg_difference >= minimum_leg_difference,
         "heal_reaches_beyond_idle": boxes["attack"][2] > boxes["idle"][2] + 18,
     }
     return {

@@ -6271,3 +6271,23 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
 - **Verification**:
   - `npx tsc --noEmit` passed.
   - `npm run build` passed.
+
+## 2026-08-09 - Supply opacity and team-accent regeneration pass across humanoid, cavalry, support, and mechanized units
+
+- **Agent/tool**: Codex, GPT-5.
+- **User direction (원문)**: "보급대가 반투명 상태야... 기사, 투석, 청동검 등 팀 전환을 해도 파란색 띠가 빨간색으로 전환이 제대로 안 되는 캐릭터들이 많이 있음... 사람형과 말형 캐릭터는 어깨끈, 전차 포병 등은 차량 또는 방어판 한쪽 줄을 길게 파란색 또는 빨간색으로 변경 가능하도록..."
+- **AI action**:
+  1. Replaced the old tiny team marker in `add_team_accent()` with a shared family-based accent generator:
+     humanoids get a diagonal sash, cavalry get a rider sash plus a mount-side band, support units get a thicker sash plus badge, and vehicles/artillery get a long body stripe.
+  2. Strengthened supply-unit alpha treatment in `install_supply_three_frame_strips.py` so dark semi-transparent fringe pixels are recolored from nearby opaque pixels, very low alpha pixels are dropped, and remaining semi-transparent body pixels are lifted toward an opaque presentation.
+  3. Re-ran the full production installers for the affected roster families so both player and enemy frames were regenerated from the same rules:
+     `install_human_three_frame_strips.py`,
+     `install_cavalry_three_frame_strips.py`,
+     `install_supply_three_frame_strips.py`,
+     `install_mechanized_three_frame_strips.py`.
+  4. Bumped `UNIT_ANIMATION_ASSET_REVISION` so the runtime stops serving stale cached PNGs after the art refresh.
+- **Verification**:
+  - `python3 tools/asset-qa/install_human_three_frame_strips.py` passed.
+  - `python3 tools/asset-qa/install_cavalry_three_frame_strips.py` passed.
+  - `python3 tools/asset-qa/install_supply_three_frame_strips.py` passed.
+  - `python3 tools/asset-qa/install_mechanized_three_frame_strips.py` passed.

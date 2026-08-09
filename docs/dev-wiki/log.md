@@ -6162,3 +6162,37 @@ Use consistent headings so entries are easy to grep.
   버튼 비용행 아이콘도 `14px -> 17px`로 확대해 "금 등 자원 아이콘 크기를
   좀 더 키워달라"는 요구를 반영했다.
 - 검증: `npx tsc --noEmit` 통과, `npm run build` 통과.
+
+## 2026-08-09 - 보급 반투명 완화 및 전 유닛 팀 색상 표식 공용 재생성
+
+사용자가 보급 병력이 여전히 연하고 반투명해 보이며, 기사/투석/청동검
+뿐 아니라 전차/포병까지 팀 전환 시 적색 표식이 약하거나 아예 바뀌지 않는
+유닛이 많다고 지적했다. 사람형/기병/보급/기갑이 서로 다른 임시 표식이 아니라
+샌드박스와 실전에서 일관되게 보이는 공용 생성 규칙을 원했다.
+
+- `tools/asset-qa/generate_pose_board_production_assets.py`
+  의 `add_team_accent()`를 작은 점 마커 방식에서 계열별 공용 오버레이
+  방식으로 교체했다.
+  - 사람형: 몸통을 가로지르는 대각선 어깨끈
+  - 기병: 기수 어깨끈 + 말 측면 식별 띠
+  - 보급: 더 두꺼운 대각선 어깨끈 + 원형 배지
+  - 전차/포병: 차체/방패판에 걸리는 긴 측면 줄
+- `tools/asset-qa/install_supply_three_frame_strips.py`에서 보급 에셋의
+  가장자리 반투명 픽셀을 더 강하게 불투명화하도록 알파 보정을 강화했다.
+  어두운 반투명 프린지 색은 기존처럼 근접 불투명 픽셀 색으로 치환하고,
+  낮은 알파 픽셀은 제거한 뒤 나머지 반투명 영역을 더 높은 최소 알파로
+  끌어올리도록 조정했다.
+- 사람형/기병/보급/기갑 설치 스크립트를 다시 실행해 관련 전 유닛
+  생산 프레임과 `-enemy` 변형을 재생성했다. 이 재생성으로
+  `stone-slinger`, `bronze-swordsman`, `knight`, `heavy-cavalry`,
+  `tank`, `mobile-artillery`, `artillery-i`, `cannon-i`를 포함한
+  해당 계열 전체가 같은 규칙을 쓰게 됐다.
+- `src/presentation/units/unitAnimationRegistry.ts`의
+  `UNIT_ANIMATION_ASSET_REVISION`을 올려 브라우저가 새 유닛 PNG를
+  강제로 다시 읽도록 했다.
+
+- 검증:
+  `python3 tools/asset-qa/install_human_three_frame_strips.py` 통과,
+  `python3 tools/asset-qa/install_cavalry_three_frame_strips.py` 통과,
+  `python3 tools/asset-qa/install_supply_three_frame_strips.py` 통과,
+  `python3 tools/asset-qa/install_mechanized_three_frame_strips.py` 통과.
