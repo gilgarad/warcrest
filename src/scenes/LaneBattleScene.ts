@@ -1835,6 +1835,11 @@ export class LaneBattleScene extends Phaser.Scene {
       const engageTolerance = this.isMeleeUnit(unit) ? MELEE_ENGAGE_TOLERANCE_PROGRESS : 0;
       if (distance > attackRange) {
         if (distance <= attackRange + engageTolerance) {
+          if (this.isMeleeUnit(unit) && unit.attackAnimTime <= 0 && unit.attackTimerSec > 0) {
+            this.advanceUnit(unit, deltaSec, nearest);
+            this.holdUnitCombatFacing(unit, nearest.sprite.x, nearest.sprite.y);
+            return;
+          }
           this.holdUnitCombatFacing(unit, nearest.sprite.x, nearest.sprite.y);
         } else {
           this.advanceUnit(unit, deltaSec, nearest);
@@ -2285,7 +2290,14 @@ export class LaneBattleScene extends Phaser.Scene {
       COMBAT_ROW_REACH,
       COMBAT_ROW_STEP,
     );
-    const progressCandidates = COMBAT_PROGRESS_OFFSETS.map((offset) => enemy.progress + direction * offset);
+    const meleeContactOffsets = this.isMeleeUnit(unit)
+      ? [
+          Math.max(0.004, unit.range * RANGE_TO_PROGRESS - 0.0018),
+          Math.max(0.004, unit.range * RANGE_TO_PROGRESS - 0.0036),
+        ]
+      : [];
+    const progressCandidates = [...new Set([...meleeContactOffsets, ...COMBAT_PROGRESS_OFFSETS])]
+      .map((offset) => enemy.progress + direction * offset);
 
     let best: CombatSlot | undefined;
     let bestScore = Number.POSITIVE_INFINITY;
