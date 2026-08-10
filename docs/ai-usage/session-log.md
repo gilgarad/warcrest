@@ -6742,3 +6742,38 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   `HTTP 200` with `<title>Warcrest</title>` present. No source code was
   touched this turn (`README.md`, this log, and repo/Pages settings only),
   so no `tsc`/`test`/`build` re-run was needed.
+
+## 2026-08-10 - Renamed repo/deploy to "warcrest", built the detailed game-intro PDF
+
+- **Agent/tool**: Claude Code (Sonnet 5).
+- **User direction (원문)**: "프로젝트 이름을 game_project1이 아니라 이제
+  warcrest로 변경해줘야해. 그리고 다시 배포해줘. 내가 그런 뒤 내가
+  제출해야 하는 링크가 뭔지도 다시 보여줘. 그리고 나서 readme에 게임
+  실행부터 플레이까지 간략하게 설명하고, 그걸 기반으로 상세한 건 pdf로
+  제작해줘."
+- **AI action**: Renamed the GitHub repo `gilgarad/game_project1` →
+  `gilgarad/warcrest` via the REST API; Pages automatically picked up the
+  new name (`html_url` became `https://gilgarad.github.io/warcrest/`).
+  Updated `vite.config.ts`'s `base`, `package.json`'s `name` (with
+  `npm install` to sync `package-lock.json`), ~20 Playwright spec files'
+  hardcoded `/game_project1/` URLs, and two reference docs. Deliberately
+  left the local working directory path
+  (`/data/projects/game_project1`) unchanged since another session was
+  concurrently working in that same path — repo/deploy naming and local
+  directory naming are independent, so this caused no functional issue.
+  Pushed to `master`, which auto-triggered the deploy workflow; polled it
+  to a clean success (including the previously-fragile "Configure Pages"
+  step) and confirmed the new URL serves the real game with `200 OK`.
+  Then condensed README's play-instructions section into a short 5-step
+  "게임 실행부터 플레이까지" summary and split the detailed version into
+  a new `docs/submission/game-intro.html` following the contest's
+  deliverable-3 structure (overview, how to run, video-link placeholder,
+  difficulty table, controls table, credits), rendered to an actual PDF
+  via Playwright's `page.pdf()` at `docs/submission/game-intro.pdf`.
+- **Verification**: `npx tsc --noEmit`, `npm test` (181), `npm run build`
+  all passed after the rename (confirmed the built `dist/index.html`
+  references `/warcrest/` paths, not the old base). Deploy workflow run
+  completed successfully; `https://gilgarad.github.io/warcrest/` returns
+  `200 OK` with `<title>Warcrest</title>`. Rendered the PDF to PNG via
+  `pdftoppm` and visually reviewed both pages for layout/overflow issues
+  — none found.

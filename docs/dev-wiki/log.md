@@ -6690,3 +6690,38 @@ CC0라도 "완전히 동일한 원본 파형을 그대로 쓰는 것" 자체가 
   및 소스 코드"** — 링크 활성화로 이 항목은 완료됨. 나머지(플레이
   영상/게임 소개 PDF/AI 활용 PDF/팀원 롤 PDF)는 사용자에게 체크리스트로
   안내(플레이 영상은 사용자가 직접 진행 중이라 제외).
+
+## 2026-08-10 - 저장소/배포 이름을 game_project1 → warcrest로 개명, 상세 소개 PDF 제작
+
+사용자 지시: "프로젝트 이름을 game_project1이 아니라 이제 warcrest로
+변경해줘야해. 그리고 다시 배포해줘. 내가 그런 뒤 내가 제출해야 하는
+링크가 뭔지도 다시 보여줘. 그리고 나서 readme에 게임 실행부터 플레이까지
+간략하게 설명하고, 그걸 기반으로 상세한 건 pdf로 제작해줘."
+
+- **저장소 개명**: GitHub REST API로 `gilgarad/game_project1` →
+  `gilgarad/warcrest`로 이름 변경(Pages 설정은 자동으로 새 이름을
+  따라가 `html_url`이 `https://gilgarad.github.io/warcrest/`로 갱신됨을
+  확인). 로컬 `origin` 리모트 URL도 함께 갱신. 로컬 작업 디렉터리 경로
+  (`/data/projects/game_project1`)는 다른 세션이 동시에 같은 경로에서
+  작업 중이라 그대로 유지 — 배포/저장소 이름과 로컬 디렉터리명은 독립적
+  이라 문제 없음.
+- **코드/설정 반영**: `vite.config.ts`의 `base`를 `/warcrest/`로,
+  `package.json`의 `name`을 `warcrest`로 변경(`package-lock.json`은
+  `npm install` 재실행으로 자동 반영), `tools/validation/*.spec.ts`
+  20여 개 파일의 하드코딩된 `/game_project1/` 경로를 일괄 치환,
+  `docs/dev-wiki/github-pages-deployment.md`·`project_development.md`의
+  URL 참조 갱신.
+- **재배포**: `master` 푸시로 `deploy-pages.yml`이 자동 트리거됨 —
+  전 단계 성공, `https://gilgarad.github.io/warcrest/` 200 OK/타이틀
+  `Warcrest` 확인. README의 실행/개발 명령어(`git clone`,
+  `npm run dev` 안내 URL, `?sandbox=2` 예시)도 새 이름으로 갱신.
+- **README 간략화 + 상세 PDF 분리**: README의 "게임 방법" 절을
+  "게임 실행부터 플레이까지 (간략)" 5단계로 압축하고, 상세 버전은
+  별도 문서로 분리. `docs/submission/game-intro.html`을 새로 작성(게임
+  개요/실행 방법/플레이 영상 자리/난이도 표/조작 표/제작 정보 등, 공모전
+  제출 요건 3번 항목 구조를 그대로 따름)하고, Playwright의
+  `page.pdf()`로 실제 PDF 파일(`docs/submission/game-intro.pdf`, 2쪽)을
+  렌더링. `pdftoppm`으로 PNG 변환해 레이아웃 깨짐/넘침 없음을 육안
+  확인. 플레이 영상 링크는 사용자가 별도로 진행 중이라 문서 안에
+  명확한 TODO로 표시해 둠 — 영상 링크가 정해지면 HTML만 수정 후 같은
+  스크립트로 PDF 재생성 가능.

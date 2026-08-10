@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>Warcrest — 게임 소개 및 설명 문서</title>
+<style>
+  @page { size: A4; margin: 22mm 18mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    color: #1a1a1a;
+    line-height: 1.55;
+    font-size: 13px;
+  }
+  h1 { font-size: 26px; margin: 0 0 4px; color: #16233d; }
+  .tagline { font-size: 14px; color: #55637a; margin: 0 0 18px; }
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    color: #7a5b12;
+    background: #fbe8b8;
+    border: 1px solid #d8ac3e;
+    border-radius: 4px;
+    padding: 2px 8px;
+    margin-bottom: 20px;
+  }
+  h2 {
+    font-size: 16px;
+    color: #16233d;
+    border-bottom: 2px solid #16233d;
+    padding-bottom: 4px;
+    margin: 26px 0 10px;
+  }
+  h3 { font-size: 13.5px; color: #2a3a5c; margin: 14px 0 6px; }
+  p { margin: 6px 0; }
+  ul, ol { margin: 6px 0; padding-left: 20px; }
+  li { margin: 3px 0; }
+  .link-box {
+    background: #f2f6fb;
+    border: 1px solid #c7d5e8;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin: 8px 0;
+  }
+  .link-box a { color: #1a56b0; text-decoration: none; font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 12.5px; }
+  th, td { border: 1px solid #d5dce6; padding: 5px 8px; text-align: left; }
+  th { background: #eef2f8; }
+  .todo {
+    background: #fff1f1;
+    border: 1px dashed #e08a8a;
+    color: #a33636;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  .footer {
+    margin-top: 30px;
+    font-size: 11px;
+    color: #8a8a8a;
+    border-top: 1px solid #ddd;
+    padding-top: 8px;
+  }
+  code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="badge">NHN <code>nan2026</code> AI 게임잼 출품작 — 제출물 3. 게임 소개 및 설명 문서</div>
+
+<h1>Warcrest</h1>
+<p class="tagline">전선과 요새를 두고 충돌하는 지휘 전장 — 넓은 대각선 레인 전장에서
+자동 웨이브와 경제를 운영하는 전략 게임</p>
+
+<h2>1. 게임 개요</h2>
+<p>
+<strong>Warcrest</strong>는 좌하단 아군 본진과 우상단 적 본진 사이를 잇는 대각선
+레인에서 병력이 자동으로 편성·이동·전투하는 <strong>오토배틀러형 공성 경제
+게임</strong>입니다. 플레이어는 유닛을 직접 조작하는 대신, 자원 생산·일꾼
+배치·시대(테크) 진행·거점 점령과 시설 건설을 운영하며 전황을 유리하게
+만듭니다. 석기 시대부터 현대에 이르는 11개 시대를 거치며 병종과 시설이
+점점 강력해지는 문명 발전형 진행이 핵심 루프입니다.
+</p>
+
+<h2>2. 실행 방법</h2>
+<p>설치가 필요 없습니다. 아래 링크를 클릭하면 브라우저에서 바로 실행됩니다.</p>
+<div class="link-box">
+  ▶ 플레이 링크: <a href="https://gilgarad.github.io/warcrest/">https://gilgarad.github.io/warcrest/</a>
+</div>
+<ul>
+  <li>PC/모바일 브라우저 모두 지원(Chrome 계열 권장), 별도 설치·로그인·결제 불필요.</li>
+  <li>소스 코드 전체는 GitHub 저장소에 공개되어 있습니다:
+    <a href="https://github.com/gilgarad/warcrest">https://github.com/gilgarad/warcrest</a></li>
+  <li>로컬에서 소스로 직접 실행하려면: <code>git clone</code> → <code>npm install</code> →
+    <code>npm run dev</code> (Node.js 20 이상 필요). 자세한 절차는 저장소의
+    <code>README.md</code> 참고.</li>
+</ul>
+
+<h2>3. 플레이 영상</h2>
+<div class="link-box">
+  ▶ 플레이 영상(YouTube): <span class="todo">TODO — 영상 업로드 후 링크 채워넣기</span>
+</div>
+
+<h2>4. 게임 방법</h2>
+
+<h3>4.1 시작하기</h3>
+<ol>
+  <li>플레이 링크 접속 → 타이틀 화면에서 난이도를 선택합니다.</li>
+  <li>난이도 선택과 동시에 전장에 입장하고, 양측이 초기 병력으로 첫 웨이브를
+    자동 출전시키며 게임이 시작됩니다.</li>
+</ol>
+
+<h3>4.2 난이도</h3>
+<table>
+  <tr><th>난이도</th><th>적 자원 생산 배율</th><th>적 연구(공/방) 최저 보정</th></tr>
+  <tr><td>초급</td><td>×1</td><td>없음</td></tr>
+  <tr><td>중급</td><td>×2</td><td>1단계 보장</td></tr>
+  <tr><td>고급</td><td>×3</td><td>2단계 보장</td></tr>
+  <tr><td>신</td><td>×4</td><td>3단계 보장</td></tr>
+</table>
+
+<h3>4.3 목표와 종료 조건</h3>
+<p>상대 본진의 체력을 먼저 0으로 만들면 승리, 내 본진의 체력이 먼저 0이
+되면 패배합니다. 병력은 정규 웨이브 주기마다 자동으로 편성되어 레인을
+따라 전진하며, 상대 병력·타워와 자동으로 교전합니다.</p>
+
+<h3>4.4 조작 — 화면 하단 운영 패널</h3>
+<table>
+  <tr><th>조작</th><th>설명</th></tr>
+  <tr><td>일꾼 배치 (+/−)</td>
+      <td>금/목재/식량/금속/연구 5개 자원 중 어디에 일꾼을 배정할지 실시간으로 재분배.
+      기본 일꾼 1명은 자원별로 항상 유지되며, 추가로 고용한 일꾼만 자유롭게 이동 가능.</td></tr>
+  <tr><td>일꾼 고용 / 연구 일꾼</td>
+      <td>자원을 소모해 일꾼 총원 자체를 늘림. 연구 일꾼은 즉시 연구 자원 생산에 투입됨.</td></tr>
+  <tr><td>즉시 웨이브</td>
+      <td>보유한 토큰을 소모해 다음 정규 웨이브를 기다리지 않고 즉시 병력을 출전시킴
+      (직전 웨이브 후 일정 시간의 쿨다운, 식량 조건 있음). 토큰은 시대 진행 시 지급됨.</td></tr>
+  <tr><td>시대 업</td>
+      <td>자원을 모아 다음 시대로 진행. 더 강한 병종·시설이 해금되고,
+      석기 → 청동기 → 초/중/후기 철기 → 르네상스 → 근대 초/후기 →
+      현대 초/중/후기까지 총 11단계.</td></tr>
+  <tr><td>거점 점령</td>
+      <td>전장 중앙의 거점을 클릭해 점령하면 방어 타워 / 병참(전투력 강화·마나 보급) /
+      조달소(치유) 중 하나를 건설할 수 있음. 재건·폐기도 클릭으로 조작.</td></tr>
+</table>
+
+<h3>4.5 오디오/개발자 도구 (선택)</h3>
+<p>게임 내 모든 효과음·배경음을 직접 들어볼 수 있는 오디오 랩 화면을
+<code>?sandbox=2</code> 쿼리로 열 수 있습니다
+(예: <code>https://gilgarad.github.io/warcrest/?sandbox=2</code>).</p>
+
+<h2>5. 제작 정보</h2>
+<p>
+게임 로직 설계·구현·디버깅·밸런싱 전 과정을 Claude Code(AI 코딩 에이전트)와의
+협업으로 진행했습니다. 구체적인 지시/피드백 turn 기록은 별도 제출물
+"AI 활용 기술 문서"에서 다룹니다. 효과음은 CC0 레퍼런스 녹음을 분석해
+그래뉼러 방식으로 완전히 새로 합성한 자체 제작 자산이며(원본 파형은 출력에
+포함되지 않음), 그 외 아트/음악 자산은 자체 생성했습니다.
+</p>
+
+<div class="footer">
+  Warcrest — NHN nan2026 AI 게임잼 제출물 · 저장소:
+  https://github.com/gilgarad/warcrest
+</div>
+
+</body>
+</html>
