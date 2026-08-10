@@ -6889,3 +6889,24 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   Playwright's `page.pdf()` (now 5 pages), converted to PNG via
   `pdftoppm`, and visually reviewed every page — no image overflow/
   clipping, captions match their screenshots' on-screen numbers.
+
+## 2026-08-10 - Verified the PDF against NHN's actual requirements, then filled in the video link
+
+- **Agent/tool**: Claude Code (Sonnet 5).
+- **User direction (원문)**: "nhn에서 어떤 문서 어떻게 쓰라고 했는지 설명
+  보고 만든 거 맞아? 그거에 맞는 내용들이 충실해야 하는 거야. 맞다면
+  상관 없는데 아니라면 그거에 맞춰서 필요한 내용들 스크린샷과 함께
+  남겨야해." Then, in a follow-up turn: "플레이 영상 링크 여깄어
+  https://youtu.be/7Nw0OpdBQK8"
+- **AI action**: Re-read `docs/knowledge/contest-requirements.md`'s
+  verbatim-preserved official rules and cross-checked each of the 5
+  sub-bullets under submission item 3 (title+one-line intro,
+  goal/controls/end-condition, how-to-run, play link, video link)
+  against the actual sections in `game-intro.html`, reporting the
+  mapping back as a table rather than just asserting compliance. Found
+  everything already covered except the video link, which was a known,
+  intentional TODO. When the user supplied the real YouTube link,
+  replaced the TODO placeholder with it and re-rendered the PDF.
+- **Verification**: Rendered PDF still 5 pages; visually confirmed page 1
+  now shows the real video link in the "3. 플레이 영상" link box with no
+  layout regression.
