@@ -6854,3 +6854,38 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   capture/tower actions and planned to feed it from `canAfford()` in
   `LaneBattleScene.refreshHudActionLabels()` so insufficient resources turn
   the button red immediately instead of still reading as buildable.
+
+## 2026-08-10 - Detailed play-by-play screenshots added to the submission PDF
+
+- **Agent/tool**: Claude Code (Sonnet 5).
+- **User direction (원문)**: "자, 이제 플레이 관련 스크린샷을 여러 개 찍어서
+  pdf로 만들어야 하는데, 지금 내가 기억하기로는 초안만 있을 거거든? 본진
+  스크린샷 찍고 시대 업그레이드 하는 버튼 등 소개하는 것들과 일꾼
+  추가했을 때 자원이 어디가 올라가는 지 등 설명할 수 있도록 해서 게임
+  플레이시 어떻게 하는지를 좀 상세하게 써줘야해."
+- **AI action**: Since another session had reworked the worker panel's
+  size/layout in `LaneBattleHudView.ts` since the last visual check, did
+  not reuse remembered pixel coordinates — re-explored the live UI via
+  Playwright against the local dev server to find current button
+  positions first. Then captured an actual play sequence proving the
+  worker→resource mechanic concretely rather than describing it
+  abstractly: baseline worker panel ("0/4"), after clicking "일꾼 고용"
+  (idle count → "1/5"), after clicking "+" on gold to assign that idle
+  worker ("0/5", gold workers 1→2), and the next production tick showing
+  gold's "+2" gain popup versus "+1" on every other resource — a direct
+  visual proof of "adding a worker there makes that resource climb
+  faster." Also captured the home base, resource bar, all four strategic
+  buttons, the capture-point selection panel, and the build menu
+  (tower/supply depot/mint). Deliberately did not use the dev-only DEV
+  mode toggle to fake an age-up transition for the submission material,
+  judging that inappropriate to show as if it were normal play.
+- Added a new "5. 스크린샷으로 따라하는 상세 플레이 가이드" section to
+  `docs/submission/game-intro.html` with 10 numbered/captioned
+  screenshots (renumbering the old "제작 정보" section to 6), saved under
+  `docs/submission/screenshots/` (~1.1MB total).
+- **Verification**: Caught one caption/screenshot mismatch during review
+  (a caption said "일꾼 배치 0/5" for the baseline state, but the actual
+  screenshot showed "0/4") and corrected it. Re-rendered the PDF via
+  Playwright's `page.pdf()` (now 5 pages), converted to PNG via
+  `pdftoppm`, and visually reviewed every page — no image overflow/
+  clipping, captions match their screenshots' on-screen numbers.
