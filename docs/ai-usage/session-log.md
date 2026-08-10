@@ -6777,3 +6777,39 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   `200 OK` with `<title>Warcrest</title>`. Rendered the PDF to PNG via
   `pdftoppm` and visually reviewed both pages for layout/overflow issues
   — none found.
+
+## 2026-08-10 - Diagnosed "difficulty click does nothing / no music" on the deployed site, fixed the real cause
+
+- **Agent/tool**: Claude Code (Sonnet 5).
+- **User direction (원문)**: "배포 링크 들어갔는데 메인 화면만 나오고
+  난이도 선택해도 게임 화면으로 전환 안 됨. 음악도 안 나옴... 이거
+  프로젝트명 바뀌어서 문제일 수도 있고, 또는 배포시에는 따로 뭔가 경로
+  같은 거 조치를 취해야 할 수도 있는 거 같은데 확인하고 바로잡아줘."
+- **AI action**: Reproduced the report via Playwright with a genuinely
+  cold browser context (a warm-cache context did not reproduce it, which
+  is why earlier smoke tests this session missed it). Confirmed the same
+  behavior on the *local* dev server too, ruling out the rename/deploy
+  path as the cause — the actual mechanism: the boot scene queues ~511
+  battlefield assets on first load, which takes 10-25+ seconds cold, and
+  the difficulty buttons are deliberately non-interactive/invisible until
+  that finishes (`markBattleAssetsReady()`); the only in-progress feedback
+  was a small percentage number easy to miss, so a click during that
+  window did nothing and looked exactly like a broken deploy. Verified
+  zero network 4xx/5xx and zero console/page errors throughout — this was
+  a UX-clarity gap, not a functional break, and definitely not something
+  the repo rename introduced (confirmed with the pre/post-rename code
+  behaving identically). One test run did show requests plateauing at
+  1026/101MB then going idle without completing, but this did not
+  reproduce on repeated clean attempts, so it was treated as an artifact
+  of firing many rapid-fire test scripts at the same CDN edge in a short
+  window rather than a confirmed code defect.
+- Fixed `src/scenes/BootScene.ts`: added an actual filled progress bar
+  (track + fill rectangles reacting to the loader's `progress` event) plus
+  a reassuring two-line hint ("최초 접속 시 최대 30초... 버튼이 나타날
+  때까지 기다려주세요"), replacing the easy-to-miss bare percentage text.
+- **Verification**: `npx tsc --noEmit`, `npm test` (181), `npm run build`
+  all passed. Local cold-cache Playwright run confirmed the bar fills and
+  the scene transitions correctly post-load. Pushed, deploy workflow
+  succeeded, then re-verified live with a fresh cold-cache context:
+  progress bar visible while loading, full transition to the battle scene
+  after completion, zero console/page errors, zero failed requests.
