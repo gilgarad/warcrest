@@ -202,6 +202,17 @@ const TOWER_H = 176;
 const PLAYER_BASE_WORLD_OFFSET_X = -120;
 const ENEMY_BASE_WORLD_OFFSET_X = -260;
 const MELEE_ENGAGE_TOLERANCE_PROGRESS = 0.0022;
+const COMBAT_FORMATION_PULL_PROGRESS = 0.12;
+const CAPTURE_POINT_RUINS_VISUAL_SEC = 4;
+const STRUCTURE_HALF_WIDTH_ROWS = 2.5;
+const STRUCTURE_ROW_DISTANCE_SCALE = 0.006;
+const TOWER_HALF_DEPTH_PROGRESS = 0.046;
+const BASE_HALF_DEPTH_PROGRESS = 0.024;
+const STRUCTURE_ATTACK_ROW_REACH = 4;
+const DEFAULT_PLAYER_WAVE_SPAWN_PROGRESS = 0.12;
+const DEFAULT_ENEMY_WAVE_SPAWN_PROGRESS = 0.88;
+const WAVE_SPAWN_STAGGER_PROGRESS = 0.018;
+const WAVE_SUPPORT_TRAIL_PROGRESS = 0.028;
 const CENTRAL_CAPTURE_PROGRESS = 0.588;
 const DEFAULT_VERIFICATION_SEED = "warcrest-central-v1";
 const QUERY_PARAMS = new URLSearchParams(window.location.search);
@@ -305,6 +316,8 @@ export interface CapturePointState {
   attackTimerSec: number;
   incomeTimerSec: number;
   supplyTimerSec: number;
+  ruinsVisualTimerSec: number;
+  ruinsVisualOwner: TeamId | "neutral";
   manaCurrent: number;
   manaMax: number;
   manaRegenPerSec: number;
@@ -1504,6 +1517,8 @@ export class LaneBattleScene extends Phaser.Scene {
         attackTimerSec: 0,
         incomeTimerSec: 0,
         supplyTimerSec: 0,
+        ruinsVisualTimerSec: 0,
+        ruinsVisualOwner: "neutral",
         manaCurrent: 0,
         manaMax: 0,
         manaRegenPerSec: 0,
@@ -1778,6 +1793,11 @@ export class LaneBattleScene extends Phaser.Scene {
         const towerDistance = this.towerDistance(unit, enemyTower);
         const attackRange = Math.max(unit.range * RANGE_TO_PROGRESS, MIN_TOWER_STANDOFF_PROGRESS);
         if (towerDistance > attackRange) {
+          const towerSlot = this.findStructureAttackSlot(unit, enemyTower.progress);
+          if (towerSlot) {
+            this.moveUnitTowardSlot(unit, deltaSec, towerSlot);
+            return;
+          }
           this.advanceUnit(unit, deltaSec);
           return;
         }
@@ -2059,24 +2079,33 @@ export class LaneBattleScene extends Phaser.Scene {
   private advanceUnit(unit: LaneUnit, deltaSec: number, combatTarget?: LaneUnit): void {
     const dir = unit.team === "player" ? 1 : -1;
     const towerLimit = this.forwardTowerBlockLimit(unit, dir);
-    if (combatTarget && this.isMeleeUnit(unit)) {
+    const baseLimit = this.forwardBaseBlockLimit(unit, dir);
+    const forwardLimit = towerLimit === undefined
+      ? baseLimit
+      : baseLimit === undefined
+        ? towerLimit
+        : dir > 0 ? Math.min(towerLimit, baseLimit) : Math.max(towerLimit, baseLimit);
+    const combatTargetDistance = combatTarget
+      ? progressBetween(unit.progress, combatTarget.progress)
+      : Number.POSITIVE_INFINITY;
+    if (combatTarget && this.isMeleeUnit(unit) && combatTargetDistance <= COMBAT_FORMATION_PULL_PROGRESS) {
       const slot = this.findCombatSlot(unit, combatTarget);
       if (slot) {
         this.setUnitTravelFacing(unit, slot.progress, slot.laneRow);
         unit.laneRow = Phaser.Math.Linear(unit.laneRow, slot.laneRow, 0.34);
         const moveStep = unit.speed * UNIT_PROGRESS_SPEED * deltaSec;
         const nextProgress = this.moveToward(unit.progress, slot.progress, moveStep);
-        unit.progress = towerLimit === undefined
+        unit.progress = forwardLimit === undefined
           ? nextProgress
-          : dir > 0 ? Math.min(nextProgress, towerLimit) : Math.max(nextProgress, towerLimit);
+          : dir > 0 ? Math.min(nextProgress, forwardLimit) : Math.max(nextProgress, forwardLimit);
         this.keepUnitInPlayableLane(unit);
         return;
       }
     }
     const rawDesired = unit.progress + dir * unit.speed * UNIT_PROGRESS_SPEED * deltaSec;
-    const desired = towerLimit === undefined
+    const desired = forwardLimit === undefined
       ? rawDesired
-      : dir > 0 ? Math.min(rawDesired, towerLimit) : Math.max(rawDesired, towerLimit);
+      : dir > 0 ? Math.min(rawDesired, forwardLimit) : Math.max(rawDesired, forwardLimit);
     // While a tower is blocking the path, skip enemy-unit repositioning —
     // it would fight the tower-row-centering pull above and could strand the
     // unit oscillating just outside both engagement ranges.
@@ -2131,6 +2160,8 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private repositionTowardCombat(unit: LaneUnit, enemy: LaneUnit): void {
+    const frontlineGap = progressBetween(unit.progress, enemy.progress);
+    if (frontlineGap > COMBAT_FORMATION_PULL_PROGRESS) return;
     if (this.isMeleeUnit(unit)) {
       const slot = this.findCombatSlot(unit, enemy);
       if (slot) {
@@ -2138,7 +2169,6 @@ export class LaneBattleScene extends Phaser.Scene {
         return;
       }
     }
-    const frontlineGap = progressBetween(unit.progress, enemy.progress);
     if (frontlineGap < 0.08 && Math.abs(enemy.laneRow - unit.laneRow) < 1.2) {
       unit.laneRow = Phaser.Math.Linear(unit.laneRow, enemy.laneRow, 0.45);
       return;
@@ -2162,6 +2192,9 @@ export class LaneBattleScene extends Phaser.Scene {
     )
       .filter((row) => Math.abs(row - unit.laneRow) > 0.1)
       .sort((a, b) => {
+        const aCongestion = this.getFriendlySlotCongestion(unit, unit.progress, a);
+        const bCongestion = this.getFriendlySlotCongestion(unit, unit.progress, b);
+        if (Math.abs(aCongestion - bCongestion) > 0.01) return aCongestion - bCongestion;
         const aDirectionScore = Math.sign(a - unit.laneRow) === direction ? 0 : 1;
         const bDirectionScore = Math.sign(b - unit.laneRow) === direction ? 0 : 1;
         if (aDirectionScore !== bDirectionScore) return aDirectionScore - bDirectionScore;
@@ -2179,11 +2212,19 @@ export class LaneBattleScene extends Phaser.Scene {
     const candidates = createLaneRowCandidates(unit.laneRow, 5, LANE_SHIFT_STEP);
     const preferred = enemy
       ? candidates.sort((a, b) => {
+          const aCongestion = this.getFriendlySlotCongestion(unit, unit.progress, a);
+          const bCongestion = this.getFriendlySlotCongestion(unit, unit.progress, b);
+          if (Math.abs(aCongestion - bCongestion) > 0.01) return aCongestion - bCongestion;
           const laneBias = Math.abs(a - enemy.laneRow) - Math.abs(b - enemy.laneRow);
           if (laneBias !== 0) return laneBias;
           return Math.abs(a) - Math.abs(b);
         })
-      : candidates;
+      : candidates.sort((a, b) => {
+          const aCongestion = this.getFriendlySlotCongestion(unit, unit.progress, a);
+          const bCongestion = this.getFriendlySlotCongestion(unit, unit.progress, b);
+          if (Math.abs(aCongestion - bCongestion) > 0.01) return aCongestion - bCongestion;
+          return Math.abs(a - unit.laneRow) - Math.abs(b - unit.laneRow);
+        });
     const nextRow = preferred.find((row) => row !== unit.laneRow && this.isLaneRowFree(unit, row));
     if (nextRow === undefined) return false;
     unit.laneRow = nextRow;
@@ -2209,6 +2250,34 @@ export class LaneBattleScene extends Phaser.Scene {
     return unit.role === "battle" && unit.range > 2.5;
   }
 
+  private moveUnitTowardSlot(unit: LaneUnit, deltaSec: number, slot: CombatSlot): void {
+    this.setUnitTravelFacing(unit, slot.progress, slot.laneRow);
+    unit.laneRow = Phaser.Math.Linear(unit.laneRow, slot.laneRow, 0.34);
+    unit.progress = this.moveToward(
+      unit.progress,
+      Phaser.Math.Clamp(slot.progress, 0.01, 0.99),
+      unit.speed * UNIT_PROGRESS_SPEED * deltaSec,
+    );
+    this.keepUnitInPlayableLane(unit);
+  }
+
+  private getFriendlySlotCongestion(unit: LaneUnit, progress: number, laneRow: number): number {
+    return this.units.reduce((total, other) => {
+      if (
+        other.id === unit.id
+        || other.team !== unit.team
+        || other.laneId !== unit.laneId
+      ) return total;
+      const rowGap = Math.abs(other.laneRow - laneRow);
+      if (rowGap > 1.1) return total;
+      const progressGap = progressBetween(other.progress, progress);
+      if (progressGap > 0.07) return total;
+      const rowWeight = 1 - Math.min(1, rowGap / 1.1);
+      const progressWeight = 1 - Math.min(1, progressGap / 0.07);
+      return total + rowWeight * progressWeight;
+    }, 0);
+  }
+
   private findCombatSlot(unit: LaneUnit, enemy: LaneUnit): CombatSlot | undefined {
     const direction = unit.team === "player" ? -1 : 1;
     const laneCandidates = createLaneRowCandidates(
@@ -2225,10 +2294,12 @@ export class LaneBattleScene extends Phaser.Scene {
         const slot = { progress: Phaser.Math.Clamp(progress, 0.02, 0.98), laneRow };
         if (this.isMeleeUnit(unit) && !this.canAttackEnemyFromSlot(unit, slot, enemy)) continue;
         if (!this.isCombatSlotFree(unit, slot, enemy)) continue;
+        const congestion = this.getFriendlySlotCongestion(unit, slot.progress, slot.laneRow);
         const score =
           Math.abs(slot.laneRow - unit.laneRow) * 0.6 +
           Math.abs(slot.progress - unit.progress) * 100 +
-          Math.abs(slot.laneRow - enemy.laneRow) * 0.25;
+          Math.abs(slot.laneRow - enemy.laneRow) * 0.25 +
+          congestion * 1.8;
         if (score < bestScore) {
           bestScore = score;
           best = slot;
@@ -2254,6 +2325,66 @@ export class LaneBattleScene extends Phaser.Scene {
       other.laneId === unit.laneId &&
       progressBetween(other.progress, slot.progress) < COMBAT_PROGRESS_CLEARANCE &&
       Math.abs(other.laneRow - slot.laneRow) < COMBAT_ROW_CLEARANCE,
+    );
+  }
+
+  private findStructureAttackSlot(
+    unit: LaneUnit,
+    structureProgress: number,
+    halfDepthProgress: number = TOWER_HALF_DEPTH_PROGRESS,
+  ): CombatSlot | undefined {
+    const direction = unit.team === "player" ? -1 : 1;
+    const engageRange = Math.max(unit.range * RANGE_TO_PROGRESS, MIN_TOWER_STANDOFF_PROGRESS);
+    const laneCandidates = createLaneRowCandidates(0, STRUCTURE_ATTACK_ROW_REACH, LANE_SHIFT_STEP);
+    const progressCandidates = [
+      structureProgress + direction * (halfDepthProgress + engageRange),
+      structureProgress + direction * (halfDepthProgress + Math.max(0.006, engageRange * 0.8)),
+      structureProgress + direction * (halfDepthProgress + Math.max(0.004, engageRange * 0.55)),
+      structureProgress + direction * (halfDepthProgress + Math.max(0.002, engageRange * 0.35)),
+    ].map((progress) => Phaser.Math.Clamp(progress, 0.01, 0.99));
+
+    let best: CombatSlot | undefined;
+    let bestScore = Number.POSITIVE_INFINITY;
+    for (const progress of progressCandidates) {
+      for (const laneRow of laneCandidates) {
+        const slot = { progress, laneRow };
+        if (!this.canAttackStructureFromSlot(unit, slot, structureProgress, halfDepthProgress)) continue;
+        if (!this.isStructureSlotFree(unit, slot)) continue;
+        const congestion = this.getFriendlySlotCongestion(unit, slot.progress, slot.laneRow);
+        const score =
+          Math.abs(slot.laneRow - unit.laneRow) * 0.42 +
+          Math.abs(slot.progress - unit.progress) * 100 +
+          Math.abs(slot.laneRow) * 0.12 +
+          congestion * 2.2;
+        if (score < bestScore) {
+          bestScore = score;
+          best = slot;
+        }
+      }
+    }
+    return best;
+  }
+
+  private canAttackStructureFromSlot(
+    unit: LaneUnit,
+    slot: CombatSlot,
+    structureProgress: number,
+    halfDepthProgress: number = TOWER_HALF_DEPTH_PROGRESS,
+  ): boolean {
+    const progressDistance = this.getStructureProgressDistance(slot.progress, structureProgress, halfDepthProgress);
+    const rowDistance = this.getStructureRowDistance(slot.laneRow);
+    const distance = Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
+    const tolerance = this.isMeleeUnit(unit) ? MELEE_ENGAGE_TOLERANCE_PROGRESS : 0;
+    return distance <= Math.max(unit.range * RANGE_TO_PROGRESS, MIN_TOWER_STANDOFF_PROGRESS) + tolerance;
+  }
+
+  private isStructureSlotFree(unit: LaneUnit, slot: CombatSlot): boolean {
+    return !this.units.some((other) =>
+      other.id !== unit.id
+      && other.team === unit.team
+      && other.laneId === unit.laneId
+      && progressBetween(other.progress, slot.progress) < COMBAT_PROGRESS_CLEARANCE
+      && Math.abs(other.laneRow - slot.laneRow) < COMBAT_ROW_CLEARANCE
     );
   }
 
@@ -2326,9 +2457,21 @@ export class LaneBattleScene extends Phaser.Scene {
     return Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
   }
 
+  private getStructureRowDistance(laneRow: number): number {
+    return Math.max(0, Math.abs(laneRow) - STRUCTURE_HALF_WIDTH_ROWS) * STRUCTURE_ROW_DISTANCE_SCALE;
+  }
+
+  private getStructureProgressDistance(
+    progress: number,
+    structureProgress: number,
+    halfDepthProgress: number,
+  ): number {
+    return Math.max(0, progressBetween(progress, structureProgress) - halfDepthProgress);
+  }
+
   private towerDistance(unit: LaneUnit, tower: DefenseTowerState): number {
-    const progressDistance = progressBetween(unit.progress, tower.progress);
-    const rowDistance = Math.abs(unit.laneRow) * 0.01;
+    const progressDistance = this.getStructureProgressDistance(unit.progress, tower.progress, TOWER_HALF_DEPTH_PROGRESS);
+    const rowDistance = this.getStructureRowDistance(unit.laneRow);
     return Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
   }
 
@@ -2338,14 +2481,12 @@ export class LaneBattleScene extends Phaser.Scene {
       .filter((tower) => (dir > 0 ? tower.progress > unit.progress : tower.progress < unit.progress))
       .sort((a, b) => Math.abs(a.progress - unit.progress) - Math.abs(b.progress - unit.progress))[0];
     if (!blockingTower) return undefined;
-    // Towers sit at lane row 0 (see towerDistance()); pull the unit toward that
-    // row as it approaches so the row-distance term doesn't strand it just
-    // outside attack range forever once the progress clamp below kicks in.
-    unit.laneRow = Phaser.Math.Linear(unit.laneRow, 0, 0.06);
     const engageRange = Math.max(unit.range * RANGE_TO_PROGRESS, MIN_TOWER_STANDOFF_PROGRESS);
-    const rowDistance = Math.abs(unit.laneRow) * 0.01;
+    const rowDistance = this.getStructureRowDistance(unit.laneRow);
     const progressBudget = Math.sqrt(Math.max(0, engageRange * engageRange - rowDistance * rowDistance));
-    return dir > 0 ? blockingTower.progress - progressBudget : blockingTower.progress + progressBudget;
+    return dir > 0
+      ? blockingTower.progress - TOWER_HALF_DEPTH_PROGRESS - progressBudget
+      : blockingTower.progress + TOWER_HALF_DEPTH_PROGRESS + progressBudget;
   }
 
   private keepUnitInPlayableLane(unit: LaneUnit): void {
@@ -2361,6 +2502,7 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private tickCapturePoints(deltaSec: number): void {
     this.capturePoints.forEach((point) => {
+      point.ruinsVisualTimerSec = Math.max(0, point.ruinsVisualTimerSec - deltaSec);
       const prevOwner = point.owner;
       const nearbyPlayer = this.units.filter((unit) => unit.team === "player" && unit.laneId === point.laneId && progressBetween(unit.progress, point.progress) <= CAPTURE_RADIUS_PROGRESS).length;
       const nearbyEnemy = this.units.filter((unit) => unit.team === "enemy" && unit.laneId === point.laneId && progressBetween(unit.progress, point.progress) <= CAPTURE_RADIUS_PROGRESS).length;
@@ -2373,7 +2515,7 @@ export class LaneBattleScene extends Phaser.Scene {
       else if (Math.abs(point.control) < 0.08 && nearbyPlayer === 0 && nearbyEnemy === 0) point.owner = "neutral";
 
       if (prevOwner !== point.owner && prevOwner !== "neutral" && point.owner !== "neutral") {
-        this.resolveCapturedStructure(point, point.owner);
+        this.resolveCapturedStructure(point, point.owner, prevOwner);
       }
       if (prevOwner !== point.owner) {
         if (point.owner === "player") {
@@ -2745,7 +2887,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.refreshDefenseTowerVisuals();
   }
 
-  private resolveCapturedStructure(point: CapturePointState, toOwner: TeamId): void {
+  private resolveCapturedStructure(point: CapturePointState, toOwner: TeamId, fromOwner: TeamId): void {
     const outcome = resolveCapturedBuilding(
       point.buildingId,
       point.buildingLevel,
@@ -2754,8 +2896,17 @@ export class LaneBattleScene extends Phaser.Scene {
     );
     point.buildingId = outcome.buildingId;
     point.buildingLevel = outcome.buildingLevel;
-    if (!point.buildingId) this.resetCaptureBuildingState(point);
-    else this.initializeCaptureBuildingState(point);
+    if (!point.buildingId) {
+      this.resetCaptureBuildingState(point);
+      if (outcome.result === "destroyed" || outcome.result === "collapsed") {
+        point.ruinsVisualTimerSec = CAPTURE_POINT_RUINS_VISUAL_SEC;
+        point.ruinsVisualOwner = fromOwner;
+      }
+    } else {
+      this.initializeCaptureBuildingState(point);
+      point.ruinsVisualTimerSec = 0;
+      point.ruinsVisualOwner = "neutral";
+    }
     if (outcome.result === "none") return;
     if (outcome.result === "destroyed") {
       if (toOwner === "player") this.hud.setInfo("적 거점 건물이 파괴되었습니다");
@@ -2840,6 +2991,10 @@ export class LaneBattleScene extends Phaser.Scene {
         ? this.snapWorldPointToCanvasPixel(rawPos.x, rawPos.y)
         : rawPos;
       const structuredPoint = this.isPrototypeV2();
+      const showingTower = point.buildingId === "defense_tower";
+      const showingRuins = !point.buildingId && point.ruinsVisualTimerSec > 0;
+      const ruinsOwner = point.ruinsVisualOwner === "enemy" ? "enemy" : "player";
+      const ruinsAgeId = ruinsOwner === "enemy" ? this.enemy.ageId : this.player.ageId;
       point.ring.setFillStyle(ownerColor, selected ? 0.32 : 0.18);
       point.ring.setRadius(structuredPoint ? (selected ? 48 : 42) : selected ? 40 : 34);
       point.ring.setStrokeStyle(selected ? 5 : 4, selected ? 0xffffff : ownerColor, selected ? 0.9 : 0.5);
@@ -2853,12 +3008,19 @@ export class LaneBattleScene extends Phaser.Scene {
         .setPosition(pos.x, pos.y)
         .setDepth(this.getGroundDepth(pos.y, -5))
         .setVisible(!structuredPoint || selected);
-      const showingTower = point.buildingId === "defense_tower";
       const markerHeight = showingTower
         ? this.cssPxToWorld(this.scaleVisualConfig.captureTowerCssHeight / getDefenseTowerVisibleHeightRatio(this.getStructureOwnerAge(point.owner), "full"))
-        : this.cssPxToWorld(96 / CAPTURE_MARKER_VISIBLE_HEIGHT_RATIO);
+        : showingRuins
+          ? this.cssPxToWorld(this.scaleVisualConfig.captureTowerCssHeight / getDefenseTowerVisibleHeightRatio(ruinsAgeId, "ruins"))
+          : this.cssPxToWorld(96 / CAPTURE_MARKER_VISIBLE_HEIGHT_RATIO);
       point.marker
-        .setTexture(showingTower ? getDefenseTowerTexture(this.getStructureOwnerAge(point.owner), "full", point.owner === "enemy" ? "enemy" : "player") : getCaptureMarkerTexture(point.owner))
+        .setTexture(
+          showingTower
+            ? getDefenseTowerTexture(this.getStructureOwnerAge(point.owner), "full", point.owner === "enemy" ? "enemy" : "player")
+            : showingRuins
+              ? getDefenseTowerTexture(ruinsAgeId, "ruins", ruinsOwner)
+              : getCaptureMarkerTexture(point.owner),
+        )
         .setPosition(pos.x, pos.y + STRUCTURE_SOCKET_ATTACH_Y)
         .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
         .setDisplaySize(markerHeight, markerHeight)
@@ -2889,7 +3051,9 @@ export class LaneBattleScene extends Phaser.Scene {
       point.buildingText.setText(
         point.buildingId
           ? `${getBuildingDefinition(point.buildingId).shortLabel} Lv.${point.buildingLevel}`
-          : "빈 건설 거점",
+          : showingRuins
+            ? "파괴된 거점"
+            : "빈 건설 거점",
       );
       if (this.isPrototypeV2()) {
         this.styleV2WorldText(point.label, this.scaleVisualConfig.towerFontCssPx, true);
@@ -3023,6 +3187,26 @@ export class LaneBattleScene extends Phaser.Scene {
     point.manaCurrent = 0;
     point.manaMax = 0;
     point.manaRegenPerSec = 0;
+  }
+
+  private baseDistance(unit: LaneUnit, targetTeamId: TeamId): number {
+    const targetProgress = targetTeamId === "player" ? 0 : 1;
+    const progressDistance = this.getStructureProgressDistance(unit.progress, targetProgress, BASE_HALF_DEPTH_PROGRESS);
+    const rowDistance = this.getStructureRowDistance(unit.laneRow);
+    return Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
+  }
+
+  private forwardBaseBlockLimit(unit: LaneUnit, dir: 1 | -1): number | undefined {
+    const targetTeamId = dir > 0 ? "enemy" : "player";
+    const engageRange = Math.max(unit.range * RANGE_TO_PROGRESS, MIN_TOWER_STANDOFF_PROGRESS);
+    if (progressBetween(unit.progress, targetTeamId === "enemy" ? 1 : 0) > Math.max(0.09, engageRange + 0.045)) {
+      return undefined;
+    }
+    const rowDistance = this.getStructureRowDistance(unit.laneRow);
+    const progressBudget = Math.sqrt(Math.max(0, engageRange * engageRange - rowDistance * rowDistance));
+    return targetTeamId === "enemy"
+      ? 1 - BASE_HALF_DEPTH_PROGRESS - progressBudget
+      : BASE_HALF_DEPTH_PROGRESS + progressBudget;
   }
 
   private getUnitProjectileAnchor(unit: LaneUnit): Phaser.Math.Vector2 {
@@ -3159,8 +3343,14 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private checkBasePressure(_deltaSec: number): void {
-    const playerThreat = this.units.filter((unit) => unit.team === "enemy" && unit.progress <= 0.04);
-    const enemyThreat = this.units.filter((unit) => unit.team === "player" && unit.progress >= 0.96);
+    const playerThreat = this.units.filter((unit) =>
+      unit.team === "enemy"
+      && this.baseDistance(unit, "player") <= Math.max(unit.range * RANGE_TO_PROGRESS, MIN_TOWER_STANDOFF_PROGRESS) + MELEE_ENGAGE_TOLERANCE_PROGRESS,
+    );
+    const enemyThreat = this.units.filter((unit) =>
+      unit.team === "player"
+      && this.baseDistance(unit, "enemy") <= Math.max(unit.range * RANGE_TO_PROGRESS, MIN_TOWER_STANDOFF_PROGRESS) + MELEE_ENGAGE_TOLERANCE_PROGRESS,
+    );
 
     playerThreat.forEach((unit) => this.tryAttackBase(unit, this.player));
     enemyThreat.forEach((unit) => this.tryAttackBase(unit, this.enemy));
@@ -3276,7 +3466,11 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private deployOpeningWave(team: TeamState): void {
-    this.spawnWaveUnits(team, getWaveRoster(team.ageId), team.id === "player" ? 0.12 : 0.88);
+    this.spawnWaveUnits(
+      team,
+      getWaveRoster(team.ageId),
+      team.id === "player" ? DEFAULT_PLAYER_WAVE_SPAWN_PROGRESS : DEFAULT_ENEMY_WAVE_SPAWN_PROGRESS,
+    );
     resetWaveClock(team);
     if (team.id === "player") {
       this.audio.playSfx("sfx.wave.start", { eventKey: "wave:opening" });
@@ -3374,18 +3568,27 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private spawnWaveUnits(team: TeamState, roster = getWaveRoster(team.ageId), overrideSpawnProgress?: number): void {
     const productionAgeId = team.selectedProductionAgeId;
-    const battleRows = [-3, 0, 3];
+    const battleRows = [-5, -3, -1, 1, 3, 5, 0];
+    const supportRows = [-5, 5];
     const laneIds = this.mapSpec.lanes.map((lane) => lane.id);
-    const spawnProgress = overrideSpawnProgress ?? (team.id === "player" ? 0.06 : 0.94);
+    const requestedSpawnProgress = overrideSpawnProgress
+      ?? (team.id === "player" ? DEFAULT_PLAYER_WAVE_SPAWN_PROGRESS : DEFAULT_ENEMY_WAVE_SPAWN_PROGRESS);
+    const frontlineDirection = team.id === "player" ? 1 : -1;
     laneIds.forEach((laneId) => {
+      const spawnProgress = this.resolveWaveSpawnProgress(team.id, laneId, requestedSpawnProgress);
       let laneIndex = 0;
       roster.battleline.forEach((entry) => {
         for (let i = 0; i < entry.count; i++) {
+          const rank = Math.floor(laneIndex / battleRows.length);
           this.spawnLaneUnit(
             team.id,
             "battle",
             entry.unitId,
-            spawnProgress,
+            Phaser.Math.Clamp(
+              spawnProgress + frontlineDirection * rank * WAVE_SPAWN_STAGGER_PROGRESS,
+              0.01,
+              0.99,
+            ),
             battleRows[laneIndex % battleRows.length],
             laneId,
             productionAgeId,
@@ -3393,20 +3596,59 @@ export class LaneBattleScene extends Phaser.Scene {
           laneIndex += 1;
         }
       });
+      const supportStartRank = Math.max(1, Math.ceil(laneIndex / battleRows.length));
+      let supportIndex = 0;
       roster.support.forEach((entry) => {
         for (let i = 0; i < entry.count; i++) {
+          const rank = supportStartRank + supportIndex;
           this.spawnLaneUnit(
             team.id,
             "support",
             entry.unitId,
-            team.id === "player" ? spawnProgress - 0.02 : spawnProgress + 0.02,
-            0,
+            Phaser.Math.Clamp(
+              spawnProgress - frontlineDirection * (rank * WAVE_SPAWN_STAGGER_PROGRESS + WAVE_SUPPORT_TRAIL_PROGRESS),
+              0.01,
+              0.99,
+            ),
+            supportRows[supportIndex % supportRows.length],
             laneId,
             productionAgeId,
           );
+          supportIndex += 1;
         }
       });
     });
+  }
+
+  private resolveWaveSpawnProgress(
+    teamId: TeamId,
+    laneId: string,
+    requestedSpawnProgress: number,
+  ): number {
+    const sameLaneUnits = this.units.filter((unit) => unit.team === teamId && unit.laneId === laneId);
+    if (sameLaneUnits.length === 0) return requestedSpawnProgress;
+    if (teamId === "player") {
+      const nearbySpawnPocket = sameLaneUnits
+        .map((unit) => unit.progress)
+        .filter((progress) => progress <= requestedSpawnProgress + 0.06);
+      if (nearbySpawnPocket.length === 0) return requestedSpawnProgress;
+      const frontmostPocketProgress = Math.max(...nearbySpawnPocket);
+      return Phaser.Math.Clamp(
+        Math.max(requestedSpawnProgress, frontmostPocketProgress + WAVE_SPAWN_STAGGER_PROGRESS),
+        0.01,
+        0.22,
+      );
+    }
+    const nearbySpawnPocket = sameLaneUnits
+      .map((unit) => unit.progress)
+      .filter((progress) => progress >= requestedSpawnProgress - 0.06);
+    if (nearbySpawnPocket.length === 0) return requestedSpawnProgress;
+    const frontmostPocketProgress = Math.min(...nearbySpawnPocket);
+    return Phaser.Math.Clamp(
+      Math.min(requestedSpawnProgress, frontmostPocketProgress - WAVE_SPAWN_STAGGER_PROGRESS),
+      0.78,
+      0.99,
+    );
   }
 
   private spawnLaneUnit(

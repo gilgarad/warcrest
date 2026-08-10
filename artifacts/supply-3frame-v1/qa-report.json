@@ -22,38 +22,38 @@
       },
       "pass": true,
       "heightRatio": 1.0112,
-      "walkSilhouetteDifference": 0.0395,
-      "walkLowerBodyDifference": 0.0512,
+      "walkSilhouetteDifference": 0.0246,
+      "walkLowerBodyDifference": 0.044,
       "boxes": {
         "idle": [
-          184,
-          66,
-          315,
-          336
+          183,
+          65,
+          316,
+          337
         ],
         "walk-01": [
-          186,
-          69,
-          357,
-          336
+          185,
+          68,
+          358,
+          337
         ],
         "walk-02": [
-          186,
-          67,
-          315,
-          336
+          185,
+          66,
+          316,
+          337
         ],
         "walk-03": [
-          188,
-          68,
-          340,
-          336
+          187,
+          67,
+          341,
+          337
         ],
         "attack": [
-          181,
-          67,
-          352,
-          336
+          180,
+          66,
+          353,
+          337
         ]
       }
     },
@@ -66,44 +66,44 @@
         "five_complete_poses": true,
         "safe_canvas_margins": true,
         "locomotion_height_consistent": true,
-        "opposite_stride_silhouettes_distinct": true,
-        "opposite_stride_lower_bodies_distinct": true,
+        "opposite_stride_silhouettes_distinct": false,
+        "opposite_stride_lower_bodies_distinct": false,
         "heal_reaches_beyond_idle": true
       },
-      "pass": true,
-      "heightRatio": 1.0189,
-      "walkSilhouetteDifference": 0.025,
-      "walkLowerBodyDifference": 0.0255,
+      "pass": false,
+      "heightRatio": 1.0187,
+      "walkSilhouetteDifference": 0.0088,
+      "walkLowerBodyDifference": 0.0128,
       "boxes": {
         "idle": [
-          180,
-          66,
-          316,
-          336
+          179,
+          65,
+          317,
+          337
         ],
         "walk-01": [
-          187,
-          70,
-          349,
-          336
+          186,
+          69,
+          350,
+          337
         ],
         "walk-02": [
-          183,
-          70,
-          310,
-          336
+          182,
+          69,
+          311,
+          337
         ],
         "walk-03": [
-          188,
-          71,
-          345,
-          336
+          187,
+          70,
+          346,
+          337
         ],
         "attack": [
-          181,
-          67,
-          355,
-          336
+          180,
+          66,
+          356,
+          337
         ]
       }
     },
@@ -122,38 +122,38 @@
       },
       "pass": true,
       "heightRatio": 1.0112,
-      "walkSilhouetteDifference": 0.0324,
-      "walkLowerBodyDifference": 0.0388,
+      "walkSilhouetteDifference": 0.0184,
+      "walkLowerBodyDifference": 0.0298,
       "boxes": {
         "idle": [
-          180,
-          66,
-          314,
-          336
+          179,
+          65,
+          315,
+          337
         ],
         "walk-01": [
-          183,
-          69,
-          350,
-          336
+          182,
+          68,
+          351,
+          337
         ],
         "walk-02": [
-          182,
-          67,
-          314,
-          336
+          181,
+          66,
+          315,
+          337
         ],
         "walk-03": [
-          187,
-          69,
-          342,
-          336
+          186,
+          68,
+          343,
+          337
         ],
         "attack": [
-          178,
-          68,
-          361,
-          336
+          177,
+          67,
+          362,
+          337
         ]
       }
     },
@@ -166,44 +166,44 @@
         "five_complete_poses": true,
         "safe_canvas_margins": true,
         "locomotion_height_consistent": true,
-        "opposite_stride_silhouettes_distinct": true,
+        "opposite_stride_silhouettes_distinct": false,
         "opposite_stride_lower_bodies_distinct": true,
         "heal_reaches_beyond_idle": true
       },
-      "pass": true,
-      "heightRatio": 1.0075,
-      "walkSilhouetteDifference": 0.0175,
-      "walkLowerBodyDifference": 0.0241,
+      "pass": false,
+      "heightRatio": 1.0074,
+      "walkSilhouetteDifference": 0.0104,
+      "walkLowerBodyDifference": 0.0204,
       "boxes": {
         "idle": [
-          184,
-          66,
-          319,
-          336
+          183,
+          65,
+          320,
+          337
         ],
         "walk-01": [
-          188,
-          68,
-          360,
-          336
+          187,
+          67,
+          361,
+          337
         ],
         "walk-02": [
-          184,
-          66,
-          309,
-          336
+          183,
+          65,
+          310,
+          337
         ],
         "walk-03": [
-          184,
-          68,
-          359,
-          336
+          183,
+          67,
+          360,
+          337
         ],
         "attack": [
-          181,
-          66,
-          367,
-          336
+          180,
+          65,
+          368,
+          337
         ]
       }
     },
@@ -221,39 +221,39 @@
         "heal_reaches_beyond_idle": true
       },
       "pass": true,
-      "heightRatio": 1.0189,
-      "walkSilhouetteDifference": 0.0257,
-      "walkLowerBodyDifference": 0.029,
+      "heightRatio": 1.0187,
+      "walkSilhouetteDifference": 0.0142,
+      "walkLowerBodyDifference": 0.0245,
       "boxes": {
         "idle": [
-          189,
-          66,
-          313,
-          336
+          188,
+          65,
+          314,
+          337
         ],
         "walk-01": [
-          192,
-          71,
-          344,
-          336
+          191,
+          70,
+          345,
+          337
         ],
         "walk-02": [
-          190,
-          68,
-          303,
-          336
+          189,
+          67,
+          304,
+          337
         ],
         "walk-03": [
-          191,
-          68,
-          336,
-          336
+          190,
+          67,
+          337,
+          337
         ],
         "attack": [
-          188,
-          67,
-          362,
-          336
+          187,
+          66,
+          363,
+          337
         ]
       }
     },
@@ -266,44 +266,44 @@
         "five_complete_poses": true,
         "safe_canvas_margins": true,
         "locomotion_height_consistent": true,
-        "opposite_stride_silhouettes_distinct": true,
-        "opposite_stride_lower_bodies_distinct": true,
+        "opposite_stride_silhouettes_distinct": false,
+        "opposite_stride_lower_bodies_distinct": false,
         "heal_reaches_beyond_idle": true
       },
-      "pass": true,
-      "heightRatio": 1.0305,
-      "walkSilhouetteDifference": 0.0181,
-      "walkLowerBodyDifference": 0.0156,
+      "pass": false,
+      "heightRatio": 1.0303,
+      "walkSilhouetteDifference": 0.0099,
+      "walkLowerBodyDifference": 0.0123,
       "boxes": {
         "idle": [
-          198,
-          66,
-          298,
-          336
+          197,
+          65,
+          299,
+          337
         ],
         "walk-01": [
-          192,
-          74,
-          346,
-          336
+          191,
+          73,
+          347,
+          337
         ],
         "walk-02": [
-          199,
-          73,
-          298,
-          336
+          198,
+          72,
+          299,
+          337
         ],
         "walk-03": [
-          190,
-          72,
-          343,
-          336
+          189,
+          71,
+          344,
+          337
         ],
         "attack": [
-          198,
-          75,
-          343,
-          336
+          197,
+          74,
+          344,
+          337
         ]
       }
     }

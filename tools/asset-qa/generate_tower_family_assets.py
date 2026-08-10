@@ -109,6 +109,15 @@ def load_full_player_source(family: str) -> Image.Image:
     return Image.open(SOURCE_DIR / f"{family}-full-player.png").convert("RGBA")
 
 
+def load_ruins_player_source(family: str) -> Image.Image | None:
+    if family == "stone":
+        return None
+    path = SOURCE_DIR / f"{family}-ruins-player.png"
+    if not path.exists():
+        return None
+    return Image.open(path).convert("RGBA")
+
+
 def chip_alpha(mask: Image.Image, shapes: list[tuple[int, int, int, int]]) -> Image.Image:
     chip = Image.new("L", CANVAS, 255)
     draw = ImageDraw.Draw(chip)
@@ -397,6 +406,10 @@ def build_family_state(family: str, state: str, team: str) -> Image.Image:
     if state == "construction":
         return build_construction(full, family)
     if state == "ruins":
+        ruins_source = load_ruins_player_source(family)
+        if ruins_source is not None:
+            fitted_ruins = fit_to_canvas(ruins_source, family)
+            return fitted_ruins if team == "player" else swap_blue_to_red(fitted_ruins)
         return build_ruins(full, family)
     raise ValueError(f"unsupported state: {state}")
 

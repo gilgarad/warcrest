@@ -6447,3 +6447,216 @@ Use consistent headings so entries are easy to grep.
   - `python3 tools/asset-qa/install_supply_three_frame_strips.py`
   - `npx vitest run src/ui/__tests__/laneBattleHudModel.test.ts`
   - `npm run build`
+
+## 2026-08-09 - Rear-line combat-slot widening and tower-construction art cleanup
+
+- Investigated the report that dense rear units were peeling into upper/lower rows and then waiting instead of joining the frontline. The bottleneck was not the friendly minimum-spacing rule itself; it was the combat-slot search band and re-centering behavior around that rule.
+- Widened the lane-combat occupancy rules in `src/systems/lane-combat/laneOccupancy.ts` from a 3-row / 3-front melee slot search to a 5-row / 4-front search (`COMBAT_ROW_REACH` `1 -> 2`, additional forward progress offset). This lets more melee bodies claim legal engagement slots without relaxing the minimum same-team spacing.
+- Added `pullUnitTowardOpenCombatRow()` in `src/scenes/LaneBattleScene.ts` so a unit that gets packed behind an ally and cannot advance still tries to slide back toward an actually open combat row near the enemy line, instead of sitting stranded in a lateral detour row.
+- Reworked non-stone tower construction generation in `tools/asset-qa/generate_tower_family_assets.py`. The previous version drew a screen-wide timber grid on top of the finished tower silhouette. The new version uses family-specific construction overlays: side scaffolding, partial block stacks / platforms, crane booms, ladders, and material piles so the structure reads as "under construction" rather than as a flat paint-over.
+- Regenerated the affected construction outputs: `defense-tower-palisade-construction*`, `defense-tower-bastion-construction*`, and `defense-tower-missile-construction*`.
+- Verification:
+  - `python3 tools/asset-qa/generate_tower_family_assets.py`
+  - `npx vitest run src/systems/lane-combat/__tests__/laneOccupancy.test.ts src/presentation/structures/__tests__/productionStructureRegistry.test.ts`
+  - `npm run build`
+  - `npx playwright test tools/validation/six-issue-followup.spec.ts --workers=1` was attempted, but the existing `__terrainPrototypeControl` follow-up probe failed to initialize before any scenario-specific assertions ran.
+
+## 2026-08-09 - Restored the old worker-panel structure and strengthened support carrier read
+
+- After user review, reverted the bottom worker-management layout away from the new chip row experiment in `src/ui/LaneBattleHudView.ts`. The panel now keeps the earlier two-column worker-row structure and visible `+/-` controls for resource workers, while retaining the larger fonts / icons / buttons requested for smaller displays.
+- Kept research workers separate from the `+/-` controls so the previously requested direct-hire behavior still matches the UI.
+- Revisited the support-carrier visibility problem. The exported PNGs were already fully opaque by alpha channel, so the remaining “transparent” read was coming from weak on-field contrast rather than literal translucency. Updated `tools/asset-qa/install_supply_three_frame_strips.py` to add an additional post-normalization presence pass (higher color/contrast, slightly lower brightness) after alpha hardening, then regenerated all supply production sprites.
+- Verification:
+  - `python3 tools/asset-qa/install_supply_three_frame_strips.py`
+  - `npx vitest run src/ui/__tests__/laneBattleHudModel.test.ts`
+  - `npm run build`
+
+## 2026-08-08 - 타격음 v1(순수 절차적 합성) 폐기, 실제 녹음 CC0 샘플 기반 v2로 재작업
+
+사용자 반응: "아 뭐야 음악이 여전히 기계음 같잖아 진짜 엉망이네. 다시 음악
+제대로 생성해줘 좀 제대로 생성해달라고 효과음" — 직전 턴에서 만든 20종
+타격음(numpy 오실레이터+노이즈 절차적 합성)이 여전히 합성음 티가 난다는
+직접적이고 강한 피드백. AI는 소리를 들을 수 없어 "자연스러움"을
+스스로 검증 못 한다고 미리 밝혔었는데, 실제로 순수 합성만으로는
+한계가 있었던 것으로 판단하고 접근을 근본적으로 바꿈.
+
+- **방향 전환**: 저번 턴 컨펌 질문에서 사용자가 고르지 않았던
+  "라이선스 프리 사운드 라이브러리" 쪽으로 실질적으로 전환 — 인터넷
+  접근이 가능함을 확인하고 Kenney(kenney.nl)의 CC0(저작권 완전 포기)
+  오디오 팩 3종(`Impact Sounds`, `Sci-fi Sounds`, `RPG Audio`)에서
+  실제 녹음된 임팩트/폭발/천 소리 샘플을 선별 다운로드해
+  `tools/audio-synth/vendor/kenney-*/`에 라이선스 파일과 함께 보관.
+- **재구현**: `tools/audio-synth/render_combat_sfx.py`를 전면 재작성 —
+  기존 절차적 신스 레시피 20개 중 16개를 **실제 녹음 샘플 레이어링**으로
+  교체:
+  - 근접 타격(딱/퍽/챙챙): `impactWood_heavy`+`impactSoft_heavy`(둔기),
+    `impactBell_heavy`+`impactMetal_medium`(검 — 종 소리의 자연스러운
+    금속 울림을 그대로 활용), `impactMetal_medium`+`impactPlate_light`
+    (창), `impactMetal_heavy`+`impactTin_medium`(근대 돌격) 조합.
+  - 대포/전차 발사·명중: `explosionCrunch`/`lowFrequency_explosion`
+    (진짜 녹음된 폭발음) + `impactMining`(파편 텍스처).
+  - 소총/화승총 발사, 투사체 명중 대부분: `impactMetal_*`/
+    `impactPlate_*`/`impactSoft_*` 녹음을 트림·페이드해 그대로 또는
+    합성 저음 바디와 레이어링.
+  - 무기 스윙(휙 소리 4종)과 활 발사음만 실제로 맞는 샘플이 없어
+    합성 유지하되, `cloth1`/`cloth2`(천 스치는 실제 녹음)를 텍스처로
+    얹어 완전 합성보다는 자연스럽게 보강.
+  - 신규 헬퍼 `slice_from_onset()`이 녹음 샘플에서 실제 타격
+    트랜지언트 지점을 자동 검출해 필요한 길이만 페이드인/아웃과 함께
+    잘라내므로, 원본이 훨씬 길어도 게임 타이밍에 맞게 재사용 가능.
+  - 같은 20개 mp3 파일명을 덮어써 `assetManifest.ts` 쪽 코드 변경은
+    라이선스 문구 갱신 외에 불필요.
+- **검증**: `npx tsc --noEmit`/`npm test`(181)/`npm run build` 모두
+  통과. Playwright로 `?sandbox=2`에서 신규 v2 mp3 14종(테스트한 범위)을
+  직접 클릭 재생해 전부 200 OK로 fetch/decode됨을 확인, 에러 0건.
+  단, 이번에도 AI는 소리 자체를 들을 수 없다는 한계는 동일 — 다만 이번엔
+  원재료가 절차적 합성이 아니라 CC0 실제 녹음이므로 "기계음" 문제의
+  근본 원인은 해소됐을 가능성이 높다고 보고, 사용자 청취 확인 필요.
+
+## [2026-08-09] fix | 레인 전투 보급 오버레이 제거, 근접 교전 여유값, 본진 화면 오프셋 재조정
+
+- 사용자 피드백: 상단 자원 바 아래 파랑/빨강 바의 의미 문의, 보급 유닛
+  머리 위 파란 바 제거 요청, 보급이 여전히 반투명처럼 보인다는 지적,
+  일부 적 유닛 정지/병목 문제, 적 본진이 여전히 덜 보이고 아군 본진
+  왼쪽 여백이 과하다는 지적이 있었다.
+- `src/scenes/LaneBattleScene.ts`에서 보급 유닛 오버레이를 전면 정리했다.
+  보급은 생성 시점부터 HP바 기본값을 꺼 두고, `setUnitPresentationVisible`
+  및 `refreshUnitOverlayDensity`에서도 support role은 HP/마나 바를 모두
+  숨긴다. 헤드리스 Playwright 수동 캡처
+  `artifacts/manual-check-2026-08-09-r2/support-probe.png`로 보급 머리
+  위 파란 바가 사라진 것을 확인했다.
+- 근접병 병목 대응으로 `MELEE_ENGAGE_TOLERANCE_PROGRESS = 0.0022`를
+  추가했다. 최소 아군 간격(`RANGE_TO_PROGRESS = 0.013`)은 그대로 두고,
+  근접 공격 판정/전투 슬롯 판정에만 작은 완충값을 주어 "전열은 섰는데
+  못 때리고 정지"하는 상황을 줄였다.
+- 동일 파일에서 본진 시각 위치 오프셋을 재조정했다.
+  `PLAYER_BASE_WORLD_OFFSET_X = -120`,
+  `ENEMY_BASE_WORLD_OFFSET_X = -260`으로 바꾸고, 실제 공격 앵커
+  (`getBaseAnchor`)에도 같은 오프셋을 적용해 화면상 본진 위치와
+  전투 판정 기준이 어긋나지 않도록 유지했다.
+- 보급 실루엣 문제는 알파값 자체가 아니라 전장 대비 읽힘 문제임을 다시
+  확인했다. 현재 production support PNG의 idle 프레임은 전부
+  `semi alpha = 0`(완전 불투명)이며, 지난 턴에 추가한 대비/외곽선 강화
+  파이프라인 상태 그대로 유지했다.
+- 검증:
+  - `npm run build` 통과
+  - `npx vitest run src/ui/__tests__/laneBattleHudModel.test.ts src/systems/lane-combat/__tests__/laneOccupancy.test.ts` 통과
+  - 수동 Playwright occupancy probe에서 `uniqueAttackers = 21 / battleUnits = 24`
+    확인, 스크린샷 `artifacts/manual-check-2026-08-09-r2/occupancy-after.png`
+  - 기존 `tools/validation/support-follow-heal.spec.ts`는 1개 통과, 1개 실패.
+    실패는 broadened support-follow 로직 때문에 기존 "far ally면 제자리"
+    기대치와 충돌한 것으로, 현재 동작 변화와 일치한다.
+  - 기존 `tools/validation/six-issue-followup.spec.ts`는 시나리오 진입 전
+    `Six-issue follow-up probe did not initialize`로 실패. 이번 수정이 만든
+    신규 회귀가 아니라 기존 follow-up probe 초기화 문제다.
+
+## [2026-08-09] fix | 보급 가독성 추가 강화, 아군 길막 우회 강화, 타워 폐허/건설 규격 보정, HUD 소형 뷰포트 보정
+
+- 사용자 추가 피드백:
+  - 보급은 많이 좋아졌지만 아직 약간 연해 보임
+  - 바로 앞 적과 자신 사이에 아군이 끼면 제자리걸음을 하는 경우가 있어
+    옆으로 돌아가 때리길 원함
+  - 터진 타워가 너무 크게 보이고 건설 상태도 함께 점검 필요
+  - 상단/하단 HUD가 작은 화면에서도 비슷한 비율로 읽히길 원함
+- `tools/asset-qa/install_supply_three_frame_strips.py`의 보급 자산 보정값을
+  한 번 더 올렸다. 색/대비를 소폭 더 높이고 밝기를 낮춘 뒤 sharpness까지
+  추가해 전장 배경 위에서 경계가 더 잘 서도록 했다. 재생성 결과 ancient /
+  renaissance / modern-early는 QA pass, iron / industrial / modern-late는
+  stride silhouette 임계값 때문에 기존과 같은 QA fail이지만 production PNG는
+  모두 새 결과로 갱신되었다.
+- `src/scenes/LaneBattleScene.ts`의 `advanceUnit()`에 "아군 앞유닛에 막혔지만
+  적과의 측면 전투 슬롯은 비어 있는" 경우를 우선 처리하는 분기를 추가했다.
+  이 경우 laneRow를 기존보다 강하게 flank slot 쪽으로 끌고, progress는
+  앞 아군과 최소 간격을 유지한 채 슬롯 방향으로 전진한다.
+- `src/presentation/structures/productionStructureRegistry.ts`의 타워 state별
+  visible-height ratio를 현재 production 자산 실측 bbox 기준으로 교체했다.
+  특히 ruins/construction이 예전 더 큰 기준을 계속 사용하던 것이 핵심
+  원인이었다.
+- `src/scenes/LaneBattleScene.ts`의 prototype-v2/world-surface 타워 스케일링도
+  state별 visible ratio로 매번 "같은 visible height"를 강제하지 않도록
+  바꿨다. 이제 full-state 기준 height를 유지하고 ruins/construction은 실제
+  자산의 보이는 높이만큼 더 작게 나온다.
+- `src/ui/LaneBattleHudView.ts`는 viewport ratio 기반
+  `responsiveScale()`을 도입해 작은 화면일수록 top resource bar, 본진 HP bar,
+  worker rows, 버튼, 비용 아이콘/텍스트, 자원 증가 popup까지 함께 더 크게
+  보정되도록 바꿨다. 완전한 "실제 물리 인치" 기준 보정은 브라우저에서 알 수
+  없으므로 viewport 기반 보정이다.
+- 검증:
+  - `npm run build` 통과
+  - Vitest 3 files / 6 tests 통과
+  - 수동 Playwright 캡처:
+    - `artifacts/manual-check-2026-08-09-r4/support-probe.png`
+    - `artifacts/manual-check-2026-08-09-r4/tower-construction.png`
+    - `artifacts/manual-check-2026-08-09-r4/tower-ruins.png`
+    - `artifacts/manual-check-2026-08-09-r4/occupancy.json`
+  - occupancy probe는 여전히 `uniqueAttackers = 21`, `battleUnits = 24`.
+
+## 2026-08-08 - 타격음 v3: 실제 녹음을 "그대로 재생"에서 "분석 기반 재합성"으로 전환
+
+사용자 지시: "완전 무료/저작권 없음도 문제가 있을 수 있음. 해당 음을
+기반으로 네가 직접 재생성해줘. 똑같으면 안 된다고 생각하면 되." — v2에서
+Kenney CC0 녹음을 트림/레이어링해 그대로 재생하던 방식에 대해, 라이선스가
+CC0라도 "완전히 동일한 원본 파형을 그대로 쓰는 것" 자체가 문제될 수
+있다고 보고 원본과 다른 결과물을 요구.
+
+- **구현**: `tools/audio-synth/render_combat_sfx.py`를 다시 전면
+  재작성 — 이번엔 real 샘플을 **분석 입력으로만** 사용하고 출력
+  파형에는 원본 데이터를 전혀 포함하지 않는 방식으로 바꿨다.
+  - `find_partials()`: FFT 피크 피킹으로 원본의 지배적 공명 주파수
+    (예: 종 소리의 배음 구조)와 "톤성 대 노이즈성" 비율을 추출.
+  - `centroid_trend()`: 원본을 시간축으로 6구간 분할해 구간별 스펙트럴
+    센트로이드(밝기) 변화를 추출 — 크랙→바디→테일로 이어지는 밝기 변화
+    패턴을 재현하기 위한 재료.
+  - `amplitude_envelope()`: 힐버트 변환 기반 진폭 봉투 추출.
+  - `resynthesize()`: 위 3가지로 얻은 파라미터만 가지고 매번 새로
+    시드를 뿌려 가산 정현파(공명 주파수, ±2% 랜덤 디튠) + 시간별로
+    셰이핑한 화이트 노이즈를 처음부터 새로 합성 — 원본 파형 샘플은
+    단 하나도 출력에 들어가지 않는다.
+  - 20개 키 전부 이 파이프라인으로 재생성(같은 파일명 덮어쓰기).
+- **검증**: 출력 mp3와 원본 참조 recording을 numpy로 직접 비교 —
+  `combat-meleeHit-blade` vs `impactBell_heavy_002` 상관계수 -0.23,
+  `combat-rangedFire-cannon` vs `explosionCrunch_002` 상관계수 0.005,
+  둘 다 `np.array_equal` False, 길이도 다름 — 파형이 원본과 사실상
+  무관함을 수치로 확인. `npx tsc --noEmit`/`npm test`(181)/
+  `npm run build` 모두 통과. Playwright `?sandbox=2`에서 14개 버튼
+  재생 확인, 에러 0건. `assetManifest.ts`의 licenseNote를 "녹음은
+  분석만 하고 파형은 사용 안 함" 문구로 갱신.
+
+## 2026-08-08 - 타격음 v4: v3의 정현파 재합성이 문제 원인이었음을 파악, 그래뉼러 재합성으로 교체
+
+사용자 반응: "뭐가 바뀐 건지 전혀 모르겠어 전혀 총 소리도 총 소리 같지
+않고 정말 개선이 하나도 안 된 거 같아" — v3가 실질적으로 아무 개선도
+안 됐다는 재확인. 원인을 다시 분석해보니 v3의 근본 결함을 발견했다:
+`find_partials()`로 몇 개의 공명 주파수를 뽑아 순수 사인파로 재합성하는
+방식 자체가, v1에서 사용자가 "기계음 같다"고 지적했던 바로 그 방식
+(오실레이터 합성)을 분석값만 바꿔서 반복한 것이었다 — 원본을 "분석"해도
+합성 수단이 여전히 깨끗한 사인파라면 결과물은 여전히 "삐-" 소리로
+들릴 수밖에 없다. 실측으로도 확인: 소총 발사음의 재료로 쓴
+`impactMetal_light`(가벼운 금속 탭 소리)는 스펙트럴 평탄도가 매우 낮아
+(순음에 가까움, 4.6e-05) 애초에 총성의 넓은 대역 크랙과는 음향적으로
+거리가 멀었다 — 반면 `explosionCrunch`의 초반 트랜지언트는 평탄도가
+훨씬 높아(2.1e-03, 약 40배) 광대역 크랙 특성을 실제로 갖고 있음을
+확인하고 소총/화승총 발사음의 기준 소스를 폭발음 쪽으로 교체했다.
+
+- **재구현(그래뉼러 재합성)**: `granular_resynth()` 신설 — 참조 녹음을
+  5-20ms 단위의 작은 그레인으로 잘라, 위치를 지터링(jitter)하고
+  타임라인을 재매핑하면서 오버랩-애드로 재조립한다. 순음 오실레이터를
+  전혀 쓰지 않고 실제 녹음의 파형 조각을 그대로 재료로 쓰기 때문에
+  진짜 녹음의 광대역 트랜지언트 질감이 보존된다 — 단, 그레인 길이(최대
+  20ms)보다 긴 연속 구간은 출력에 남지 않고 매 렌더마다 순서/지터가
+  랜덤이라 원본과 파형 자체는 동일하지 않다.
+  - 소총/화승총 발사음: 이제 `explosionCrunch`의 초반 22-30ms만
+    하이패스(500-700Hz 이상)로 걸러 짧게 그레인화한 것을 "크랙" 층으로
+    사용(딥 붐은 제거하고 크랙만 남김), 그 아래 합성 저음 펀치만 소량
+    추가.
+  - 나머지 근접 타격/원거리 명중 15개도 같은 그래뉼러 방식으로 재작성
+    (검=종소리 그레인, 창=금속 그레인, 대포/전차=폭발음 그레인 등,
+    소스 매핑은 v2/v3과 동일하게 유지).
+- **검증**: `combat-rangedFire-rifle` vs `explosionCrunch_002` 상관계수
+  0.02, `combat-meleeHit-blade` vs `impactBell_heavy_002` 상관계수
+  -0.005 — 둘 다 완전 무관, `np.array_equal` False. `npx tsc
+  --noEmit`(TS 변경 없음)/`npm test`(181)/`npm run build` 통과.
+  Playwright `?sandbox=2`에서 14개 버튼 재생 확인, 에러 0건. AI는 이번에도
+  소리를 직접 들을 수 없다는 한계는 동일하지만, 이번엔 v1→v3까지 실패한
+  근본 원인(정현파 재합성)을 명확히 특정하고 다른 합성 기법(그래뉼러)으로
+  교체했다는 점에서 이전 두 번의 반복과 기술적으로 다르다.

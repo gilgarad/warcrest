@@ -1,0 +1,65 @@
+{
+  "initial": {
+    "ruinTexture": "defense-tower-palisade-ruins-enemy",
+    "ruinLabel": "파괴된 거점",
+    "spawnedId": 29,
+    "unitCountDelta": 1
+  },
+  "endEnemyBaseHp": 400,
+  "attacker": {
+    "id": 29,
+    "team": "player",
+    "unitId": "stone_slinger",
+    "role": "battle",
+    "laneId": "main",
+    "progress": 0.963522172843297,
+    "laneRow": 1.3797395621119999,
+    "hp": 30,
+    "maxHp": 30,
+    "facingX": 1,
+    "facingDirection": "w",
+    "travelFacingX": 1,
+    "travelFacingDirection": "w",
+    "combatFacingX": 1,
+    "combatFacingDirection": "e",
+    "flipX": false,
+    "tint": 16777215,
+    "motion": {
+      "x": 3.9422437440271096,
+      "y": -3.2762645045463614
+    },
+    "pose": "stone-slinger-e-attack",
+    "renderTexture": "stone-slinger-e-attack",
+    "attackAnimTime": 0.3766666666666667,
+    "attackFacingLockSec": 0.3766666666666667,
+    "combatFacingHoldSec": 0.3766666666666667,
+    "attackTargetKind": "structure",
+    "manaCurrent": 0,
+    "manaMax": 0,
+    "manaRegenPerSec": 0,
+    "healManaCost": 0,
+    "healPower": 0,
+    "presentation": {
+      "x": 5787.377640045722,
+      "y": 1727.8980474508382,
+      "originX": 0.5,
+      "originY": 0.875,
+      "rotationRad": -0.013491810913212277,
+      "spriteDisplayWidth": 395.74879227053134,
+      "spriteDisplayHeight": 296.8115942028985
+    },
+    "overlay": {
+      "mode": "compact",
+      "hpVisible": false,
+      "manaVisible": false,
+      "labelVisible": false,
+      "labelText": "투석"
+    },
+    "attackTiming": {
+      "durationSec": 0.46,
+      "eventProgress": 0.36,
+      "targetKind": "structure",
+      "eventDelayMs": 165.6
+    }
+  }
+}

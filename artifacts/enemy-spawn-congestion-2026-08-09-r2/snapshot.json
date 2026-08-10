@@ -1,0 +1,159 @@
+{
+  "units": [
+    {
+      "progress": 0.594,
+      "laneRow": -3,
+      "role": "battle"
+    },
+    {
+      "progress": 0.592,
+      "laneRow": 0,
+      "role": "battle"
+    },
+    {
+      "progress": 0.5940000000000001,
+      "laneRow": 2.5669425569663997,
+      "role": "battle"
+    },
+    {
+      "progress": 0.6130000000000009,
+      "laneRow": -0.906000584211592,
+      "role": "battle"
+    },
+    {
+      "progress": 0.6110000000000008,
+      "laneRow": 1.0907994666542962,
+      "role": "battle"
+    },
+    {
+      "progress": 0.6327999999999999,
+      "laneRow": -0.6902946399999998,
+      "role": "support"
+    },
+    {
+      "progress": 0.8730000000000008,
+      "laneRow": -1.0907994666542962,
+      "role": "battle"
+    },
+    {
+      "progress": 0.8860000000000008,
+      "laneRow": -0.8957285508447677,
+      "role": "battle"
+    },
+    {
+      "progress": 0.8730000000000008,
+      "laneRow": 0,
+      "role": "battle"
+    },
+    {
+      "progress": 0.926,
+      "laneRow": 0,
+      "role": "support"
+    },
+    {
+      "progress": 0.8730000000000008,
+      "laneRow": -1.0907994666542962,
+      "role": "battle"
+    },
+    {
+      "progress": 0.8860000000000008,
+      "laneRow": -0.5453997333271481,
+      "role": "battle"
+    },
+    {
+      "progress": 0.8990000000000008,
+      "laneRow": 0,
+      "role": "battle"
+    },
+    {
+      "progress": 0.926,
+      "laneRow": 0,
+      "role": "support"
+    },
+    {
+      "progress": 0.9370000000000008,
+      "laneRow": -1.0907994666542962,
+      "role": "battle"
+    },
+    {
+      "progress": 0.9500000000000008,
+      "laneRow": -0.8957285508447677,
+      "role": "battle"
+    },
+    {
+      "progress": 0.9370000000000008,
+      "laneRow": 0,
+      "role": "battle"
+    },
+    {
+      "progress": 0.977,
+      "laneRow": 0,
+      "role": "support"
+    },
+    {
+      "progress": 0.9370000000000008,
+      "laneRow": -1.0907994666542962,
+      "role": "battle"
+    },
+    {
+      "progress": 0.9500000000000008,
+      "laneRow": -0.5453997333271481,
+      "role": "battle"
+    },
+    {
+      "progress": 0.9630000000000009,
+      "laneRow": 0,
+      "role": "battle"
+    },
+    {
+      "progress": 0.977,
+      "laneRow": 0,
+      "role": "support"
+    },
+    {
+      "progress": 0.9630000000000009,
+      "laneRow": -1.0907994666542962,
+      "role": "battle"
+    },
+    {
+      "progress": 0.9760000000000009,
+      "laneRow": -0.8957285508447677,
+      "role": "battle"
+    },
+    {
+      "progress": 0.9630000000000007,
+      "laneRow": 0,
+      "role": "battle"
+    },
+    {
+      "progress": 0.99,
+      "laneRow": 0,
+      "role": "support"
+    },
+    {
+      "progress": 0.9630000000000007,
+      "laneRow": -1.0907994666542962,
+      "role": "battle"
+    },
+    {
+      "progress": 0.9760000000000008,
+      "laneRow": -0.5453997333271481,
+      "role": "battle"
+    },
+    {
+      "progress": 0.977,
+      "laneRow": 0,
+      "role": "battle"
+    },
+    {
+      "progress": 0.99,
+      "laneRow": 0,
+      "role": "support"
+    }
+  ],
+  "engagement": {
+    "uniqueAttackers": 4,
+    "battleUnits": 28,
+    "currentlyAnimating": 4
+  }
+}

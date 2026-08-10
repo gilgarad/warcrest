@@ -1,0 +1,65 @@
+{
+  "enemyTowerHp": 750,
+  "nearbyCount": 1,
+  "nearbyRows": [
+    -4
+  ],
+  "nearby": [
+    {
+      "id": 30,
+      "team": "player",
+      "unitId": "stone_axeman",
+      "role": "battle",
+      "laneId": "north",
+      "progress": 0.5786666666666661,
+      "laneRow": -4,
+      "hp": 50,
+      "maxHp": 50,
+      "facingX": 1,
+      "facingDirection": "e",
+      "travelFacingX": 1,
+      "travelFacingDirection": "e",
+      "combatFacingX": 1,
+      "combatFacingDirection": "e",
+      "flipX": false,
+      "tint": 16777215,
+      "motion": {
+        "x": 2.1632237899830216,
+        "y": 0.17207461965779203
+      },
+      "pose": "stone-axeman-e-walk-02",
+      "renderTexture": "stone-axeman-e-walk-02",
+      "attackAnimTime": 0,
+      "attackFacingLockSec": 0,
+      "combatFacingHoldSec": 0,
+      "attackTargetKind": "unit",
+      "manaCurrent": 0,
+      "manaMax": 0,
+      "manaRegenPerSec": 0,
+      "healManaCost": 0,
+      "healPower": 0,
+      "presentation": {
+        "x": 4314.415838785509,
+        "y": 649.8872710999567,
+        "originX": 0.5,
+        "originY": 0.875,
+        "rotationRad": -0.008391441309496983,
+        "spriteDisplayWidth": 321.54589371980677,
+        "spriteDisplayHeight": 321.54589371980677
+      },
+      "overlay": {
+        "mode": "hidden",
+        "hpVisible": false,
+        "manaVisible": false,
+        "labelVisible": false,
+        "labelText": "도끼"
+      },
+      "attackTiming": {
+        "durationSec": 0.38,
+        "eventProgress": 0.44,
+        "targetKind": "unit",
+        "eventDelayMs": 167.20000000000002
+      }
+    }
+  ]
+}

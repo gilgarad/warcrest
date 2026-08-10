@@ -1,0 +1,91 @@
+{
+  "count": 6,
+  "stuck": [
+    {
+      "id": 48,
+      "unitId": "supply_wagon",
+      "role": "support",
+      "p1": 0.8933333333333333,
+      "p2": 0.8933333333333333,
+      "row1": -5,
+      "row2": -5,
+      "motion": {
+        "x": 0.14337667740710458,
+        "y": 0.07168833870355229
+      },
+      "pose": "supply-wagon-ancient-e-walk-01"
+    },
+    {
+      "id": 52,
+      "unitId": "supply_wagon",
+      "role": "support",
+      "p1": 0.89,
+      "p2": 0.89,
+      "row1": -5,
+      "row2": -5,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "supply-wagon-ancient-e-idle"
+    },
+    {
+      "id": 56,
+      "unitId": "supply_wagon",
+      "role": "support",
+      "p1": 0.8753333333333333,
+      "p2": 0.8753333333333333,
+      "row1": -5,
+      "row2": -5,
+      "motion": {
+        "x": 0.14337667740710458,
+        "y": 0.07168833870355229
+      },
+      "pose": "supply-wagon-ancient-e-walk-01"
+    },
+    {
+      "id": 60,
+      "unitId": "supply_wagon",
+      "role": "support",
+      "p1": 0.872,
+      "p2": 0.872,
+      "row1": -5,
+      "row2": -5,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "supply-wagon-ancient-e-idle"
+    },
+    {
+      "id": 64,
+      "unitId": "supply_wagon",
+      "role": "support",
+      "p1": 0.854,
+      "p2": 0.854,
+      "row1": -5,
+      "row2": -5,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "supply-wagon-ancient-e-idle"
+    },
+    {
+      "id": 68,
+      "unitId": "supply_wagon",
+      "role": "support",
+      "p1": 0.854,
+      "p2": 0.854,
+      "row1": -5,
+      "row2": -5,
+      "motion": {
+        "x": 0,
+        "y": 0
+      },
+      "pose": "supply-wagon-ancient-e-idle"
+    }
+  ],
+  "snap1Count": 52,
+  "snap2Count": 52
+}

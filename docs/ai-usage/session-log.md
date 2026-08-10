@@ -6502,3 +6502,205 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
 - **AI action**: First confirmed the previous art/tower batch was already committed and pushed, then changed the supply asset install pipeline so partially visible edge pixels get hardened to opaque output instead of surviving as soft alpha. Rebuilt all supply wagon production sprites and QA artifacts. In parallel, reworked the lane-battle HUD model/view so the top resource header, sound button, and bottom management panel all render larger and more centrally on small displays; removed visible `+/-` controls from the worker area; moved resource worker chips inline next to `일꾼 배치`; and added explicit `assigned / idle` plus separate research-worker summary text.
 - **Notable outcome**: The user-facing behavior now matches the requested direction without forking gameplay logic: research workers still hire directly into research, while resource assignment remains interactive through the chips rather than through dedicated `+/-` buttons.
 - **Verification**: `python3 tools/asset-qa/install_supply_three_frame_strips.py`, `npx vitest run src/ui/__tests__/laneBattleHudModel.test.ts`, and `npm run build` all passed. Manual image checks on representative supply sprites confirmed the exported characters are no longer rendered as faint semi-transparent silhouettes.
+
+## 2026-08-09 - Dense rear-line combat routing widened and tower construction visuals rewritten
+
+- **Agent/tool**: Codex (GPT-5), local TypeScript edits, local Python asset-generation script.
+- **User direction (원문)**: "뒤쪽 병력이 아래나 위쪽으로 움직여서 전열을 마주쳐 싸우지를 않고 뒤쪽에서 길게 대기하고 있어. 이거 문제 확인하고 수정해야해." and "점령지에 요새를 지을 때 대충 그림판으로 되는 것과 같은 격자 무늬가 생기는데 이거 잘못된 거야."
+- **AI action**: Traced the rear-line issue to the melee engagement-slot search being too narrow relative to the preserved same-team spacing rule. Expanded the legal combat-row/front candidates in `laneOccupancy.ts` and added a fallback row-recentering step in `LaneBattleScene.ts` so a unit blocked behind an ally still slides toward an open row near the enemy line instead of lingering in a side row. Separately rewrote non-stone tower construction generation in `tools/asset-qa/generate_tower_family_assets.py`: removed the flat full-screen timber grid overlay and replaced it with family-specific side scaffolds, partial materials, ladders, and crane/platform details, then regenerated the production construction sprites.
+- **Notable outcome**: The fix keeps the user's explicitly approved minimum spacing behavior intact; the change is in how many valid combat slots exist and how blocked units rejoin them, not in shrinking unit separation. The construction art now reads closer to an actual build state instead of a painted lattice.
+- **Verification**: `python3 tools/asset-qa/generate_tower_family_assets.py`, `npx vitest run src/systems/lane-combat/__tests__/laneOccupancy.test.ts src/presentation/structures/__tests__/productionStructureRegistry.test.ts`, and `npm run build` all passed. `npx playwright test tools/validation/six-issue-followup.spec.ts --workers=1` was also attempted, but it failed before scenario checks because the existing `__terrainPrototypeControl` follow-up probe never initialized.
+
+## 2026-08-09 - Worker panel rollback to the previous structure and a stronger support-carrier export pass
+
+- **Agent/tool**: Codex (GPT-5), local TypeScript edits, local Python asset-install script.
+- **User direction (원문)**: "디자인은 이 직전 디자인 그대로 하되 크기를 전반적으로 다 키웠어야 해! 아이콘부터 글자 및 박스까지 말야! 그리고 금/목재 등은 왜 +/-도 사라졌는지 이해를 할 수 없다." and "보급이 여전히 투명한데 ... 이번에는 제대로 수정되도록 확실하게 좀 고쳐!"
+- **AI action**: Backed the bottom worker panel away from the new chip-row layout and restored the earlier two-column worker-row design in `src/ui/LaneBattleHudView.ts`, but at larger scale so it still addresses the small-screen readability complaint. Visible `+/-` controls were restored for gold/wood/food/metal rows, while research remained separate. For support carriers, confirmed the production PNGs were already fully opaque in alpha, so the remaining washed-out look was treated as a contrast/readability problem. Updated `tools/asset-qa/install_supply_three_frame_strips.py` with an extra post-alpha presence pass (higher saturation/contrast, slightly darker final tone) and regenerated all supply outputs.
+- **Notable outcome**: This turn corrected an earlier UI interpretation mistake instead of layering another redesign on top. The support fix targeted how the sprite reads against the battlefield rather than repeating the already-done alpha hardening step.
+- **Verification**: `python3 tools/asset-qa/install_supply_three_frame_strips.py`, `npx vitest run src/ui/__tests__/laneBattleHudModel.test.ts`, and `npm run build` all passed.
+
+## 2026-08-08 - Combat SFX v2: dropped pure procedural synthesis, switched to real CC0 recorded samples
+
+- **Agent/tool**: Claude Code (Sonnet 5).
+- **User direction (원문)**: "아 뭐야 음악이 여전히 기계음 같잖아 진짜
+  엉망이네. 다시 음악 제대로 생성해줘 좀 제대로 생성해달라고 효과음" —
+  direct, frustrated rejection of the previous turn's 20 procedurally
+  synthesized combat SFX files as still sounding "machine-like."
+- **AI action**: Rather than iterating further on pure oscillator/noise
+  synthesis (which the AI had already flagged as unverifiable-by-ear and
+  now had direct evidence was insufficient), pivoted to the other option
+  the user hadn't picked in the earlier confirmation prompt: real
+  licensed sample audio. Confirmed internet access was available, then
+  downloaded three CC0 (public-domain-equivalent) Kenney.nl audio packs
+  (`Impact Sounds`, `Sci-fi Sounds`, `RPG Audio`), auditioned candidate
+  files by inspecting peak level/duration (couldn't listen, but could
+  verify they weren't silent/clipped/mislabeled junk), and hand-picked
+  specific real recordings per weapon archetype: real bell/metal/wood/
+  soft-impact recordings for melee hits (the sword-clang sound in
+  particular now uses a real bell-impact recording for its natural
+  metallic ring instead of synthesized inharmonic partials), real
+  recorded explosions for cannon/tank fire and hits, real metal-impact
+  recordings trimmed to ~15-20ms as the "crack" transient for rifle/
+  musket fire (only the low-end punch under that crack is still
+  synthesized), and real cloth-rustle recordings layered under the
+  weapon-swing whooshes that still had no good real match. Vendored the
+  selected files (with their CC0 license files) under
+  `tools/audio-synth/vendor/kenney-*/`, and rewrote
+  `tools/audio-synth/render_combat_sfx.py` around a new
+  `slice_from_onset()` helper that auto-detects a recording's transient
+  and crops/fades it to fit game timing, so 16 of the 20 sfx are now
+  real-sample-based (only the 4 pure air-whoosh swing sounds and the bow
+  pluck remain synthesized, augmented with real cloth texture). Output
+  filenames were kept identical, so no `assetManifest.ts` changes were
+  needed beyond an updated license note.
+- **Verification**: `npx tsc --noEmit`, `npm test` (181), `npm run build`
+  all passed. Live Playwright pass on `?sandbox=2`: clicked through 14 of
+  the 20 updated combat buttons and confirmed each new mp3 fetched with
+  `200 OK` and decoded/played with zero console/page errors. Repeated the
+  same honesty caveat as before — still can't judge "sounds natural" by
+  ear — but this time the underlying material is real recorded audio
+  rather than synthesis, which directly targets the reported "machine
+  sound" complaint at its likely root cause.
+
+- **Agent/tool**: Codex GPT-5.
+- **User direction (원문)**: "첫 번째 스크린샷에서 상단 자원 바 밑에 있는
+  파란색과 빨간색 바가 뭐하는 바야? ... 보급 위에 파란색 바 삭제 ...
+  보급이 투명하게 보여 ... 적이 안 움직이고 ... 적 본진 더 보이게..."
+- **AI action**: Confirmed from the scene code that the top blue/red bars are
+  the player/enemy base HP bars, then fixed the actionable parts in
+  `src/scenes/LaneBattleScene.ts`: support units now spawn with HP bars hidden
+  by default, support role never re-enables HP/mana bars through overlay
+  density or visibility helpers, melee-vs-unit engagement gained a small
+  tolerance (`0.0022` progress) so lines that have effectively met are not
+  left idling just outside exact range, and base world offsets were corrected
+  directionally (`player -120`, `enemy -260`) and mirrored in
+  `getBaseAnchor()` so visual base placement and damage target anchors stay in
+  sync. Also re-checked the support PNGs directly: alpha channels remain fully
+  opaque, so the "transparency" complaint tracks contrast/readability rather
+  than literal semi-transparency.
+- **Verification**: `npm run build` passed. Focused Vitest
+  (`src/ui/__tests__/laneBattleHudModel.test.ts`,
+  `src/systems/lane-combat/__tests__/laneOccupancy.test.ts`) passed.
+  Headless Playwright/manual captures saved under
+  `artifacts/manual-check-2026-08-09-r2/`:
+  `support-probe.png` confirms the support blue bar is gone, and
+  `occupancy-after.png` plus JSON snapshot show `21` unique attackers out of
+  `24` battle units in the dense occupancy probe. Existing
+  `tools/validation/support-follow-heal.spec.ts` now has 1 pass / 1 fail
+  because the widened support-follow behavior no longer matches the old "far
+  ally => stay at 0.5 progress" expectation. Existing
+  `tools/validation/six-issue-followup.spec.ts` still fails at probe
+  initialization (`Six-issue follow-up probe did not initialize`) before any
+  scenario assertion, which appears to be a pre-existing harness issue rather
+  than a new regression from this turn.
+
+- **Agent/tool**: Codex GPT-5.
+- **User direction (원문)**: "보급병 투명도는 아직 약간 남아있긴 한데 ...
+  조금 더 해줘 ... 병력이 앞에 있을 때 ... 조금 돌아가서 적을 타격 ...
+  터진 타워의 크기 ... HUD가 다른 크기의 모니터에서 봐도 비슷한 비율..."
+- **AI action**: Tightened the support readability pass by further increasing
+  supply sprite color/contrast, slightly lowering brightness, and adding a
+  small sharpness lift in `tools/asset-qa/install_supply_three_frame_strips.py`,
+  then regenerated the production supply PNGs. In `LaneBattleScene.ts`, added
+  a new flank-slot preference when a melee unit is blocked by a friendly unit:
+  if the enemy has an open combat slot on another row, the blocked unit now
+  pivots toward that row and advances as far as the friendly-gap rule allows
+  instead of just treadmill-packing behind its ally. Reworked tower state
+  scaling by updating `productionStructureRegistry.ts` visible-height ratios to
+  match the current production assets' actual alpha bounding boxes, and changed
+  prototype-v2/world-surface tower rendering so construction/ruins no longer
+  get scaled up to match full-tower visible height. Added viewport-based HUD
+  compensation in `LaneBattleHudView.ts` so smaller browser viewports enlarge
+  top resource boxes, base HP bars, worker rows, strategic buttons, and popup
+  text together rather than shrinking strictly with the fixed 1600x900 canvas.
+- **Verification**: `npm run build` passed. Focused Vitest on HUD,
+  lane-occupancy, and structure-registry tests passed (`3` files / `6`
+  tests). Regenerated support assets reported QA pass for ancient /
+  renaissance / modern-early and the same stride-silhouette QA failures for
+  iron / industrial / modern-late, but all production PNGs were still updated.
+  Headless Playwright/manual captures under
+  `artifacts/manual-check-2026-08-09-r4/` show: support probe with no support
+  overlay bar, construction tower and ruins at visibly reduced scale, and the
+  occupancy probe still reaching `21` unique attackers out of `24` battle
+  units after 300 steps.
+
+## 2026-08-08 - Combat SFX v3: from "play the real recording" to "analyze it, then resynthesize from scratch"
+
+- **Agent/tool**: Claude Code (Sonnet 5).
+- **User direction (원문)**: "완전 무료/저작권 없음도 문제가 있을 수 있음.
+  해당 음을 기반으로 네가 직접 재생성해줘. 똑같으면 안 된다고 생각하면
+  되." — even though the v2 Kenney samples were CC0, the user flagged
+  that using the *exact* recorded waveform verbatim could still be a
+  problem, and asked for output based on those recordings but not
+  identical to them.
+- **AI action**: Rewrote `tools/audio-synth/render_combat_sfx.py` a third
+  time so the real recordings are used purely as analysis input, never as
+  output audio. Added `find_partials()` (FFT peak-picking to extract a
+  recording's dominant resonant frequencies and how "tonal vs. noisy" it
+  is — e.g. captures that a bell hit is a few strong harmonic partials),
+  `centroid_trend()` (spectral brightness over 6 time chunks, to capture
+  the crack→body→tail evolution of an impact), and
+  `amplitude_envelope()` (Hilbert-transform loudness contour). A new
+  `resynthesize()` function takes only those extracted numbers and
+  regenerates a sound from scratch every render — freshly seeded additive
+  sine partials (with small random detune) plus freshly seeded white
+  noise shaped to match the extracted brightness trend and envelope. Not
+  one output sample is copied from the source recording. All 20 combat
+  sfx keys were re-rendered through this pipeline, overwriting the same
+  filenames again.
+- **Verification**: Directly compared output mp3s against their reference
+  recordings in numpy — `combat-meleeHit-blade` vs. the bell-impact
+  reference: correlation coefficient -0.23; `combat-rangedFire-cannon`
+  vs. the explosion reference: correlation coefficient 0.005; both
+  `np.array_equal() == False` and different lengths, confirming the
+  outputs are not the source audio, edited or otherwise. `npx tsc
+  --noEmit`, `npm test` (181), `npm run build` all passed. Live
+  Playwright pass on `?sandbox=2` replayed all 14 tested combat buttons
+  with `200 OK` fetches and zero console/page errors. Updated
+  `assetManifest.ts`'s license note to describe the analysis-only
+  relationship to the reference recordings.
+
+## 2026-08-08 - Combat SFX v4: diagnosed why v3 changed nothing audible, switched to granular resynthesis
+
+- **Agent/tool**: Claude Code (Sonnet 5).
+- **User direction (원문)**: "뭐가 바뀐 건지 전혀 모르겠어 전혀 총 소리도
+  총 소리 같지 않고 정말 개선이 하나도 안 된 거 같아" — confirmation that
+  v3 was not perceptibly different from v1/v2 at all, specifically calling
+  out the rifle sound again.
+- **AI action**: Re-examined v3's actual synthesis method rather than just
+  re-tuning parameters, and found the real bug: `find_partials()` reduced
+  each reference recording to a handful of dominant frequencies and
+  rebuilt the sound as pure sine-wave oscillators at those frequencies —
+  i.e., analyzing a real recording first didn't matter, because the
+  synthesis method was still the exact same "clean oscillator" approach
+  that caused the original "기계음" complaint in v1. Confirmed
+  numerically: spectral flatness (a noisiness measure) of the reference
+  used for the rifle crack, `impactMetal_light` (a soft metal tap), was
+  4.6e-05 (near-pure-tone) — a poor structural match for a gunshot's
+  broadband crack — versus `explosionCrunch`'s onset transient at 2.1e-03
+  (~40x noisier/broader-band), which is a much closer match. Rewrote
+  `tools/audio-synth/render_combat_sfx.py` around a new
+  `granular_resynth()`: chops a reference recording into small (5-20ms)
+  windowed grains, reassembles them at jittered positions with a remapped
+  timeline via overlap-add, and applies small per-grain micro-pitch
+  jitter. No oscillators drive the transient/texture layers anymore — the
+  output is built from real recorded waveform fragments, so it keeps
+  their genuine broadband character, while no contiguous run of source
+  samples longer than one grain survives and grain order/timing is
+  randomized per render. Also switched the rifle/musket "crack" reference
+  from the metal tap to a short, high-pass-filtered slice of
+  `explosionCrunch`'s onset (22-30ms, cutting the deep boom so only the
+  broadband crack remains), re-derived from the flatness measurement
+  above. All 20 combat sfx were regenerated through this pipeline.
+- **Verification**: `combat-rangedFire-rifle` vs. its `explosionCrunch_002`
+  reference: correlation 0.02; `combat-meleeHit-blade` vs. its
+  `impactBell_heavy_002` reference: correlation -0.005 — both
+  effectively uncorrelated, `np.array_equal() == False`. `npx tsc
+  --noEmit` (no TS changes this turn), `npm test` (181), `npm run build`
+  all passed. Live Playwright pass on `?sandbox=2` replayed all 14 tested
+  combat buttons with `200 OK` and zero console/page errors. Same
+  can't-hear-it-myself caveat as before, but this time the turn's value is
+  in having actually diagnosed *why* the previous two attempts failed
+  (oscillator-based resynthesis, structurally mismatched reference
+  material) rather than repeating the same category of fix with different
+  parameters.
