@@ -3,7 +3,7 @@ import { cpSync, mkdirSync, writeFileSync } from "node:fs";
 import type { LaneBattleDebugSnapshot } from "../../src/scenes/laneBattleDebugSnapshot";
 
 const ARTIFACT_DIR = "artifacts/a-bugfix-review";
-const BASE_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&seed=a-bugfix-review";
+const BASE_URL = "/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&seed=a-bugfix-review";
 
 test.beforeAll(() => {
   mkdirSync(ARTIFACT_DIR, { recursive: true });

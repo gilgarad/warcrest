@@ -4,7 +4,7 @@
 
 The production game is deployed at:
 
-`https://gilgarad.github.io/game_project1/`
+`https://gilgarad.github.io/warcrest/`
 
 ## Pipeline
 
@@ -22,7 +22,7 @@ No `gh-pages` branch is used.
 
 ## Subpath Contract
 
-`vite.config.ts` sets `base` to `/game_project1/`. Runtime assets use
+`vite.config.ts` sets `base` to `/warcrest/`. Runtime assets use
 `src/config/assetUrl.ts`, which resolves paths against Vite's `BASE_URL` rather
 than the host root. This supports both local development at `/` and the Pages
 project path.
@@ -36,7 +36,7 @@ npm run build
 npm run preview -- --host 127.0.0.1 --port 4173
 ```
 
-Then open `http://127.0.0.1:4173/game_project1/`.
+Then open `http://127.0.0.1:4173/warcrest/`.
 
 The 2026-07-29 deployment smoke test entered the live battle scene from the
 production preview with zero failed HTTP responses and zero page errors.

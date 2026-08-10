@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const SANDBOX_URL = "/game_project1/?sandbox=1";
+const SANDBOX_URL = "/warcrest/?sandbox=1";
 const BIPEDS = [
   "stone_slinger", "stone_axeman", "bronze_swordsman", "bronze_spearman", "archer",
   "iron_swordsman", "iron_spearman", "musketeer", "pikeman", "grenadier",

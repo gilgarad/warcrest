@@ -46,7 +46,8 @@
   현재 레인 공성/거점 운영 게임 방향과 맞지 않음.
 - **stock_predict_rev 등 다른 프로젝트와 완전히 무관한 독립 저장소.**
   GitHub 저장소는 이제 연결되어 있음:
-  `https://github.com/gilgarad/game_project1.git`
+  `https://github.com/gilgarad/warcrest.git` (2026-08-10에 `game_project1`에서
+  개명, GitHub Pages 링크도 함께 이동: `https://gilgarad.github.io/warcrest/`)
   (`origin` configured, `master` pushed on 2026-07-26). 자격증명 패턴은
   `/data/projects/stock_predict`와 같은 계정을 재사용.
 
@@ -190,7 +191,8 @@ gfx/                        렌더링 헬퍼
   **비주얼 톤, 등각 파이프라인, 모바일 입력 방향**을 다음 게임으로 이관하기
   위한 중간 프로토타입으로 보면 됨.
 - GitHub 저장소는 이미 연결됨:
-  `https://github.com/gilgarad/game_project1.git`
+  `https://github.com/gilgarad/warcrest.git` (2026-08-10에 `game_project1`에서
+  개명, GitHub Pages 링크도 함께 이동: `https://gilgarad.github.io/warcrest/`)
   이제부터는 가능하면 실제 GitHub Issue/branch 단위로 진행하는 것이 맞음.
 
 ## 6. 알아두면 시간 아끼는 것들 (gotcha 모음, 전체는 `docs/patterns/README.md`)

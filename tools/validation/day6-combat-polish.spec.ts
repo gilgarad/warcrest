@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/day6-combat-polish";
 const CAPTURE_PHASE = process.env.DAY6_CAPTURE_PHASE ?? "after";
-const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-day6-combat";
+const GAME_URL = "/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-day6-combat";
 
 type UnitId = "stone_axeman" | "stone_slinger" | "supply_wagon" | "bronze_spearman";
 type Role = "melee" | "ranged" | "support";

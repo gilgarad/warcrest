@@ -1,7 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 
-const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=support-follow-heal&autostart=1";
+const GAME_URL = "/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=support-follow-heal&autostart=1";
 const ARTIFACT_DIR = "artifacts/support-follow-heal";
 
 type Team = "player" | "enemy";

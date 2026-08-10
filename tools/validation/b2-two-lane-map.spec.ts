@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import type { LaneBattleDebugSnapshot } from "../../src/scenes/laneBattleDebugSnapshot";
 
 const ARTIFACT_DIR = "artifacts/b2-two-lane-map";
-const BASE_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&seed=b2-two-lane-map";
+const BASE_URL = "/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&seed=b2-two-lane-map";
 const CANDIDATE_MAP_ID = "warcrest-two-lane-v1";
 const LEGACY_MAP_ID = "warcrest-full-lane-hybrid-v1";
 

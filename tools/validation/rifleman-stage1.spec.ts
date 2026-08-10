@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/rifleman-stage1";
-const SANDBOX_URL = "/game_project1/?sandbox=1";
-const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=rifleman-stage1&autostart=1";
+const SANDBOX_URL = "/warcrest/?sandbox=1";
+const GAME_URL = "/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=rifleman-stage1&autostart=1";
 const WALK_PHASE = 0.55;
 
 type SandboxDirection = "e" | "w";

@@ -1,8 +1,8 @@
 import { mkdirSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 
-const SANDBOX_URL = "/game_project1/?sandbox=1";
-const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=cavalry-three-frame&autostart=1";
+const SANDBOX_URL = "/warcrest/?sandbox=1";
+const GAME_URL = "/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=cavalry-three-frame&autostart=1";
 const ARTIFACT_DIR = "artifacts/cavalry-3frame-v1/sandbox-audit";
 const CAVALRY = ["knight", "heavy_cavalry", "light_cavalry", "cavalry"] as const;
 const PREFIXES: Record<typeof CAVALRY[number], string> = {

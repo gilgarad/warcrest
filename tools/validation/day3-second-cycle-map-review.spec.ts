@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/day3-second-cycle-map-review";
-const BASE_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&seed=warcrest-second-cycle-map-review";
+const BASE_URL = "/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&seed=warcrest-second-cycle-map-review";
 const CANDIDATE_MAP_ID = "warcrest-day3-three-fronts-v1";
 const LEGACY_MAP_ID = "warcrest-full-lane-hybrid-v1";
 

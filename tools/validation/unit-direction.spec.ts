@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/unit-direction";
-const GAME_URL = "/game_project1/?preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-direction-v2";
+const GAME_URL = "/warcrest/?preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-direction-v2";
 
 interface UnitSnapshot {
   unitId: string;

@@ -31,7 +31,7 @@ function waveformSvg(measurements: Record<string, SignalMeasurement>): string {
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 
 async function openAudioLab(page: Page): Promise<void> {
-  await page.goto("/game_project1/tools/audio-lab/index.html", { waitUntil: "domcontentloaded" });
+  await page.goto("/warcrest/tools/audio-lab/index.html", { waitUntil: "domcontentloaded" });
   await page.waitForLoadState("networkidle");
   await expect(page.locator("#unlockBtn")).toBeVisible({ timeout: 60_000 });
 }

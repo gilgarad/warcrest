@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/day8-regression";
-const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&seed=warcrest-day8&audioDebug=1&map=warcrest-full-lane-hybrid-v1";
+const GAME_URL = "/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&seed=warcrest-day8&audioDebug=1&map=warcrest-full-lane-hybrid-v1";
 
 type AgeId = "stone" | "bronze" | "iron_early" | "iron_mid" | "iron_late";
 

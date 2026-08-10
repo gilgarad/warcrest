@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import type { LaneBattleDebugSnapshot } from "../../src/scenes/laneBattleDebugSnapshot";
 
 const ARTIFACT_DIR = "artifacts/unit-animation-tower-v2";
-const GAME_URL = "/game_project1/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-animation-tower-v2";
+const GAME_URL = "/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-animation-tower-v2";
 
 type UnitId = "stone_axeman" | "stone_slinger" | "supply_wagon" | "bronze_spearman";
 
@@ -33,7 +33,7 @@ test("normalized pose assets share canvas and ground anchor without edge clippin
   ];
   const metrics = await page.evaluate(async (assetKeys) => Promise.all(assetKeys.map(async (key) => {
     const image = new Image();
-    image.src = `/game_project1/assets/production/units/${key}.png`;
+    image.src = `/warcrest/assets/production/units/${key}.png`;
     await image.decode();
     const canvas = document.createElement("canvas");
     canvas.width = image.width;
