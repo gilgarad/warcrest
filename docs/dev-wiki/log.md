@@ -6660,3 +6660,33 @@ CC0라도 "완전히 동일한 원본 파형을 그대로 쓰는 것" 자체가 
   소리를 직접 들을 수 없다는 한계는 동일하지만, 이번엔 v1→v3까지 실패한
   근본 원인(정현파 재합성)을 명확히 특정하고 다른 합성 기법(그래뉼러)으로
   교체했다는 점에서 이전 두 번의 반복과 기술적으로 다르다.
+
+## 2026-08-10 - README.md 작성 + GitHub Pages 배포 활성화(공모전 제출물 1번 완료)
+
+사용자가 `docs/knowledge/contest-requirements.md`를 참고해 설치/플레이
+방법 README 작성을 요청하고, GitHub Pages가 뭔지 물으며 제출 전 점검을
+요청.
+
+- **README.md 신설**: 게임 소개, 플레이 링크, 플레이 방법(목표/조작/승패
+  조건), 로컬 실행법, `?sandbox=1`/`?sandbox=2` 개발자 도구, 기술 스택,
+  문서 지도, 라이선스(TODO) 섹션 구성.
+- **GitHub Pages 실사용 상태 점검 중 발견**: `has_pages: false` —
+  Pages가 저장소 Settings에서 한 번도 활성화된 적이 없었고, 기존
+  `.github/workflows/deploy-pages.yml`의 과거 실행 3회가 전부
+  "Configure Pages" 단계에서 실패한 뒤 워크플로 자체가
+  `disabled_manually` 상태였음. 저장소도 비공개(private)였음(공모전은
+  공개 권장 또는 심사 계정 초대를 요구).
+  - 사용자 확인(질문 2개) 후 진행: (1) 저장소를 공개로 전환(사전에
+    커밋 이력 전체에 `ghp_` 패턴 유출이 없음을 `git grep`/`git log -p`로
+    확인 후 전환), (2) GitHub REST API로 Pages를 `build_type: workflow`로
+    활성화, 비활성화된 배포 워크플로를 재활성화하고
+    `workflow_dispatch`로 즉시 1회 실행.
+  - 실행 결과 전 단계 성공(Checkout/Setup Node/Install/Build/**Configure
+    Pages**/Upload/Deploy) — Pages 활성화가 실제 원인이었음을 확인.
+    `https://gilgarad.github.io/game_project1/`이 실제로 200 OK로 응답,
+    타이틀 `Warcrest` 정상 로드 확인.
+  - README의 플레이 링크를 실제 URL로 채워 넣음.
+- 이 저장소가 담당하는 공모전 제출물은 5개 중 **"1. 플레이 가능한 빌드
+  및 소스 코드"** — 링크 활성화로 이 항목은 완료됨. 나머지(플레이
+  영상/게임 소개 PDF/AI 활용 PDF/팀원 롤 PDF)는 사용자에게 체크리스트로
+  안내(플레이 영상은 사용자가 직접 진행 중이라 제외).

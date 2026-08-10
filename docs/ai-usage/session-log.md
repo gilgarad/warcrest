@@ -6704,3 +6704,41 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   (oscillator-based resynthesis, structurally mismatched reference
   material) rather than repeating the same category of fix with different
   parameters.
+
+## 2026-08-10 - README + GitHub Pages: found and fixed submission-blocking gaps in the "playable build" deliverable
+
+- **Agent/tool**: Claude Code (Sonnet 5).
+- **User direction (원문)**: "이제 나름 잘 고친 거 같아. 자 좀 확인해줘야
+  하는 게 있어. 이제 이게 사실 컴페티션이라고 해야하나? 공모전에 나가는
+  게임인데 그 정보도 어딘가 지금 문서로 저장되어 있어. 그거 읽고 나서 이거
+  게임을 위해 설치방법 및 접속 & 플레이 방법 쓰는 md파일 (readme 같은거?)
+  써줘야 할 거 같아. 그리고 github pages도 링크 공유하라고 하는데, 그게
+  뭐야? ... 게임 플레이 동영상 저장하고 유튜브 올리는 건 내가 지금 알아서
+  할 거니 그거 이외에 해야할 것들 좀 점검해줘"
+- **AI action**: Read `docs/knowledge/contest-requirements.md` (already
+  saved from an earlier session), wrote `README.md` (game intro, play
+  link, how-to-play, local setup, `?sandbox=1`/`?sandbox=2` dev tools,
+  tech stack, doc map). While explaining what GitHub Pages actually is,
+  audited the repo's real deployment state via the GitHub REST API
+  (no `gh` CLI available) and found two submission blockers the user
+  didn't know about: the repo was **private** (contest wants public or a
+  reviewer-account invite), and GitHub Pages had **never been enabled** —
+  the existing `deploy-pages.yml` workflow's 3 prior runs had all failed
+  at the "Configure Pages" step for exactly that reason, and the workflow
+  had since been auto/manually disabled. Reported both plainly rather
+  than assuming permission to fix them, then used `AskUserQuestion` to
+  get explicit sign-off before touching repo-level settings. After
+  confirmation: verified no token/secret was ever committed to the repo
+  (`git grep`/`git log -p` for the `ghp_` pattern, zero hits) before
+  flipping visibility to public via the API, enabled Pages with
+  `build_type: workflow`, re-enabled the disabled workflow, and triggered
+  a `workflow_dispatch` run. Polled the run to completion — every step
+  including the previously-failing "Configure Pages" succeeded — and
+  confirmed `https://gilgarad.github.io/game_project1/` returns `200 OK`
+  with the game's real HTML. Filled the real URL into `README.md`'s play
+  link.
+- **Verification**: Live workflow run (id `31351566228`) completed with
+  conclusion `success`; live `curl` of the deployed Pages URL returned
+  `HTTP 200` with `<title>Warcrest</title>` present. No source code was
+  touched this turn (`README.md`, this log, and repo/Pages settings only),
+  so no `tsc`/`test`/`build` re-run was needed.
