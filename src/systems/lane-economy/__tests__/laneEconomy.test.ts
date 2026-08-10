@@ -3,6 +3,8 @@ import {
   advanceTeamAge,
   canAfford,
   createTeamState,
+  getBaseDefense,
+  getBaseMaxHp,
   getAgeUpCost,
   makeResourceMap,
   payCost,
@@ -51,6 +53,15 @@ describe("lane economy", () => {
     expect(advanceTeamAge(team)).toBe(true);
     expect(team.ageId).toBe("bronze");
     expect(team.selectedProductionAgeId).toBe("bronze");
+  });
+
+  it("scales main-base HP and defense by 1.5x every age", () => {
+    expect(getBaseMaxHp("stone")).toBe(400);
+    expect(getBaseMaxHp("bronze")).toBe(600);
+    expect(getBaseMaxHp("iron_early")).toBe(900);
+    expect(getBaseDefense("stone")).toBe(10);
+    expect(getBaseDefense("bronze")).toBe(15);
+    expect(getBaseDefense("iron_early")).toBe(23);
   });
 
 });

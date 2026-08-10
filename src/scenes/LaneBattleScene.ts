@@ -129,6 +129,8 @@ import {
   advanceTeamAge,
   canAfford,
   createTeamState,
+  getBaseDefense,
+  getBaseMaxHp,
   getAgeUpCost,
   makeResourceMap,
   payCost,
@@ -218,7 +220,7 @@ const WAVE_SUPPORT_TRAIL_PROGRESS = 0.028;
 const CENTRAL_CAPTURE_PROGRESS = 0.588;
 const DEFAULT_VERIFICATION_SEED = "warcrest-central-v1";
 const QUERY_PARAMS = new URLSearchParams(window.location.search);
-const DEV_MODE_AVAILABLE = !window.location.hostname.endsWith("github.io") && QUERY_PARAMS.get("dev") === "1";
+const DEV_MODE_AVAILABLE = !window.location.hostname.endsWith("github.io");
 const DEFAULT_DEV_MODE_ENABLED = false;
 const FACING_DEAD_ZONE_WORLD_PX = 1.5;
 const HORIZONTAL_FACING_FLIP_DEAD_ZONE_WORLD_PX = 22;
@@ -923,7 +925,7 @@ export class LaneBattleScene extends Phaser.Scene {
         this.scene.pause();
       },
       setPlayerBaseHpRatio: (ratio: number) => {
-        this.player.baseHp = PLAYER_BASE_HP * Phaser.Math.Clamp(ratio, 0, 1);
+        this.player.baseHp = this.player.baseMaxHp * Phaser.Math.Clamp(ratio, 0, 1);
         this.refreshUi();
         this.publishDebug();
       },
@@ -1710,7 +1712,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.audioWiring.update(this.elapsedSec, {
       engagedUnits,
       activeProjectiles: this.activeProjectiles.size,
-      playerBaseHpRatio: this.player.baseHp / PLAYER_BASE_HP,
+      playerBaseHpRatio: this.player.baseMaxHp > 0 ? this.player.baseHp / this.player.baseMaxHp : 1,
       playerFortressHpRatio: playerTower
         ? playerTower.built ? playerTower.hp / playerTower.maxHp : 0
         : 1,
@@ -3499,7 +3501,10 @@ export class LaneBattleScene extends Phaser.Scene {
     }
   }
 
-  private checkBasePressure(_deltaSec: number): void {
+  private checkBasePressure(deltaSec: number): void {
+    this.player.baseAttackTimerSec -= deltaSec;
+    this.enemy.baseAttackTimerSec -= deltaSec;
+
     const playerThreat = this.units.filter((unit) =>
       unit.team === "enemy"
       && this.baseDistance(unit, "player") <= Math.max(unit.range * RANGE_TO_PROGRESS, MIN_TOWER_STANDOFF_PROGRESS) + MELEE_ENGAGE_TOLERANCE_PROGRESS,
@@ -3508,6 +3513,9 @@ export class LaneBattleScene extends Phaser.Scene {
       unit.team === "player"
       && this.baseDistance(unit, "enemy") <= Math.max(unit.range * RANGE_TO_PROGRESS, MIN_TOWER_STANDOFF_PROGRESS) + MELEE_ENGAGE_TOLERANCE_PROGRESS,
     );
+
+    this.tryBaseDefenseVolley(this.player);
+    this.tryBaseDefenseVolley(this.enemy);
 
     playerThreat.forEach((unit) => this.tryAttackBase(unit, this.player));
     enemyThreat.forEach((unit) => this.tryAttackBase(unit, this.enemy));
@@ -3523,14 +3531,15 @@ export class LaneBattleScene extends Phaser.Scene {
     const target = this.getBaseAnchor(targetTeam.id, unit.laneId, targetProgress);
     const damage = Math.max(1, Math.round(5.8 * unit.attackCooldownSec * (1 - unit.attrition)));
     const applyDamage = () => {
-      targetTeam.baseHp = Math.max(0, targetTeam.baseHp - damage);
+      const mitigatedDamage = Math.max(1, Math.round(damage - targetTeam.baseDefense));
+      targetTeam.baseHp = Math.max(0, targetTeam.baseHp - mitigatedDamage);
       this.playWorldSfx(
         "sfx.combat.towerHit",
         target.x,
         target.y,
         `impact:base:${targetTeam.id}:${unit.id}:${Math.round(this.elapsedSec * 1000)}`,
       );
-      this.spawnToast(`${damage}`, target.x, target.y - 88, unit.team === "player" ? "#8fd2ff" : "#ffb4b4");
+      this.spawnToast(`${mitigatedDamage}`, target.x, target.y - 88, unit.team === "player" ? "#8fd2ff" : "#ffb4b4");
     };
 
     if (this.isRangedUnit(unit)) {
@@ -3542,6 +3551,42 @@ export class LaneBattleScene extends Phaser.Scene {
     } else {
       this.startMeleeAttack(unit, target.x, target.y, "structure", applyDamage);
     }
+  }
+
+  private tryBaseDefenseVolley(team: TeamState): void {
+    if (team.baseAttackTimerSec > 0) return;
+    const researchState = this.getResearchStateForTeam(team.id);
+    const spec = createTowerAttackPattern(team.ageId, researchState);
+    const targetProgress = team.id === "player" ? 0 : 1;
+    const threats = this.units
+      .filter((unit) =>
+        unit.team !== team.id
+        && this.baseDistance(unit, team.id) <= spec.rangeProgress
+      )
+      .sort((a, b) => this.baseDistance(a, team.id) - this.baseDistance(b, team.id))
+      .slice(0, spec.projectileCount);
+    if (threats.length === 0) return;
+
+    team.baseAttackTimerSec = spec.cooldownSec;
+    const start = this.getBaseAnchor(team.id, this.primaryLaneSpec.id, targetProgress);
+    threats.forEach((target, index) => {
+      const anchor = this.getUnitProjectileAnchor(target);
+      const centeredIndex = index - (threats.length - 1) / 2;
+      const launch = start.clone().add(new Phaser.Math.Vector2(centeredIndex * spec.spreadWorldPx, -Math.abs(centeredIndex) * 4 - 54));
+      this.playWorldSfx(
+        "sfx.combat.rangedFire",
+        launch.x,
+        launch.y,
+        `base:${team.id}:fire:${target.id}:${Math.round(this.elapsedSec * 1000)}:${index}`,
+      );
+      this.launchProjectile(
+        launch,
+        anchor,
+        spec.projectileKey,
+        () => this.applyDamageToUnit(target, spec.perProjectileDamage, team.id === "player" ? "#8fd2ff" : "#ffb4b4"),
+        1.04,
+      );
+    });
   }
 
   private killUnit(unit: LaneUnit): void {
@@ -4317,7 +4362,11 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private advanceAge(team: TeamState): void {
     const previousAgeId = team.ageId;
+    const previousBaseRatio = team.baseMaxHp > 0 ? team.baseHp / team.baseMaxHp : 1;
     if (!advanceTeamAge(team)) return;
+    team.baseMaxHp = getBaseMaxHp(team.ageId, team.id === "player" ? PLAYER_BASE_HP : ENEMY_BASE_HP);
+    team.baseHp = Math.max(1, Math.round(team.baseMaxHp * Phaser.Math.Clamp(previousBaseRatio, 0, 1)));
+    team.baseDefense = getBaseDefense(team.ageId);
     this.applyTowerResearchCarryover(team, previousAgeId, team.ageId);
     if (getAge(team.ageId).immediateWaveTokenGranted) this.grantInstantWaveToken(team);
     if (team.id === "player") {
@@ -4369,8 +4418,8 @@ export class LaneBattleScene extends Phaser.Scene {
       enemy: this.enemy,
       playerUnitCount: this.units.filter((unit) => unit.team === "player").length,
       enemyUnitCount: this.units.filter((unit) => unit.team === "enemy").length,
-      playerBaseMaxHp: PLAYER_BASE_HP,
-      enemyBaseMaxHp: ENEMY_BASE_HP,
+      playerBaseMaxHp: this.player.baseMaxHp,
+      enemyBaseMaxHp: this.enemy.baseMaxHp,
       opponentCount: PLAYER_OPPONENT_COUNT,
       selectedCapturePoint: selected,
       selectedDefenseTower: selectedTower,
@@ -4622,8 +4671,8 @@ export class LaneBattleScene extends Phaser.Scene {
           engageGap: ENGAGE_GAP,
           captureRadiusProgress: CAPTURE_RADIUS_PROGRESS,
           captureRatePerSec: CAPTURE_RATE_PER_SEC,
-          playerBaseHp: PLAYER_BASE_HP,
-          enemyBaseHp: ENEMY_BASE_HP,
+          playerBaseHp: this.player.baseMaxHp,
+          enemyBaseHp: this.enemy.baseMaxHp,
           laneRowSpacing: LANE_ROW_SPACING,
         },
         terrain: {

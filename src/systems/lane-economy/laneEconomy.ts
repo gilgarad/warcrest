@@ -1,4 +1,4 @@
-import { AGES, type AgeId } from "../../data/ages";
+import { AGES, getAgeIndex, type AgeId } from "../../data/ages";
 import {
   BASE_RESOURCE_TICK_SEC,
   RESEARCH_RESOURCE_TICK_SEC,
@@ -14,6 +14,9 @@ export type WorkerResourceId = "gold" | "wood" | "food" | "metal";
 export interface TeamState {
   id: TeamId;
   baseHp: number;
+  baseMaxHp: number;
+  baseDefense: number;
+  baseAttackTimerSec: number;
   ageId: AgeId;
   selectedProductionAgeId: AgeId;
   resources: Record<ResourceId, number>;
@@ -44,6 +47,9 @@ export function createTeamState(
   return {
     id,
     baseHp,
+    baseMaxHp: baseHp,
+    baseDefense: getBaseDefense("stone"),
+    baseAttackTimerSec: 0.35,
     ageId: "stone",
     selectedProductionAgeId: "stone",
     resources,
@@ -62,6 +68,16 @@ export function createTeamState(
     lastFoodShortageNoticeSec: -100,
     pendingBonusWaves: 0,
   };
+}
+
+const BASE_DEFENSE_AT_STONE = 10;
+
+export function getBaseMaxHp(ageId: AgeId, startingHp = 400): number {
+  return Math.max(1, Math.round(startingHp * (1.5 ** getAgeIndex(ageId))));
+}
+
+export function getBaseDefense(ageId: AgeId, startingDefense = BASE_DEFENSE_AT_STONE): number {
+  return Math.max(0, Math.round(startingDefense * (1.5 ** getAgeIndex(ageId))));
 }
 
 export function canAfford(resources: Record<ResourceId, number>, cost: ResourceCost): boolean {

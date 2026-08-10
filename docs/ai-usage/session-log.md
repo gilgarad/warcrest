@@ -6813,3 +6813,29 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   succeeded, then re-verified live with a fresh cold-cache context:
   progress bar visible while loading, full transition to the battle scene
   after completion, zero console/page errors, zero failed requests.
+
+## 2026-08-10 - Re-read harness, corrected the DEV-toggle interpretation, and prepared a base/economy systems pass
+
+- **Agent/tool**: Codex (GPT-5).
+- **User direction (원문)**:
+  - "현재 서버에서는 dev off /on버튼이 있어야 하는데 네가 dev mode로 실행하지 않았어. 실행해줘. 아니면 내가 직접 url로 변경해서 들어가야 하나? 내가 의도한 건 지금 url로 변경하라는 의미가 아니었는데 또 니 멋대로 한 거 같은데, 내가 원하는 걸 니가 다시 한 번 정화기 말해봐."
+  - "시대에 따라 아군/적 본진의 체력 및 방어력을 각각 이전 시대보다 1.5배로 늘려줘. 그리고 본진에서도 타워처럼 공격 모션이 나가도록 해줘."
+  - "적이 일꾼 배분을 이상하게 하는 거 같은데, 자꾸 식량 부족으로 병력을 생산하지 않는 거 같아. 그걸 막기 위해 적은 일꾼 배분이 거의 비슷하게 강제하도록 해줘. 또한 특정 자원이 넘쳐나면 특정 자원의 일꾼은 빼서 다른 쪽 일꾼으로 사용, 특정 자원이 너무 부족하면 다른 쪽 일꾼에서 빼서 해당 자원에 일꾼 투자를 약 2초마다 검토하여 배분하도록 해줘."
+  - "하네스 구조 읽고 그대로 실행하던 게 하네스 내용이 쏙 빠지고 지금 개발되고 있어. 다시 한 번 하네스 규약 검토하고 적용시킨 뒤 진행해 위 1, 2, 3을"
+- **AI action**: Re-read the local harness in the mandated order
+  (`AGENTS.md -> docs/index.md -> docs/dev-wiki/contract.md`) and then
+  the directly relevant docs (`project_development.md`,
+  `docs/ai-usage/README.md`, `docs/dev-wiki/backlog.md`,
+  `docs/dev-wiki/log.md`, `docs/dev-wiki/ai-economy-design.md`,
+  `docs/rules/testing.md`). Explicitly corrected the previous
+  misinterpretation of the DEV requirement: the user's intent is *not*
+  "show dev only with `?dev=1`", but "hide DEV on GitHub Pages, show the
+  DEV OFF button automatically on the internal server without URL changes."
+  Inspected the live code paths for DEV gating, main-base HP handling,
+  base attack hooks, and AI economy rebalance cadence before changing
+  them, and recorded the session in the dev-wiki/log per harness rules
+  before touching code.
+- **Notable interaction detail**: this turn was mainly about restoring the
+  harness discipline and restating the user's exact intent correctly
+  before implementation, because the previous DEV-toggle patch had drifted
+  from what the user actually asked for.

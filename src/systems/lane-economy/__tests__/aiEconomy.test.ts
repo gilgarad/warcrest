@@ -42,7 +42,7 @@ describe("AI economy pacing", () => {
   });
 
   it("directs a freshly hired worker toward food when wave upkeep dominates", () => {
-    const team = createTeamState("enemy", makeResourceMap(0, 0, 0, 0), 400);
+    const team = createTeamState("enemy", makeResourceMap(120, 120, 0, 120), 400);
     team.workers.gold = 5;
     team.workers.wood = 5;
     team.workers.metal = 5;
@@ -60,7 +60,19 @@ describe("AI economy pacing", () => {
     const plan = planAiWorkerRebalance(team, 0, state);
     expect(plan?.from).toBe("food");
     state.lastRebalanceSec = 0;
-    expect(planAiWorkerRebalance(team, 3, state)).toBeNull();
+    expect(planAiWorkerRebalance(team, 1, state)).toBeNull();
+  });
+
+  it("pulls a worker into food quickly when food is critically short", () => {
+    const team = createTeamState("enemy", makeResourceMap(120, 120, 0, 120), 400);
+    team.workers.gold = 3;
+    team.workers.wood = 2;
+    team.workers.food = 1;
+    team.workers.metal = 2;
+    const state = createAiEconomyState();
+    const plan = planAiWorkerRebalance(team, 10, state);
+    expect(plan?.to).toBe("food");
+    expect(plan?.from).not.toBe("food");
   });
 
   it("never proposes stripping the sole remaining assigned worker", () => {

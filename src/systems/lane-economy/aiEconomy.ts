@@ -23,7 +23,7 @@ export function createAiEconomyState(): AiEconomyState {
 
 const WORKER_RESOURCE_IDS: WorkerResourceId[] = ["gold", "wood", "food", "metal"];
 const HIRE_INTERVAL_SEC = 6;
-const REBALANCE_INTERVAL_SEC = 9;
+const REBALANCE_INTERVAL_SEC = 2;
 /** Fraction of the next age-up cost kept in reserve before spending on anything else, so hiring/rebalancing never permanently starves the age-up the time-threshold gate is trying to reach. */
 const AGE_UP_RESERVE_FRACTION = 0.15;
 
@@ -63,12 +63,53 @@ function canAffordWithAgeUpReserve(team: TeamState, cost: ResourceCost): boolean
 export function computeResourceNeedWeights(team: TeamState): Record<WorkerResourceId, number> {
   const ageUpCost = nextAgeUpCost(team);
   const balance = getAgeBalance(team.ageId);
+  const averageAgeUpNeed = ageUpCost
+    ? (ageUpCost.gold + ageUpCost.wood + ageUpCost.metal) / 3
+    : 1;
   return {
-    gold: (ageUpCost?.gold ?? 0) + 1,
-    wood: (ageUpCost?.wood ?? 0) + 1,
-    metal: (ageUpCost?.metal ?? 0) + 1,
-    food: Math.max(1, balance.baseWaveFoodCost) * 4,
+    gold: Math.max(averageAgeUpNeed * 0.8, (ageUpCost?.gold ?? 0) + 1),
+    wood: Math.max(averageAgeUpNeed * 0.8, (ageUpCost?.wood ?? 0) + 1),
+    metal: Math.max(averageAgeUpNeed * 0.8, (ageUpCost?.metal ?? 0) + 1),
+    food: Math.max(averageAgeUpNeed * 0.9, Math.max(1, balance.baseWaveFoodCost) * 6),
   };
+}
+
+function getDesiredResourceReserve(team: TeamState, role: WorkerResourceId): number {
+  const ageUpCost = nextAgeUpCost(team);
+  const balance = getAgeBalance(team.ageId);
+  if (role === "food") return Math.max(18, balance.baseWaveFoodCost * 3);
+  const cost = ageUpCost?.[role] ?? 0;
+  return Math.max(18, Math.round(cost * 0.28));
+}
+
+function getCriticalShortageRole(team: TeamState): WorkerResourceId | null {
+  const deficits = WORKER_RESOURCE_IDS
+    .map((role) => {
+      const desired = getDesiredResourceReserve(team, role);
+      const have = team.resources[role];
+      return { role, ratio: desired <= 0 ? 0 : (desired - have) / desired };
+    })
+    .sort((a, b) => b.ratio - a.ratio);
+  return deficits[0] && deficits[0].ratio > 0.22 ? deficits[0].role : null;
+}
+
+function getSurplusRoleForRebalance(team: TeamState, protectedRole: WorkerResourceId): WorkerResourceId | null {
+  const surpluses = WORKER_RESOURCE_IDS
+    .filter((role) => role !== protectedRole && team.workers[role] > 1)
+    .map((role) => {
+      const desired = getDesiredResourceReserve(team, role);
+      const have = team.resources[role];
+      return {
+        role,
+        ratio: desired <= 0 ? 0 : (have - desired) / desired,
+        workers: team.workers[role],
+      };
+    })
+    .sort((a, b) => {
+      if (Math.abs(b.ratio - a.ratio) > 0.001) return b.ratio - a.ratio;
+      return b.workers - a.workers;
+    });
+  return surpluses[0] && (surpluses[0].ratio > 0.35 || surpluses[0].workers >= 3) ? surpluses[0].role : null;
 }
 
 export function shouldAiHireWorker(team: TeamState, elapsedSec: number, state: AiEconomyState): boolean {
@@ -84,6 +125,8 @@ export function shouldAiHireResearchWorker(team: TeamState): boolean {
 
 /** Which currently-assigned resource role has the largest shortfall vs. its need weight — used to place a freshly hired idle worker. */
 export function pickNeediestResourceRole(team: TeamState): WorkerResourceId {
+  const criticalShortage = getCriticalShortageRole(team);
+  if (criticalShortage) return criticalShortage;
   const weights = computeResourceNeedWeights(team);
   const totalAssigned = WORKER_RESOURCE_IDS.reduce((sum, role) => sum + team.workers[role], 0);
   const totalWeight = WORKER_RESOURCE_IDS.reduce((sum, role) => sum + weights[role], 0);
@@ -110,6 +153,12 @@ export function planAiWorkerRebalance(
   const totalAssigned = WORKER_RESOURCE_IDS.reduce((sum, role) => sum + team.workers[role], 0);
   if (totalAssigned <= 1) return null;
 
+  const criticalShortage = getCriticalShortageRole(team);
+  if (criticalShortage) {
+    const donor = getSurplusRoleForRebalance(team, criticalShortage);
+    if (donor) return { from: donor, to: criticalShortage };
+  }
+
   const weights = computeResourceNeedWeights(team);
   const totalWeight = WORKER_RESOURCE_IDS.reduce((sum, role) => sum + weights[role], 0);
   const gaps: { role: WorkerResourceId; gap: number }[] = WORKER_RESOURCE_IDS.map((role) => {
@@ -127,8 +176,15 @@ export function planAiWorkerRebalance(
   const worst = removable.reduce((a, b) => (b.gap < a.gap ? b : a));
 
   if (best.role === worst.role) return null;
+  const workerCounts = WORKER_RESOURCE_IDS.map((role) => ({ role, count: team.workers[role] }))
+    .sort((a, b) => b.count - a.count);
+  const spread = workerCounts[0].count - workerCounts[workerCounts.length - 1].count;
+  if (spread >= 2 && workerCounts[0].role !== workerCounts[workerCounts.length - 1].role && team.workers[workerCounts[0].role] > 1) {
+    return { from: workerCounts[0].role, to: workerCounts[workerCounts.length - 1].role };
+  }
+
   // Only move a worker when the imbalance is large enough to matter — avoids
   // shuffling a single worker back and forth every cycle.
-  if (best.gap - worst.gap < 0.18) return null;
+  if (best.gap - worst.gap < 0.1) return null;
   return { from: worst.role, to: best.role };
 }

@@ -6759,3 +6759,29 @@ CC0라도 "완전히 동일한 원본 파형을 그대로 쓰는 것" 자체가 
   트리거 → 성공. **배포된 사이트에서 새 콜드 캐시 컨텍스트로 최종
   재검증**: 진행률 바 노출 확인, 20초 대기 후 클릭 → 전장 전환 성공,
   콘솔/페이지 에러 0건, 실패한 요청 0건.
+
+## 2026-08-10 - DEV 버튼 정책 재정렬 + 본진 스케일/공격 + 적 경제 재배분 강화 착수
+
+사용자 지시: 내부 서버에서는 DEV 버튼이 보여야 하는데, URL에 `?dev=1`을
+붙여야만 나타나게 바뀐 건 의도와 다르다. 배포판에서는 숨기되 내부 실행은
+기본 OFF 상태의 DEV 버튼을 항상 보이게 되돌리고, 본진 체력/방어력 시대
+스케일과 본진 공격 모션, 적의 식량 부족을 줄이기 위한 더 공격적인 일꾼
+재배분까지 함께 수정하라는 요청.
+
+- 하네스 순서대로 `AGENTS.md -> docs/index.md -> docs/dev-wiki/contract.md`
+  를 다시 읽고, 관련 문서로 `project_development.md`,
+  `docs/ai-usage/README.md`, `docs/dev-wiki/backlog.md`,
+  `docs/dev-wiki/ai-economy-design.md`, `docs/rules/testing.md`를
+  재확인했다.
+- 현재 구현 점검 결과:
+  - DEV 버튼은 `src/scenes/LaneBattleScene.ts`에서
+    `!github.io && ?dev=1` 조건으로 제한되어 있었고, 이것이 사용자 의도와
+    어긋났다.
+  - 본진은 `baseHp`만 있고 `baseDefense`/`baseMaxHp`/본진 자체의
+    원거리 반격 주기가 없어, 시대 스케일과 타워형 공격을 넣으려면 팀 상태
+    구조와 HUD 비율 계산을 함께 바꿔야 한다.
+  - 적 경제는 이미 `gold/wood/food/metal/research`를 별도 자원으로
+    관리하지만, `aiEconomy.ts`의 재배분 주기가 9초로 느리고 age-up 가중치
+    중심이라 식량 부족에 둔감하다.
+- 이 항목은 fallback 기록이며, 실제 코드 수정/검증 결과는 다음 동일 날짜
+  항목에 이어 기록한다.
