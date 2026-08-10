@@ -4457,15 +4457,25 @@ export class LaneBattleScene extends Phaser.Scene {
     this.hud.setStrategicActionLabel("use-instant-wave", `즉시 웨이브\n토큰 ${this.player.instantWaveTokens}`);
 
     this.hud.setCaptureActionLabel("rebuild-defense-tower", "타워 재건");
-    this.hud.setCaptureActionCost("rebuild-defense-tower", getDefenseTowerBuildCost(this.player.ageId));
+    const rebuildTowerCost = getDefenseTowerBuildCost(this.player.ageId);
+    this.hud.setCaptureActionCost("rebuild-defense-tower", rebuildTowerCost);
+    this.hud.setCaptureActionEnabled("rebuild-defense-tower", this.devModeEnabled || canAfford(this.player.resources, rebuildTowerCost));
     this.hud.setCaptureActionLabel("build-defense-tower", "타워");
-    this.hud.setCaptureActionCost("build-defense-tower", getBuildingCost("defense_tower", this.player.ageId));
+    const buildTowerCost = getBuildingCost("defense_tower", this.player.ageId);
+    this.hud.setCaptureActionCost("build-defense-tower", buildTowerCost);
+    this.hud.setCaptureActionEnabled("build-defense-tower", this.devModeEnabled || canAfford(this.player.resources, buildTowerCost));
     this.hud.setCaptureActionLabel("build-supply-depot", "병참");
-    this.hud.setCaptureActionCost("build-supply-depot", getBuildingCost("supply_depot", this.player.ageId));
+    const supplyDepotCost = getBuildingCost("supply_depot", this.player.ageId);
+    this.hud.setCaptureActionCost("build-supply-depot", supplyDepotCost);
+    this.hud.setCaptureActionEnabled("build-supply-depot", this.devModeEnabled || canAfford(this.player.resources, supplyDepotCost));
     this.hud.setCaptureActionLabel("build-mint", "조달소");
-    this.hud.setCaptureActionCost("build-mint", getBuildingCost("mint", this.player.ageId));
+    const mintCost = getBuildingCost("mint", this.player.ageId);
+    this.hud.setCaptureActionCost("build-mint", mintCost);
+    this.hud.setCaptureActionEnabled("build-mint", this.devModeEnabled || canAfford(this.player.resources, mintCost));
     this.hud.setCaptureActionLabel("dismantle", "폐기");
-    this.hud.setCaptureActionCost("dismantle", { gold: DISMANTLE_COST_GOLD });
+    const dismantleCost = { gold: DISMANTLE_COST_GOLD };
+    this.hud.setCaptureActionCost("dismantle", dismantleCost);
+    this.hud.setCaptureActionEnabled("dismantle", this.devModeEnabled || canAfford(this.player.resources, dismantleCost));
   }
 
   private toggleDevMode(): void {

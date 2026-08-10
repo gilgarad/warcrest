@@ -224,6 +224,14 @@ export class LaneBattleHudView {
     this.applyCostRow(this.captureActionButtons.get(actionId), cost);
   }
 
+  setCaptureActionEnabled(actionId: CapturePointAction | DefenseTowerAction, enabled: boolean): void {
+    const button = this.captureActionButtons.get(actionId);
+    if (!button) return;
+    button.rect.setFillStyle(enabled ? 0x1d2d47 : 0x3b2222, enabled ? 0.95 : 0.92);
+    button.rect.setStrokeStyle(2, enabled ? 0xd6b979 : 0xd07c7c, enabled ? 0.65 : 0.8);
+    button.text.setColor(enabled ? "#f3f7fb" : "#ffd4d4");
+  }
+
   setDevMode(active: boolean): void {
     if (!this.devToggleButton || !this.devResearchButton) return;
     if (!this.devToolsVisible) {
@@ -371,14 +379,16 @@ export class LaneBattleHudView {
     this.capturePanelTitle = this.scene.add.text(-1000, -1000, "", { fontFamily: "Georgia, serif", fontSize: "18px", color: "#f4e6c5" }).setVisible(false);
     this.capturePanelBody = this.scene.add.text(-1000, -1000, "", { fontFamily: "sans-serif", fontSize: "14px", color: "#d8e7f6" }).setVisible(false);
 
-    const captureActionX = centerX + 254;
-    const captureActionY = this.canvasHeight - 166;
-    const captureActionGapY = 40;
-    this.captureActionButtons.set("rebuild-defense-tower", this.createActionButton(captureActionX, captureActionY, 150, 32, "타워 재건", this.callbacks.rebuildDefenseTower));
-    this.captureActionButtons.set("build-defense-tower", this.createActionButton(captureActionX, captureActionY + captureActionGapY, 150, 32, "타워", this.callbacks.buildDefenseTower));
-    this.captureActionButtons.set("build-supply-depot", this.createActionButton(captureActionX, captureActionY + captureActionGapY * 2, 150, 32, "병참", this.callbacks.buildSupplyDepot));
-    this.captureActionButtons.set("build-mint", this.createActionButton(captureActionX, captureActionY + captureActionGapY * 3, 150, 32, "조달소", this.callbacks.buildMint));
-    this.captureActionButtons.set("dismantle", this.createActionButton(captureActionX, captureActionY + captureActionGapY * 4, 150, 28, "폐기", this.callbacks.dismantle));
+    const captureActionX = centerX + 256;
+    const captureActionY = this.canvasHeight - 212;
+    const captureActionGapY = 56;
+    const captureActionWidth = 198;
+    const captureActionHeight = 44;
+    this.captureActionButtons.set("rebuild-defense-tower", this.createActionButton(captureActionX, captureActionY, captureActionWidth, captureActionHeight, "타워 재건", this.callbacks.rebuildDefenseTower));
+    this.captureActionButtons.set("build-defense-tower", this.createActionButton(captureActionX, captureActionY + captureActionGapY, captureActionWidth, captureActionHeight, "타워", this.callbacks.buildDefenseTower));
+    this.captureActionButtons.set("build-supply-depot", this.createActionButton(captureActionX, captureActionY + captureActionGapY * 2, captureActionWidth, captureActionHeight, "병참", this.callbacks.buildSupplyDepot));
+    this.captureActionButtons.set("build-mint", this.createActionButton(captureActionX, captureActionY + captureActionGapY * 3, captureActionWidth, captureActionHeight, "조달소", this.callbacks.buildMint));
+    this.captureActionButtons.set("dismantle", this.createActionButton(captureActionX, captureActionY + captureActionGapY * 4, captureActionWidth, captureActionHeight, "폐기", this.callbacks.dismantle));
     this.devToggleButton = this.createActionButton(42, 846, 94, 34, "DEV OFF", this.callbacks.toggleDevMode);
     this.devResearchButton = this.createActionButton(42, 804, 94, 34, "연구 +25", this.callbacks.grantDevResearch);
     this.devResearchButton.rect.setVisible(false);

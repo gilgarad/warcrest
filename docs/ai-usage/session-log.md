@@ -6839,3 +6839,18 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
   harness discipline and restating the user's exact intent correctly
   before implementation, because the previous DEV-toggle patch had drifted
   from what the user actually asked for.
+
+## 2026-08-10 - Wired capture/tower action buttons to the same affordability colors as strategic buttons
+
+- **Agent/tool**: Codex (GPT-5).
+- **User direction (원문)**: "해당 거점 클릭했을 때 지을 수 있는 버튼도
+  자원이 있고 없고에 따라 빨간색 배경으로 변경되도록 해야해. 지금은
+  자원이 부족한데도 마치 지을 수 있는 것처럼 파란색 바탕 버튼으로
+  나타나고 있어"
+- **AI action**: Confirmed the root cause in code rather than guessing:
+  strategic buttons already had `setStrategicActionEnabled()` styling, but
+  capture/tower actions only refreshed their cost row and never got an
+  enabled/disabled visual state. Added the same enabled-state method for
+  capture/tower actions and planned to feed it from `canAfford()` in
+  `LaneBattleScene.refreshHudActionLabels()` so insufficient resources turn
+  the button red immediately instead of still reading as buildable.
