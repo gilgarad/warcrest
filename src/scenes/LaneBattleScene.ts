@@ -218,8 +218,8 @@ const WAVE_SUPPORT_TRAIL_PROGRESS = 0.028;
 const CENTRAL_CAPTURE_PROGRESS = 0.588;
 const DEFAULT_VERIFICATION_SEED = "warcrest-central-v1";
 const QUERY_PARAMS = new URLSearchParams(window.location.search);
-const DEV_MODE_AVAILABLE = !window.location.hostname.endsWith("github.io");
-const DEFAULT_DEV_MODE_ENABLED = DEV_MODE_AVAILABLE && QUERY_PARAMS.get("dev") !== "0";
+const DEV_MODE_AVAILABLE = !window.location.hostname.endsWith("github.io") && QUERY_PARAMS.get("dev") === "1";
+const DEFAULT_DEV_MODE_ENABLED = false;
 const FACING_DEAD_ZONE_WORLD_PX = 1.5;
 const HORIZONTAL_FACING_FLIP_DEAD_ZONE_WORLD_PX = 22;
 const COMBAT_FACING_HOLD_SEC = 0.2;
@@ -1800,7 +1800,7 @@ export class LaneBattleScene extends Phaser.Scene {
         if (towerDistance > attackRange) {
           const towerSlot = this.findStructureAttackSlot(unit, enemyTower.progress);
           if (towerSlot) {
-            this.moveUnitTowardSlot(unit, deltaSec, towerSlot);
+            this.moveUnitTowardSlot(unit, deltaSec, towerSlot, enemyTower.progress);
             return;
           }
           if (this.isMeleeUnit(unit) && this.tryShiftLane(unit)) {
@@ -1816,7 +1816,7 @@ export class LaneBattleScene extends Phaser.Scene {
             const needsReposition = progressBetween(unit.progress, towerSlot.progress) > 0.0025
               || Math.abs(unit.laneRow - towerSlot.laneRow) > 0.22;
             if (needsReposition) {
-              this.moveUnitTowardSlot(unit, deltaSec, towerSlot);
+              this.moveUnitTowardSlot(unit, deltaSec, towerSlot, enemyTower.progress);
               return;
             }
           } else if (this.tryShiftLane(unit)) {
@@ -2336,15 +2336,78 @@ export class LaneBattleScene extends Phaser.Scene {
     return unitDistance + 0.006 < towerDistance;
   }
 
-  private moveUnitTowardSlot(unit: LaneUnit, deltaSec: number, slot: CombatSlot): void {
-    this.setUnitTravelFacing(unit, slot.progress, slot.laneRow);
-    unit.laneRow = Phaser.Math.Linear(unit.laneRow, slot.laneRow, 0.34);
-    unit.progress = this.moveToward(
-      unit.progress,
-      Phaser.Math.Clamp(slot.progress, 0.01, 0.99),
-      unit.speed * UNIT_PROGRESS_SPEED * deltaSec,
-    );
+  private moveUnitTowardSlot(
+    unit: LaneUnit,
+    deltaSec: number,
+    slot: CombatSlot,
+    structureProgress: number,
+    halfDepthProgress: number = TOWER_HALF_DEPTH_PROGRESS,
+    halfWidthRows: number = TOWER_HALF_WIDTH_ROWS,
+  ): void {
+    const dir = unit.team === "player" ? 1 : -1;
+    const friendAhead = this.units
+      .filter((other) =>
+        other.id !== unit.id
+        && other.team === unit.team
+        && other.laneId === unit.laneId
+        && Math.abs(other.laneRow - unit.laneRow) < 0.58,
+      )
+      .filter((other) => (dir > 0 ? other.progress > unit.progress : other.progress < unit.progress))
+      .sort((a, b) => progressBetween(a.progress, unit.progress) - progressBetween(b.progress, unit.progress))[0];
+
+    let effectiveSlot = slot;
+    if (friendAhead && progressBetween(friendAhead.progress, slot.progress) < FRIENDLY_GAP + 0.012) {
+      const alternateSlot = createLaneRowCandidates(slot.laneRow, 6, LANE_SHIFT_STEP)
+        .filter((laneRow) => Math.abs(laneRow - slot.laneRow) > 0.1)
+        .map((laneRow) => ({ progress: slot.progress, laneRow }))
+        .filter((candidate) =>
+          this.canAttackStructureFromSlot(unit, candidate, structureProgress, halfDepthProgress, halfWidthRows)
+          && this.isStructureSlotFree(unit, candidate),
+        )
+        .sort((a, b) => {
+          const aCongestion = this.getFriendlySlotCongestion(unit, a.progress, a.laneRow);
+          const bCongestion = this.getFriendlySlotCongestion(unit, b.progress, b.laneRow);
+          if (Math.abs(aCongestion - bCongestion) > 0.001) return aCongestion - bCongestion;
+          const aBias = Math.abs(a.laneRow - unit.laneRow) + Math.abs(a.laneRow - slot.laneRow) * 0.45;
+          const bBias = Math.abs(b.laneRow - unit.laneRow) + Math.abs(b.laneRow - slot.laneRow) * 0.45;
+          return aBias - bBias;
+        })[0];
+      if (alternateSlot) effectiveSlot = alternateSlot;
+    }
+
+    const rowDelta = Math.abs(unit.laneRow - effectiveSlot.laneRow);
+    const moveStepBase = unit.speed * UNIT_PROGRESS_SPEED * deltaSec;
+    const progressStep = rowDelta > 0.65 ? moveStepBase * 0.62 : moveStepBase;
+    const desiredProgress = Phaser.Math.Clamp(effectiveSlot.progress, 0.01, 0.99);
+    const nextProgress = this.moveToward(unit.progress, desiredProgress, progressStep);
+
+    this.setUnitTravelFacing(unit, desiredProgress, effectiveSlot.laneRow);
+    unit.laneRow = Phaser.Math.Linear(unit.laneRow, effectiveSlot.laneRow, friendAhead ? 0.52 : 0.4);
+    if (friendAhead && Math.abs(friendAhead.laneRow - unit.laneRow) < 0.62) {
+      const packedLimit = dir > 0
+        ? friendAhead.progress - FRIENDLY_GAP
+        : friendAhead.progress + FRIENDLY_GAP;
+      unit.progress = dir > 0
+        ? Math.min(nextProgress, packedLimit)
+        : Math.max(nextProgress, packedLimit);
+    } else {
+      unit.progress = nextProgress;
+    }
     this.keepUnitInPlayableLane(unit);
+  }
+
+  private getFriendlySlotCongestion(unit: LaneUnit, progress: number, laneRow: number): number {
+    const progressWindow = 0.03;
+    return this.units.reduce((score, other) => {
+      if (other.id === unit.id || other.team !== unit.team || other.laneId !== unit.laneId) return score;
+      const progressDistance = progressBetween(other.progress, progress);
+      if (progressDistance >= progressWindow) return score;
+      const rowDistance = Math.abs(other.laneRow - laneRow);
+      if (rowDistance >= 1.2) return score;
+      const progressWeight = 1 - progressDistance / progressWindow;
+      const rowWeight = 1 - Math.min(1, rowDistance / 1.2);
+      return score + progressWeight * rowWeight;
+    }, 0);
   }
 
   private findCombatSlot(unit: LaneUnit, enemy: LaneUnit): CombatSlot | undefined {
@@ -2427,7 +2490,9 @@ export class LaneBattleScene extends Phaser.Scene {
         const slot = { progress, laneRow };
         if (!this.canAttackStructureFromSlot(unit, slot, structureProgress, halfDepthProgress, halfWidthRows)) continue;
         if (!this.isStructureSlotFree(unit, slot)) continue;
+        const congestion = this.getFriendlySlotCongestion(unit, slot.progress, slot.laneRow);
         const score =
+          congestion * (this.isMeleeUnit(unit) ? 1.2 : 0.45) +
           Math.abs(slot.laneRow - unit.laneRow) * 0.28 +
           Math.abs(slot.progress - unit.progress) * 100 +
           Math.abs(slot.laneRow) * (this.isMeleeUnit(unit) ? 0.08 : 0.04);
