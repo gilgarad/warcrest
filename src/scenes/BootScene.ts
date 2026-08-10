@@ -14,7 +14,10 @@ export class BootScene extends Phaser.Scene {
   private autoStart = false;
   private progressText?: Phaser.GameObjects.Text;
   private promptText?: Phaser.GameObjects.Text;
+  private hintText?: Phaser.GameObjects.Text;
   private loadingBox?: Phaser.GameObjects.Rectangle;
+  private progressBarTrack?: Phaser.GameObjects.Rectangle;
+  private progressBarFill?: Phaser.GameObjects.Rectangle;
   private difficultyLabel?: Phaser.GameObjects.Text;
   private difficultyButtons: { rect: Phaser.GameObjects.Rectangle; text: Phaser.GameObjects.Text }[] = [];
   private startBattle?: (difficultyId: DifficultyId) => Promise<void>;
@@ -91,22 +94,46 @@ export class BootScene extends Phaser.Scene {
     }).setOrigin(0.5, 0);
 
     this.loadingBox = this.add
-      .rectangle(width / 2, height / 2 + 166, 320, 62, 0x101a28, 0.92)
+      .rectangle(width / 2, height / 2 + 178, 400, 112, 0x101a28, 0.92)
       .setStrokeStyle(2, 0xd39f3f, 0.62);
     this.promptText = this.add
-      .text(width / 2, height / 2 + 150, "전장 준비 중...", {
+      .text(width / 2, height / 2 + 144, "전장 준비 중...", {
         fontFamily: "sans-serif",
         fontSize: "20px",
         color: "#f7d46c",
       })
       .setOrigin(0.5, 0.5);
+    // A real filled progress bar, not just a percentage number — first-visit
+    // asset loading can take 10-25+ seconds, and a bare number is easy to
+    // miss (users assumed the click did nothing and the game was broken).
+    const barWidth = 300;
+    const barHeight = 18;
+    const barX = width / 2 - barWidth / 2;
+    const barY = height / 2 + 174;
+    this.progressBarTrack = this.add
+      .rectangle(width / 2, barY, barWidth, barHeight, 0x0a0f18, 0.9)
+      .setStrokeStyle(1, 0x5c7291, 0.6);
+    this.progressBarFill = this.add
+      .rectangle(barX, barY, 0, barHeight - 4, 0xf7d46c, 0.95)
+      .setOrigin(0, 0.5);
     this.progressText = this.add
-      .text(width / 2, height / 2 + 182, "자산 0%", {
+      .text(width / 2 + barWidth / 2 + 28, barY, "0%", {
         fontFamily: "sans-serif",
         fontSize: "13px",
-        color: "#b9c7e2",
+        color: "#f7d46c",
+        fontStyle: "bold",
       })
-      .setOrigin(0.5, 0.5);
+      .setOrigin(0.5, 0.5)
+      .setDepth(1);
+    this.hintText = this.add
+      .text(width / 2, height / 2 + 202, "최초 접속 시 자산을 내려받는 데 최대 30초 정도 걸릴 수 있습니다.\n버튼이 나타날 때까지 잠시만 기다려주세요.", {
+        fontFamily: "sans-serif",
+        fontSize: "11px",
+        color: "#8fa3c2",
+        align: "center",
+        lineSpacing: 4,
+      })
+      .setOrigin(0.5, 0);
     this.tweens.add({ targets: this.promptText, alpha: 0.45, duration: 750, yoyo: true, repeat: -1 });
 
     this.difficultyLabel = this.add
@@ -182,8 +209,11 @@ export class BootScene extends Phaser.Scene {
       return;
     }
 
+    const barWidth = this.progressBarTrack?.width ?? 320;
+    const barHeight = this.progressBarFill?.height ?? 14;
     this.load.on("progress", (progress: number) => {
-      this.progressText?.setText(`자산 ${Math.round(progress * 100)}%`);
+      this.progressText?.setText(`${Math.round(progress * 100)}%`);
+      this.progressBarFill?.setSize(barWidth * Phaser.Math.Clamp(progress, 0, 1), barHeight);
     });
     this.load.once("complete", () => {
       this.markBattleAssetsReady();
@@ -196,6 +226,9 @@ export class BootScene extends Phaser.Scene {
     this.loadingBox?.setVisible(false);
     this.promptText?.setVisible(false);
     this.progressText?.setVisible(false);
+    this.progressBarTrack?.setVisible(false);
+    this.progressBarFill?.setVisible(false);
+    this.hintText?.setVisible(false);
     this.difficultyLabel?.setVisible(true);
     this.difficultyButtons.forEach(({ rect, text }) => {
       rect.setVisible(true).setInteractive({ useHandCursor: true });
