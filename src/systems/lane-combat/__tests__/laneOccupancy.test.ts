@@ -14,6 +14,6 @@ describe("lane occupancy", () => {
   });
 
   it("keeps rows inside the playable lane", () => {
-    expect(createLaneRowCandidates(4.8, 3, 0.75).every((row) => row >= -5 && row <= 5)).toBe(true);
+    expect(createLaneRowCandidates(5.8, 3, 0.75).every((row) => row >= -6 && row <= 6)).toBe(true);
   });
 });

@@ -30,6 +30,10 @@ const MAX_COST_ITEMS = 5;
 
 type StrategicActionId = "hire-worker" | "hire-research-worker" | "use-instant-wave" | "age-up";
 
+interface InfoMessageOptions {
+  color?: string;
+}
+
 const HUD_SOURCE_WIDTH = 1672;
 const HUD_TOP_SOURCE_HEIGHT = 160;
 const HUD_BOTTOM_SOURCE_HEIGHT = 220;
@@ -71,6 +75,7 @@ export class LaneBattleHudView {
   private audioSettingsPanel!: AudioSettingsPanel;
   private devToggleButton?: ActionButton;
   private devResearchButton?: ActionButton;
+  private devToolsVisible = true;
   private readonly lastResourceValues = new Map<ResourceId, number>();
 
   constructor(
@@ -93,12 +98,12 @@ export class LaneBattleHudView {
    * surface as a floating toast over the worker/action panel instead of a
    * static line that's either empty or stale.
    */
-  setInfo(text: string): void {
+  setInfo(text: string, options: InfoMessageOptions = {}): void {
     if (!text) return;
     const toast = this.scene.add.text(672, 676, text, {
       fontFamily: "sans-serif",
       fontSize: "20px",
-      color: "#f4e6c5",
+      color: options.color ?? "#f4e6c5",
       stroke: "#132033",
       strokeThickness: 4,
       align: "center",
@@ -221,17 +226,34 @@ export class LaneBattleHudView {
 
   setDevMode(active: boolean): void {
     if (!this.devToggleButton || !this.devResearchButton) return;
+    if (!this.devToolsVisible) {
+      this.devToggleButton.rect.setVisible(false);
+      this.devToggleButton.text.setVisible(false);
+      this.devResearchButton.rect.setVisible(false);
+      this.devResearchButton.text.setVisible(false);
+      this.devToggleButton.rect.disableInteractive();
+      this.devResearchButton.rect.disableInteractive();
+      return;
+    }
     this.devToggleButton.rect.setFillStyle(active ? 0x27503f : 0x3b2a2a, 0.96);
     this.devToggleButton.rect.setStrokeStyle(2, active ? 0x9fe3c4 : 0xd79b9b, 0.75);
+    this.devToggleButton.rect.setVisible(true);
+    this.devToggleButton.text.setVisible(true);
     this.devToggleButton.text.setText(active ? "DEV ON" : "DEV OFF");
     this.devToggleButton.text.setColor(active ? "#eafff2" : "#ffe3e3");
     this.devResearchButton.rect.setVisible(active);
     this.devResearchButton.text.setVisible(active);
+    this.devToggleButton.rect.setInteractive({ useHandCursor: true });
     if (active) {
       this.devResearchButton.rect.setInteractive({ useHandCursor: true });
     } else {
       this.devResearchButton.rect.disableInteractive();
     }
+  }
+
+  setDevToolsVisible(visible: boolean): void {
+    this.devToolsVisible = visible;
+    this.setDevMode(this.devToggleButton?.text.text === "DEV ON");
   }
 
   getCompositionMetrics(): { topHeight: number; bottomHeight: number; openWorldHeight: number; openWorldRatio: number } {

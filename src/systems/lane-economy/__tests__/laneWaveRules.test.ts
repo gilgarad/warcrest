@@ -4,6 +4,7 @@ import {
   commitForcedWaveDeployment,
   commitWaveDeployment,
   createWaveDeploymentPlan,
+  FOOD_SHORTAGE_REPEAT_SEC,
   getInstantWaveEligibility,
   scheduleWaveRetry,
   shouldAnnounceWaveFoodShortage,
@@ -68,9 +69,11 @@ describe("lane wave rules", () => {
 
   it("re-announces food shortage for manual clicks but suppresses duplicate auto-retry spam", () => {
     const team = createTeamState("player", makeResourceMap(0, 0, 0, 0), 400);
-    expect(shouldAnnounceWaveFoodShortage(team, false)).toBe(true);
+    expect(shouldAnnounceWaveFoodShortage(team, false, 10)).toBe(true);
     team.waveBlockedByFood = true;
-    expect(shouldAnnounceWaveFoodShortage(team, false)).toBe(false);
-    expect(shouldAnnounceWaveFoodShortage(team, true)).toBe(true);
+    team.lastFoodShortageNoticeSec = 10;
+    expect(shouldAnnounceWaveFoodShortage(team, false, 11)).toBe(false);
+    expect(shouldAnnounceWaveFoodShortage(team, false, 10 + FOOD_SHORTAGE_REPEAT_SEC)).toBe(true);
+    expect(shouldAnnounceWaveFoodShortage(team, true, 11)).toBe(true);
   });
 });

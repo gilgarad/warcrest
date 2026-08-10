@@ -22,6 +22,7 @@ export interface TeamState {
   nextWaveInSec: number;
   lastWaveElapsedSec: number;
   waveBlockedByFood: boolean;
+  lastFoodShortageNoticeSec: number;
   pendingBonusWaves: number;
 }
 
@@ -58,6 +59,7 @@ export function createTeamState(
     nextWaveInSec: WAVE_INTERVAL_SEC,
     lastWaveElapsedSec: -100,
     waveBlockedByFood: false,
+    lastFoodShortageNoticeSec: -100,
     pendingBonusWaves: 0,
   };
 }

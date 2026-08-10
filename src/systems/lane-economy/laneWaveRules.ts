@@ -27,6 +27,7 @@ export type InstantWaveEligibility = "ready" | "no-token" | "cooldown";
  * wave leaves as soon as the economy catches up.
  */
 export const WAVE_RETRY_DELAY_SEC = 1;
+export const FOOD_SHORTAGE_REPEAT_SEC = 3;
 
 export function tickWaveClock(team: TeamState, deltaSec: number, prepareWarningSec = 10): WaveClockResult {
   const previous = team.nextWaveInSec;
@@ -69,8 +70,10 @@ export function scheduleWaveRetry(team: TeamState, retryDelaySec = WAVE_RETRY_DE
   team.nextWaveInSec = Math.max(0, retryDelaySec);
 }
 
-export function shouldAnnounceWaveFoodShortage(team: TeamState, manualTrigger: boolean): boolean {
-  return manualTrigger || !team.waveBlockedByFood;
+export function shouldAnnounceWaveFoodShortage(team: TeamState, manualTrigger: boolean, elapsedSec: number): boolean {
+  return manualTrigger
+    || !team.waveBlockedByFood
+    || elapsedSec - team.lastFoodShortageNoticeSec >= FOOD_SHORTAGE_REPEAT_SEC;
 }
 
 export function getInstantWaveEligibility(team: TeamState): InstantWaveEligibility {

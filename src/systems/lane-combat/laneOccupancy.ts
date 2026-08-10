@@ -1,5 +1,5 @@
-export const LANE_ROW_MIN = -5;
-export const LANE_ROW_MAX = 5;
+export const LANE_ROW_MIN = -6;
+export const LANE_ROW_MAX = 6;
 export const LANE_SHIFT_STEP = 1;
 export const COMBAT_ROW_REACH = 2;
 export const COMBAT_ROW_STEP = 1;

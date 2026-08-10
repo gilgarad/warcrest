@@ -27,7 +27,7 @@ describe("lane battle HUD model", () => {
     expect(snapshot.workers.gold.canIncrease).toBe(true);
     expect(snapshot.workers.research.canIncrease).toBe(false);
     expect(snapshot.workers.research.canDecrease).toBe(false);
-    expect(snapshot.assignedWorkersText).toBe("4");
+    expect(snapshot.assignedWorkersText).toBe("6");
     expect(snapshot.idleWorkersText).toBe("2");
     expect(snapshot.researchWorkersText).toBe("0");
     expect(snapshot.captureTitle).toBe("거점 또는 타워 선택");

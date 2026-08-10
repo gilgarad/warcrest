@@ -37,7 +37,7 @@ const TOWER_VISIBLE_HEIGHT_RATIOS: Record<DefenseTowerFamily, Record<DefenseTowe
     full: 397 / 512,
     damaged: 397 / 512,
     critical: 397 / 512,
-    ruins: 136 / 512,
+    ruins: 285 / 512,
     construction: 327 / 512,
   },
   stone: {
@@ -51,14 +51,14 @@ const TOWER_VISIBLE_HEIGHT_RATIOS: Record<DefenseTowerFamily, Record<DefenseTowe
     full: 346 / 512,
     damaged: 346 / 512,
     critical: 346 / 512,
-    ruins: 119 / 512,
+    ruins: 284 / 512,
     construction: 327 / 512,
   },
   missile: {
     full: 325 / 512,
     damaged: 325 / 512,
     critical: 325 / 512,
-    ruins: 112 / 512,
+    ruins: 269 / 512,
     construction: 307 / 512,
   },
 };
