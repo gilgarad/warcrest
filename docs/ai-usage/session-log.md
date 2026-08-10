@@ -6910,3 +6910,56 @@ NHN `nan2026` 게임잼 제출물 4번(AI 활용 기술 문서) 작성을 위한
 - **Verification**: Rendered PDF still 5 pages; visually confirmed page 1
   now shows the real video link in the "3. 플레이 영상" link box with no
   layout regression.
+
+## 2026-08-10 - Wrote submission deliverable 4 (AI usage technical document)
+
+- **Agent/tool**: Claude Code (Sonnet 5), using one background
+  general-purpose sub-agent for read-only log digestion.
+- **User direction (원문)**: "다음 문서는... 4번(ai 활용 기술 문서)야.
+  이거 내가 어떻게 사용했고, 등이 대화 로그에 다 남아있는데, 그 내용을
+  중요한 내용만 일단 뽑아서 요약하고, 그걸 숙지하여 내가 어떻게 ai를
+  활용했는지를 확인해. 그런 뒤 그 요약한 걸 추가로 요약해서 5장 정도로
+  적되 대략적으로 어떻게 사용했는지를 쓰고, 상세하게는 어떤 방식으로
+  활용했는지, 하네스 등을 사용하도록 한 점, 그리고 코덱스와
+  클로드코드를 양쪽 다 사용한 점 등을 설명해주면 돼. 게임 컨셉과
+  디자인과 플레이까지 내가 아이디어를 제시하고 다듬어가며 확인하고
+  다시 ai를 활용해서 만드는 작업을 반복해서 했음도 상세히 적어줘. 쓸
+  내용은 내가 가이드를 줬지만 쓰는 내용의 포맷과 순서 및 보강할 내용
+  등은 네가 알아서 추가로 정리해줘."
+- **AI action**: `docs/ai-usage/session-log.md` had grown to ~6900 lines
+  (~300 dated turns) — too large to read directly without spending most
+  of the context budget on it, so delegated a full read-only pass to a
+  general-purpose sub-agent with explicit instructions on what to extract
+  (phase timeline, verbatim user quotes, propose→build→review→revise
+  examples, Claude-Code-vs-Codex evidence, external-asset mentions). Did
+  not treat the sub-agent's digest as ground truth: spot-checked its 6
+  headline quotes against the actual log file with `grep`/`Read` before
+  using any of them, and one quote's context line was cross-referenced
+  directly (the "디아블로 던전" rejection at log line 143). Authored
+  `docs/submission/ai-usage.html` from scratch (not delegated) — the
+  digest fed the research, but the actual document structure/writing was
+  done directly: (1) high-level summary of the whole AI-collaboration
+  scope and the Claude-Code/Codex split, (2) harness mechanics in detail
+  (AGENTS.md, dev-wiki log/backlog, the ai-usage log's own verbatim-quote
+  rule) plus the "verify, don't trust self-reports" habit that recurred
+  throughout the project, (3) a detailed narrative of the concept/design
+  iteration story pulled from `docs/dev-wiki/game-concept.md` and
+  `concept-pivot-lane-siege.md` in addition to the session log (menu-based
+  MVP rejected for a real-time dungeon, two rounds of visual-tone
+  correction into isometric/Clash-of-Clans styling, Patapon-command combat
+  redone as MMO-hotbar cooldown slots, a ~50-turn Codex negotiation over
+  skill/AI rules, a "노잼" rejection triggering a sprite swap, and the full
+  genre pivot from dungeon action to the DotA/LoL/Civilization-Wars-
+  inspired lane-siege economy game that became Warcrest), (4) three
+  detailed vignettes (the 4-version combat-SFX rework, the GitHub Pages
+  deploy audit, and a same-day Codex→Claude-Code handoff on the same HUD
+  bug), (5) an external-assets/license table (Kenney CC0 packs), (6) a
+  closing summary, (7) a pointer table to the underlying raw logs for
+  reviewers who want full detail.
+- **Verification**: Rendered via Playwright's `page.pdf()`. First render
+  was 5 pages with one nearly-empty page caused by a manual page-break;
+  removed that break to let content reflow naturally (4 pages, tighter),
+  then added the "근거 문서 지도" appendix section to use the leftover
+  space on the final page meaningfully rather than leaving it blank.
+  Converted to PNG via `pdftoppm` and visually reviewed all 4 pages — no
+  table/quote-box overflow.
