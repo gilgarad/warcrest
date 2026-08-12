@@ -595,6 +595,26 @@ export class LaneBattleHudView {
     });
   }
 
+  /**
+   * Whether a screen point lands on a visible action button.
+   *
+   * The scene's "is this pointer on UI" test is a coarse top/bottom band, which
+   * stopped covering the capture-action buttons once they moved next to the
+   * selected structure — so clicking "build" registered as a tap on empty
+   * ground and dropped the selection the button belonged to.
+   */
+  isPointerOverActionButton(x: number, y: number): boolean {
+    const hit = (button: ActionButton): boolean => {
+      if (!button.rect.visible) return false;
+      return Math.abs(x - button.rect.x) <= button.rect.width / 2
+        && Math.abs(y - button.rect.y) <= button.rect.height / 2;
+    };
+    let over = false;
+    this.captureActionButtons.forEach((button) => { over = over || hit(button); });
+    this.strategicActionButtons.forEach((button) => { over = over || hit(button); });
+    return over;
+  }
+
   private bottomHudHeight(): number {
     return HUD_BOTTOM_SOURCE_HEIGHT * (this.canvasWidth / HUD_SOURCE_WIDTH);
   }

@@ -71,15 +71,6 @@ const AGE_LABELS: Record<AgeId, string> = {
 test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 test.describe.configure({ timeout: 120_000 });
 
-async function clickLogical(page: Page, x: number, y: number): Promise<void> {
-  const canvas = page.locator("canvas");
-  const box = await canvas.boundingBox();
-  if (!box) throw new Error("Canvas is not visible");
-  await canvas.click({
-    position: { x: x * box.width / 1600, y: y * box.height / 900 },
-    force: true,
-  });
-}
 
 interface HudButtonRect { x: number; y: number; width: number; height: number; visible: boolean }
 
@@ -89,6 +80,12 @@ interface HudButtonRect { x: number; y: number; width: number; height: number; v
  * empty canvas, and the failure surfaced as an unrelated assertion.
  */
 async function clickHudAction(page: Page, actionId: string): Promise<void> {
+  // Resolve the canvas box first, then read the button position immediately
+  // before clicking. Capture actions are anchored to the selected structure, so
+  // any await between reading a position and using it can let the menu move.
+  const canvas = page.locator("canvas");
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error("Canvas is not visible");
   const rect = await page.evaluate((id) => (
     (window as unknown as {
       __terrainPrototypeControl: { getHudButtonLayout: () => Record<string, HudButtonRect> };
@@ -96,7 +93,10 @@ async function clickHudAction(page: Page, actionId: string): Promise<void> {
   ), actionId);
   if (!rect) throw new Error(`HUD action "${actionId}" is not present`);
   if (!rect.visible) throw new Error(`HUD action "${actionId}" is not visible`);
-  await clickLogical(page, rect.x, rect.y);
+  await canvas.click({
+    position: { x: rect.x * box.width / 1600, y: rect.y * box.height / 900 },
+    force: true,
+  });
 }
 
 async function openGame(page: Page): Promise<void> {

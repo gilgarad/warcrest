@@ -1528,7 +1528,10 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private isPointerOnUi(pointer: Phaser.Input.Pointer): boolean {
-    return this.audioSettingsOpen || pointer.y <= 250 || pointer.y >= CANVAS_H - 260;
+    if (this.audioSettingsOpen || pointer.y <= 250 || pointer.y >= CANVAS_H - 260) return true;
+    // Capture/tower action buttons now sit beside the selected structure, well
+    // inside the field area, so the band check above no longer covers them.
+    return this.hud.isPointerOverActionButton(pointer.x, pointer.y);
   }
 
   private drawBattlefield(): void {
@@ -4722,9 +4725,14 @@ export class LaneBattleScene extends Phaser.Scene {
     const sprite = point?.marker ?? tower?.sprite;
     if (!sprite) return null;
     const cam = this.cameras.main;
+    // Measure against `worldView`, not `scrollX`/`scrollY`. A zoomed camera is
+    // rendered around its midpoint, so scroll is not the top-left of what is
+    // on screen — at zoom 0.46 the two differ by 939x528 world px, which put
+    // this anchor 432x243 screen px up-left of the structure it belongs to.
+    const view = cam.worldView;
     return {
-      x: (sprite.x - cam.scrollX) * cam.zoom,
-      y: (sprite.y - cam.scrollY) * cam.zoom,
+      x: (sprite.x - view.x) * cam.zoom,
+      y: (sprite.y - view.y) * cam.zoom,
     };
   }
 
