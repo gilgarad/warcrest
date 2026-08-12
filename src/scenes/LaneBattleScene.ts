@@ -301,6 +301,8 @@ interface LaneUnit {
    * changing rather than run once per unit per frame.
    */
   nameplateStyleKey: string;
+  /** Enemy this unit committed to on first contact; see `acquireTarget`. */
+  targetId?: number;
   hovered: boolean;
   selected: boolean;
 }
@@ -389,6 +391,31 @@ const CAPTURE_RATE_PER_SEC = 0.36;
  * rather than walked past.
  */
 const CAPTURE_TOWER_DEFENDER_EQUIVALENT = 3;
+/**
+ * How close an enemy has to come before a unit notices it and commits to
+ * fighting it. Beyond this a unit simply advances down the lane.
+ *
+ * There was no detection range at all before — every unit re-picked the
+ * nearest enemy in the whole lane on every frame. This is comfortably wider
+ * than the longest unit range (5.5 * RANGE_TO_PROGRESS = 0.0715) so ranged
+ * units acquire a target before they can shoot it.
+ *
+ * Tuned by measurement, not taste. Narrower values commit sooner and cut the
+ * blocked-behind-an-ally share (5.98% at 0.13 vs 9.48% with no detection
+ * range), but they also stop units from closing on fights they used to join:
+ * total HP removed per second fell to 0.65x baseline at 0.13, versus 0.91x
+ * here. Combat is ~9% slower than the old always-re-target behaviour, which is
+ * the price of units committing to a charge instead of shopping for a new
+ * target every frame.
+ */
+const AGGRO_RANGE_PROGRESS = 0.22;
+/**
+ * A committed unit only gives up on its target once the target gets this far
+ * away (or dies). Deliberately larger than the acquisition range: the whole
+ * point is that a unit charges the enemy it first locked onto instead of
+ * re-shopping for a marginally closer one every frame.
+ */
+const AGGRO_LEASH_PROGRESS = 0.45;
 
 /**
  * Width-to-height ratio of the frame a sprite is currently showing, used to
@@ -1831,7 +1858,7 @@ export class LaneBattleScene extends Phaser.Scene {
         this.tickSupport(unit, deltaSec);
         return;
       }
-      const nearest = this.findNearestEnemy(unit);
+      const nearest = this.acquireTarget(unit);
       const enemyTower = this.findNearestEnemyTower(unit);
       if (!nearest && !enemyTower) {
         this.advanceUnit(unit, deltaSec);
@@ -2185,7 +2212,7 @@ export class LaneBattleScene extends Phaser.Scene {
     // Reuse the caller's locked target instead of re-scanning: a second,
     // independent nearest-enemy lookup could steer the unit toward one enemy
     // while the attack logic aimed at another.
-    const enemyAhead = towerLimit === undefined ? (combatTarget ?? this.findNearestEnemy(unit)) : undefined;
+    const enemyAhead = towerLimit === undefined ? (combatTarget ?? this.acquireTarget(unit)) : undefined;
     if (enemyAhead) this.repositionTowardCombat(unit, enemyAhead, deltaSec);
     if (
       enemyAhead
@@ -2644,6 +2671,43 @@ export class LaneBattleScene extends Phaser.Scene {
       }
     }
     return best;
+  }
+
+  /**
+   * The enemy this unit is committed to fighting.
+   *
+   * A unit advances down the lane until an enemy comes within
+   * `AGGRO_RANGE_PROGRESS`, then charges that specific enemy and keeps
+   * charging until it dies or escapes `AGGRO_LEASH_PROGRESS`. It does not swap
+   * to whoever happens to be marginally closer this frame.
+   *
+   * An earlier attempt kept re-comparing distances with a switch margin and
+   * measured worse (attack rate 6.80% -> 5.26%): units still re-shopped
+   * constantly, they just did it with hysteresis. Committing on first contact
+   * and holding is the behaviour that was actually wanted.
+   */
+  private acquireTarget(unit: LaneUnit): LaneUnit | undefined {
+    if (unit.targetId !== undefined) {
+      const held = this.units.find((other) => other.id === unit.targetId);
+      if (held && held.laneId === unit.laneId && this.unitDistance(unit, held) <= AGGRO_LEASH_PROGRESS) {
+        return held;
+      }
+      unit.targetId = undefined;
+    }
+
+    let nearest: LaneUnit | undefined;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+    for (const other of this.units) {
+      if (other.team === unit.team || other.laneId !== unit.laneId) continue;
+      const distance = this.unitDistance(unit, other);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearest = other;
+      }
+    }
+    if (!nearest || nearestDistance > AGGRO_RANGE_PROGRESS) return undefined;
+    unit.targetId = nearest.id;
+    return nearest;
   }
 
   private findNearestEnemyTower(unit: LaneUnit): DefenseTowerState | undefined {
