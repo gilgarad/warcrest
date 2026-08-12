@@ -6951,3 +6951,52 @@ CC0라도 "완전히 동일한 원본 파형을 그대로 쓰는 것" 자체가 
 - 검증: 저장소 소스 변경 없음. 계측은 로컬 dev 서버 + Playwright 실측이며
   수치는 위 표와 `docs/dev-wiki/backlog.md` 항목에 남겼다. 다음 단계
   범위(성능 수정만 먼저 vs PvP 준비 리팩터까지)는 사용자 판단 대기 중.
+
+## [2026-08-12] fix | 랙 원인 2건 제거 + 전투 슬롯 진입 lerp의 프레임 의존성 제거
+
+- 위 조사 항목의 후속 구현 턴. 사용자 판단으로 이번 범위는 **성능 수정 우선**,
+  O(n^2) 탐색 최적화와 PvP용 시뮬/렌더 분리는 다음 단위로 미룸.
+  PvP 목표 형태는 **1v1 실시간 대전(서버 권위형)** 으로 확정됨.
+- **수정 1 — 유닛 이름표 재래스터화 제거.** `syncUnitPresentation()`의 라벨
+  블록 전체를 `shouldShowV2UnitLabel(unit)` 뒤로 옮겨, 보이지 않는 이름표에는
+  `setText`/`setPosition`/`setDepth`/스타일 호출이 아예 가지 않게 했다.
+  추가로 `LaneUnit`에 `nameplateStyleKey`를 두고 `styleUnitNameplate()`가
+  (폰트/스트로크/해상도/팀/강조여부) 키가 실제로 바뀔 때만 스타일을 다시
+  먹이도록 했다. legacy(비 prototype-v2) 분기도 같은 키로 1회만 적용된다.
+- **수정 2 — 구조물 비주얼 갱신 스로틀.** `tickCapturePoints()`가 매 프레임
+  호출하던 `refreshCapturePointVisuals()`/`refreshDefenseTowerVisuals()`를
+  `STRUCTURE_VISUAL_REFRESH_SEC = 0.1`(10Hz) 폴링 + `structureVisualsDirty`
+  즉시 갱신 조합으로 바꿨다. 점령/건설/철거/재건/선택은 이미 각자 명시적으로
+  refresh를 부르고 있었으므로, 여기에 `applyDamageToTower()`와 점령 소유권
+  변경 지점에만 dirty 마킹을 추가해 HP바/소유권 변화는 여전히 즉시 반영된다.
+- **수정 3 — 전투 슬롯 진입 lerp의 프레임 의존성 제거.** `laneRow` 보간
+  6곳(`advanceUnit` 2곳, `repositionTowardCombat` 2곳,
+  `pullUnitTowardOpenCombatRow`, `moveUnitTowardSlot`)이 쓰던 고정 alpha를
+  새 순수 모듈 `src/systems/lane-combat/frameLerp.ts`의
+  `frameLerpAlpha(deltaSec, alphaAt60)`로 교체했다.
+  `1 - (1 - a)^(deltaSec * 60)` 형태라 60fps에서는 기존 튜닝값이 그대로
+  보존되고, 프레임이 떨어져도 벽시계 기준 수렴 속도가 같아진다.
+  `repositionTowardCombat`/`pullUnitTowardOpenCombatRow`는 이를 위해
+  `deltaSec` 인자를 받도록 시그니처를 바꿨다.
+- **검증**:
+  - `npm run build`(tsc --noEmit + vite build) 통과
+  - `npm test` 35 files / **188 tests 통과** (신규 `frameLerp.test.ts` 5건 포함)
+  - 브라우저 실측(유닛 108기 동일 조건, 수정 전후 같은 계측 방식):
+    | 구간 | 수정 전 | 수정 후 |
+    |---|---|---|
+    | `tickCombat` | 54.41ms | **16.86ms** |
+    | `syncUnitPresentation` | 45.16ms | **6.38ms** |
+    | `styleUnitNameplate` 호출 | 유닛수 x 매프레임 | **0회** |
+  - 구조물 스로틀은 이 환경의 프레임(약 190ms)이 이미 0.1초보다 길어
+    프레임 단위로는 판별이 안 되므로, `tickCapturePoints(1/60)`을 120회
+    (=60fps 2초) 직접 돌려 게이트를 따로 검증: refresh **120회 -> 17회
+    (약 7.1배 감소)**.
+  - 기능 회귀 확인: 유닛 선택 시 이름표가 정상 표시됨
+    (`styleKey="33|2|2|player|1"`, 배경/스트로크 강조색 적용), 비선택 유닛은
+    비표시. 스크린샷으로 HUD/전장/본진 정상 렌더 확인. 콘솔/페이지 에러 0건.
+- **남은 항목**(다음 단위): O(n^2) 전투 슬롯/혼잡도 탐색의 버킷 인덱싱,
+  시뮬/렌더 분리(1v1 서버 권위형 PvP 전제), `rollKillResourceReward()`의
+  `Phaser.Utils.Array.GetRandom()` 결정론 누수.
+- **실기 확인 필요**: 이 환경은 소프트웨어 GL이라 절대 FPS가 실기와 다르다.
+  사용자 쪽에서 실제로 랙과 "멍하니 서있는" 증상이 사라졌는지 확인받아야
+  다음 단위(O(n^2) 최적화)로 갈지 판단할 수 있다.

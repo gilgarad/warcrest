@@ -14,45 +14,50 @@ GitHub Issues own task status. This file owns planning context.
 
 ## Active Queue
 
-- **[MEASURED 2026-08-12, ready to implement] Runtime performance: per-frame
-  text rasterization + per-frame structure visual refresh** — no GitHub Issue
-  (no `gh` CLI in this environment); recorded via this entry +
+- **[AWAITING REAL-HARDWARE CONFIRMATION] Runtime performance fixes landed
+  2026-08-12** — branch `issue-perf-ai-pvp-groundwork`; no GitHub Issue (no
+  `gh` CLI in this environment), recorded via this entry +
   `docs/dev-wiki/log.md` 2026-08-12 per the `AGENTS.md` fallback rule.
-  Branch: `issue-perf-ai-pvp-groundwork`.
-  - Root cause 1: `syncUnitPresentation()` calls `styleUnitNameplate()` every
-    frame for every unit; its `setFontSize`/`setStroke`/`setShadow`/
-    `setBackgroundColor`/`setPadding` chain each force a Phaser `updateText()`
-    (canvas re-raster + `texImage2D` upload) — 7 per unit per frame, on labels
-    that are invisible unless `selected || hovered`.
-  - Root cause 2: `tickCapturePoints()` runs `refreshCapturePointVisuals()` +
-    `refreshDefenseTowerVisuals()` every frame — a flat ~7ms/frame regardless
-    of unit count.
-  - Root cause 3 (secondary, scales with unit count): `findCombatSlot`,
-    `isCombatSlotFree`, `getForwardLaneCongestion`, `findNearestEnemy` each
-    scan all of `this.units` per unit per frame (~10ms at 295 units).
-  - Measured A/B at 108 units via runtime monkey-patch (source unmodified):
-    scene JS cost ~61ms -> ~11ms per frame (~5.4x) from fixing 1 and 2 alone.
-  - Implementation order: guard the nameplate restyle behind visibility +
-    a dirty check, throttle structure visual refresh to ~4Hz (event-driven
-    where possible), then add a per-frame spatial/lane bucket index for 3.
-- **[SAME ROOT CAUSE as above] Frame-rate-dependent lerps make units stand in
-  front of enemies without engaging** — the reported "때리려고 하는데 멍하니
-  서있다" symptom. All 12 `Phaser.Math.Linear(...)` calls in
-  `LaneBattleScene.ts` use fixed alphas (0.34/0.4/0.42/0.45/0.52/…) with no
-  `deltaSec` normalization. Forward movement (`progress`) *is* delta-scaled,
-  but the `laneRow` slide into a combat slot is not — so as the frame rate
-  drops, units keep advancing correctly but slide into attack slots ever more
-  slowly, parking next to an enemy without engaging. This makes the lag and
-  the idle-AI complaint one bug, not two.
-  - A 75-second headless stall probe found max ~1.0s idle gaps (matching the
-    ranged attack cooldown) and did **not** reproduce a long stall — but the
-    probe environment runs at ~3-6 FPS on software GL, so non-reproduction is
-    not evidence of absence. Re-check on real hardware after the perf fixes.
-  - Fix: convert the fixed alphas to `1 - Math.exp(-k * deltaSec)` so
-    convergence is wall-clock stable (`syncUnitVisual` already uses this form
-    — reuse it).
+  - Fixed: per-frame unit-nameplate rasterization (the dominant cost — every
+    `setFontSize`/`setStroke`/`setShadow`/`setBackgroundColor`/`setPadding`
+    forces a Phaser `updateText()` = canvas re-raster + `texImage2D` upload,
+    7 per unit per frame, on labels invisible unless `selected || hovered`).
+    Now gated behind visibility plus a `nameplateStyleKey` dirty check.
+  - Fixed: per-frame structure visual refresh in `tickCapturePoints()`, now a
+    10Hz poll (`STRUCTURE_VISUAL_REFRESH_SEC`) plus `structureVisualsDirty`
+    marking so capture/build/damage still update immediately.
+  - Fixed: frame-rate-dependent `laneRow` steering lerps (see next entry).
+  - Measured at 108 units: `tickCombat` 54.41ms -> 16.86ms,
+    `syncUnitPresentation` 45.16ms -> 6.38ms, `styleUnitNameplate` calls to
+    zero; structure redraws 120 -> 17 per 2 simulated seconds at 60fps.
+  - **Still open (deliberately deferred):** the O(n^2) scans in
+    `findCombatSlot`, `isCombatSlotFree`, `getForwardLaneCongestion` and
+    `findNearestEnemy`, which each walk all of `this.units` per unit per frame
+    (~10ms at 295 units). Fix with a per-frame lane/progress bucket index.
+    Do this only after the user confirms whether the shipped fixes already
+    resolved the felt lag on real hardware.
+- **[FIXED 2026-08-12, needs real-hardware confirmation] Frame-rate-dependent
+  lerps made units stand in front of enemies without engaging** — the reported
+  "때리려고 하는데 멍하니 서있다" symptom. Forward movement (`progress`) was
+  delta-scaled but the `laneRow` slide into a combat slot was not, so as the
+  frame rate dropped units kept advancing correctly while sliding into attack
+  position ever more slowly. That makes the lag report and the idle-AI report
+  one bug, not two.
+  - Fixed by routing the six steering lerps through
+    `frameLerpAlpha(deltaSec, alphaAt60)` in
+    `src/systems/lane-combat/frameLerp.ts` (`1 - (1 - a)^(deltaSec * 60)`),
+    which preserves the existing tuning exactly at 60fps. Covered by
+    `src/systems/lane-combat/__tests__/frameLerp.test.ts`.
+  - Caveat kept on the record: a 75-second headless stall probe found only
+    ~1.0s idle gaps (matching the ranged attack cooldown) and did **not**
+    reproduce a long stall — but that probe runs at ~3-6 FPS on software GL,
+    so non-reproduction was never evidence of absence. The user's own
+    playtest is the real check.
 - **[BLOCKER for online PvP] Simulation and rendering are fused** — before any
-  netcode work is worth starting. `LaneUnit` mixes simulation state
+  netcode work is worth starting. **Target form confirmed by the user
+  2026-08-12: 1v1 real-time PvP**, which means a server-authoritative
+  simulation with state snapshots — the option that most needs the extraction
+  below. `LaneUnit` mixes simulation state
   (`progress`/`hp`/`attackTimerSec`) with 8 Phaser display objects, and combat
   logic reads `unit.sprite.x`/`.y` in **45 places**, so the simulation depends
   on rendered pixel positions. There is no network code in the repo at all

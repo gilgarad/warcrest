@@ -125,6 +125,7 @@ import {
   LANE_SHIFT_STEP,
   createLaneRowCandidates,
 } from "../systems/lane-combat/laneOccupancy";
+import { frameLerpAlpha } from "../systems/lane-combat/frameLerp";
 import {
   advanceTeamAge,
   canAfford,
@@ -227,7 +228,15 @@ const HORIZONTAL_FACING_FLIP_DEAD_ZONE_WORLD_PX = 22;
 const COMBAT_FACING_HOLD_SEC = 0.2;
 const SUPPORT_ACQUISITION_RANGE_PROGRESS = 0.13;
 const SUPPORT_ARRIVAL_EPSILON_PROGRESS = 0.003;
-
+/**
+ * Background poll interval for capture-point / defense-tower visuals. Every
+ * discrete change (capture, build, dismantle, rebuild, selection, damage)
+ * already forces an immediate refresh, so this only has to keep up with
+ * slow continuous values — the capture control meter and the build countdown.
+ * Running it every frame instead cost a flat ~7ms/frame regardless of how
+ * many units were on the field.
+ */
+const STRUCTURE_VISUAL_REFRESH_SEC = 0.1;
 
 interface LaneUnit {
   id: number;
@@ -284,6 +293,14 @@ interface LaneUnit {
   manaBg: Phaser.GameObjects.Rectangle;
   manaFill: Phaser.GameObjects.Rectangle;
   label: Phaser.GameObjects.Text;
+  /**
+   * Identity of the style currently baked into `label`'s texture. Every
+   * `setFontSize`/`setStroke`/`setShadow`/`setBackgroundColor`/`setPadding`
+   * call forces a Phaser `updateText()` — a canvas re-raster plus a
+   * `texImage2D` upload — so restyling is gated on this key actually
+   * changing rather than run once per unit per frame.
+   */
+  nameplateStyleKey: string;
   hovered: boolean;
   selected: boolean;
 }
@@ -399,6 +416,8 @@ export class LaneBattleScene extends Phaser.Scene {
   private selectedMainBaseTeam: TeamId | null = null;
   private selectedCapturePointId: number | null = null;
   private selectedDefenseTowerId: number | null = null;
+  private structureVisualsDirty = true;
+  private structureVisualRefreshTimerSec = 0;
   private player!: TeamState;
   private enemy!: TeamState;
   private aiController!: AiController;
@@ -2124,7 +2143,7 @@ export class LaneBattleScene extends Phaser.Scene {
       const slot = this.findCombatSlot(unit, combatTarget);
       if (slot) {
         this.setUnitTravelFacing(unit, slot.progress, slot.laneRow);
-        unit.laneRow = Phaser.Math.Linear(unit.laneRow, slot.laneRow, 0.34);
+        unit.laneRow = Phaser.Math.Linear(unit.laneRow, slot.laneRow, frameLerpAlpha(deltaSec, 0.34));
         const moveStep = unit.speed * UNIT_PROGRESS_SPEED * deltaSec;
         const nextProgress = this.moveToward(unit.progress, slot.progress, moveStep);
         unit.progress = forwardLimit === undefined
@@ -2142,7 +2161,7 @@ export class LaneBattleScene extends Phaser.Scene {
     // it would fight the tower-row-centering pull above and could strand the
     // unit oscillating just outside both engagement ranges.
     const enemyAhead = towerLimit === undefined ? this.findNearestEnemy(unit) : undefined;
-    if (enemyAhead) this.repositionTowardCombat(unit, enemyAhead);
+    if (enemyAhead) this.repositionTowardCombat(unit, enemyAhead, deltaSec);
     if (
       enemyAhead
       && !this.isMeleeUnit(unit)
@@ -2168,7 +2187,7 @@ export class LaneBattleScene extends Phaser.Scene {
             ? Math.min(flankSlot.progress, friendAhead.progress - FRIENDLY_GAP)
             : Math.max(flankSlot.progress, friendAhead.progress + FRIENDLY_GAP);
           this.setUnitTravelFacing(unit, cappedProgress, flankSlot.laneRow);
-          unit.laneRow = Phaser.Math.Linear(unit.laneRow, flankSlot.laneRow, 0.52);
+          unit.laneRow = Phaser.Math.Linear(unit.laneRow, flankSlot.laneRow, frameLerpAlpha(deltaSec, 0.52));
           unit.progress = this.moveToward(
             unit.progress,
             Phaser.Math.Clamp(cappedProgress, 0.01, 0.99),
@@ -2183,7 +2202,7 @@ export class LaneBattleScene extends Phaser.Scene {
             : Math.max(desired, friendAhead.progress + 0.006);
           this.setUnitTravelFacing(unit, packedDesired, unit.laneRow);
           unit.progress = Phaser.Math.Clamp(packedDesired, 0.01, 0.99);
-          if (enemyAhead) this.pullUnitTowardOpenCombatRow(unit, enemyAhead);
+          if (enemyAhead) this.pullUnitTowardOpenCombatRow(unit, enemyAhead, deltaSec);
           this.keepUnitInPlayableLane(unit);
           return;
         }
@@ -2195,18 +2214,18 @@ export class LaneBattleScene extends Phaser.Scene {
     this.keepUnitInPlayableLane(unit);
   }
 
-  private repositionTowardCombat(unit: LaneUnit, enemy: LaneUnit): void {
+  private repositionTowardCombat(unit: LaneUnit, enemy: LaneUnit, deltaSec: number): void {
     const frontlineGap = progressBetween(unit.progress, enemy.progress);
     if (frontlineGap > COMBAT_FORMATION_PULL_PROGRESS) return;
     if (this.isMeleeUnit(unit)) {
       const slot = this.findCombatSlot(unit, enemy);
       if (slot) {
-        unit.laneRow = Phaser.Math.Linear(unit.laneRow, slot.laneRow, 0.4);
+        unit.laneRow = Phaser.Math.Linear(unit.laneRow, slot.laneRow, frameLerpAlpha(deltaSec, 0.4));
         return;
       }
     }
     if (frontlineGap < 0.08 && Math.abs(enemy.laneRow - unit.laneRow) < 1.2) {
-      unit.laneRow = Phaser.Math.Linear(unit.laneRow, enemy.laneRow, 0.45);
+      unit.laneRow = Phaser.Math.Linear(unit.laneRow, enemy.laneRow, frameLerpAlpha(deltaSec, 0.45));
       return;
     }
     if (Math.abs(enemy.laneRow - unit.laneRow) < 0.45) return;
@@ -2218,7 +2237,7 @@ export class LaneBattleScene extends Phaser.Scene {
     }
   }
 
-  private pullUnitTowardOpenCombatRow(unit: LaneUnit, enemy: LaneUnit): void {
+  private pullUnitTowardOpenCombatRow(unit: LaneUnit, enemy: LaneUnit, deltaSec: number): void {
     const direction = Math.sign(enemy.laneRow - unit.laneRow);
     const candidateRows = createLaneRowCandidates(
       enemy.laneRow,
@@ -2229,7 +2248,7 @@ export class LaneBattleScene extends Phaser.Scene {
       .sort((a, b) => this.compareLaneShiftCandidates(unit, a, b, enemy, direction));
     const nextRow = candidateRows.find((row) => this.isLaneRowFree(unit, row));
     if (nextRow === undefined) return;
-    unit.laneRow = Phaser.Math.Linear(unit.laneRow, nextRow, 0.42);
+    unit.laneRow = Phaser.Math.Linear(unit.laneRow, nextRow, frameLerpAlpha(deltaSec, 0.42));
     this.keepUnitInPlayableLane(unit);
   }
 
@@ -2384,7 +2403,7 @@ export class LaneBattleScene extends Phaser.Scene {
     const nextProgress = this.moveToward(unit.progress, desiredProgress, progressStep);
 
     this.setUnitTravelFacing(unit, desiredProgress, effectiveSlot.laneRow);
-    unit.laneRow = Phaser.Math.Linear(unit.laneRow, effectiveSlot.laneRow, friendAhead ? 0.52 : 0.4);
+    unit.laneRow = Phaser.Math.Linear(unit.laneRow, effectiveSlot.laneRow, frameLerpAlpha(deltaSec, friendAhead ? 0.52 : 0.4));
     if (friendAhead && Math.abs(friendAhead.laneRow - unit.laneRow) < 0.62) {
       const packedLimit = dir > 0
         ? friendAhead.progress - FRIENDLY_GAP
@@ -2677,6 +2696,7 @@ export class LaneBattleScene extends Phaser.Scene {
         this.resolveCapturedStructure(point, point.owner, prevOwner);
       }
       if (prevOwner !== point.owner) {
+        this.structureVisualsDirty = true;
         if (point.owner === "player") {
           this.audio.playSfx("sfx.capture.complete", { eventKey: `capture:${point.id}:player` });
         } else if (prevOwner === "player") {
@@ -2692,8 +2712,14 @@ export class LaneBattleScene extends Phaser.Scene {
     this.aiController.autoBuildCapturePoint();
     this.defenseTowers.forEach((tower) => this.tickWatchtower(tower, deltaSec));
     this.aiController.autoRebuildDefenseTower();
-    this.refreshCapturePointVisuals();
-    this.refreshDefenseTowerVisuals();
+
+    this.structureVisualRefreshTimerSec += deltaSec;
+    if (this.structureVisualsDirty || this.structureVisualRefreshTimerSec >= STRUCTURE_VISUAL_REFRESH_SEC) {
+      this.structureVisualRefreshTimerSec = 0;
+      this.structureVisualsDirty = false;
+      this.refreshCapturePointVisuals();
+      this.refreshDefenseTowerVisuals();
+    }
   }
 
   private tickWatchtower(tower: DefenseTowerState, deltaSec: number): void {
@@ -3130,6 +3156,9 @@ export class LaneBattleScene extends Phaser.Scene {
     const accent = unit.team === "player" ? "#5fb4ff" : "#ff8a6a";
     const backgroundTint = unit.team === "player" ? "18, 32, 48" : "42, 20, 20";
     const emphasized = unit.selected || unit.hovered;
+    const styleKey = `${fontWorldPx}|${strokeWorldPx}|${textResolution}|${unit.team}|${emphasized ? 1 : 0}`;
+    if (unit.nameplateStyleKey === styleKey) return;
+    unit.nameplateStyleKey = styleKey;
     unit.label
       .setFontSize(fontWorldPx)
       .setFontStyle("bold")
@@ -3477,6 +3506,7 @@ export class LaneBattleScene extends Phaser.Scene {
     if (!point.built) return;
     const mitigatedDamage = Math.max(1, Math.round(damage - point.defense));
     point.hp = Math.max(0, point.hp - mitigatedDamage);
+    this.structureVisualsDirty = true;
     this.playWorldSfx(
       "sfx.combat.towerHit",
       point.sprite.x,
@@ -3966,6 +3996,7 @@ export class LaneBattleScene extends Phaser.Scene {
       manaBg,
       manaFill,
       label,
+      nameplateStyleKey: "",
       hovered: false,
       selected: false,
     };
@@ -4253,25 +4284,32 @@ export class LaneBattleScene extends Phaser.Scene {
       .setSize(v2HpWidth * (unit.manaMax > 0 ? unit.manaCurrent / unit.manaMax : 0), Math.max(2, v2HpHeight * 0.72))
       .setDepth(this.getGroundDepth(pos.y, 6))
       .setVisible(false);
-    unit.label
-      .setText(UNIT_STATS[unit.unitId].label)
-      .setPosition(pos.x, labelY)
-      .setDepth(this.getGroundDepth(pos.y, 7));
-    if (this.isPrototypeV2()) {
-      const unitFontCssPx = unit.selected || unit.hovered
-        ? this.scaleVisualConfig.selectedUnitFontCssPx
-        : this.scaleVisualConfig.unitFontCssPx;
-      this.styleUnitNameplate(unit, unitFontCssPx);
-      unit.label.setVisible(this.shouldShowV2UnitLabel(unit));
-    } else {
+    // Nameplates only ever show for a unit the player is touching, so anything
+    // that would re-rasterize the label texture stays behind that check. Doing
+    // this unconditionally cost ~0.4ms per unit per frame — the dominant
+    // source of the reported in-battle lag.
+    const nameplateVisible = this.shouldShowV2UnitLabel(unit);
+    if (nameplateVisible) {
       unit.label
-        .setVisible(this.shouldShowV2UnitLabel(unit))
-        .setScale(1)
-        .setStroke("#132033", 3)
-        .setShadow(0, 0, "#000000", 0, false, false)
-        .setBackgroundColor("rgba(0, 0, 0, 0)")
-        .setPadding(0);
+        .setText(UNIT_STATS[unit.unitId].label)
+        .setPosition(pos.x, labelY)
+        .setDepth(this.getGroundDepth(pos.y, 7));
+      if (this.isPrototypeV2()) {
+        const unitFontCssPx = unit.selected || unit.hovered
+          ? this.scaleVisualConfig.selectedUnitFontCssPx
+          : this.scaleVisualConfig.unitFontCssPx;
+        this.styleUnitNameplate(unit, unitFontCssPx);
+      } else if (unit.nameplateStyleKey !== "legacy") {
+        unit.nameplateStyleKey = "legacy";
+        unit.label
+          .setScale(1)
+          .setStroke("#132033", 3)
+          .setShadow(0, 0, "#000000", 0, false, false)
+          .setBackgroundColor("rgba(0, 0, 0, 0)")
+          .setPadding(0);
+      }
     }
+    unit.label.setVisible(nameplateVisible);
   }
 
   private shiftWorker(role: WorkerRole, delta: 1 | -1): void {
