@@ -401,6 +401,12 @@ const CAPTURE_RATE_PER_SEC = 0.36;
  */
 const CAPTURE_TOWER_DEFENDER_EQUIVALENT = 3;
 /**
+ * Pointer travel (screen px) still counted as a tap rather than a field pan.
+ * Touch input always drifts a few pixels, so requiring an exact zero would
+ * make "tap empty ground to deselect" fail on a phone.
+ */
+const FIELD_TAP_SLOP_PX = 12;
+/**
  * How close an enemy has to come before a unit notices it and commits to
  * fighting it. Beyond this a unit simply advances down the lane.
  *
@@ -469,6 +475,13 @@ export class LaneBattleScene extends Phaser.Scene {
   private selectedCapturePointId: number | null = null;
   private selectedDefenseTowerId: number | null = null;
   private structureVisualsDirty = true;
+  /**
+   * Set by any field object's own pointerdown so the scene-level pointerup can
+   * tell "tapped bare ground" from "tapped something". `hitTestPointer` cannot
+   * answer this: the HUD's `uiCamera` is the pointer's camera, so hit-testing
+   * against it never reports world objects.
+   */
+  private fieldObjectTapped = false;
   private structureVisualRefreshTimerSec = 0;
   private player!: TeamState;
   private enemy!: TeamState;
@@ -838,8 +851,24 @@ export class LaneBattleScene extends Phaser.Scene {
    */
   private clampCameraToWorld(): void {
     const cam = this.cameras.main;
-    cam.scrollX = Phaser.Math.Clamp(cam.scrollX, 0, Math.max(0, WORLD_W - CANVAS_W / cam.zoom));
-    cam.scrollY = Phaser.Math.Clamp(cam.scrollY, 0, Math.max(0, WORLD_H - CANVAS_H / cam.zoom));
+    const viewW = cam.width / cam.zoom;
+    const viewH = cam.height / cam.zoom;
+    // Phaser renders a zoomed camera around its midpoint, so the visible world
+    // rectangle is not `[scrollX, scrollX + viewW]`:
+    //   worldView.x = scrollX + (cam.width - viewW) / 2
+    // At this zoom (0.46) that term is -939px horizontally and -528px
+    // vertically. Clamping scrollX to `[0, WORLD_W - viewW]` therefore allowed
+    // the view to start at world -939 and revealed the empty area outside the
+    // ground plane. Clamping the *world view* instead keeps the camera on
+    // painted ground. (This is also what Phaser's own bounds clamp computes —
+    // it was disabled in `create()` on the mistaken belief that its offset was
+    // the bug.)
+    const minX = (viewW - cam.width) / 2;
+    const minY = (viewH - cam.height) / 2;
+    const maxX = WORLD_W - (viewW + cam.width) / 2;
+    const maxY = WORLD_H - (viewH + cam.height) / 2;
+    cam.scrollX = Phaser.Math.Clamp(cam.scrollX, minX, Math.max(minX, maxX));
+    cam.scrollY = Phaser.Math.Clamp(cam.scrollY, minY, Math.max(minY, maxY));
   }
 
   /** Centres the camera on a world point without leaving the ground plane. */
@@ -853,24 +882,29 @@ export class LaneBattleScene extends Phaser.Scene {
       if (this.isPointerOnUi(pointer)) return;
       this.isDraggingField = true;
     });
-    this.input.on("pointerup", () => {
+    this.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
       this.isDraggingField = false;
+      if (this.isPointerOnUi(pointer)) return;
+      // Only a tap clears the selection, never the end of a pan.
+      const travelled = Phaser.Math.Distance.Between(pointer.downX, pointer.downY, pointer.upX, pointer.upY);
+      if (travelled > FIELD_TAP_SLOP_PX) return;
+      // The flag is set during pointerdown, which always precedes pointerup,
+      // so this does not depend on whether Phaser emits the scene-level or the
+      // game-object-level event first. Anything on the field handles its own
+      // selection; only bare ground clears the current one.
+      const tappedObject = this.fieldObjectTapped;
+      this.fieldObjectTapped = false;
+      if (tappedObject) return;
+      this.clearFieldSelection();
     });
     this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
       if (!this.isDraggingField || !pointer.isDown) return;
       const cam = this.cameras.main;
-      const visibleWorldW = CANVAS_W / cam.zoom;
-      const visibleWorldH = CANVAS_H / cam.zoom;
-      cam.scrollX = Phaser.Math.Clamp(
-        cam.scrollX - (pointer.x - pointer.prevPosition.x) / cam.zoom,
-        0,
-        Math.max(0, WORLD_W - visibleWorldW),
-      );
-      cam.scrollY = Phaser.Math.Clamp(
-        cam.scrollY - (pointer.y - pointer.prevPosition.y) / cam.zoom,
-        0,
-        Math.max(0, WORLD_H - visibleWorldH),
-      );
+      cam.scrollX -= (pointer.x - pointer.prevPosition.x) / cam.zoom;
+      cam.scrollY -= (pointer.y - pointer.prevPosition.y) / cam.zoom;
+      // One clamp for dragging and programmatic moves alike, so they cannot
+      // disagree about where the edge of the map is.
+      this.clampCameraToWorld();
     });
   }
 
@@ -1604,10 +1638,10 @@ export class LaneBattleScene extends Phaser.Scene {
         stroke: "#132033",
         strokeThickness: 3,
       }).setOrigin(0.5).setDepth(this.getGroundDepth(pos.y, 4));
-      ring.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
-      core.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
-      marker.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
-      label.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
+      ring.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.toggleCapturePointSelection(index));
+      core.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.toggleCapturePointSelection(index));
+      marker.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.toggleCapturePointSelection(index));
+      label.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.toggleCapturePointSelection(index));
 
       return {
         id: index,
@@ -1671,9 +1705,9 @@ export class LaneBattleScene extends Phaser.Scene {
       const statusText = this.add.text(pos.x, pos.y + 52, "가동 중", {
         fontFamily: "sans-serif", fontSize: "11px", color: "#d3d8e8", stroke: "#132033", strokeThickness: 3,
       }).setOrigin(0.5).setDepth(this.getGroundDepth(pos.y, 7));
-      sprite.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectDefenseTower(definition.id));
-      selectionHitZone.on("pointerdown", () => this.selectDefenseTower(definition.id));
-      label.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectDefenseTower(definition.id));
+      sprite.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.toggleDefenseTowerSelection(definition.id));
+      selectionHitZone.on("pointerdown", () => this.toggleDefenseTowerSelection(definition.id));
+      label.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.toggleDefenseTowerSelection(definition.id));
       const maxHp = getDefenseTowerMaxHp("stone");
       const defense = getDefenseTowerDefense("stone");
       return {
@@ -3025,6 +3059,47 @@ export class LaneBattleScene extends Phaser.Scene {
     });
   }
 
+  /**
+   * Pointer-driven selection. Tapping the selected structure again clears it,
+   * which is the only way (besides picking something else) to dismiss its
+   * action buttons. Kept separate from `selectCapturePoint` so debug controls
+   * and probes can still select idempotently.
+   */
+  private toggleCapturePointSelection(id: number): void {
+    this.fieldObjectTapped = true;
+    if (this.selectedCapturePointId === id) {
+      this.clearFieldSelection();
+      return;
+    }
+    this.selectCapturePoint(id);
+  }
+
+  private toggleDefenseTowerSelection(id: number): void {
+    this.fieldObjectTapped = true;
+    if (this.selectedDefenseTowerId === id) {
+      this.clearFieldSelection();
+      return;
+    }
+    this.selectDefenseTower(id);
+  }
+
+  /** Drops any field selection, hiding the capture/tower action buttons. */
+  private clearFieldSelection(): void {
+    if (
+      this.selectedCapturePointId === null
+      && this.selectedDefenseTowerId === null
+      && this.selectedMainBaseTeam === null
+    ) return;
+    this.selectedCapturePointId = null;
+    this.selectedDefenseTowerId = null;
+    this.selectedMainBaseTeam = null;
+    this.baseResearchPanel.setVisible(false);
+    this.audio.playSfx("sfx.ui.cancel", { eventKey: "field:deselect" });
+    this.refreshCapturePointVisuals();
+    this.refreshDefenseTowerVisuals();
+    this.refreshUi();
+  }
+
   private selectCapturePoint(id: number): void {
     this.selectedCapturePointId = id;
     this.selectedDefenseTowerId = null;
@@ -3047,6 +3122,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private selectMainBase(team: TeamId): void {
+    this.fieldObjectTapped = true;
     this.selectedMainBaseTeam = team;
     this.selectedCapturePointId = null;
     this.selectedDefenseTowerId = null;
@@ -4167,6 +4243,7 @@ export class LaneBattleScene extends Phaser.Scene {
         this.refreshUnitOverlayDensity();
       })
       .on("pointerdown", () => {
+        this.fieldObjectTapped = true;
         this.units.forEach((entry) => {
           entry.selected = entry.id === unit.id ? !entry.selected : false;
           this.syncUnitPresentation(entry);
