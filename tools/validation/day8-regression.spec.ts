@@ -1,8 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
+import { getWaveRoster } from "../../src/data/unitRosters";
 
 const ARTIFACT_DIR = "artifacts/day8-regression";
-const GAME_URL = "/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&seed=warcrest-day8&audioDebug=1&map=warcrest-full-lane-hybrid-v1";
+const GAME_URL = "/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&seed=warcrest-day8&audioDebug=1&map=warcrest-full-lane-hybrid-v1&autostart=1";
 
 type AgeId = "stone" | "bronze" | "iron_early" | "iron_mid" | "iron_late";
 
@@ -45,12 +46,18 @@ interface AudioState {
   recentEvents: Array<{ id: string; result: string }>;
 }
 
-const EXPECTED_ROSTERS: Record<AgeId, string[]> = {
-  stone: ["stone_slinger", "stone_axeman", "stone_axeman", "supply_wagon"],
-  bronze: ["stone_slinger", "bronze_swordsman", "bronze_spearman", "supply_wagon"],
-  iron_early: ["stone_slinger", "archer", "iron_swordsman", "supply_wagon"],
-  iron_mid: ["archer", "iron_swordsman", "iron_spearman", "supply_wagon"],
-  iron_late: ["archer", "knight", "musketeer", "supply_wagon"],
+/**
+ * Derived from the roster table rather than copied from it. The hardcoded copy
+ * fell out of date when `iron_early` swapped a slinger for a spearman, and the
+ * spec then reported a roster "failure" that was really just a stale
+ * expectation. What is worth asserting is that spawning honours the table —
+ * so read the table.
+ */
+const rosterFor = (ageId: AgeId): string[] => {
+  const roster = getWaveRoster(ageId);
+  return [...roster.battleline, ...roster.support]
+    .flatMap((entry) => Array.from({ length: entry.count }, () => entry.unitId as string))
+    .sort();
 };
 
 const AGE_LABELS: Record<AgeId, string> = {
@@ -74,18 +81,31 @@ async function clickLogical(page: Page, x: number, y: number): Promise<void> {
   });
 }
 
+interface HudButtonRect { x: number; y: number; width: number; height: number; visible: boolean }
+
+/**
+ * Clicks a HUD action button at wherever it actually is. Hardcoded button
+ * coordinates are what made this spec rot: the HUD moved, the clicks landed on
+ * empty canvas, and the failure surfaced as an unrelated assertion.
+ */
+async function clickHudAction(page: Page, actionId: string): Promise<void> {
+  const rect = await page.evaluate((id) => (
+    (window as unknown as {
+      __terrainPrototypeControl: { getHudButtonLayout: () => Record<string, HudButtonRect> };
+    }).__terrainPrototypeControl.getHudButtonLayout()[id]
+  ), actionId);
+  if (!rect) throw new Error(`HUD action "${actionId}" is not present`);
+  if (!rect.visible) throw new Error(`HUD action "${actionId}" is not visible`);
+  await clickLogical(page, rect.x, rect.y);
+}
+
 async function openGame(page: Page): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(GAME_URL);
-  await page.waitForTimeout(1_000);
-  for (let attempt = 0; attempt < 15; attempt += 1) {
-    await clickLogical(page, 800, 805);
-    await page.waitForTimeout(750);
-    if (await page.evaluate(() => Boolean(
-      (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-    ))) return;
-  }
-  throw new Error("Day 8 regression probe did not initialize");
+  // `autostart=1` enters the battle once assets finish loading.
+  await page.waitForFunction(() => Boolean(
+    (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+  ));
 }
 
 const snapshot = (page: Page): Promise<GameSnapshot> => page.evaluate(() => (
@@ -107,7 +127,7 @@ test("plays through all five ages using the real age-up and instant-wave buttons
 
   let current = await snapshot(page);
   let playerUnits = current.units.filter((unit) => unit.team === "player");
-  expect(playerUnits.map((unit) => unit.unitId).sort()).toEqual([...EXPECTED_ROSTERS.stone].sort());
+  expect(playerUnits.map((unit) => unit.unitId).sort()).toEqual(rosterFor("stone"));
   expect(current.ui.ageLabel).toBe(AGE_LABELS.stone);
   evidence.stone = { ageLabel: current.ui.ageLabel, units: playerUnits };
   await page.screenshot({ path: `${ARTIFACT_DIR}/age-stone.png` });
@@ -119,7 +139,7 @@ test("plays through all five ages using the real age-up and instant-wave buttons
         __terrainPrototypeControl: { fundDay8Regression: () => void };
       }).__terrainPrototypeControl.fundDay8Regression();
     });
-    await clickLogical(page, 1295, 797);
+    await clickHudAction(page, "age-up");
     await expect.poll(async () => (await snapshot(page)).player.ageId).toBe(ageId);
     const transitionAudio = await audioState(page);
     expect(transitionAudio.recentEvents.some(
@@ -130,12 +150,16 @@ test("plays through all five ages using the real age-up and instant-wave buttons
         __terrainPrototypeControl: { fundDay8Regression: () => void };
       }).__terrainPrototypeControl.fundDay8Regression();
     });
-    await clickLogical(page, 1295, 749);
-    await page.waitForTimeout(80);
+    await clickHudAction(page, "use-instant-wave");
+    // Wait for the wave to actually exist rather than for a fixed span that a
+    // slow frame can outlast.
+    await expect.poll(async () => (await snapshot(page)).units.some(
+      (unit) => unit.team === "player" && unit.id > previousMaxId,
+    )).toBe(true);
 
     current = await snapshot(page);
     playerUnits = current.units.filter((unit) => unit.team === "player" && unit.id > previousMaxId);
-    expect(playerUnits.map((unit) => unit.unitId).sort()).toEqual([...EXPECTED_ROSTERS[ageId]].sort());
+    expect(playerUnits.map((unit) => unit.unitId).sort()).toEqual(rosterFor(ageId));
     expect(playerUnits.every((unit) => unit.renderTexture === unit.pose)).toBe(true);
     expect(playerUnits.every((unit) => !unit.renderTexture.includes("token"))).toBe(true);
     expect(current.ui.ageLabel).toBe(AGE_LABELS[ageId]);
@@ -149,7 +173,9 @@ test("plays through all five ages using the real age-up and instant-wave buttons
   }
 
   const audio = await audioState(page);
-  expect(audio.currentBgmId).toMatch(/^bgm\.battle\./);
+  // Gameplay BGM is chosen per age (`audioDirector.resolveBgmId`); the old
+  // `bgm.battle.*` ids are legacy and no longer play during a battle.
+  expect(audio.currentBgmId).toMatch(/^bgm\.age\./);
   expect(audio.activeBgmVoices).toBeGreaterThan(0);
   writeFileSync(`${ARTIFACT_DIR}/five-age-playthrough.json`, JSON.stringify({ evidence, audio }, null, 2));
 });
@@ -168,8 +194,11 @@ test("builds dismantles rebuilds and captures structures through production inte
   });
   expect((await snapshot(page)).ui.visibleCaptureActions).toContain("build-supply-depot");
 
-  await clickLogical(page, 995, 764);
-  await page.waitForTimeout(220);
+  await clickHudAction(page, "build-supply-depot");
+  // Poll instead of sleeping a fixed span: one frame is ~16ms on a fast
+  // machine but far longer under software rendering, and a bare wait shorter
+  // than a frame made these assertions fail for timing reasons alone.
+  await expect.poll(async () => (await snapshot(page)).battlefield.controlPoints[0].buildingId).toBe("supply_depot");
   let current = await snapshot(page);
   expect(current.battlefield.controlPoints[0]).toMatchObject({
     owner: "player",
@@ -185,8 +214,8 @@ test("builds dismantles rebuilds and captures structures through production inte
   )).toBe(true);
   const completedBuildAudio = await audioState(page);
 
-  await clickLogical(page, 995, 842);
-  await page.waitForTimeout(80);
+  await clickHudAction(page, "dismantle");
+  await expect.poll(async () => (await snapshot(page)).battlefield.controlPoints[0].buildingId).toBe(null);
   current = await snapshot(page);
   expect(current.battlefield.controlPoints[0]).toMatchObject({ buildingId: null, buildingLevel: 0 });
 
@@ -204,8 +233,8 @@ test("builds dismantles rebuilds and captures structures through production inte
     control.selectDefenseTower(0);
     control.setPaused(false);
   });
-  await clickLogical(page, 995, 724);
-  await page.waitForTimeout(80);
+  await clickHudAction(page, "rebuild-defense-tower");
+  await expect.poll(async () => (await snapshot(page)).battlefield.defenseTowers[0].buildRemainingSec).toBeGreaterThan(0);
   current = await snapshot(page);
   expect(current.battlefield.defenseTowers[0].built).toBe(false);
   expect(current.battlefield.defenseTowers[0].buildRemainingSec).toBeGreaterThan(9);

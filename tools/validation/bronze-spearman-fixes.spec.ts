@@ -12,7 +12,6 @@ test("bronze spearman keeps source colors at gameplay scale", async ({ page }) =
   const canvas = page.locator("canvas");
   const box = await canvas.boundingBox();
   if (!box) throw new Error("Canvas is not visible");
-  await canvas.click({ position: { x: 800 * box.width / 1600, y: 805 * box.height / 900 } });
   await page.waitForFunction(() => Boolean(
     (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
   ));
@@ -41,7 +40,6 @@ test("bronze spearman keeps one silhouette height through attack poses", async (
   const canvas = page.locator("canvas");
   const box = await canvas.boundingBox();
   if (!box) throw new Error("Canvas is not visible");
-  await canvas.click({ position: { x: 800 * box.width / 1600, y: 805 * box.height / 900 } });
   await page.waitForFunction(() => Boolean(
     (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
   ));

@@ -59,6 +59,10 @@ export class LaneBattleHudView {
   private readonly resourceBarXs: number[] = [];
   private readonly workerRows = new Map<WorkerRole, WorkerUiRow>();
   private readonly captureActionButtons = new Map<CapturePointAction | DefenseTowerAction, ActionButton>();
+  /** Top of the capture-action stack and the spacing between slots, kept so
+   * `layoutCaptureActions()` can repack the visible buttons each refresh. */
+  private captureActionOriginY = 0;
+  private captureActionGapY = 56;
   private readonly strategicActionButtons = new Map<StrategicActionId, ActionButton>();
   private ageText!: Phaser.GameObjects.Text;
   private waveText!: Phaser.GameObjects.Text;
@@ -154,7 +158,7 @@ export class LaneBattleHudView {
     this.playerBaseBar.setOrigin(0, 0.5);
     this.enemyBaseBar.setOrigin(0, 0.5);
     this.rosterText.setVisible(false);
-    this.captureActionButtons.forEach((button, action) => this.setActionVisible(button, actions.includes(action)));
+    this.layoutCaptureActions(actions);
     this.capturePanelTitle.setText(snapshot.captureTitle);
     this.capturePanelBody.setText(snapshot.captureLines);
   }
@@ -194,6 +198,31 @@ export class LaneBattleHudView {
 
   getAgeLabelText(): string {
     return this.ageText.text;
+  }
+
+  /**
+   * Screen-space rectangles of the HUD action buttons.
+   *
+   * Validation specs used to hardcode button coordinates, so every HUD layout
+   * change silently broke them — they kept clicking empty space and then
+   * failed on an unrelated assertion further down. Reading the real positions
+   * keeps a spec honest about clicking the actual button while surviving
+   * layout changes.
+   */
+  getActionButtonLayout(): Record<string, { x: number; y: number; width: number; height: number; visible: boolean }> {
+    const layout: Record<string, { x: number; y: number; width: number; height: number; visible: boolean }> = {};
+    const record = (id: string, button: ActionButton): void => {
+      layout[id] = {
+        x: button.rect.x,
+        y: button.rect.y,
+        width: button.rect.width,
+        height: button.rect.height,
+        visible: button.rect.visible,
+      };
+    };
+    this.strategicActionButtons.forEach((button, id) => record(id, button));
+    this.captureActionButtons.forEach((button, id) => record(id, button));
+    return layout;
   }
 
   setStrategicActionLabel(actionId: StrategicActionId, label: string): void {
@@ -382,6 +411,8 @@ export class LaneBattleHudView {
     const captureActionX = centerX + 256;
     const captureActionY = this.canvasHeight - 212;
     const captureActionGapY = 56;
+    this.captureActionOriginY = captureActionY;
+    this.captureActionGapY = captureActionGapY;
     const captureActionWidth = 198;
     const captureActionHeight = 44;
     this.captureActionButtons.set("rebuild-defense-tower", this.createActionButton(captureActionX, captureActionY, captureActionWidth, captureActionHeight, "타워 재건", this.callbacks.rebuildDefenseTower));
@@ -490,6 +521,31 @@ export class LaneBattleHudView {
       const itemX = startX + i * itemWidth;
       icon.setTexture(getResourceIconKey(resourceId)).setPosition(itemX - 9, y).setVisible(true);
       costText.setText(String(Math.round(amount))).setPosition(itemX + 1, y).setVisible(true);
+    });
+  }
+
+  /**
+   * Shows the currently available capture actions packed into consecutive
+   * slots from the top of the panel.
+   *
+   * Each action used to own a fixed slot, but at most three of the five are
+   * ever offered at once, so the lower slots were dead space — and the last
+   * one ("폐기") sat below the bottom of a 900px-tall viewport entirely, which
+   * made dismantling a building impossible to click.
+   */
+  private layoutCaptureActions(actions: readonly (CapturePointAction | DefenseTowerAction)[]): void {
+    let slot = 0;
+    this.captureActionButtons.forEach((button, action) => {
+      const visible = actions.includes(action);
+      this.setActionVisible(button, visible);
+      if (!visible) return;
+      const targetY = this.captureActionOriginY + this.captureActionGapY * slot + button.rect.height / 2;
+      const deltaY = targetY - button.rect.y;
+      if (deltaY !== 0) {
+        button.rect.y = targetY;
+        button.text.y += deltaY;
+      }
+      slot += 1;
     });
   }
 

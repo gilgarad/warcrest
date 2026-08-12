@@ -16,15 +16,11 @@ test("keeps two buildable points separate from the defense tower collection", as
     position: { x: x * box.width / 1600, y: y * box.height / 900 },
   });
   const startGame = async (): Promise<void> => {
-    await page.waitForTimeout(1_000);
-    for (let attempt = 0; attempt < 15; attempt += 1) {
-      await clickLogical(800, 805);
-      await page.waitForTimeout(750);
-      if (await page.evaluate(() => Boolean(
-        (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-      ))) return;
-    }
-    throw new Error("Capture-point distinction probe did not initialize");
+  // `autostart=1` enters the battle once assets finish loading; a cold
+  // load can take far longer than any fixed polling budget.
+  await page.waitForFunction(() => Boolean(
+    (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+  ));
   };
   await startGame().catch(async () => {
     await page.reload();

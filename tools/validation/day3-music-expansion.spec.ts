@@ -16,15 +16,7 @@ test.beforeAll(() => {
   mkdirSync(ARTIFACT_DIR, { recursive: true });
 });
 
-async function clickCanvasLogical(page: Page, x: number, y: number): Promise<void> {
-  const canvas = page.locator("canvas");
-  const box = await canvas.boundingBox();
-  if (!box) throw new Error("Canvas is not visible");
-  await canvas.click({ position: { x: x * box.width / 1600, y: y * box.height / 900 } });
-}
-
 async function startBattle(page: Page): Promise<void> {
-  await clickCanvasLogical(page, 800, 805);
   await page.waitForFunction(() => Boolean(
     (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
   ));

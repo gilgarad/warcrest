@@ -8,23 +8,13 @@ test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 
 test("captures old central field and the Day 2 golden reference at the same viewport", async ({ browser }) => {
   const oldPage = await browser.newPage({ viewport: { width: 1600, height: 900 } });
-  await oldPage.goto("/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&seed=golden-reference-old");
-  const oldCanvas = oldPage.locator("canvas");
-  const startOldGame = async (): Promise<void> => {
-    await oldPage.waitForTimeout(1_000);
-    for (let attempt = 0; attempt < 15; attempt += 1) {
-      await oldCanvas.click({ position: { x: 800, y: 805 } });
-      await oldPage.waitForTimeout(750);
-      if (await oldPage.evaluate(() => Boolean(
-        (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-      ))) return;
-    }
-    throw new Error("Old-field golden reference probe did not initialize");
-  };
-  await startOldGame().catch(async () => {
-    await oldPage.reload();
-    await startOldGame();
-  });
+  await oldPage.goto("/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&seed=golden-reference-old&autostart=1");
+  // `autostart=1` starts the battle on its own once assets finish loading, so
+  // just wait for the scene rather than polling on a fixed budget that a cold
+  // asset load can outlast.
+  await oldPage.waitForFunction(() => Boolean(
+    (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+  ));
   await oldPage.evaluate(() => {
     (window as unknown as { __terrainPrototypeControl: { focusProgress: (progress: number) => void } })
       .__terrainPrototypeControl.focusProgress(0.6);
@@ -33,7 +23,7 @@ test("captures old central field and the Day 2 golden reference at the same view
   await oldPage.screenshot({ path: `${ARTIFACT_DIR}/old-oblique-central.png` });
 
   const newPage = await browser.newPage({ viewport: { width: 1600, height: 900 } });
-  await newPage.goto("/warcrest/?golden=1");
+  await newPage.goto("/warcrest/?golden=1&autostart=1");
   await newPage.waitForFunction(() => Boolean(
     (window as unknown as { __goldenReferenceDebug?: { ready: boolean } }).__goldenReferenceDebug?.ready,
   ));
@@ -51,7 +41,7 @@ test("captures old central field and the Day 2 golden reference at the same view
 
 test("captures atomic pose transitions without interpolation", async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto("/warcrest/?golden=1&sequence=1");
+  await page.goto("/warcrest/?golden=1&sequence=1&autostart=1");
   await page.waitForFunction(() => Boolean(
     (window as unknown as { __goldenReferenceControl?: unknown }).__goldenReferenceControl,
   ));

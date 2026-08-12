@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import type { LaneBattleDebugSnapshot, LaneBattleDebugUnitSnapshot } from "../../src/scenes/laneBattleDebugSnapshot";
 
 const ARTIFACT_DIR = "artifacts/day7-5-unit-art";
-const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&seed=warcrest-day7-5";
+const GAME_URL = "/?terrain=world-surface&preset=balanced&scale=recommended&camera=central&seed=warcrest-day7-5&autostart=1";
 test.describe.configure({ timeout: 120_000 });
 
 type AgeId = "stone" | "bronze" | "iron_early" | "iron_mid" | "iron_late";
@@ -24,7 +24,6 @@ async function openGame(page: import("@playwright/test").Page): Promise<void> {
   const canvas = page.locator("canvas");
   const box = await canvas.boundingBox();
   if (!box) throw new Error("Canvas is not visible");
-  await canvas.click({ position: { x: 800 * box.width / 1600, y: 805 * box.height / 900 } });
   await page.waitForFunction(() => Boolean(
     (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
   ));

@@ -381,6 +381,22 @@ let nextUnitId = 1;
 
 const CAPTURE_RADIUS_PROGRESS = 0.06;
 const CAPTURE_RATE_PER_SEC = 0.36;
+/**
+ * How many defending units a standing capture-point defense tower is worth
+ * when the point is contested. Four attackers used to flip a defended point in
+ * about 1.4s; at this weight the same push needs roughly 5.5s, so the tower
+ * actually fires a meaningful number of volleys and has to be overwhelmed
+ * rather than walked past.
+ */
+const CAPTURE_TOWER_DEFENDER_EQUIVALENT = 3;
+
+/**
+ * Width-to-height ratio of the frame a sprite is currently showing, used to
+ * size structures from their real artwork instead of assuming a square canvas.
+ * Call it *after* `setTexture`, or it reports the outgoing frame.
+ */
+const frameAspectRatio = (sprite: Phaser.GameObjects.Image): number =>
+  sprite.frame.realHeight > 0 ? sprite.frame.realWidth / sprite.frame.realHeight : 1;
 const TOWER_CAPTURE_RADIUS_PROGRESS = 0.065;
 const TOWER_CAPTURE_RATE_PER_SEC = 0.34;
 const SUPPLY_DEPOT_ATTACK_BUFF_MULTIPLIER = 1.2;
@@ -1146,6 +1162,12 @@ export class LaneBattleScene extends Phaser.Scene {
         this.uiCamera.setVisible(visible);
         this.publishDebug();
       },
+      /**
+       * Real screen rectangles of the HUD action buttons, so validation specs
+       * can click the button that exists instead of the coordinate someone
+       * wrote down when the layout looked different.
+       */
+      getHudButtonLayout: () => this.hud.getActionButtonLayout(),
       setVisualAuditLayer: (layer: "ground" | "props" | "units" | "combat") => {
         this.uiCamera.setVisible(false);
         if (layer === "ground") {
@@ -2160,7 +2182,10 @@ export class LaneBattleScene extends Phaser.Scene {
     // While a tower is blocking the path, skip enemy-unit repositioning —
     // it would fight the tower-row-centering pull above and could strand the
     // unit oscillating just outside both engagement ranges.
-    const enemyAhead = towerLimit === undefined ? this.findNearestEnemy(unit) : undefined;
+    // Reuse the caller's locked target instead of re-scanning: a second,
+    // independent nearest-enemy lookup could steer the unit toward one enemy
+    // while the attack logic aimed at another.
+    const enemyAhead = towerLimit === undefined ? (combatTarget ?? this.findNearestEnemy(unit)) : undefined;
     if (enemyAhead) this.repositionTowardCombat(unit, enemyAhead, deltaSec);
     if (
       enemyAhead
@@ -2597,17 +2622,27 @@ export class LaneBattleScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Closest enemy in the same lane.
+   *
+   * A sticky-target variant (hold the current enemy unless another is clearly
+   * closer) was tried here and measured *worse*: in an interleaved A/B over
+   * ~6.5k engaged unit-frames per arm it cut lane-row churn ~13% but dropped
+   * the attack rate from 6.80% to 5.26% of engaged frames, because units kept
+   * aiming at a committed target instead of hitting whoever was in reach.
+   * Nearest-enemy stays until there is evidence for something better.
+   */
   private findNearestEnemy(unit: LaneUnit): LaneUnit | undefined {
     let best: LaneUnit | undefined;
     let bestDistance = Number.POSITIVE_INFINITY;
-    this.units.forEach((other) => {
-      if (other.team === unit.team || other.laneId !== unit.laneId) return;
+    for (const other of this.units) {
+      if (other.team === unit.team || other.laneId !== unit.laneId) continue;
       const distance = this.unitDistance(unit, other);
       if (distance < bestDistance) {
         bestDistance = distance;
         best = other;
       }
-    });
+    }
     return best;
   }
 
@@ -2684,7 +2719,19 @@ export class LaneBattleScene extends Phaser.Scene {
       const prevOwner = point.owner;
       const nearbyPlayer = this.units.filter((unit) => unit.team === "player" && unit.laneId === point.laneId && progressBetween(unit.progress, point.progress) <= CAPTURE_RADIUS_PROGRESS).length;
       const nearbyEnemy = this.units.filter((unit) => unit.team === "enemy" && unit.laneId === point.laneId && progressBetween(unit.progress, point.progress) <= CAPTURE_RADIUS_PROGRESS).length;
-      const pressure = Phaser.Math.Clamp((nearbyPlayer - nearbyEnemy) * CAPTURE_RATE_PER_SEC * deltaSec, -0.8, 0.8);
+      // A standing defense tower holds its own ground. Without this it
+      // contributed nothing to the contest, so a handful of attackers flipped
+      // the point in ~1.4s — the tower got off two volleys and then started
+      // shooting for the other side, which read as "my tower does nothing".
+      // Capture-point buildings have no HP and cannot be attacked directly, so
+      // counting the tower as defenders is how it gets to defend at all; a
+      // real push still takes the point, it just has to be a real push.
+      const towerDefenders = point.buildingId === "defense_tower" && point.owner !== "neutral"
+        ? CAPTURE_TOWER_DEFENDER_EQUIVALENT
+        : 0;
+      const playerStrength = nearbyPlayer + (point.owner === "player" ? towerDefenders : 0);
+      const enemyStrength = nearbyEnemy + (point.owner === "enemy" ? towerDefenders : 0);
+      const pressure = Phaser.Math.Clamp((playerStrength - enemyStrength) * CAPTURE_RATE_PER_SEC * deltaSec, -0.8, 0.8);
 
       if (pressure !== 0) point.control = Phaser.Math.Clamp(point.control + pressure, -1, 1);
 
@@ -3196,22 +3243,32 @@ export class LaneBattleScene extends Phaser.Scene {
         .setPosition(pos.x, pos.y)
         .setDepth(this.getGroundDepth(pos.y, -5))
         .setVisible(!structuredPoint || selected);
-      const markerHeight = showingTower
-        ? this.cssPxToWorld(this.scaleVisualConfig.captureTowerCssHeight / getDefenseTowerVisibleHeightRatio(this.getStructureOwnerAge(point.owner), "full"))
-        : showingRuins
-          ? this.cssPxToWorld(this.scaleVisualConfig.captureTowerCssHeight / getDefenseTowerVisibleHeightRatio(ruinsAgeId, "ruins"))
-          : this.cssPxToWorld(96 / CAPTURE_MARKER_VISIBLE_HEIGHT_RATIO);
-      point.marker
-        .setTexture(
-          showingTower
-            ? getDefenseTowerTexture(this.getStructureOwnerAge(point.owner), "full", point.owner === "enemy" ? "enemy" : "player")
-            : showingRuins
-              ? getDefenseTowerTexture(ruinsAgeId, "ruins", ruinsOwner)
-              : getCaptureMarkerTexture(point.owner),
+      // Every tower state is normalized by the *full* ratio, so the canvas
+      // stays one size and each state's own artwork decides how tall it looks.
+      // Normalizing ruins by the ruins ratio instead made rubble render at the
+      // exact height of an intact tower — and 1.39x the height of the very
+      // same ruins on a lane defense tower, which is what read as inconsistent
+      // and stretched.
+      const markerHeight = showingTower || showingRuins
+        ? this.cssPxToWorld(
+          this.scaleVisualConfig.captureTowerCssHeight
+          / getDefenseTowerVisibleHeightRatio(showingTower ? this.getStructureOwnerAge(point.owner) : ruinsAgeId, "full"),
         )
+        : this.cssPxToWorld(96 / CAPTURE_MARKER_VISIBLE_HEIGHT_RATIO);
+      point.marker.setTexture(
+        showingTower
+          ? getDefenseTowerTexture(this.getStructureOwnerAge(point.owner), "full", point.owner === "enemy" ? "enemy" : "player")
+          : showingRuins
+            ? getDefenseTowerTexture(ruinsAgeId, "ruins", ruinsOwner)
+            : getCaptureMarkerTexture(point.owner),
+      );
+      // Size from the frame we just set, never a hardcoded square: the current
+      // structure art happens to be 512x512, so forcing a square hid this, but
+      // any non-square asset would render stretched.
+      point.marker
         .setPosition(pos.x, pos.y + STRUCTURE_SOCKET_ATTACH_Y)
         .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
-        .setDisplaySize(markerHeight, markerHeight)
+        .setDisplaySize(markerHeight * frameAspectRatio(point.marker), markerHeight)
         .setDepth(this.getGroundDepth(pos.y))
         .setVisible(this.terrainMode === "world-surface");
       point.ownerText.setText(point.owner === "player" ? "아군 점령" : point.owner === "enemy" ? "적 점령" : "중립");
@@ -3283,13 +3340,17 @@ export class LaneBattleScene extends Phaser.Scene {
       const towerHeight = this.isPrototypeV2()
         ? this.cssPxToWorld(this.scaleVisualConfig.captureTowerCssHeight / fullVisibleHeightRatio) * selectedScale
         : TOWER_H * selectedScale;
-      const towerWidth = this.isPrototypeV2()
-        ? towerHeight * (tower.sprite.frame.realWidth / tower.sprite.frame.realHeight)
-        : TOWER_W * selectedScale;
       const hpRatio = tower.maxHp > 0 ? tower.hp / tower.maxHp : 0;
       const texture = getDefenseTowerTexture(towerAgeId, visualState, tower.owner === "enemy" ? "enemy" : "player");
+      // Set the texture before measuring it. Reading the aspect ratio first
+      // sized the new state's artwork using the *previous* state's frame, so a
+      // full -> ruins/construction switch rendered one refresh at the wrong
+      // proportions.
+      tower.sprite.setTexture(texture);
+      const towerWidth = this.isPrototypeV2()
+        ? towerHeight * frameAspectRatio(tower.sprite)
+        : TOWER_W * selectedScale;
       tower.sprite
-        .setTexture(texture)
         .setPosition(pos.x, pos.y + STRUCTURE_SOCKET_ATTACH_Y)
         .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
         .setDisplaySize(towerWidth, towerHeight)

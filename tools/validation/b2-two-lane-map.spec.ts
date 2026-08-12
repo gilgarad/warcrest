@@ -3,7 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import type { LaneBattleDebugSnapshot } from "../../src/scenes/laneBattleDebugSnapshot";
 
 const ARTIFACT_DIR = "artifacts/b2-two-lane-map";
-const BASE_URL = "/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&seed=b2-two-lane-map";
+const BASE_URL = "/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&seed=b2-two-lane-map&autostart=1";
 const CANDIDATE_MAP_ID = "warcrest-two-lane-v1";
 const LEGACY_MAP_ID = "warcrest-full-lane-hybrid-v1";
 
@@ -13,30 +13,16 @@ test.beforeAll(() => {
 
 test.setTimeout(120_000);
 
-async function clickLogical(page: Page, x: number, y: number): Promise<void> {
-  const canvas = page.locator("canvas");
-  const box = await canvas.boundingBox();
-  if (!box) throw new Error("Canvas is not visible");
-  await canvas.click({
-    position: { x: x * box.width / 1600, y: y * box.height / 900 },
-    force: true,
-  });
-}
-
 async function openGame(page: Page, mapId: string | null): Promise<void> {
   const url = mapId ? `${BASE_URL}&map=${mapId}` : BASE_URL;
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(url);
   await page.waitForTimeout(1_000);
-  for (let attempt = 0; attempt < 15; attempt += 1) {
-    await clickLogical(page, 800, 805);
-    await page.waitForTimeout(750);
-    const ready = await page.evaluate(() => Boolean(
-      (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-    ));
-    if (ready) return;
-  }
-  throw new Error(`two-lane validation probe did not initialize for ${mapId ?? "baseline"}`);
+  // `autostart=1` enters the battle once assets finish loading; a cold
+  // load outlasts any fixed polling budget.
+  await page.waitForFunction(() => Boolean(
+    (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+  ));
 }
 
 const snapshot = (page: Page): Promise<LaneBattleDebugSnapshot> => page.evaluate(() => (

@@ -41,15 +41,7 @@ test.beforeAll(() => {
   mkdirSync(`${ARTIFACT_DIR}/map`, { recursive: true });
 });
 
-async function clickCanvasLogical(page: Page, x: number, y: number): Promise<void> {
-  const canvas = page.locator("canvas");
-  const box = await canvas.boundingBox();
-  if (!box) throw new Error("Canvas is not visible");
-  await canvas.click({ position: { x: x * box.width / 1600, y: y * box.height / 900 } });
-}
-
 async function startBattle(page: Page): Promise<void> {
-  await clickCanvasLogical(page, 800, 805);
   await page.waitForFunction(() => Boolean(
     (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
   ));
@@ -83,7 +75,7 @@ async function annotateAudioState(page: Page, title: string, state: AudioState):
 
 test("captures bronze spearman 8-direction turnaround using the new directional registry", async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
-  await page.goto("/?golden=1&directions=1");
+  await page.goto("/?golden=1&directions=1&autostart=1");
   await page.waitForFunction(() => Boolean(
     (window as unknown as { __goldenDirectionControl?: unknown }).__goldenDirectionControl,
   ));
