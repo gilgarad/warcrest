@@ -1,17 +1,10 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { mkdirSync, writeFileSync } from "node:fs";
 
 const ARTIFACT_DIR = "artifacts/terrain-full-lane";
 const CAPTURE_PHASE = process.env.TERRAIN_CAPTURE_PHASE === "before" ? "before" : "after";
 const GAME_URL = "/?terrain=prototype-v2&preset=balanced&scale=recommended&camera=central&scenario=visual-validation&seed=warcrest-central-v1&map=warcrest-full-lane-hybrid-v1";
 test.describe.configure({ timeout: 120_000 });
-
-async function clickCanvasLogical(page: Page, x: number, y: number): Promise<void> {
-  const canvas = page.locator("canvas");
-  const box = await canvas.boundingBox();
-  if (!box) throw new Error("Canvas is not visible");
-  await canvas.click({ position: { x: x * box.width / 1600, y: y * box.height / 900 } });
-}
 
 type VerificationSnapshot = Record<string, unknown> & {
   verification?: Record<string, unknown>;
@@ -49,7 +42,6 @@ test(`captures the ${CAPTURE_PHASE} full-lane terrain state without changing gam
 
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(GAME_URL);
-  await clickCanvasLogical(page, 800, 805);
   await page.waitForFunction(() => (
     (window as unknown as { __gameDebug?: { phase?: string } }).__gameDebug?.phase === "lane-siege"
   ));
@@ -127,7 +119,6 @@ test(`captures the ${CAPTURE_PHASE} full-lane terrain state without changing gam
 test("terrain keyboard cycling is absent in normal play and available behind the QA flag", async ({ page }) => {
   const start = async (url: string): Promise<void> => {
     await page.goto(url);
-    await clickCanvasLogical(page, 800, 805);
     await page.waitForFunction(() => Boolean(
       (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
     ));

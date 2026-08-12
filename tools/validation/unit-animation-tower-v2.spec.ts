@@ -15,7 +15,6 @@ async function openGame(page: import("@playwright/test").Page): Promise<void> {
   const canvas = page.locator("canvas");
   const box = await canvas.boundingBox();
   if (!box) throw new Error("Canvas is not visible");
-  await canvas.click({ position: { x: 800 * box.width / 1600, y: 805 * box.height / 900 } });
   await page.waitForFunction(() => Boolean(
     (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
   ));

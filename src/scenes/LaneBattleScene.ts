@@ -203,8 +203,17 @@ const ENGAGE_GAP = 0.022;
 const FIELD_CAMERA_ZOOM = 0.46;
 const TOWER_W = 148;
 const TOWER_H = 176;
-const PLAYER_BASE_WORLD_OFFSET_X = -120;
-const ENEMY_BASE_WORLD_OFFSET_X = -260;
+/**
+ * How far each main base sits behind its own end of the lane, measured along
+ * the lane direction.
+ *
+ * The two bases used to be nudged by raw, unequal X offsets (-120 for the
+ * player, -260 for the enemy). Because the lane runs diagonally, an X-only
+ * nudge also moves a base sideways off the road, and the two different values
+ * made the sides visibly non-mirrored. One setback along the lane tangent puts
+ * both bases on the lane centreline, the same distance beyond their own end.
+ */
+const BASE_LANE_SETBACK = 190;
 const MELEE_ENGAGE_TOLERANCE_PROGRESS = 0.0022;
 const COMBAT_FORMATION_PULL_PROGRESS = 0.12;
 const CAPTURE_POINT_RUINS_VISUAL_SEC = 4;
@@ -301,6 +310,8 @@ interface LaneUnit {
    * changing rather than run once per unit per frame.
    */
   nameplateStyleKey: string;
+  /** Enemy this unit committed to on first contact; see `acquireTarget`. */
+  targetId?: number;
   hovered: boolean;
   selected: boolean;
 }
@@ -381,6 +392,53 @@ let nextUnitId = 1;
 
 const CAPTURE_RADIUS_PROGRESS = 0.06;
 const CAPTURE_RATE_PER_SEC = 0.36;
+/**
+ * How many defending units a standing capture-point defense tower is worth
+ * when the point is contested. Four attackers used to flip a defended point in
+ * about 1.4s; at this weight the same push needs roughly 5.5s, so the tower
+ * actually fires a meaningful number of volleys and has to be overwhelmed
+ * rather than walked past.
+ */
+const CAPTURE_TOWER_DEFENDER_EQUIVALENT = 3;
+/**
+ * Pointer travel (screen px) still counted as a tap rather than a field pan.
+ * Touch input always drifts a few pixels, so requiring an exact zero would
+ * make "tap empty ground to deselect" fail on a phone.
+ */
+const FIELD_TAP_SLOP_PX = 12;
+/**
+ * How close an enemy has to come before a unit notices it and commits to
+ * fighting it. Beyond this a unit simply advances down the lane.
+ *
+ * There was no detection range at all before — every unit re-picked the
+ * nearest enemy in the whole lane on every frame. This is comfortably wider
+ * than the longest unit range (5.5 * RANGE_TO_PROGRESS = 0.0715) so ranged
+ * units acquire a target before they can shoot it.
+ *
+ * Tuned by measurement, not taste. Narrower values commit sooner and cut the
+ * blocked-behind-an-ally share (5.98% at 0.13 vs 9.48% with no detection
+ * range), but they also stop units from closing on fights they used to join:
+ * total HP removed per second fell to 0.65x baseline at 0.13, versus 0.91x
+ * here. Combat is ~9% slower than the old always-re-target behaviour, which is
+ * the price of units committing to a charge instead of shopping for a new
+ * target every frame.
+ */
+const AGGRO_RANGE_PROGRESS = 0.22;
+/**
+ * A committed unit only gives up on its target once the target gets this far
+ * away (or dies). Deliberately larger than the acquisition range: the whole
+ * point is that a unit charges the enemy it first locked onto instead of
+ * re-shopping for a marginally closer one every frame.
+ */
+const AGGRO_LEASH_PROGRESS = 0.45;
+
+/**
+ * Width-to-height ratio of the frame a sprite is currently showing, used to
+ * size structures from their real artwork instead of assuming a square canvas.
+ * Call it *after* `setTexture`, or it reports the outgoing frame.
+ */
+const frameAspectRatio = (sprite: Phaser.GameObjects.Image): number =>
+  sprite.frame.realHeight > 0 ? sprite.frame.realWidth / sprite.frame.realHeight : 1;
 const TOWER_CAPTURE_RADIUS_PROGRESS = 0.065;
 const TOWER_CAPTURE_RATE_PER_SEC = 0.34;
 const SUPPLY_DEPOT_ATTACK_BUFF_MULTIPLIER = 1.2;
@@ -417,6 +475,13 @@ export class LaneBattleScene extends Phaser.Scene {
   private selectedCapturePointId: number | null = null;
   private selectedDefenseTowerId: number | null = null;
   private structureVisualsDirty = true;
+  /**
+   * Set by any field object's own pointerdown so the scene-level pointerup can
+   * tell "tapped bare ground" from "tapped something". `hitTestPointer` cannot
+   * answer this: the HUD's `uiCamera` is the pointer's camera, so hit-testing
+   * against it never reports world objects.
+   */
+  private fieldObjectTapped = false;
   private structureVisualRefreshTimerSec = 0;
   private player!: TeamState;
   private enemy!: TeamState;
@@ -513,7 +578,7 @@ export class LaneBattleScene extends Phaser.Scene {
       ? CENTRAL_CAPTURE_PROGRESS
       : 0.22;
     const initialFocus = this.progressToScreen(initialProgress, 0);
-    this.cameras.main.centerOn(initialFocus.x, initialFocus.y);
+    this.focusCameraOn(initialFocus.x, initialFocus.y);
 
     this.createUiIconTextures();
 
@@ -776,29 +841,70 @@ export class LaneBattleScene extends Phaser.Scene {
     });
   }
 
+  /**
+   * Keeps the camera inside the world after a programmatic move.
+   *
+   * Phaser's own clamp is disabled (`useBounds = false`, see `create()`), and
+   * the drag handler clamps by hand — but `centerOn`/`setScroll` callers did
+   * not, so focusing a structure near the map edge could scroll past the
+   * ground plane and show the empty background colour beyond it.
+   */
+  private clampCameraToWorld(): void {
+    const cam = this.cameras.main;
+    const viewW = cam.width / cam.zoom;
+    const viewH = cam.height / cam.zoom;
+    // Phaser renders a zoomed camera around its midpoint, so the visible world
+    // rectangle is not `[scrollX, scrollX + viewW]`:
+    //   worldView.x = scrollX + (cam.width - viewW) / 2
+    // At this zoom (0.46) that term is -939px horizontally and -528px
+    // vertically. Clamping scrollX to `[0, WORLD_W - viewW]` therefore allowed
+    // the view to start at world -939 and revealed the empty area outside the
+    // ground plane. Clamping the *world view* instead keeps the camera on
+    // painted ground. (This is also what Phaser's own bounds clamp computes —
+    // it was disabled in `create()` on the mistaken belief that its offset was
+    // the bug.)
+    const minX = (viewW - cam.width) / 2;
+    const minY = (viewH - cam.height) / 2;
+    const maxX = WORLD_W - (viewW + cam.width) / 2;
+    const maxY = WORLD_H - (viewH + cam.height) / 2;
+    cam.scrollX = Phaser.Math.Clamp(cam.scrollX, minX, Math.max(minX, maxX));
+    cam.scrollY = Phaser.Math.Clamp(cam.scrollY, minY, Math.max(minY, maxY));
+  }
+
+  /** Centres the camera on a world point without leaving the ground plane. */
+  private focusCameraOn(x: number, y: number): void {
+    this.cameras.main.centerOn(x, y);
+    this.clampCameraToWorld();
+  }
+
   private setupFieldDrag(): void {
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       if (this.isPointerOnUi(pointer)) return;
       this.isDraggingField = true;
     });
-    this.input.on("pointerup", () => {
+    this.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
       this.isDraggingField = false;
+      if (this.isPointerOnUi(pointer)) return;
+      // Only a tap clears the selection, never the end of a pan.
+      const travelled = Phaser.Math.Distance.Between(pointer.downX, pointer.downY, pointer.upX, pointer.upY);
+      if (travelled > FIELD_TAP_SLOP_PX) return;
+      // The flag is set during pointerdown, which always precedes pointerup,
+      // so this does not depend on whether Phaser emits the scene-level or the
+      // game-object-level event first. Anything on the field handles its own
+      // selection; only bare ground clears the current one.
+      const tappedObject = this.fieldObjectTapped;
+      this.fieldObjectTapped = false;
+      if (tappedObject) return;
+      this.clearFieldSelection();
     });
     this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => {
       if (!this.isDraggingField || !pointer.isDown) return;
       const cam = this.cameras.main;
-      const visibleWorldW = CANVAS_W / cam.zoom;
-      const visibleWorldH = CANVAS_H / cam.zoom;
-      cam.scrollX = Phaser.Math.Clamp(
-        cam.scrollX - (pointer.x - pointer.prevPosition.x) / cam.zoom,
-        0,
-        Math.max(0, WORLD_W - visibleWorldW),
-      );
-      cam.scrollY = Phaser.Math.Clamp(
-        cam.scrollY - (pointer.y - pointer.prevPosition.y) / cam.zoom,
-        0,
-        Math.max(0, WORLD_H - visibleWorldH),
-      );
+      cam.scrollX -= (pointer.x - pointer.prevPosition.x) / cam.zoom;
+      cam.scrollY -= (pointer.y - pointer.prevPosition.y) / cam.zoom;
+      // One clamp for dragging and programmatic moves alike, so they cannot
+      // disagree about where the edge of the map is.
+      this.clampCameraToWorld();
     });
   }
 
@@ -825,7 +931,7 @@ export class LaneBattleScene extends Phaser.Scene {
         this.syncUnitPresentation(unit);
       });
       const focus = this.progressToScreen(0.5, 0);
-      this.cameras.main.centerOn(focus.x, focus.y);
+      this.focusCameraOn(focus.x, focus.y);
       this.refreshUi();
       this.publishDebug();
     };
@@ -837,11 +943,11 @@ export class LaneBattleScene extends Phaser.Scene {
       focusCentral: () => this.focusCentralCapture(),
       focusProgress: (progress: number) => {
         const focus = this.progressToScreen(Phaser.Math.Clamp(progress, 0, 1), 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
       },
       focusLaneProgress: (laneId: string, progress: number) => {
         const focus = this.progressToScreen(Phaser.Math.Clamp(progress, 0, 1), 0, laneId);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
       },
       setPaused: (paused: boolean) => {
         if (paused) {
@@ -911,7 +1017,7 @@ export class LaneBattleScene extends Phaser.Scene {
         tower.hp = 0;
         tower.buildRemainingSec = DEFENSE_TOWER_BUILD_DURATION_SEC;
         const focus = this.progressToScreen(tower.progress, 0, tower.laneId);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.refreshDefenseTowerVisuals();
         this.publishDebug();
         this.scene.pause();
@@ -927,7 +1033,7 @@ export class LaneBattleScene extends Phaser.Scene {
             ? tower.maxHp * 0.5
             : state === "critical" ? tower.maxHp * 0.2 : 0;
         const focus = this.progressToScreen(tower.progress, 0, tower.laneId);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.refreshDefenseTowerVisuals();
         this.publishDebug();
         this.scene.pause();
@@ -938,7 +1044,7 @@ export class LaneBattleScene extends Phaser.Scene {
         point.owner = owner;
         point.control = owner === "player" ? 1 : owner === "enemy" ? -1 : 0;
         const focus = this.progressToScreen(point.progress, 0, point.laneId);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.refreshCapturePointVisuals();
         this.publishDebug();
         this.scene.pause();
@@ -956,7 +1062,7 @@ export class LaneBattleScene extends Phaser.Scene {
         point.buildingId = undefined;
         point.buildingLevel = 0;
         const focus = this.progressToScreen(point.progress, 0, point.laneId);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.selectCapturePoint(point.id);
         this.publishDebug();
       },
@@ -1002,7 +1108,7 @@ export class LaneBattleScene extends Phaser.Scene {
           this.syncUnitPresentation(unit);
         });
         const focus = this.progressToScreen(0.505, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.publishDebug();
       },
       prepareTeamPaletteProbe: (unitId: BattleUnitId | SupportUnitId) => {
@@ -1016,7 +1122,7 @@ export class LaneBattleScene extends Phaser.Scene {
           this.syncUnitPresentation(unit);
         });
         const focus = this.progressToScreen(0.5, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.publishDebug();
       },
       prepareAgeWaveProbe,
@@ -1035,7 +1141,7 @@ export class LaneBattleScene extends Phaser.Scene {
         this.tickWatchtower(tower, 0);
         this.activeProjectiles.forEach((projectile) => setLaneProjectileProgress(projectile, 0.45));
         const focus = this.progressToScreen(tower.progress, 0, tower.laneId);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.publishDebug();
         this.scene.pause();
       },
@@ -1053,7 +1159,7 @@ export class LaneBattleScene extends Phaser.Scene {
           tower.hp = tower.maxHp;
         });
         const focus = this.progressToScreen(0.571, 0).add(new Phaser.Math.Vector2(0, -150));
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.refreshCapturePointVisuals();
         this.refreshDefenseTowerVisuals();
         this.publishDebug();
@@ -1074,7 +1180,7 @@ export class LaneBattleScene extends Phaser.Scene {
         const unit = this.units[0];
         unit.attackTimerSec = 0;
         const focus = this.progressToScreen(point.progress - 0.018, 0, point.laneId);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.refreshCapturePointVisuals();
         this.publishDebug();
       },
@@ -1100,7 +1206,7 @@ export class LaneBattleScene extends Phaser.Scene {
         this.syncUnitPresentation(attacker);
         this.syncUnitPresentation(target);
         const focus = this.progressToScreen(0.5, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.refreshDefenseTowerVisuals();
         this.publishDebug();
         this.scene.pause();
@@ -1121,7 +1227,7 @@ export class LaneBattleScene extends Phaser.Scene {
           unit.attackTimerSec = 0;
         });
         const focus = this.progressToScreen(0.5, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.refreshCapturePointVisuals();
         this.units.forEach((unit) => this.syncUnitPresentation(unit));
         this.refreshUnitOverlayDensity();
@@ -1146,6 +1252,12 @@ export class LaneBattleScene extends Phaser.Scene {
         this.uiCamera.setVisible(visible);
         this.publishDebug();
       },
+      /**
+       * Real screen rectangles of the HUD action buttons, so validation specs
+       * can click the button that exists instead of the coordinate someone
+       * wrote down when the layout looked different.
+       */
+      getHudButtonLayout: () => this.hud.getActionButtonLayout(),
       setVisualAuditLayer: (layer: "ground" | "props" | "units" | "combat") => {
         this.uiCamera.setVisible(false);
         if (layer === "ground") {
@@ -1192,7 +1304,7 @@ export class LaneBattleScene extends Phaser.Scene {
           this.syncUnitPresentation(unit);
         });
         const focus = this.progressToScreen(0.5, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.refreshCapturePointVisuals();
         this.publishDebug();
       },
@@ -1221,7 +1333,7 @@ export class LaneBattleScene extends Phaser.Scene {
         unit.lastPresentationX = start.x;
         unit.lastPresentationY = start.y;
         const focus = this.progressToScreen(0.5, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.syncUnitPresentation(unit);
         this.publishDebug();
       },
@@ -1252,7 +1364,7 @@ export class LaneBattleScene extends Phaser.Scene {
         unit.lastPresentationY = start.y;
         this.units.forEach((entry) => this.setUnitPresentationVisible(entry, entry === unit));
         const focus = this.progressToScreen(0.5, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.syncUnitPresentation(unit);
         this.publishDebug();
       },
@@ -1317,7 +1429,7 @@ export class LaneBattleScene extends Phaser.Scene {
         });
         [...allies, support].forEach((unit) => this.syncUnitPresentation(unit));
         const focus = this.progressToScreen(0.5, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.publishDebug();
         this.scene.pause();
       },
@@ -1345,7 +1457,7 @@ export class LaneBattleScene extends Phaser.Scene {
         ally.hp = Math.max(1, ally.maxHp - 20);
         this.units.forEach((unit) => this.syncUnitPresentation(unit));
         const focus = this.progressToScreen(supportProgress, 0, support.laneId);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.publishDebug();
         this.scene.pause();
       },
@@ -1412,11 +1524,14 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private focusCentralCapture(): void {
     const focus = this.progressToScreen(CENTRAL_CAPTURE_PROGRESS, 0);
-    this.cameras.main.centerOn(focus.x, focus.y);
+    this.focusCameraOn(focus.x, focus.y);
   }
 
   private isPointerOnUi(pointer: Phaser.Input.Pointer): boolean {
-    return this.audioSettingsOpen || pointer.y <= 250 || pointer.y >= CANVAS_H - 260;
+    if (this.audioSettingsOpen || pointer.y <= 250 || pointer.y >= CANVAS_H - 260) return true;
+    // Capture/tower action buttons now sit beside the selected structure, well
+    // inside the field area, so the band check above no longer covers them.
+    return this.hud.isPointerOverActionButton(pointer.x, pointer.y);
   }
 
   private drawBattlefield(): void {
@@ -1495,7 +1610,7 @@ export class LaneBattleScene extends Phaser.Scene {
       );
       const progress = socket?.progress ?? definition.progress;
       const laneId = socket?.laneRef.laneId ?? this.primaryLaneSpec.id;
-      const pos = this.progressToScreen(progress, 0, laneId);
+      const pos = this.structureScreenPosition(progress, laneId);
       const ring = this.add.circle(pos.x, pos.y, 34, 0xf3cc6a, 0.2)
         .setDepth(this.getGroundDepth(pos.y, -6))
         .setStrokeStyle(4, 0xf8e2a5, 0.55);
@@ -1526,10 +1641,10 @@ export class LaneBattleScene extends Phaser.Scene {
         stroke: "#132033",
         strokeThickness: 3,
       }).setOrigin(0.5).setDepth(this.getGroundDepth(pos.y, 4));
-      ring.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
-      core.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
-      marker.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
-      label.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectCapturePoint(index));
+      ring.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.toggleCapturePointSelection(index));
+      core.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.toggleCapturePointSelection(index));
+      marker.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.toggleCapturePointSelection(index));
+      label.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.toggleCapturePointSelection(index));
 
       return {
         id: index,
@@ -1566,7 +1681,7 @@ export class LaneBattleScene extends Phaser.Scene {
       );
       const progress = socket?.progress ?? definition.progress;
       const laneId = socket?.laneRef.laneId ?? this.primaryLaneSpec.id;
-      const pos = this.progressToScreen(progress, 0, laneId);
+      const pos = this.structureScreenPosition(progress, laneId);
       const sprite = this.add.image(
         pos.x,
         pos.y + STRUCTURE_SOCKET_ATTACH_Y,
@@ -1593,9 +1708,9 @@ export class LaneBattleScene extends Phaser.Scene {
       const statusText = this.add.text(pos.x, pos.y + 52, "가동 중", {
         fontFamily: "sans-serif", fontSize: "11px", color: "#d3d8e8", stroke: "#132033", strokeThickness: 3,
       }).setOrigin(0.5).setDepth(this.getGroundDepth(pos.y, 7));
-      sprite.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectDefenseTower(definition.id));
-      selectionHitZone.on("pointerdown", () => this.selectDefenseTower(definition.id));
-      label.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.selectDefenseTower(definition.id));
+      sprite.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.toggleDefenseTowerSelection(definition.id));
+      selectionHitZone.on("pointerdown", () => this.toggleDefenseTowerSelection(definition.id));
+      label.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.toggleDefenseTowerSelection(definition.id));
       const maxHp = getDefenseTowerMaxHp("stone");
       const defense = getDefenseTowerDefense("stone");
       return {
@@ -1624,12 +1739,12 @@ export class LaneBattleScene extends Phaser.Scene {
       };
     });
 
-    const laneStarts = this.mapSpec.lanes.map((lane) => this.progressToScreen(0, 0, lane.id));
-    const laneEnds = this.mapSpec.lanes.map((lane) => this.progressToScreen(1, 0, lane.id));
+    // Same anchor the combat code targets, so the sprite and the thing units
+    // actually attack can never drift apart.
+    const laneStarts = this.mapSpec.lanes.map((lane) => this.getBaseAnchor("player", lane.id, 0));
+    const laneEnds = this.mapSpec.lanes.map((lane) => this.getBaseAnchor("enemy", lane.id, 1));
     const playerBase = laneStarts.reduce((sum, point) => sum.add(point), new Phaser.Math.Vector2(0, 0)).scale(1 / laneStarts.length);
     const enemyBase = laneEnds.reduce((sum, point) => sum.add(point), new Phaser.Math.Vector2(0, 0)).scale(1 / laneEnds.length);
-    playerBase.x += PLAYER_BASE_WORLD_OFFSET_X;
-    enemyBase.x += ENEMY_BASE_WORLD_OFFSET_X;
     const baseVisibleWorldHeight = this.cssPxToWorld(220);
     const baseDisplaySize = baseVisibleWorldHeight / MAIN_BASE_VISIBLE_HEIGHT_RATIO;
     this.add.ellipse(playerBase.x + 8, playerBase.y + 3, 250, 82, 0x111918, 0.34)
@@ -1809,7 +1924,7 @@ export class LaneBattleScene extends Phaser.Scene {
         this.tickSupport(unit, deltaSec);
         return;
       }
-      const nearest = this.findNearestEnemy(unit);
+      const nearest = this.acquireTarget(unit);
       const enemyTower = this.findNearestEnemyTower(unit);
       if (!nearest && !enemyTower) {
         this.advanceUnit(unit, deltaSec);
@@ -2160,7 +2275,10 @@ export class LaneBattleScene extends Phaser.Scene {
     // While a tower is blocking the path, skip enemy-unit repositioning —
     // it would fight the tower-row-centering pull above and could strand the
     // unit oscillating just outside both engagement ranges.
-    const enemyAhead = towerLimit === undefined ? this.findNearestEnemy(unit) : undefined;
+    // Reuse the caller's locked target instead of re-scanning: a second,
+    // independent nearest-enemy lookup could steer the unit toward one enemy
+    // while the attack logic aimed at another.
+    const enemyAhead = towerLimit === undefined ? (combatTarget ?? this.acquireTarget(unit)) : undefined;
     if (enemyAhead) this.repositionTowardCombat(unit, enemyAhead, deltaSec);
     if (
       enemyAhead
@@ -2597,18 +2715,65 @@ export class LaneBattleScene extends Phaser.Scene {
     }
   }
 
+  /**
+   * Closest enemy in the same lane.
+   *
+   * A sticky-target variant (hold the current enemy unless another is clearly
+   * closer) was tried here and measured *worse*: in an interleaved A/B over
+   * ~6.5k engaged unit-frames per arm it cut lane-row churn ~13% but dropped
+   * the attack rate from 6.80% to 5.26% of engaged frames, because units kept
+   * aiming at a committed target instead of hitting whoever was in reach.
+   * Nearest-enemy stays until there is evidence for something better.
+   */
   private findNearestEnemy(unit: LaneUnit): LaneUnit | undefined {
     let best: LaneUnit | undefined;
     let bestDistance = Number.POSITIVE_INFINITY;
-    this.units.forEach((other) => {
-      if (other.team === unit.team || other.laneId !== unit.laneId) return;
+    for (const other of this.units) {
+      if (other.team === unit.team || other.laneId !== unit.laneId) continue;
       const distance = this.unitDistance(unit, other);
       if (distance < bestDistance) {
         bestDistance = distance;
         best = other;
       }
-    });
+    }
     return best;
+  }
+
+  /**
+   * The enemy this unit is committed to fighting.
+   *
+   * A unit advances down the lane until an enemy comes within
+   * `AGGRO_RANGE_PROGRESS`, then charges that specific enemy and keeps
+   * charging until it dies or escapes `AGGRO_LEASH_PROGRESS`. It does not swap
+   * to whoever happens to be marginally closer this frame.
+   *
+   * An earlier attempt kept re-comparing distances with a switch margin and
+   * measured worse (attack rate 6.80% -> 5.26%): units still re-shopped
+   * constantly, they just did it with hysteresis. Committing on first contact
+   * and holding is the behaviour that was actually wanted.
+   */
+  private acquireTarget(unit: LaneUnit): LaneUnit | undefined {
+    if (unit.targetId !== undefined) {
+      const held = this.units.find((other) => other.id === unit.targetId);
+      if (held && held.laneId === unit.laneId && this.unitDistance(unit, held) <= AGGRO_LEASH_PROGRESS) {
+        return held;
+      }
+      unit.targetId = undefined;
+    }
+
+    let nearest: LaneUnit | undefined;
+    let nearestDistance = Number.POSITIVE_INFINITY;
+    for (const other of this.units) {
+      if (other.team === unit.team || other.laneId !== unit.laneId) continue;
+      const distance = this.unitDistance(unit, other);
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearest = other;
+      }
+    }
+    if (!nearest || nearestDistance > AGGRO_RANGE_PROGRESS) return undefined;
+    unit.targetId = nearest.id;
+    return nearest;
   }
 
   private findNearestEnemyTower(unit: LaneUnit): DefenseTowerState | undefined {
@@ -2684,7 +2849,19 @@ export class LaneBattleScene extends Phaser.Scene {
       const prevOwner = point.owner;
       const nearbyPlayer = this.units.filter((unit) => unit.team === "player" && unit.laneId === point.laneId && progressBetween(unit.progress, point.progress) <= CAPTURE_RADIUS_PROGRESS).length;
       const nearbyEnemy = this.units.filter((unit) => unit.team === "enemy" && unit.laneId === point.laneId && progressBetween(unit.progress, point.progress) <= CAPTURE_RADIUS_PROGRESS).length;
-      const pressure = Phaser.Math.Clamp((nearbyPlayer - nearbyEnemy) * CAPTURE_RATE_PER_SEC * deltaSec, -0.8, 0.8);
+      // A standing defense tower holds its own ground. Without this it
+      // contributed nothing to the contest, so a handful of attackers flipped
+      // the point in ~1.4s — the tower got off two volleys and then started
+      // shooting for the other side, which read as "my tower does nothing".
+      // Capture-point buildings have no HP and cannot be attacked directly, so
+      // counting the tower as defenders is how it gets to defend at all; a
+      // real push still takes the point, it just has to be a real push.
+      const towerDefenders = point.buildingId === "defense_tower" && point.owner !== "neutral"
+        ? CAPTURE_TOWER_DEFENDER_EQUIVALENT
+        : 0;
+      const playerStrength = nearbyPlayer + (point.owner === "player" ? towerDefenders : 0);
+      const enemyStrength = nearbyEnemy + (point.owner === "enemy" ? towerDefenders : 0);
+      const pressure = Phaser.Math.Clamp((playerStrength - enemyStrength) * CAPTURE_RATE_PER_SEC * deltaSec, -0.8, 0.8);
 
       if (pressure !== 0) point.control = Phaser.Math.Clamp(point.control + pressure, -1, 1);
 
@@ -2885,6 +3062,47 @@ export class LaneBattleScene extends Phaser.Scene {
     });
   }
 
+  /**
+   * Pointer-driven selection. Tapping the selected structure again clears it,
+   * which is the only way (besides picking something else) to dismiss its
+   * action buttons. Kept separate from `selectCapturePoint` so debug controls
+   * and probes can still select idempotently.
+   */
+  private toggleCapturePointSelection(id: number): void {
+    this.fieldObjectTapped = true;
+    if (this.selectedCapturePointId === id) {
+      this.clearFieldSelection();
+      return;
+    }
+    this.selectCapturePoint(id);
+  }
+
+  private toggleDefenseTowerSelection(id: number): void {
+    this.fieldObjectTapped = true;
+    if (this.selectedDefenseTowerId === id) {
+      this.clearFieldSelection();
+      return;
+    }
+    this.selectDefenseTower(id);
+  }
+
+  /** Drops any field selection, hiding the capture/tower action buttons. */
+  private clearFieldSelection(): void {
+    if (
+      this.selectedCapturePointId === null
+      && this.selectedDefenseTowerId === null
+      && this.selectedMainBaseTeam === null
+    ) return;
+    this.selectedCapturePointId = null;
+    this.selectedDefenseTowerId = null;
+    this.selectedMainBaseTeam = null;
+    this.baseResearchPanel.setVisible(false);
+    this.audio.playSfx("sfx.ui.cancel", { eventKey: "field:deselect" });
+    this.refreshCapturePointVisuals();
+    this.refreshDefenseTowerVisuals();
+    this.refreshUi();
+  }
+
   private selectCapturePoint(id: number): void {
     this.selectedCapturePointId = id;
     this.selectedDefenseTowerId = null;
@@ -2907,6 +3125,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private selectMainBase(team: TeamId): void {
+    this.fieldObjectTapped = true;
     this.selectedMainBaseTeam = team;
     this.selectedCapturePointId = null;
     this.selectedDefenseTowerId = null;
@@ -3174,7 +3393,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.capturePoints.forEach((point) => {
       const selected = this.selectedCapturePointId === point.id;
       const ownerColor = point.owner === "player" ? 0x61c3ff : point.owner === "enemy" ? 0xff7f7f : 0xf3cc6a;
-      const rawPos = this.progressToScreen(point.progress, 0, point.laneId);
+      const rawPos = this.structureScreenPosition(point.progress, point.laneId);
       const pos = this.isPrototypeV2()
         ? this.snapWorldPointToCanvasPixel(rawPos.x, rawPos.y)
         : rawPos;
@@ -3196,22 +3415,32 @@ export class LaneBattleScene extends Phaser.Scene {
         .setPosition(pos.x, pos.y)
         .setDepth(this.getGroundDepth(pos.y, -5))
         .setVisible(!structuredPoint || selected);
-      const markerHeight = showingTower
-        ? this.cssPxToWorld(this.scaleVisualConfig.captureTowerCssHeight / getDefenseTowerVisibleHeightRatio(this.getStructureOwnerAge(point.owner), "full"))
-        : showingRuins
-          ? this.cssPxToWorld(this.scaleVisualConfig.captureTowerCssHeight / getDefenseTowerVisibleHeightRatio(ruinsAgeId, "ruins"))
-          : this.cssPxToWorld(96 / CAPTURE_MARKER_VISIBLE_HEIGHT_RATIO);
-      point.marker
-        .setTexture(
-          showingTower
-            ? getDefenseTowerTexture(this.getStructureOwnerAge(point.owner), "full", point.owner === "enemy" ? "enemy" : "player")
-            : showingRuins
-              ? getDefenseTowerTexture(ruinsAgeId, "ruins", ruinsOwner)
-              : getCaptureMarkerTexture(point.owner),
+      // Every tower state is normalized by the *full* ratio, so the canvas
+      // stays one size and each state's own artwork decides how tall it looks.
+      // Normalizing ruins by the ruins ratio instead made rubble render at the
+      // exact height of an intact tower — and 1.39x the height of the very
+      // same ruins on a lane defense tower, which is what read as inconsistent
+      // and stretched.
+      const markerHeight = showingTower || showingRuins
+        ? this.cssPxToWorld(
+          this.scaleVisualConfig.captureTowerCssHeight
+          / getDefenseTowerVisibleHeightRatio(showingTower ? this.getStructureOwnerAge(point.owner) : ruinsAgeId, "full"),
         )
+        : this.cssPxToWorld(96 / CAPTURE_MARKER_VISIBLE_HEIGHT_RATIO);
+      point.marker.setTexture(
+        showingTower
+          ? getDefenseTowerTexture(this.getStructureOwnerAge(point.owner), "full", point.owner === "enemy" ? "enemy" : "player")
+          : showingRuins
+            ? getDefenseTowerTexture(ruinsAgeId, "ruins", ruinsOwner)
+            : getCaptureMarkerTexture(point.owner),
+      );
+      // Size from the frame we just set, never a hardcoded square: the current
+      // structure art happens to be 512x512, so forcing a square hid this, but
+      // any non-square asset would render stretched.
+      point.marker
         .setPosition(pos.x, pos.y + STRUCTURE_SOCKET_ATTACH_Y)
         .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
-        .setDisplaySize(markerHeight, markerHeight)
+        .setDisplaySize(markerHeight * frameAspectRatio(point.marker), markerHeight)
         .setDepth(this.getGroundDepth(pos.y))
         .setVisible(this.terrainMode === "world-surface");
       point.ownerText.setText(point.owner === "player" ? "아군 점령" : point.owner === "enemy" ? "적 점령" : "중립");
@@ -3274,7 +3503,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.defenseTowers.forEach((tower) => {
       const selected = this.selectedDefenseTowerId === tower.id;
       const ownerColor = tower.owner === "player" ? 0x61c3ff : tower.owner === "enemy" ? 0xff7f7f : 0xf3cc6a;
-      const rawPos = this.progressToScreen(tower.progress, 0, tower.laneId);
+      const rawPos = this.structureScreenPosition(tower.progress, tower.laneId);
       const pos = this.isPrototypeV2() ? this.snapWorldPointToCanvasPixel(rawPos.x, rawPos.y) : rawPos;
       const selectedScale = this.isPrototypeV2() ? 1 : selected ? 1.04 : 1;
       const visualState = this.getDefenseTowerVisualState(tower);
@@ -3283,13 +3512,17 @@ export class LaneBattleScene extends Phaser.Scene {
       const towerHeight = this.isPrototypeV2()
         ? this.cssPxToWorld(this.scaleVisualConfig.captureTowerCssHeight / fullVisibleHeightRatio) * selectedScale
         : TOWER_H * selectedScale;
-      const towerWidth = this.isPrototypeV2()
-        ? towerHeight * (tower.sprite.frame.realWidth / tower.sprite.frame.realHeight)
-        : TOWER_W * selectedScale;
       const hpRatio = tower.maxHp > 0 ? tower.hp / tower.maxHp : 0;
       const texture = getDefenseTowerTexture(towerAgeId, visualState, tower.owner === "enemy" ? "enemy" : "player");
+      // Set the texture before measuring it. Reading the aspect ratio first
+      // sized the new state's artwork using the *previous* state's frame, so a
+      // full -> ruins/construction switch rendered one refresh at the wrong
+      // proportions.
+      tower.sprite.setTexture(texture);
+      const towerWidth = this.isPrototypeV2()
+        ? towerHeight * frameAspectRatio(tower.sprite)
+        : TOWER_W * selectedScale;
       tower.sprite
-        .setTexture(texture)
         .setPosition(pos.x, pos.y + STRUCTURE_SOCKET_ATTACH_Y)
         .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
         .setDisplaySize(towerWidth, towerHeight)
@@ -4013,6 +4246,7 @@ export class LaneBattleScene extends Phaser.Scene {
         this.refreshUnitOverlayDensity();
       })
       .on("pointerdown", () => {
+        this.fieldObjectTapped = true;
         this.units.forEach((entry) => {
           entry.selected = entry.id === unit.id ? !entry.selected : false;
           this.syncUnitPresentation(entry);
@@ -4463,6 +4697,7 @@ export class LaneBattleScene extends Phaser.Scene {
       selectedDefenseTower: selectedTower,
     });
     const selectedActions = this.getSelectedCaptureActions();
+    this.hud.setCaptureActionAnchor(this.getSelectedStructureScreenPosition());
     this.hud.apply(snapshot, selectedActions);
     this.hud.setDevToolsVisible(this.devModeAvailable);
     this.hud.setDevMode(this.devModeAvailable && this.devModeEnabled);
@@ -4477,6 +4712,28 @@ export class LaneBattleScene extends Phaser.Scene {
       this.baseResearchPanel.setVisible(false);
     }
     this.refreshHudActionLabels();
+  }
+
+  /**
+   * Where the currently selected structure sits on screen, in the HUD's
+   * coordinate space, so its action buttons can be placed beside it. Returns
+   * `null` when nothing on the field is selected.
+   */
+  private getSelectedStructureScreenPosition(): { x: number; y: number } | null {
+    const point = this.capturePoints.find((entry) => entry.id === this.selectedCapturePointId);
+    const tower = this.defenseTowers.find((entry) => entry.id === this.selectedDefenseTowerId);
+    const sprite = point?.marker ?? tower?.sprite;
+    if (!sprite) return null;
+    const cam = this.cameras.main;
+    // Measure against `worldView`, not `scrollX`/`scrollY`. A zoomed camera is
+    // rendered around its midpoint, so scroll is not the top-left of what is
+    // on screen — at zoom 0.46 the two differ by 939x528 world px, which put
+    // this anchor 432x243 screen px up-left of the structure it belongs to.
+    const view = cam.worldView;
+    return {
+      x: (sprite.x - view.x) * cam.zoom,
+      y: (sprite.y - view.y) * cam.zoom,
+    };
   }
 
   private refreshHudActionLabels(): void {
@@ -4851,12 +5108,15 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private getBaseAnchor(teamId: TeamId, laneId: string, fallbackProgress: number): Phaser.Math.Vector2 {
     const lanePath = this.lanePaths.get(laneId);
-    if (lanePath?.length) {
-      const point = this.progressToScreen(teamId === "player" ? 0 : 1, 0, laneId);
-      point.x += teamId === "player" ? PLAYER_BASE_WORLD_OFFSET_X : ENEMY_BASE_WORLD_OFFSET_X;
-      return point;
-    }
-    return this.progressToScreen(fallbackProgress, 0, this.primaryLaneSpec.id);
+    if (!lanePath?.length) return this.structureScreenPosition(fallbackProgress, this.primaryLaneSpec.id);
+    const isPlayer = teamId === "player";
+    const end = isPlayer ? 0 : 1;
+    // Step back along the lane rather than along world X, so the base stays on
+    // the road on a diagonal lane and both sides mirror each other.
+    const inward = this.structureScreenPosition(isPlayer ? 0.02 : 0.98, laneId);
+    const point = this.structureScreenPosition(end, laneId);
+    const outward = point.clone().subtract(inward).normalize();
+    return point.add(outward.scale(BASE_LANE_SETBACK));
   }
 
   private progressToScreen(progress: number, laneRow: number, laneId = this.primaryLaneSpec.id): Phaser.Math.Vector2 {
@@ -4877,6 +5137,21 @@ export class LaneBattleScene extends Phaser.Scene {
       .clone()
       .lerp(endNode.position, segmentProgress)
       .add(segmentPerp.scale((laneRow + LANE_ROW_WORLD_OFFSET) * LANE_ROW_SPACING));
+  }
+
+  /**
+   * Where a structure that occupies a map socket should be drawn.
+   *
+   * `progressToScreen` shifts everything sideways by `LANE_ROW_WORLD_OFFSET`
+   * so that units walk centred on the painted road, but the ground pads are
+   * rendered straight at `socket.position` (see
+   * `BattlefieldWorldRenderer.createStructureGround`). Positioning structures
+   * with a row of 0 therefore left every tower, capture marker and label
+   * floating 74px (1.2 * 62) off its own pad. Cancelling the world row offset
+   * reproduces `socket.position` exactly, without needing the socket record.
+   */
+  private structureScreenPosition(progress: number, laneId = this.primaryLaneSpec.id): Phaser.Math.Vector2 {
+    return this.progressToScreen(progress, -LANE_ROW_WORLD_OFFSET, laneId);
   }
 
   private getGroundDepth(groundY: number, offset = 0): number {

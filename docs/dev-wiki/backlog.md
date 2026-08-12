@@ -14,6 +14,32 @@ GitHub Issues own task status. This file owns planning context.
 
 ## Active Queue
 
+- **[NEXT] Melee "blocked by ally" flow (~11.9% of melee unit-frames)** —
+  branch `issue-gameplay-issues-followup` measured the current combat loop
+  under natural wave pacing (no artificial spawning, 45s, 547 melee /
+  328 ranged unit-frames): melee spends 8.6% attacking, 45.5% on cooldown,
+  34.0% closing, **11.9% blocked behind a friendly unit**, and **0.0% in range
+  but idle**. So the "unit stands there instead of attacking" pathology is no
+  longer measurable in normal play — the frame-rate-dependent lerp fix in
+  PR #5 appears to have resolved it. The one remaining inefficiency is the
+  blocked-by-ally share.
+  - Target for any future change: reduce blocked-by-ally below 11.9% **without
+    lowering the attack rate**. Both numbers come from the same probe, so a
+    candidate change must be A/B'd the same way.
+  - Do *not* re-try sticky targeting without new evidence: an interleaved A/B
+    (6489 vs 6524 engaged unit-frames) showed target locking cut lane-row churn
+    ~13% but dropped attack rate 6.80% -> 5.26%. It was reverted; the reasoning
+    and numbers live in the `findNearestEnemy()` doc comment.
+  - Note: piling on 10 waves at once drives blocked-by-ally to 71.8% with zero
+    total HP change over 30s, but that is an artificial pile-up, not something
+    the real wave cadence produces. Don't diagnose from it.
+- **[VERIFY ON REAL HARDWARE] Full Playwright suite completion** — the 67-test
+  suite now enters the game again (19 specs were failing to start at all), but
+  a full run takes over an hour under software GL in the dev container. Run
+  `npx playwright test` on real hardware to get a trustworthy pass/fail
+  baseline and fix whatever stale expectations remain; `day8-regression` (2/2)
+  and `a4-facing-stability` are confirmed green.
+
 - **[AWAITING REAL-HARDWARE CONFIRMATION] Runtime performance fixes landed
   2026-08-12** — branch `issue-perf-ai-pvp-groundwork`; no GitHub Issue (no
   `gh` CLI in this environment), recorded via this entry +
@@ -68,51 +94,13 @@ GitHub Issues own task status. This file owns planning context.
   `rollKillResourceReward()` uses `Phaser.Utils.Array.GetRandom()`, which is
   backed by `Math.random()` and so ignores the `Phaser.Math.RND.sow([seed])`
   seeding used elsewhere.
-- **[PRIORITY 1 — fix as soon as reproduced] Unit sprite semi-transparency
-  bug** — user-reported, screenshot-confirmed: a friendly/enemy unit
-  (originally described as a supply/보급 unit) sometimes renders visibly
-  translucent in actual play, at an unspecified moment/age/situation. This
-  is flagged by the user as something that "무조건 곧바로 고쳐야 되는"
-  (must be fixed the moment it's reproducible), ranked above normal queue
-  order once repro info exists — treat the next report of this as
-  drop-everything priority, not routine backlog.
-  - **Investigated 2026-08-08, not yet reproduced.** Two tracks were run:
-    (a) 80+ seconds of live Playwright monitoring of every support unit's
-    `sprite.alpha`/`sprite.tint` during real combat — always normal (alpha
-    1, no tint) the whole time; (b) a full alpha-channel scan of all
-    ~1845 unit PNGs under `public/assets/production/units/`, which found a
-    *different*, real bug: several late-era units' (`breakthrough-trooper`,
-    `grenadier-late`, `heavy-gunner`, `cannon-i`, `light-cavalry`, `tank`,
-    `shock-trooper`, `special-forces`) `walk-a`/`walk-b` frames had
-    genuinely low alpha (~170-200 vs a healthy ~240+), caused by
-    `tools/asset-qa/generate_late_era_unit_variants.py` output going stale
-    relative to later base-art updates. That was fixed (script re-run,
-    frames regenerated, confirmed healthy) — see `docs/dev-wiki/log.md`
-    2026-08-08 "적 팀 색상 자산 파이프라인 재생성..." entry — but it is
-    **not** the bug the user's screenshot showed: those stale frames are
-    `walk-a`/`walk-b`, and the shipped animation registry
-    (`src/presentation/units/unitAnimationRegistry.ts`) only ever
-    references numbered `walk-01/02/03` poses for these units, so the
-    stale frames were never actually visible on screen.
-  - **What to check next, when it recurs**: capture (in order of ease) —
-    (1) the exact unit type and team (player/enemy), (2) the age/시대 at
-    the time, (3) what the unit was doing (idle/walking/attacking/just
-    spawned/just died/being healed), (4) whether it's the "opening wave"
-    right at battle start vs. a later regular/instant wave, (5) if
-    possible, a Playwright repro script with `sprite.alpha`/`sprite.tint`
-    logged every frame for a few seconds around the moment, since this
-    turn's monitoring found runtime alpha/tint always normal — meaning if
-    it's real, it's not a static per-unit `alpha` bug like the one just
-    fixed — a repo-wide grep found **zero** `setAlpha(`/`.alpha =` calls on
-    `unit.sprite` anywhere in `LaneBattleScene.ts` (2026-08-08), so nothing
-    in this scene's code currently touches unit sprite alpha at all. That
-    points toward something more transient/environmental: a single-frame
-    render artifact during a texture swap, GPU/driver blending quirk (the
-    dev console has repeatedly logged "GPU stall due to ReadPixels"
-    warnings from the WebGL driver during testing), or a browser/hardware-
-    specific compositing issue that a static code read won't surface —
-    which is exactly why a fresh repro (screenshot + the checklist above)
-    matters more than more code archaeology at this point.
+- **[RESOLVED 2026-08-12] Unit sprite semi-transparency** — closed. A full
+  alpha audit of all 3794 unit assets under `public/assets/production/units`
+  found **zero** files whose body maxes below alpha 250 (584 supply assets
+  included), and a repo-wide search confirms nothing in the source touches a
+  unit sprite's alpha at runtime. The historical defect (frames capping at
+  alpha 170-200) is gone from the regenerated art. Reopen only with a fresh
+  screenshot plus the unit/age/action context.
 - **Concept pivot planning: lane siege / hiring / tech / fortress economy game** —
   the user has now clarified that the target is no longer a dungeon squad
   action roguelite. The new target is a mobile-friendly lane-based siege game

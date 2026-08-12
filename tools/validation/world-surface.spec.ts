@@ -40,14 +40,11 @@ async function enterBattlefield(page: import("@playwright/test").Page): Promise<
   const canvas = page.locator("canvas");
   const box = await canvas.boundingBox();
   if (!box) throw new Error("Canvas is not visible");
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    await canvas.click({ position: { x: box.width * 0.5, y: box.height * 0.894 } });
-    await page.waitForTimeout(500);
-    const ready = await page.evaluate(() => Boolean(
-      (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-    ));
-    if (ready) return;
-  }
+  // `autostart=1` enters the battle once assets finish loading; a cold
+  // load outlasts any fixed polling budget.
+  await page.waitForFunction(() => Boolean(
+    (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+  ));
   await page.waitForFunction(() => Boolean(
     (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
   ));

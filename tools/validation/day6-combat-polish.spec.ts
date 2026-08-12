@@ -43,14 +43,11 @@ async function openGame(page: import("@playwright/test").Page): Promise<void> {
   const box = await canvas.boundingBox();
   if (!box) throw new Error("Canvas is not visible");
   await page.waitForTimeout(1_000);
-  for (let attempt = 0; attempt < 15; attempt += 1) {
-    await canvas.click({ position: { x: box.width * 0.5, y: box.height * 0.894 } });
-    await page.waitForTimeout(750);
-    if (await page.evaluate(() => Boolean(
-      (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-    ))) return;
-  }
-  throw new Error("Battlefield control did not initialize");
+  // `autostart=1` enters the battle once assets finish loading; a cold
+  // load outlasts any fixed polling budget.
+  await page.waitForFunction(() => Boolean(
+    (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+  ));
 }
 
 const snapshot = (page: import("@playwright/test").Page): Promise<Snapshot> => page.evaluate(() => (

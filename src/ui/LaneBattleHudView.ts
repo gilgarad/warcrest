@@ -28,6 +28,13 @@ interface ActionButton {
 /** Max distinct resources shown in a single button's cost row (gold/wood/food/metal/research). */
 const MAX_COST_ITEMS = 5;
 
+/** Horizontal gap between the selected structure and its action menu. */
+const CAPTURE_MENU_GAP_X = 150;
+/** Keep the action menu this far from the screen edges. */
+const CAPTURE_MENU_SCREEN_MARGIN = 24;
+/** Top of the playable area, below the resource bar. */
+const CAPTURE_MENU_TOP_LIMIT = 168;
+
 type StrategicActionId = "hire-worker" | "hire-research-worker" | "use-instant-wave" | "age-up";
 
 interface InfoMessageOptions {
@@ -59,6 +66,14 @@ export class LaneBattleHudView {
   private readonly resourceBarXs: number[] = [];
   private readonly workerRows = new Map<WorkerRole, WorkerUiRow>();
   private readonly captureActionButtons = new Map<CapturePointAction | DefenseTowerAction, ActionButton>();
+  /** Fallback anchor for the capture-action stack (used when nothing on the
+   * field is selected) and the spacing between its slots. */
+  private captureActionOriginX = 0;
+  private captureActionOriginY = 0;
+  private captureActionGapY = 56;
+  /** Screen position of the selected structure, if any; see
+   * `setCaptureActionAnchor`. */
+  private captureActionAnchor: { x: number; y: number } | null = null;
   private readonly strategicActionButtons = new Map<StrategicActionId, ActionButton>();
   private ageText!: Phaser.GameObjects.Text;
   private waveText!: Phaser.GameObjects.Text;
@@ -154,7 +169,7 @@ export class LaneBattleHudView {
     this.playerBaseBar.setOrigin(0, 0.5);
     this.enemyBaseBar.setOrigin(0, 0.5);
     this.rosterText.setVisible(false);
-    this.captureActionButtons.forEach((button, action) => this.setActionVisible(button, actions.includes(action)));
+    this.layoutCaptureActions(actions);
     this.capturePanelTitle.setText(snapshot.captureTitle);
     this.capturePanelBody.setText(snapshot.captureLines);
   }
@@ -194,6 +209,31 @@ export class LaneBattleHudView {
 
   getAgeLabelText(): string {
     return this.ageText.text;
+  }
+
+  /**
+   * Screen-space rectangles of the HUD action buttons.
+   *
+   * Validation specs used to hardcode button coordinates, so every HUD layout
+   * change silently broke them — they kept clicking empty space and then
+   * failed on an unrelated assertion further down. Reading the real positions
+   * keeps a spec honest about clicking the actual button while surviving
+   * layout changes.
+   */
+  getActionButtonLayout(): Record<string, { x: number; y: number; width: number; height: number; visible: boolean }> {
+    const layout: Record<string, { x: number; y: number; width: number; height: number; visible: boolean }> = {};
+    const record = (id: string, button: ActionButton): void => {
+      layout[id] = {
+        x: button.rect.x,
+        y: button.rect.y,
+        width: button.rect.width,
+        height: button.rect.height,
+        visible: button.rect.visible,
+      };
+    };
+    this.strategicActionButtons.forEach((button, id) => record(id, button));
+    this.captureActionButtons.forEach((button, id) => record(id, button));
+    return layout;
   }
 
   setStrategicActionLabel(actionId: StrategicActionId, label: string): void {
@@ -382,6 +422,9 @@ export class LaneBattleHudView {
     const captureActionX = centerX + 256;
     const captureActionY = this.canvasHeight - 212;
     const captureActionGapY = 56;
+    this.captureActionOriginX = captureActionX;
+    this.captureActionOriginY = captureActionY;
+    this.captureActionGapY = captureActionGapY;
     const captureActionWidth = 198;
     const captureActionHeight = 44;
     this.captureActionButtons.set("rebuild-defense-tower", this.createActionButton(captureActionX, captureActionY, captureActionWidth, captureActionHeight, "타워 재건", this.callbacks.rebuildDefenseTower));
@@ -491,6 +534,89 @@ export class LaneBattleHudView {
       icon.setTexture(getResourceIconKey(resourceId)).setPosition(itemX - 9, y).setVisible(true);
       costText.setText(String(Math.round(amount))).setPosition(itemX + 1, y).setVisible(true);
     });
+  }
+
+  /**
+   * Screen position of the structure whose actions are being shown, so the
+   * action buttons can appear next to it instead of in a fixed corner. Pass
+   * `null` when nothing is selected.
+   */
+  setCaptureActionAnchor(anchor: { x: number; y: number } | null): void {
+    this.captureActionAnchor = anchor;
+  }
+
+  /**
+   * Shows the available capture actions as a stack beside the selected
+   * structure, packed into consecutive slots and kept fully on screen.
+   *
+   * Two things are deliberate here. Actions pack from the top of the stack
+   * because at most three of the five are ever offered at once — with a fixed
+   * slot each, the last one ("폐기") sat at y=934 in a 900px viewport and was
+   * literally unclickable. And the whole stack is clamped inside the playable
+   * area rather than simply following the structure, because a menu that
+   * tracks a structure near the screen edge reintroduces exactly that bug.
+   */
+  private layoutCaptureActions(actions: readonly (CapturePointAction | DefenseTowerAction)[]): void {
+    const visible: ActionButton[] = [];
+    this.captureActionButtons.forEach((button, action) => {
+      const isVisible = actions.includes(action);
+      this.setActionVisible(button, isVisible);
+      if (isVisible) visible.push(button);
+    });
+    if (visible.length === 0) return;
+
+    const width = visible[0].rect.width;
+    const height = visible[0].rect.height;
+    const stackHeight = (visible.length - 1) * this.captureActionGapY + height;
+    const anchor = this.captureActionAnchor;
+
+    let centerX = this.captureActionOriginX + width / 2;
+    let top = this.captureActionOriginY;
+    if (anchor) {
+      // Prefer the side of the structure with more room, so the menu does not
+      // cover the structure the player just clicked.
+      const towardRight = anchor.x < this.canvasWidth * 0.6;
+      centerX = anchor.x + (towardRight ? CAPTURE_MENU_GAP_X : -CAPTURE_MENU_GAP_X);
+      top = anchor.y - stackHeight / 2;
+    }
+
+    const minX = CAPTURE_MENU_SCREEN_MARGIN + width / 2;
+    const maxX = this.canvasWidth - CAPTURE_MENU_SCREEN_MARGIN - width / 2;
+    const minY = CAPTURE_MENU_TOP_LIMIT;
+    const maxY = this.canvasHeight - this.bottomHudHeight() - CAPTURE_MENU_SCREEN_MARGIN - stackHeight;
+    centerX = Phaser.Math.Clamp(centerX, minX, Math.max(minX, maxX));
+    top = Phaser.Math.Clamp(top, minY, Math.max(minY, maxY));
+
+    visible.forEach((button, slot) => {
+      const targetY = top + this.captureActionGapY * slot + height / 2;
+      button.text.x += centerX - button.rect.x;
+      button.text.y += targetY - button.rect.y;
+      button.rect.setPosition(centerX, targetY);
+    });
+  }
+
+  /**
+   * Whether a screen point lands on a visible action button.
+   *
+   * The scene's "is this pointer on UI" test is a coarse top/bottom band, which
+   * stopped covering the capture-action buttons once they moved next to the
+   * selected structure — so clicking "build" registered as a tap on empty
+   * ground and dropped the selection the button belonged to.
+   */
+  isPointerOverActionButton(x: number, y: number): boolean {
+    const hit = (button: ActionButton): boolean => {
+      if (!button.rect.visible) return false;
+      return Math.abs(x - button.rect.x) <= button.rect.width / 2
+        && Math.abs(y - button.rect.y) <= button.rect.height / 2;
+    };
+    let over = false;
+    this.captureActionButtons.forEach((button) => { over = over || hit(button); });
+    this.strategicActionButtons.forEach((button) => { over = over || hit(button); });
+    return over;
+  }
+
+  private bottomHudHeight(): number {
+    return HUD_BOTTOM_SOURCE_HEIGHT * (this.canvasWidth / HUD_SOURCE_WIDTH);
   }
 
   private setActionVisible(button: ActionButton, visible: boolean): void {

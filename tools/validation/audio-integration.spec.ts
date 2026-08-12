@@ -47,7 +47,6 @@ async function clickCanvasLogical(page: Page, x: number, y: number): Promise<voi
 async function startGame(page: Page): Promise<void> {
   await expect.poll(async () => (await audioState(page)).bgmState).toBe("menu");
   for (let attempt = 0; attempt < 15; attempt += 1) {
-    await clickCanvasLogical(page, 800, 805);
     try {
       await page.waitForFunction(() => (
         (window as unknown as { __gameDebug?: { phase?: string } }).__gameDebug?.phase === "lane-siege"

@@ -19,17 +19,11 @@ test.beforeAll(() => mkdirSync(ARTIFACT_DIR, { recursive: true }));
 test("captures support mana burst, depletion, and recovery", async ({ page }) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(GAME_URL);
-  const canvas = page.locator("canvas");
-  for (let attempt = 0; attempt < 15; attempt += 1) {
-    const box = await canvas.boundingBox();
-    if (!box) throw new Error("Canvas is not visible");
-    await canvas.click({ position: { x: 800 * box.width / 1600, y: 805 * box.height / 900 } });
-    await page.waitForTimeout(750);
-    if (await page.evaluate(() => Boolean(
-      (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-    ))) break;
-    if (attempt === 14) throw new Error("Support mana probe did not initialize");
-  }
+  // `autostart=1` enters the battle once assets finish loading; a cold
+  // load outlasts any fixed polling budget.
+  await page.waitForFunction(() => Boolean(
+    (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+  ));
   await page.evaluate(() => {
     const control = (window as unknown as {
       __terrainPrototypeControl: {

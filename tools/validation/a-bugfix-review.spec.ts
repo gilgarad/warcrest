@@ -3,7 +3,7 @@ import { cpSync, mkdirSync, writeFileSync } from "node:fs";
 import type { LaneBattleDebugSnapshot } from "../../src/scenes/laneBattleDebugSnapshot";
 
 const ARTIFACT_DIR = "artifacts/a-bugfix-review";
-const BASE_URL = "/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&seed=a-bugfix-review";
+const BASE_URL = "/warcrest/?terrain=world-surface&preset=balanced&scale=recommended&seed=a-bugfix-review&autostart=1";
 
 test.beforeAll(() => {
   mkdirSync(ARTIFACT_DIR, { recursive: true });
@@ -11,29 +11,15 @@ test.beforeAll(() => {
 
 test.setTimeout(120_000);
 
-async function clickLogical(page: Page, x: number, y: number): Promise<void> {
-  const canvas = page.locator("canvas");
-  const box = await canvas.boundingBox();
-  if (!box) throw new Error("Canvas is not visible");
-  await canvas.click({
-    position: { x: x * box.width / 1600, y: y * box.height / 900 },
-    force: true,
-  });
-}
-
 async function openGame(page: Page, query: string): Promise<void> {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto(`${BASE_URL}${query}`);
   await page.waitForTimeout(1_000);
-  for (let attempt = 0; attempt < 15; attempt += 1) {
-    await clickLogical(page, 800, 805);
-    await page.waitForTimeout(750);
-    const ready = await page.evaluate(() => Boolean(
-      (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
-    ));
-    if (ready) return;
-  }
-  throw new Error(`validation probe did not initialize for ${query}`);
+  // `autostart=1` enters the battle once assets finish loading; a cold
+  // load outlasts any fixed polling budget.
+  await page.waitForFunction(() => Boolean(
+    (window as unknown as { __terrainPrototypeControl?: unknown }).__terrainPrototypeControl,
+  ));
 }
 
 const snapshot = (page: Page): Promise<LaneBattleDebugSnapshot> => page.evaluate(() => (
