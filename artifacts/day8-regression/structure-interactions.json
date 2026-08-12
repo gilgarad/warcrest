@@ -1,14 +1,16 @@
 {
   "current": {
     "phase": "lane-siege",
-    "elapsedSec": 9.144409999999995,
+    "elapsedSec": 1.7666666666666688,
     "player": {
       "ageId": "stone",
+      "selectedProductionAgeId": "stone",
       "resources": {
-        "gold": 9992,
+        "gold": 9989,
         "wood": 9989,
-        "food": 10001.789820000016,
+        "food": 9999,
         "metal": 9999,
+        "research": 9999,
         "gunpowder": 9999,
         "fuel": 9999
       },
@@ -21,20 +23,22 @@
         "idle": 0
       },
       "baseHp": 400,
-      "nextWaveInSec": 20.85558999999991
+      "nextWaveInSec": 18.233333333333245
     },
     "enemy": {
       "ageId": "stone",
+      "selectedProductionAgeId": "stone",
       "resources": {
-        "gold": 54,
-        "wood": 20,
-        "food": 28.14441000000009,
-        "metal": 10,
+        "gold": 0,
+        "wood": 0,
+        "food": 10,
+        "metal": 0,
+        "research": 0,
         "gunpowder": 0,
         "fuel": 0
       },
       "workers": {
-        "gold": 1,
+        "gold": 2,
         "wood": 1,
         "food": 1,
         "metal": 1,
@@ -42,7 +46,7 @@
         "idle": 0
       },
       "baseHp": 400,
-      "nextWaveInSec": 20.85558999999991
+      "nextWaveInSec": 18.233333333333245
     },
     "units": [
       {
@@ -53,18 +57,22 @@
         "laneId": "main",
         "progress": 0.17,
         "laneRow": 0,
-        "hp": 34,
-        "maxHp": 34,
+        "hp": 50,
+        "maxHp": 50,
         "facingX": 1,
-        "facingDirection": "ne",
+        "facingDirection": "e",
+        "travelFacingX": 1,
+        "travelFacingDirection": "e",
+        "combatFacingX": 1,
+        "combatFacingDirection": "e",
         "flipX": false,
         "tint": 16777215,
         "motion": {
-          "x": 0.8985507246379711,
-          "y": 1.014492753623017
+          "x": 0,
+          "y": 0
         },
-        "pose": "stone-axeman-ne-idle",
-        "renderTexture": "stone-axeman-ne-idle",
+        "pose": "stone-axeman-e-idle",
+        "renderTexture": "stone-axeman-e-idle",
         "attackAnimTime": 0,
         "attackFacingLockSec": 0,
         "combatFacingHoldSec": 0,
@@ -75,22 +83,26 @@
         "healManaCost": 0,
         "healPower": 0,
         "presentation": {
-          "x": 2075.031884057971,
-          "y": 2745.560977623813,
-          "rotationRad": 0
+          "x": 1988.3345376849356,
+          "y": 2907.2846690396123,
+          "originX": 0.5,
+          "originY": 0.875,
+          "rotationRad": 0,
+          "spriteDisplayWidth": 321.54589371980677,
+          "spriteDisplayHeight": 321.54589371980677
         },
         "overlay": {
           "mode": "detail",
-          "hpVisible": true,
+          "hpVisible": false,
           "manaVisible": false,
           "labelVisible": false,
-          "labelText": "도끼 Lv.1"
+          "labelText": "도끼"
         },
         "attackTiming": {
-          "durationSec": 0.46,
-          "eventProgress": 0.48,
+          "durationSec": 0.38,
+          "eventProgress": 0.44,
           "targetKind": "unit",
-          "eventDelayMs": 220.79999999999998
+          "eventDelayMs": 167.20000000000002
         }
       }
     ],
@@ -115,19 +127,20 @@
           "laneId": "main",
           "pointType": "buildable",
           "allowedBuildingTypes": [
+            "defense_tower",
             "supply_depot",
             "mint"
           ],
           "owner": "player",
           "control": 1,
           "progress": 0.17,
-          "worldX": 2075.031884057971,
-          "worldY": 2745.6811594202895,
-          "labelWorldX": 2075.031884057971,
-          "labelWorldY": 2497.855072463768,
+          "worldX": 1956.6243927573992,
+          "worldY": 2838.657372625394,
+          "labelWorldX": 1956.6243927573992,
+          "labelWorldY": 2590.8312856688726,
           "markerTexture": "capture-marker",
           "buildingId": "mint",
-          "buildingLevel": 2,
+          "buildingLevel": 3,
           "availableActions": [
             "dismantle"
           ]
@@ -137,19 +150,20 @@
           "laneId": "main",
           "pointType": "buildable",
           "allowedBuildingTypes": [
+            "defense_tower",
             "supply_depot",
             "mint"
           ],
           "owner": "enemy",
           "control": -1,
           "progress": 0.83,
-          "worldX": 5240.249275362319,
-          "worldY": 1108.724637681159,
-          "labelWorldX": 5240.249275362319,
-          "labelWorldY": 860.8985507246373,
+          "worldX": 5121.841784061747,
+          "worldY": 1203.8747639297421,
+          "labelWorldX": 5121.841784061747,
+          "labelWorldY": 956.0486769732204,
           "markerTexture": "capture-marker-enemy",
-          "buildingId": "mint",
-          "buildingLevel": 1,
+          "buildingId": null,
+          "buildingLevel": 0,
           "availableActions": []
         }
       ],
@@ -162,7 +176,7 @@
           "progress": 0.37,
           "built": false,
           "hp": 0,
-          "maxHp": 130,
+          "maxHp": 750,
           "buildRemainingSec": 0
         },
         {
@@ -172,36 +186,38 @@
           "linkedCapturePointId": 1,
           "progress": 0.63,
           "built": true,
-          "hp": 130,
-          "maxHp": 130,
+          "hp": 750,
+          "maxHp": 750,
           "buildRemainingSec": 0
         }
       ],
       "laneStart": {
-        "x": 1240,
-        "y": 3130
+        "x": 1123,
+        "y": 3225
       },
       "laneEnd": {
-        "x": 5995,
-        "y": 580
+        "x": 5878,
+        "y": 675
       },
       "lanes": [
         {
           "id": "main",
           "role": "center",
           "start": {
-            "x": 1240,
-            "y": 3130
+            "x": 1123,
+            "y": 3225
           },
           "end": {
-            "x": 5995,
-            "y": 580
+            "x": 5878,
+            "y": 675
           }
         }
       ]
     },
     "ui": {
       "ageLabel": "시대 석기 시대",
+      "playerSelectedProductionAgeId": "stone",
+      "selectedMainBaseTeam": null,
       "selectedCapturePointId": 0,
       "selectedDefenseTowerId": null,
       "visibleCaptureActions": [
@@ -229,17 +245,19 @@
       "stone": {
         "projectileKey": "projectile-stone",
         "projectileCount": 2,
-        "perProjectileDamage": 7,
-        "spreadWorldPx": 18,
-        "rangeProgress": 0.072,
+        "basePerProjectileDamage": 5,
+        "perProjectileDamage": 5,
+        "spreadWorldPx": 12,
+        "rangeProgress": 0.046799999999999994,
         "cooldownSec": 1.3
       },
       "bronze": {
         "projectileKey": "projectile-stone",
         "projectileCount": 2,
-        "perProjectileDamage": 7,
-        "spreadWorldPx": 18,
-        "rangeProgress": 0.072,
+        "basePerProjectileDamage": 5,
+        "perProjectileDamage": 5,
+        "spreadWorldPx": 12,
+        "rangeProgress": 0.046799999999999994,
         "cooldownSec": 1.3
       }
     },
@@ -250,17 +268,17 @@
       "scalePreset": "recommended",
       "visualValidationScenario": false,
       "camera": {
-        "scrollX": 2255.4666666666667,
-        "scrollY": 1841.333333333333,
+        "scrollX": 2169.6678710182687,
+        "scrollY": 2003.8747639297421,
         "zoom": 0.46,
-        "centerX": 3055.4666666666667,
-        "centerY": 2291.333333333333
+        "centerX": 2969.6678710182687,
+        "centerY": 2453.874763929742
       },
       "rules": {
         "worldWidth": 7000,
         "worldHeight": 3900,
         "cameraZoom": 0.46,
-        "waveIntervalSec": 30,
+        "waveIntervalSec": 20,
         "unitProgressSpeed": 0.02,
         "rangeToProgress": 0.013,
         "friendlyGap": 0.011,
@@ -379,14 +397,14 @@
           {
             "id": 9,
             "unitId": "stone_axeman",
-            "pose": "stone-axeman-ne-idle",
+            "pose": "stone-axeman-e-idle",
             "worldWidth": 321.54589371980677,
             "worldHeight": 321.54589371980677,
             "canvasScreenWidth": 147.91111111111113,
             "canvasScreenHeight": 147.91111111111113,
             "cssFrameWidth": 147.91111111111113,
             "cssFrameHeight": 147.91111111111113,
-            "cssVisibleHeight": 104,
+            "cssVisibleHeight": 100,
             "originX": 0.5,
             "originY": 0.875,
             "hpWorldWidth": 113.04347826086956,
@@ -397,15 +415,16 @@
             "manaMax": 0,
             "manaRegenPerSec": 0,
             "healManaCost": 0,
-            "labelCssFontSize": 13.8,
-            "labelResolution": 2,
+            "labelCssFontSize": 4.6000000000000005,
+            "labelResolution": 1,
             "labelScale": 1,
             "labelVisible": false,
-            "facingX": 1,
+            "travelFacingX": 1,
+            "combatFacingX": 1,
             "flipX": false,
             "motion": {
-              "x": 0.8985507246379711,
-              "y": 1.014492753623017
+              "x": 0,
+              "y": 0
             }
           }
         ],
@@ -413,31 +432,31 @@
           {
             "id": 0,
             "pointType": "defense-tower",
-            "textureKey": "defense-tower-ruins",
-            "worldX": 3055.4666666666667,
-            "worldY": 2291.333333333333,
-            "cssFrameHeight": 263.3142857142857,
-            "cssVisibleHeight": 143.99999999999997,
+            "textureKey": "defense-tower-palisade-ruins",
+            "worldX": 2939.2330884095727,
+            "worldY": 2398.483459581916,
+            "cssFrameHeight": 185.71284634760704,
+            "cssVisibleHeight": 103.37531486146095,
             "originY": 0.875
           },
           {
             "id": 1,
             "pointType": "defense-tower",
-            "textureKey": "defense-tower-full-enemy",
-            "worldX": 4298.944927536231,
-            "worldY": 1636.9855072463765,
-            "cssFrameHeight": 204.8,
-            "cssVisibleHeight": 144,
+            "textureKey": "defense-tower-palisade-full-enemy",
+            "worldX": 4180.53743623566,
+            "worldY": 1744.1356334949596,
+            "cssFrameHeight": 185.71284634760704,
+            "cssVisibleHeight": 143.99999999999997,
             "originY": 0.875
           }
         ],
         "centralTower": {
           "pointType": "defense-tower",
-          "worldWidth": 445.2173913043478,
-          "worldHeight": 445.2173913043478,
-          "cssFrameWidth": 204.8,
-          "cssFrameHeight": 204.8,
-          "cssVisibleHeight": 144,
+          "worldWidth": 403.72357901653703,
+          "worldHeight": 403.72357901653703,
+          "cssFrameWidth": 185.71284634760704,
+          "cssFrameHeight": 185.71284634760704,
+          "cssVisibleHeight": 143.99999999999997,
           "originY": 0.875,
           "hpWorldWidth": 234.78260869565216,
           "hpWorldHeight": 19.565217391304348,
@@ -451,92 +470,308 @@
       },
       "unitStats": {
         "stone_slinger": {
-          "hp": 26,
-          "attack": 7,
+          "hp": 30,
+          "attack": 5,
           "defense": 2,
-          "range": 4.5,
-          "speed": 1.05,
+          "range": 3,
+          "speed": 1,
           "attackCooldownSec": 1.3,
           "healPower": 0
         },
         "stone_axeman": {
-          "hp": 34,
+          "hp": 50,
           "attack": 9,
           "defense": 3,
           "range": 1.5,
-          "speed": 1.1,
+          "speed": 1,
           "attackCooldownSec": 1,
           "healPower": 0
         },
         "bronze_swordsman": {
-          "hp": 42,
+          "hp": 60,
           "attack": 12,
           "defense": 5,
           "range": 1.5,
-          "speed": 1.1,
+          "speed": 1,
           "attackCooldownSec": 0.95,
           "healPower": 0
         },
         "bronze_spearman": {
-          "hp": 38,
+          "hp": 60,
           "attack": 11,
           "defense": 5,
-          "range": 2.2,
+          "range": 2.205,
           "speed": 1,
           "attackCooldownSec": 1.05,
           "healPower": 0
         },
         "archer": {
-          "hp": 30,
-          "attack": 13,
+          "hp": 45,
+          "attack": 7,
           "defense": 3,
-          "range": 5.2,
-          "speed": 1.15,
+          "range": 4.5,
+          "speed": 1,
           "attackCooldownSec": 2,
           "healPower": 0
         },
         "iron_swordsman": {
-          "hp": 54,
+          "hp": 70,
           "attack": 16,
           "defense": 8,
-          "range": 1.6,
-          "speed": 1.12,
+          "range": 1.605,
+          "speed": 1,
           "attackCooldownSec": 0.9,
           "healPower": 0
         },
         "iron_spearman": {
-          "hp": 50,
+          "hp": 70,
           "attack": 15,
           "defense": 7,
-          "range": 2.4,
-          "speed": 1.06,
+          "range": 2.4000000000000004,
+          "speed": 1,
           "attackCooldownSec": 1,
           "healPower": 0
         },
         "musketeer": {
-          "hp": 36,
-          "attack": 21,
+          "hp": 50,
+          "attack": 12,
           "defense": 4,
-          "range": 6.4,
-          "speed": 1,
+          "range": 4,
+          "speed": 1.2,
           "attackCooldownSec": 2.1,
           "healPower": 0
         },
         "knight": {
-          "hp": 72,
+          "hp": 100,
           "attack": 22,
           "defense": 10,
-          "range": 1.8,
-          "speed": 1.35,
+          "range": 1.7999999999999998,
+          "speed": 1.5,
           "attackCooldownSec": 1.45,
           "healPower": 0
         },
+        "pikeman": {
+          "hp": 70,
+          "attack": 20,
+          "defense": 9,
+          "range": 2.5949999999999998,
+          "speed": 0.8,
+          "attackCooldownSec": 1,
+          "healPower": 0
+        },
+        "heavy_cavalry": {
+          "hp": 120,
+          "attack": 24,
+          "defense": 12,
+          "range": 1.905,
+          "speed": 1.2,
+          "attackCooldownSec": 1.35,
+          "healPower": 0
+        },
+        "rifleman": {
+          "hp": 60,
+          "attack": 18,
+          "defense": 6,
+          "range": 5.5,
+          "speed": 1.2,
+          "attackCooldownSec": 1.8,
+          "healPower": 0
+        },
+        "grenadier": {
+          "hp": 60,
+          "attack": 22,
+          "defense": 6,
+          "range": 3,
+          "speed": 1.2,
+          "attackCooldownSec": 2,
+          "healPower": 0
+        },
+        "light_cavalry": {
+          "hp": 90,
+          "attack": 23,
+          "defense": 10,
+          "range": 1.7999999999999998,
+          "speed": 1.5,
+          "attackCooldownSec": 1.25,
+          "healPower": 0
+        },
+        "cannon_i": {
+          "hp": 50,
+          "attack": 30,
+          "defense": 8,
+          "range": 7,
+          "speed": 0.8,
+          "attackCooldownSec": 2.6,
+          "healPower": 0
+        },
+        "rifleman_late": {
+          "hp": 70,
+          "attack": 22,
+          "defense": 6,
+          "range": 6,
+          "speed": 1.2,
+          "attackCooldownSec": 1.65,
+          "healPower": 0
+        },
+        "grenadier_late": {
+          "hp": 70,
+          "attack": 25,
+          "defense": 6,
+          "range": 4,
+          "speed": 1.2,
+          "attackCooldownSec": 1.85,
+          "healPower": 0
+        },
+        "cavalry": {
+          "hp": 120,
+          "attack": 28,
+          "defense": 12,
+          "range": 1.905,
+          "speed": 1.5,
+          "attackCooldownSec": 1.2,
+          "healPower": 0
+        },
+        "cannon_ii": {
+          "hp": 70,
+          "attack": 36,
+          "defense": 8,
+          "range": 8,
+          "speed": 0.8,
+          "attackCooldownSec": 2.35,
+          "healPower": 0
+        },
+        "infantry": {
+          "hp": 70,
+          "attack": 30,
+          "defense": 10,
+          "range": 6,
+          "speed": 1.2,
+          "attackCooldownSec": 1.45,
+          "healPower": 0
+        },
+        "machine_gunner": {
+          "hp": 70,
+          "attack": 32,
+          "defense": 26,
+          "range": 5.5,
+          "speed": 1,
+          "attackCooldownSec": 0.8,
+          "healPower": 0
+        },
+        "shock_trooper": {
+          "hp": 70,
+          "attack": 36,
+          "defense": 13,
+          "range": 1.6949999999999998,
+          "speed": 1.2,
+          "attackCooldownSec": 0.8,
+          "healPower": 0
+        },
+        "artillery_i": {
+          "hp": 80,
+          "attack": 42,
+          "defense": 20,
+          "range": 10,
+          "speed": 1.2,
+          "attackCooldownSec": 2.45,
+          "healPower": 0
+        },
+        "automatic_rifleman": {
+          "hp": 70,
+          "attack": 34,
+          "defense": 20,
+          "range": 6.5,
+          "speed": 1.2,
+          "attackCooldownSec": 1,
+          "healPower": 0
+        },
+        "support_gunner": {
+          "hp": 70,
+          "attack": 30,
+          "defense": 24,
+          "range": 4,
+          "speed": 1.2,
+          "attackCooldownSec": 1.15,
+          "healPower": 0
+        },
+        "mobile_infantry": {
+          "hp": 70,
+          "attack": 38,
+          "defense": 30,
+          "range": 5,
+          "speed": 1.2,
+          "attackCooldownSec": 0.95,
+          "healPower": 0
+        },
+        "artillery_ii": {
+          "hp": 90,
+          "attack": 50,
+          "defense": 26,
+          "range": 12,
+          "speed": 1.2,
+          "attackCooldownSec": 2.15,
+          "healPower": 0
+        },
+        "tank": {
+          "hp": 150,
+          "attack": 45,
+          "defense": 50,
+          "range": 9,
+          "speed": 1.5,
+          "attackCooldownSec": 1.9,
+          "healPower": 0
+        },
+        "special_forces": {
+          "hp": 80,
+          "attack": 38,
+          "defense": 22,
+          "range": 7,
+          "speed": 1.2,
+          "attackCooldownSec": 0.9,
+          "healPower": 0
+        },
+        "heavy_gunner": {
+          "hp": 80,
+          "attack": 36,
+          "defense": 20,
+          "range": 4,
+          "speed": 1,
+          "attackCooldownSec": 1,
+          "healPower": 0
+        },
+        "breakthrough_trooper": {
+          "hp": 110,
+          "attack": 52,
+          "defense": 22,
+          "range": 1.905,
+          "speed": 1.2,
+          "attackCooldownSec": 0.75,
+          "healPower": 0
+        },
+        "mobile_artillery": {
+          "hp": 120,
+          "attack": 64,
+          "defense": 18,
+          "range": 12,
+          "speed": 1.5,
+          "attackCooldownSec": 1.85,
+          "healPower": 0
+        },
+        "modern_tank": {
+          "hp": 200,
+          "attack": 60,
+          "defense": 60,
+          "range": 10,
+          "speed": 1.5,
+          "attackCooldownSec": 1.6,
+          "healPower": 0
+        },
         "supply_wagon": {
-          "hp": 54,
+          "hp": 28,
           "attack": 0,
-          "defense": 3,
+          "defense": 1,
           "range": 4.4,
-          "speed": 0.98,
+          "speed": 0.8,
           "attackCooldownSec": 1.2,
           "healPower": 4
         }
@@ -548,15 +783,16 @@
       "initialized": true,
       "unlocked": true,
       "contextState": "running",
-      "currentBgmId": "bgm.battle.low",
+      "currentBgmId": "bgm.age.stone",
       "bgmState": "battle-low",
+      "gameplayMusicTheme": "stone",
       "activeBgmVoices": 1,
       "activeSfxVoices": 0,
       "settings": {
-        "version": 2,
-        "masterVolume": 0.8,
-        "bgmVolume": 0.8,
-        "sfxVolume": 0.9,
+        "version": 3,
+        "masterVolume": 0.92,
+        "bgmVolume": 0.96,
+        "sfxVolume": 0.95,
         "mute": false,
         "muteWhenUnfocused": true,
         "combatSfxMode": "reduced",
@@ -564,47 +800,32 @@
       },
       "recentEvents": [
         {
-          "id": "sfx.ui.confirm",
-          "result": "played",
-          "atMs": 35
-        },
-        {
           "id": "sfx.ui.buildSelect",
-          "result": "played",
-          "atMs": 59838
+          "result": "locked",
+          "atMs": 11035
         },
         {
           "id": "sfx.wave.start",
-          "result": "played",
-          "atMs": 60151
-        },
-        {
-          "id": "sfx.capture.complete",
-          "result": "played",
-          "atMs": 63843
+          "result": "locked",
+          "atMs": 11076
         },
         {
           "id": "sfx.ui.buildSelect",
-          "result": "played",
-          "atMs": 65295
+          "result": "locked",
+          "atMs": 11411
         },
         {
           "id": "sfx.ui.hover",
-          "result": "played",
-          "atMs": 72086
+          "result": "locked",
+          "atMs": 13921
         },
         {
           "id": "sfx.construction.start",
           "result": "played",
-          "atMs": 72110
-        },
-        {
-          "id": "sfx.construction.complete",
-          "result": "played",
-          "atMs": 72722
+          "atMs": 12
         }
       ],
-      "skippedEventCount": 0,
+      "skippedEventCount": 4,
       "unlockAttemptCount": 1,
       "missingAssetFallback": true,
       "focusMuted": false,
@@ -614,15 +835,16 @@
       "initialized": true,
       "unlocked": true,
       "contextState": "running",
-      "currentBgmId": "bgm.battle.low",
+      "currentBgmId": "bgm.age.stone",
       "bgmState": "battle-low",
+      "gameplayMusicTheme": "stone",
       "activeBgmVoices": 1,
-      "activeSfxVoices": 0,
+      "activeSfxVoices": 1,
       "settings": {
-        "version": 2,
-        "masterVolume": 0.8,
-        "bgmVolume": 0.8,
-        "sfxVolume": 0.9,
+        "version": 3,
+        "masterVolume": 0.92,
+        "bgmVolume": 0.96,
+        "sfxVolume": 0.95,
         "mute": false,
         "muteWhenUnfocused": true,
         "combatSfxMode": "reduced",
@@ -630,47 +852,37 @@
       },
       "recentEvents": [
         {
-          "id": "sfx.ui.confirm",
-          "result": "played",
-          "atMs": 35
-        },
-        {
           "id": "sfx.ui.buildSelect",
-          "result": "played",
-          "atMs": 59838
+          "result": "locked",
+          "atMs": 11035
         },
         {
           "id": "sfx.wave.start",
-          "result": "played",
-          "atMs": 60151
-        },
-        {
-          "id": "sfx.capture.complete",
-          "result": "played",
-          "atMs": 63843
+          "result": "locked",
+          "atMs": 11076
         },
         {
           "id": "sfx.ui.buildSelect",
-          "result": "played",
-          "atMs": 65295
+          "result": "locked",
+          "atMs": 11411
         },
         {
           "id": "sfx.ui.hover",
-          "result": "played",
-          "atMs": 72086
+          "result": "locked",
+          "atMs": 13921
         },
         {
           "id": "sfx.construction.start",
           "result": "played",
-          "atMs": 72110
+          "atMs": 12
         },
         {
           "id": "sfx.construction.complete",
           "result": "played",
-          "atMs": 72722
+          "atMs": 12
         }
       ],
-      "skippedEventCount": 0,
+      "skippedEventCount": 4,
       "unlockAttemptCount": 1,
       "missingAssetFallback": true,
       "focusMuted": false,
@@ -680,15 +892,16 @@
       "initialized": true,
       "unlocked": true,
       "contextState": "running",
-      "currentBgmId": "bgm.preparation",
-      "bgmState": "preparation",
-      "activeBgmVoices": 1,
-      "activeSfxVoices": 0,
+      "currentBgmId": "bgm.age.stone",
+      "bgmState": "fortress-under-attack",
+      "gameplayMusicTheme": "stone",
+      "activeBgmVoices": 2,
+      "activeSfxVoices": 2,
       "settings": {
-        "version": 2,
-        "masterVolume": 0.8,
-        "bgmVolume": 0.8,
-        "sfxVolume": 0.9,
+        "version": 3,
+        "masterVolume": 0.92,
+        "bgmVolume": 0.96,
+        "sfxVolume": 0.95,
         "mute": false,
         "muteWhenUnfocused": true,
         "combatSfxMode": "reduced",
@@ -697,66 +910,66 @@
       "recentEvents": [
         {
           "id": "sfx.ui.buildSelect",
-          "result": "played",
-          "atMs": 65295
+          "result": "locked",
+          "atMs": 11411
         },
         {
           "id": "sfx.ui.hover",
-          "result": "played",
-          "atMs": 72086
+          "result": "locked",
+          "atMs": 13921
         },
         {
           "id": "sfx.construction.start",
           "result": "played",
-          "atMs": 72110
+          "atMs": 12
         },
         {
           "id": "sfx.construction.complete",
           "result": "played",
-          "atMs": 72722
+          "atMs": 12
         },
         {
           "id": "sfx.ui.hover",
           "result": "played",
-          "atMs": 81154
+          "atMs": 1625
         },
         {
           "id": "sfx.ui.confirm",
           "result": "played",
-          "atMs": 81154
+          "atMs": 1625
         },
         {
           "id": "sfx.ui.buildSelect",
           "result": "played",
-          "atMs": 82826
+          "atMs": 2229
         },
         {
           "id": "sfx.fortress.warning",
           "result": "played",
-          "atMs": 83453
+          "atMs": 3669
         },
         {
           "id": "sfx.ui.hover",
           "result": "played",
-          "atMs": 89908
+          "atMs": 4284
         },
         {
           "id": "sfx.construction.start",
           "result": "played",
-          "atMs": 89919
+          "atMs": 4284
         },
         {
           "id": "sfx.construction.complete",
           "result": "played",
-          "atMs": 91800
+          "atMs": 4992
         },
         {
           "id": "sfx.fortress.rebuilt",
           "result": "played",
-          "atMs": 91800
+          "atMs": 4992
         }
       ],
-      "skippedEventCount": 0,
+      "skippedEventCount": 4,
       "unlockAttemptCount": 1,
       "missingAssetFallback": true,
       "focusMuted": false,
@@ -766,15 +979,16 @@
       "initialized": true,
       "unlocked": true,
       "contextState": "running",
-      "currentBgmId": "bgm.preparation",
-      "bgmState": "preparation",
+      "currentBgmId": "bgm.age.stone",
+      "bgmState": "battle-low",
+      "gameplayMusicTheme": "stone",
       "activeBgmVoices": 1,
-      "activeSfxVoices": 0,
+      "activeSfxVoices": 1,
       "settings": {
-        "version": 2,
-        "masterVolume": 0.8,
-        "bgmVolume": 0.8,
-        "sfxVolume": 0.9,
+        "version": 3,
+        "masterVolume": 0.92,
+        "bgmVolume": 0.96,
+        "sfxVolume": 0.95,
         "mute": false,
         "muteWhenUnfocused": true,
         "combatSfxMode": "reduced",
@@ -784,65 +998,65 @@
         {
           "id": "sfx.construction.start",
           "result": "played",
-          "atMs": 72110
+          "atMs": 12
         },
         {
           "id": "sfx.construction.complete",
           "result": "played",
-          "atMs": 72722
+          "atMs": 12
         },
         {
           "id": "sfx.ui.hover",
           "result": "played",
-          "atMs": 81154
+          "atMs": 1625
         },
         {
           "id": "sfx.ui.confirm",
           "result": "played",
-          "atMs": 81154
+          "atMs": 1625
         },
         {
           "id": "sfx.ui.buildSelect",
           "result": "played",
-          "atMs": 82826
+          "atMs": 2229
         },
         {
           "id": "sfx.fortress.warning",
           "result": "played",
-          "atMs": 83453
+          "atMs": 3669
         },
         {
           "id": "sfx.ui.hover",
           "result": "played",
-          "atMs": 89908
+          "atMs": 4284
         },
         {
           "id": "sfx.construction.start",
           "result": "played",
-          "atMs": 89919
+          "atMs": 4284
         },
         {
           "id": "sfx.construction.complete",
           "result": "played",
-          "atMs": 91800
+          "atMs": 4992
         },
         {
           "id": "sfx.fortress.rebuilt",
           "result": "played",
-          "atMs": 91800
+          "atMs": 4992
         },
         {
           "id": "sfx.ui.buildSelect",
           "result": "played",
-          "atMs": 93437
+          "atMs": 5503
         },
         {
           "id": "sfx.capture.complete",
           "result": "played",
-          "atMs": 93542
+          "atMs": 5538
         }
       ],
-      "skippedEventCount": 0,
+      "skippedEventCount": 4,
       "unlockAttemptCount": 1,
       "missingAssetFallback": true,
       "focusMuted": false,

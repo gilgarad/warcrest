@@ -9,20 +9,24 @@
           "unitId": "stone_slinger",
           "role": "battle",
           "laneId": "main",
-          "progress": 0.12210000000000001,
-          "laneRow": -3,
-          "hp": 26,
-          "maxHp": 26,
+          "progress": 0.12,
+          "laneRow": 0,
+          "hp": 30,
+          "maxHp": 30,
           "facingX": 1,
           "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 2.173913043478251,
+            "x": 0,
             "y": 0
           },
-          "pose": "stone-slinger-e-walk-b",
-          "renderTexture": "stone-slinger-e-walk-b",
+          "pose": "stone-slinger-e-idle",
+          "renderTexture": "stone-slinger-e-idle",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -33,22 +37,26 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1756.4231884057972,
-            "y": 2688.466647840104,
-            "rotationRad": 0
+            "x": 1743.0012043516024,
+            "y": 3020.8882338375115,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": 0,
+            "spriteDisplayWidth": 296.8115942028985,
+            "spriteDisplayHeight": 296.8115942028985
           },
           "overlay": {
             "mode": "summary",
-            "hpVisible": true,
+            "hpVisible": false,
             "manaVisible": false,
-            "labelVisible": true,
-            "labelText": "아군 ×4 · HP 100%"
+            "labelVisible": false,
+            "labelText": "투석"
           },
           "attackTiming": {
-            "durationSec": 0.58,
-            "eventProgress": 0.42,
+            "durationSec": 0.46,
+            "eventProgress": 0.36,
             "targetKind": "unit",
-            "eventDelayMs": 243.6
+            "eventDelayMs": 165.6
           }
         },
         {
@@ -57,20 +65,24 @@
           "unitId": "stone_axeman",
           "role": "battle",
           "laneId": "main",
-          "progress": 0.12219999999999998,
-          "laneRow": 0,
-          "hp": 34,
-          "maxHp": 34,
+          "progress": 0.12,
+          "laneRow": -1,
+          "hp": 50,
+          "maxHp": 50,
           "facingX": 1,
           "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 2.173913043478251,
+            "x": 0,
             "y": 0
           },
-          "pose": "stone-axeman-ne-walk-b",
-          "renderTexture": "stone-axeman-ne-walk-b",
+          "pose": "stone-axeman-e-idle",
+          "renderTexture": "stone-axeman-e-idle",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -81,22 +93,26 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1834.6840579710145,
-            "y": 2856.109290031655,
-            "rotationRad": 0
+            "x": 1717.0002007252672,
+            "y": 2964.521919481736,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": 0,
+            "spriteDisplayWidth": 321.54589371980677,
+            "spriteDisplayHeight": 321.54589371980677
           },
           "overlay": {
             "mode": "hidden",
             "hpVisible": false,
             "manaVisible": false,
             "labelVisible": false,
-            "labelText": "도끼 Lv.1"
+            "labelText": "도끼"
           },
           "attackTiming": {
-            "durationSec": 0.46,
-            "eventProgress": 0.48,
+            "durationSec": 0.38,
+            "eventProgress": 0.44,
             "targetKind": "unit",
-            "eventDelayMs": 220.79999999999998
+            "eventDelayMs": 167.20000000000002
           }
         },
         {
@@ -105,20 +121,24 @@
           "unitId": "stone_axeman",
           "role": "battle",
           "laneId": "main",
-          "progress": 0.12219999999999998,
-          "laneRow": 3,
-          "hp": 34,
-          "maxHp": 34,
+          "progress": 0.12,
+          "laneRow": 1,
+          "hp": 50,
+          "maxHp": 50,
           "facingX": 1,
           "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 2.173913043478251,
+            "x": 0,
             "y": 0
           },
-          "pose": "stone-axeman-e-walk-a",
-          "renderTexture": "stone-axeman-e-walk-a",
+          "pose": "stone-axeman-e-idle",
+          "renderTexture": "stone-axeman-e-idle",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -129,22 +149,26 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1912.944927536232,
-            "y": 3023.7117583361246,
-            "rotationRad": 0
+            "x": 1769.0022079779374,
+            "y": 3077.148242715699,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": 0,
+            "spriteDisplayWidth": 321.54589371980677,
+            "spriteDisplayHeight": 321.54589371980677
           },
           "overlay": {
             "mode": "hidden",
             "hpVisible": false,
             "manaVisible": false,
             "labelVisible": false,
-            "labelText": "도끼 Lv.1"
+            "labelText": "도끼"
           },
           "attackTiming": {
-            "durationSec": 0.46,
-            "eventProgress": 0.48,
+            "durationSec": 0.38,
+            "eventProgress": 0.44,
             "targetKind": "unit",
-            "eventDelayMs": 220.79999999999998
+            "eventDelayMs": 167.20000000000002
           }
         },
         {
@@ -153,20 +177,24 @@
           "unitId": "supply_wagon",
           "role": "support",
           "laneId": "main",
-          "progress": 0.09999999999999999,
-          "laneRow": 0,
-          "hp": 54,
-          "maxHp": 54,
+          "progress": 0.074,
+          "laneRow": -2,
+          "hp": 28,
+          "maxHp": 28,
           "facingX": 1,
-          "facingDirection": "ne",
+          "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
             "x": 0,
             "y": 0
           },
-          "pose": "supply-wagon-ne-idle",
-          "renderTexture": "supply-wagon-ne-idle",
+          "pose": "supply-wagon-ancient-e-idle",
+          "renderTexture": "supply-wagon-ancient-e-idle",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -177,22 +205,26 @@
           "healManaCost": 6,
           "healPower": 4,
           "presentation": {
-            "x": 1730.336231884058,
-            "y": 2902.7224649906457,
-            "rotationRad": 0
+            "x": 1465.2925304322653,
+            "y": 3012.163102102567,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": 0,
+            "spriteDisplayWidth": 478.1964573268921,
+            "spriteDisplayHeight": 358.6473429951691
           },
           "overlay": {
-            "mode": "hidden",
+            "mode": "compact",
             "hpVisible": false,
             "manaVisible": false,
             "labelVisible": false,
-            "labelText": "보급 Lv.1"
+            "labelText": "보급"
           },
           "attackTiming": {
-            "durationSec": 0.66,
+            "durationSec": 0.56,
             "eventProgress": 0.52,
             "targetKind": "unit",
-            "eventDelayMs": 343.2
+            "eventDelayMs": 291.2
           }
         }
       ]
@@ -206,20 +238,24 @@
           "unitId": "stone_slinger",
           "role": "battle",
           "laneId": "main",
-          "progress": 0.06776958,
-          "laneRow": -1,
-          "hp": 26,
-          "maxHp": 26,
+          "progress": 0.15266666666666676,
+          "laneRow": 0,
+          "hp": 30,
+          "maxHp": 30,
           "facingX": 1,
-          "facingDirection": "se",
+          "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 15.217391304347757,
-            "y": 15.21739130434753
+            "x": 1.3131017074417741,
+            "y": -0.606595897459556
           },
-          "pose": "stone-slinger-se-walk-a",
-          "renderTexture": "stone-slinger-se-walk-a",
+          "pose": "stone-slinger-e-walk-03",
+          "renderTexture": "stone-slinger-e-walk-03",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -230,22 +266,26 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1480.336231884058,
-            "y": 2848.122922076241,
-            "rotationRad": 0
+            "x": 1898.4366595374745,
+            "y": 2946.7875854396466,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": -0.014762731796196249,
+            "spriteDisplayWidth": 296.8115942028985,
+            "spriteDisplayHeight": 296.8115942028985
           },
           "overlay": {
-            "mode": "summary",
-            "hpVisible": true,
+            "mode": "hidden",
+            "hpVisible": false,
             "manaVisible": false,
-            "labelVisible": true,
-            "labelText": "아군 ×4 · HP 100%"
+            "labelVisible": false,
+            "labelText": "투석"
           },
           "attackTiming": {
-            "durationSec": 0.58,
-            "eventProgress": 0.42,
+            "durationSec": 0.46,
+            "eventProgress": 0.36,
             "targetKind": "unit",
-            "eventDelayMs": 243.6
+            "eventDelayMs": 165.6
           }
         },
         {
@@ -254,20 +294,24 @@
           "unitId": "bronze_swordsman",
           "role": "battle",
           "laneId": "main",
-          "progress": 0.06813956000000002,
-          "laneRow": 0,
-          "hp": 42,
-          "maxHp": 42,
+          "progress": 0.15266666666666676,
+          "laneRow": -1,
+          "hp": 60,
+          "maxHp": 60,
           "facingX": 1,
-          "facingDirection": "ne",
+          "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 6.52173913043498,
-            "y": -4.347826086956957
+            "x": 1.3131017074417741,
+            "y": -0.606595897459556
           },
-          "pose": "bronze-swordsman-ne-walk-b",
-          "renderTexture": "bronze-swordsman-ne-walk-b",
+          "pose": "bronze-swordsman-e-walk-02",
+          "renderTexture": "bronze-swordsman-e-walk-02",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -278,22 +322,26 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1545.553623188406,
-            "y": 2988.6726327969386,
-            "rotationRad": 0
+            "x": 1874.0360277182688,
+            "y": 2891.972092010062,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": 0.013347151440967764,
+            "spriteDisplayWidth": 309.1787439613526,
+            "spriteDisplayHeight": 309.1787439613526
           },
           "overlay": {
             "mode": "hidden",
             "hpVisible": false,
             "manaVisible": false,
             "labelVisible": false,
-            "labelText": "청동검 Lv.1"
+            "labelText": "청동검"
           },
           "attackTiming": {
-            "durationSec": 0.46,
-            "eventProgress": 0.48,
+            "durationSec": 0.38,
+            "eventProgress": 0.44,
             "targetKind": "unit",
-            "eventDelayMs": 220.79999999999998
+            "eventDelayMs": 167.20000000000002
           }
         },
         {
@@ -302,20 +350,24 @@
           "unitId": "bronze_spearman",
           "role": "battle",
           "laneId": "main",
-          "progress": 0.0673996,
-          "laneRow": 3,
-          "hp": 38,
-          "maxHp": 38,
+          "progress": 0.15266666666666676,
+          "laneRow": 1,
+          "hp": 60,
+          "maxHp": 60,
           "facingX": 1,
-          "facingDirection": "ne",
+          "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 6.521739130434753,
-            "y": -4.347826086956502
+            "x": 1.3131017074417741,
+            "y": -0.606595897459556
           },
-          "pose": "bronze-spearman-e-walk-a",
-          "renderTexture": "bronze-spearman-e-walk-a",
+          "pose": "bronze-spearman-e-walk-02",
+          "renderTexture": "bronze-spearman-e-walk-02",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -326,22 +378,26 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1623.8144927536232,
-            "y": 3156.3375012246615,
-            "rotationRad": 0
+            "x": 1924.6545344519056,
+            "y": 3005.0923118531177,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": -0.012613970322648882,
+            "spriteDisplayWidth": 333.9130434782609,
+            "spriteDisplayHeight": 333.9130434782609
           },
           "overlay": {
             "mode": "hidden",
             "hpVisible": false,
             "manaVisible": false,
             "labelVisible": false,
-            "labelText": "청동창 Lv.1"
+            "labelText": "청동창"
           },
           "attackTiming": {
-            "durationSec": 0.46,
-            "eventProgress": 0.48,
+            "durationSec": 0.38,
+            "eventProgress": 0.44,
             "targetKind": "unit",
-            "eventDelayMs": 220.79999999999998
+            "eventDelayMs": 167.20000000000002
           }
         },
         {
@@ -350,20 +406,24 @@
           "unitId": "supply_wagon",
           "role": "support",
           "laneId": "main",
-          "progress": 0.047251608,
-          "laneRow": 0,
-          "hp": 54,
-          "maxHp": 54,
+          "progress": 0.10480000000000007,
+          "laneRow": -1.8599999999999999,
+          "hp": 28,
+          "maxHp": 28,
           "facingX": 1,
-          "facingDirection": "ne",
+          "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 6.52173913043498,
-            "y": -4.347826086956047
+            "x": 0.07930130114914391,
+            "y": 1.953197554579674
           },
-          "pose": "supply-wagon-ne-walk-a",
-          "renderTexture": "supply-wagon-ne-walk-a",
+          "pose": "supply-wagon-ancient-e-walk-02",
+          "renderTexture": "supply-wagon-ancient-e-walk-02",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -374,22 +434,26 @@
           "healManaCost": 6,
           "healPower": 4,
           "presentation": {
-            "x": 1447.7275362318842,
-            "y": 3032.419756734447,
-            "rotationRad": 0
+            "x": 1618.0863159263415,
+            "y": 2943.561553191696,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": 0,
+            "spriteDisplayWidth": 478.1964573268921,
+            "spriteDisplayHeight": 358.6473429951691
           },
           "overlay": {
             "mode": "hidden",
             "hpVisible": false,
             "manaVisible": false,
             "labelVisible": false,
-            "labelText": "보급 Lv.1"
+            "labelText": "보급"
           },
           "attackTiming": {
-            "durationSec": 0.66,
+            "durationSec": 0.56,
             "eventProgress": 0.52,
             "targetKind": "unit",
-            "eventDelayMs": 343.2
+            "eventDelayMs": 291.2
           }
         }
       ],
@@ -397,15 +461,16 @@
         "initialized": true,
         "unlocked": true,
         "contextState": "running",
-        "currentBgmId": "bgm.battle.low",
+        "currentBgmId": "bgm.age.bronze",
         "bgmState": "battle-low",
+        "gameplayMusicTheme": "bronze",
         "activeBgmVoices": 1,
         "activeSfxVoices": 0,
         "settings": {
-          "version": 2,
-          "masterVolume": 0.8,
-          "bgmVolume": 0.8,
-          "sfxVolume": 0.9,
+          "version": 3,
+          "masterVolume": 0.92,
+          "bgmVolume": 0.96,
+          "sfxVolume": 0.95,
           "mute": false,
           "muteWhenUnfocused": true,
           "combatSfxMode": "reduced",
@@ -413,37 +478,27 @@
         },
         "recentEvents": [
           {
-            "id": "sfx.ui.confirm",
-            "result": "played",
-            "atMs": 23
-          },
-          {
             "id": "sfx.ui.buildSelect",
-            "result": "played",
-            "atMs": 22361
+            "result": "locked",
+            "atMs": 9996
           },
           {
             "id": "sfx.wave.start",
-            "result": "played",
-            "atMs": 22407
-          },
-          {
-            "id": "sfx.capture.complete",
-            "result": "played",
-            "atMs": 27864
+            "result": "locked",
+            "atMs": 10038
           },
           {
             "id": "sfx.ui.hover",
-            "result": "played",
-            "atMs": 28595
+            "result": "locked",
+            "atMs": 14157
           },
           {
             "id": "sfx.ui.confirm",
             "result": "played",
-            "atMs": 28607
+            "atMs": 12
           }
         ],
-        "skippedEventCount": 0,
+        "skippedEventCount": 3,
         "unlockAttemptCount": 1,
         "missingAssetFallback": true,
         "focusMuted": false,
@@ -454,73 +509,29 @@
       "ageLabel": "시대 초기 철기",
       "units": [
         {
-          "id": 17,
-          "team": "player",
-          "unitId": "stone_slinger",
-          "role": "battle",
-          "laneId": "main",
-          "progress": 0.06783929999999999,
-          "laneRow": -1,
-          "hp": 26,
-          "maxHp": 26,
-          "facingX": 1,
-          "facingDirection": "se",
-          "flipX": false,
-          "tint": 16777215,
-          "motion": {
-            "x": 15.217391304347757,
-            "y": 13.043478260869506
-          },
-          "pose": "stone-slinger-se-walk-b",
-          "renderTexture": "stone-slinger-se-walk-b",
-          "attackAnimTime": 0,
-          "attackFacingLockSec": 0,
-          "combatFacingHoldSec": 0,
-          "attackTargetKind": "unit",
-          "manaCurrent": 0,
-          "manaMax": 0,
-          "manaRegenPerSec": 0,
-          "healManaCost": 0,
-          "healPower": 0,
-          "presentation": {
-            "x": 1481.28115942029,
-            "y": 2848.0564925686067,
-            "rotationRad": 0
-          },
-          "overlay": {
-            "mode": "summary",
-            "hpVisible": true,
-            "manaVisible": false,
-            "labelVisible": true,
-            "labelText": "아군 ×4 · HP 100%"
-          },
-          "attackTiming": {
-            "durationSec": 0.58,
-            "eventProgress": 0.42,
-            "targetKind": "unit",
-            "eventDelayMs": 243.6
-          }
-        },
-        {
-          "id": 18,
+          "id": 13,
           "team": "player",
           "unitId": "archer",
           "role": "battle",
           "laneId": "main",
-          "progress": 0.0685859,
+          "progress": 0.1859799999999999,
           "laneRow": 0,
-          "hp": 30,
-          "maxHp": 30,
+          "hp": 45,
+          "maxHp": 45,
           "facingX": 1,
           "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 6.521739130434753,
-            "y": -2.1739130434784784
+            "x": 13.301640497075368,
+            "y": -6.1447795774533915
           },
-          "pose": "archer-e-walk-b",
-          "renderTexture": "archer-e-walk-b",
+          "pose": "archer-e-walk-02",
+          "renderTexture": "archer-e-walk-02",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -531,44 +542,108 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1546.4985507246377,
-            "y": 2989.7996981058272,
-            "rotationRad": 0
+            "x": 2066.718150091516,
+            "y": 2870.669073229336,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": 0.018161712197887425,
+            "spriteDisplayWidth": 296.8115942028985,
+            "spriteDisplayHeight": 296.8115942028985
           },
           "overlay": {
             "mode": "hidden",
             "hpVisible": false,
             "manaVisible": false,
             "labelVisible": false,
-            "labelText": "활 Lv.1"
+            "labelText": "활"
           },
           "attackTiming": {
-            "durationSec": 0.58,
-            "eventProgress": 0.42,
+            "durationSec": 0.46,
+            "eventProgress": 0.36,
             "targetKind": "unit",
-            "eventDelayMs": 243.6
+            "eventDelayMs": 165.6
           }
         },
         {
-          "id": 19,
+          "id": 14,
+          "team": "player",
+          "unitId": "bronze_spearman",
+          "role": "battle",
+          "laneId": "main",
+          "progress": 0.1859799999999999,
+          "laneRow": -1,
+          "hp": 60,
+          "maxHp": 60,
+          "facingX": 1,
+          "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
+          "flipX": false,
+          "tint": 16777215,
+          "motion": {
+            "x": 13.301640497075368,
+            "y": -6.1447795774533915
+          },
+          "pose": "bronze-spearman-e-walk-01",
+          "renderTexture": "bronze-spearman-e-walk-01",
+          "attackAnimTime": 0,
+          "attackFacingLockSec": 0,
+          "combatFacingHoldSec": 0,
+          "attackTargetKind": "unit",
+          "manaCurrent": 0,
+          "manaMax": 0,
+          "manaRegenPerSec": 0,
+          "healManaCost": 0,
+          "healPower": 0,
+          "presentation": {
+            "x": 2039.9350297363205,
+            "y": 2816.643661649158,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": 0.0011481443212026932,
+            "spriteDisplayWidth": 326.0869565217391,
+            "spriteDisplayHeight": 326.0869565217391
+          },
+          "overlay": {
+            "mode": "hidden",
+            "hpVisible": false,
+            "manaVisible": false,
+            "labelVisible": false,
+            "labelText": "청동창"
+          },
+          "attackTiming": {
+            "durationSec": 0.38,
+            "eventProgress": 0.44,
+            "targetKind": "unit",
+            "eventDelayMs": 167.20000000000002
+          }
+        },
+        {
+          "id": 15,
           "team": "player",
           "unitId": "iron_swordsman",
           "role": "battle",
           "laneId": "main",
-          "progress": 0.06836191999999999,
-          "laneRow": 3,
-          "hp": 54,
-          "maxHp": 54,
+          "progress": 0.1859799999999999,
+          "laneRow": 1,
+          "hp": 70,
+          "maxHp": 70,
           "facingX": 1,
-          "facingDirection": "ne",
+          "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 8.695652173913004,
-            "y": -4.347826086956502
+            "x": 13.301640497074914,
+            "y": -6.1447795774533915
           },
-          "pose": "iron-swordsman-ne-walk-b",
-          "renderTexture": "iron-swordsman-ne-walk-b",
+          "pose": "iron-swordsman-e-walk-03",
+          "renderTexture": "iron-swordsman-e-walk-03",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -579,44 +654,52 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1624.7594202898551,
-            "y": 3156.44402491809,
-            "rotationRad": 0
+            "x": 2091.568259878207,
+            "y": 2928.478360964966,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": 0.0004662086402866805,
+            "spriteDisplayWidth": 321.54589371980677,
+            "spriteDisplayHeight": 321.54589371980677
           },
           "overlay": {
             "mode": "hidden",
             "hpVisible": false,
             "manaVisible": false,
             "labelVisible": false,
-            "labelText": "철검 Lv.1"
+            "labelText": "철검"
           },
           "attackTiming": {
-            "durationSec": 0.46,
-            "eventProgress": 0.48,
+            "durationSec": 0.38,
+            "eventProgress": 0.44,
             "targetKind": "unit",
-            "eventDelayMs": 220.79999999999998
+            "eventDelayMs": 167.20000000000002
           }
         },
         {
-          "id": 20,
+          "id": 16,
           "team": "player",
           "unitId": "supply_wagon",
           "role": "support",
           "laneId": "main",
-          "progress": 0.04731668,
-          "laneRow": 0,
-          "hp": 54,
-          "maxHp": 54,
+          "progress": 0.1382466666666664,
+          "laneRow": -1.1407601970612051,
+          "hp": 40,
+          "maxHp": 40,
           "facingX": 1,
           "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 6.521739130434753,
-            "y": -2.1739130434784784
+            "x": 14.248481261423194,
+            "y": 2.8926359960655645
           },
-          "pose": "supply-wagon-ne-walk-b",
-          "renderTexture": "supply-wagon-ne-walk-b",
+          "pose": "supply-wagon-iron-e-walk-02",
+          "renderTexture": "supply-wagon-iron-e-walk-02",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -627,22 +710,26 @@
           "healManaCost": 6,
           "healPower": 4,
           "presentation": {
-            "x": 1446.4985507246377,
-            "y": 3034.385997762881,
-            "rotationRad": 0
+            "x": 1800.6857486229935,
+            "y": 2913.6778262241387,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": 0,
+            "spriteDisplayWidth": 478.1964573268921,
+            "spriteDisplayHeight": 358.6473429951691
           },
           "overlay": {
             "mode": "hidden",
             "hpVisible": false,
             "manaVisible": false,
             "labelVisible": false,
-            "labelText": "보급 Lv.1"
+            "labelText": "보급"
           },
           "attackTiming": {
-            "durationSec": 0.66,
+            "durationSec": 0.56,
             "eventProgress": 0.52,
             "targetKind": "unit",
-            "eventDelayMs": 343.2
+            "eventDelayMs": 291.2
           }
         }
       ],
@@ -650,15 +737,16 @@
         "initialized": true,
         "unlocked": true,
         "contextState": "running",
-        "currentBgmId": "bgm.battle.low",
+        "currentBgmId": "bgm.age.medieval",
         "bgmState": "battle-low",
+        "gameplayMusicTheme": "medieval",
         "activeBgmVoices": 1,
         "activeSfxVoices": 0,
         "settings": {
-          "version": 2,
-          "masterVolume": 0.8,
-          "bgmVolume": 0.8,
-          "sfxVolume": 0.9,
+          "version": 3,
+          "masterVolume": 0.92,
+          "bgmVolume": 0.96,
+          "sfxVolume": 0.95,
           "mute": false,
           "muteWhenUnfocused": true,
           "combatSfxMode": "reduced",
@@ -666,57 +754,52 @@
         },
         "recentEvents": [
           {
-            "id": "sfx.ui.confirm",
-            "result": "played",
-            "atMs": 23
+            "id": "sfx.ui.buildSelect",
+            "result": "locked",
+            "atMs": 9996
           },
           {
-            "id": "sfx.ui.buildSelect",
+            "id": "sfx.wave.start",
+            "result": "locked",
+            "atMs": 10038
+          },
+          {
+            "id": "sfx.ui.hover",
+            "result": "locked",
+            "atMs": 14157
+          },
+          {
+            "id": "sfx.ui.confirm",
             "result": "played",
-            "atMs": 22361
+            "atMs": 12
+          },
+          {
+            "id": "sfx.ui.hover",
+            "result": "played",
+            "atMs": 1242
           },
           {
             "id": "sfx.wave.start",
             "result": "played",
-            "atMs": 22407
+            "atMs": 1242
           },
           {
             "id": "sfx.capture.complete",
             "result": "played",
-            "atMs": 27864
+            "atMs": 2310
           },
           {
             "id": "sfx.ui.hover",
             "result": "played",
-            "atMs": 28595
+            "atMs": 5178
           },
           {
             "id": "sfx.ui.confirm",
             "result": "played",
-            "atMs": 28607
-          },
-          {
-            "id": "sfx.ui.hover",
-            "result": "played",
-            "atMs": 32078
-          },
-          {
-            "id": "sfx.wave.start",
-            "result": "played",
-            "atMs": 32102
-          },
-          {
-            "id": "sfx.ui.hover",
-            "result": "played",
-            "atMs": 38359
-          },
-          {
-            "id": "sfx.ui.confirm",
-            "result": "played",
-            "atMs": 38359
+            "atMs": 5190
           }
         ],
-        "skippedEventCount": 0,
+        "skippedEventCount": 3,
         "unlockAttemptCount": 1,
         "missingAssetFallback": true,
         "focusMuted": false,
@@ -732,20 +815,24 @@
           "unitId": "archer",
           "role": "battle",
           "laneId": "main",
-          "progress": 0.06873862000000003,
-          "laneRow": -1,
-          "hp": 30,
-          "maxHp": 30,
+          "progress": 0.12933333333333336,
+          "laneRow": 0,
+          "hp": 45,
+          "maxHp": 45,
           "facingX": 1,
-          "facingDirection": "se",
+          "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 17.391304347826008,
-            "y": 15.21739130434753
+            "x": 16.163156812876878,
+            "y": -7.466675701600252
           },
-          "pose": "archer-se-walk-b",
-          "renderTexture": "archer-se-walk-b",
+          "pose": "archer-e-walk-01",
+          "renderTexture": "archer-e-walk-01",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -756,22 +843,26 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1483.4550724637681,
-            "y": 2848.494100488329,
-            "rotationRad": 0
+            "x": 1788.8306159704466,
+            "y": 2999.1822212483044,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": 0.020632062645320914,
+            "spriteDisplayWidth": 296.8115942028985,
+            "spriteDisplayHeight": 296.8115942028985
           },
           "overlay": {
             "mode": "summary",
-            "hpVisible": true,
+            "hpVisible": false,
             "manaVisible": false,
-            "labelVisible": true,
-            "labelText": "아군 ×4 · HP 100%"
+            "labelVisible": false,
+            "labelText": "활"
           },
           "attackTiming": {
-            "durationSec": 0.58,
-            "eventProgress": 0.42,
+            "durationSec": 0.46,
+            "eventProgress": 0.36,
             "targetKind": "unit",
-            "eventDelayMs": 243.6
+            "eventDelayMs": 165.6
           }
         },
         {
@@ -780,20 +871,24 @@
           "unitId": "iron_swordsman",
           "role": "battle",
           "laneId": "main",
-          "progress": 0.068510656,
-          "laneRow": 0.19638400000000003,
-          "hp": 54,
-          "maxHp": 54,
+          "progress": 0.12933333333333336,
+          "laneRow": -1,
+          "hp": 70,
+          "maxHp": 70,
           "facingX": 1,
-          "facingDirection": "ne",
+          "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 8.695652173913004,
-            "y": -4.347826086956502
+            "x": 16.163156812876878,
+            "y": -7.466675701600252
           },
-          "pose": "iron-swordsman-e-walk-a",
-          "renderTexture": "iron-swordsman-e-walk-a",
+          "pose": "iron-swordsman-e-walk-03",
+          "renderTexture": "iron-swordsman-e-walk-03",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -804,22 +899,26 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1548.672463768116,
-            "y": 2989.9583540899876,
-            "rotationRad": 0
+            "x": 1761.6408941127731,
+            "y": 2945.7709544333366,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": 0.004245330597274943,
+            "spriteDisplayWidth": 321.54589371980677,
+            "spriteDisplayHeight": 321.54589371980677
           },
           "overlay": {
             "mode": "hidden",
             "hpVisible": false,
             "manaVisible": false,
             "labelVisible": false,
-            "labelText": "철검 Lv.1"
+            "labelText": "철검"
           },
           "attackTiming": {
-            "durationSec": 0.46,
-            "eventProgress": 0.48,
+            "durationSec": 0.38,
+            "eventProgress": 0.44,
             "targetKind": "unit",
-            "eventDelayMs": 220.79999999999998
+            "eventDelayMs": 167.20000000000002
           }
         },
         {
@@ -828,20 +927,24 @@
           "unitId": "iron_spearman",
           "role": "battle",
           "laneId": "main",
-          "progress": 0.06805472800000001,
-          "laneRow": 2.407584,
-          "hp": 50,
-          "maxHp": 50,
+          "progress": 0.12933333333333336,
+          "laneRow": 1,
+          "hp": 70,
+          "maxHp": 70,
           "facingX": 1,
-          "facingDirection": "ne",
+          "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 6.521739130434753,
-            "y": -8.695652173913004
+            "x": 16.163156812876878,
+            "y": -7.466675701600252
           },
-          "pose": "iron-spearman-n-walk-a",
-          "renderTexture": "iron-spearman-n-walk-a",
+          "pose": "iron-spearman-e-walk-01",
+          "renderTexture": "iron-spearman-e-walk-01",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -852,22 +955,26 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1620.4115942028986,
-            "y": 3147.6865774613098,
-            "rotationRad": 0
+            "x": 1814.463301456772,
+            "y": 3056.3652594992914,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": 0.013209393750088338,
+            "spriteDisplayWidth": 359.82008995502247,
+            "spriteDisplayHeight": 359.82008995502247
           },
           "overlay": {
             "mode": "hidden",
             "hpVisible": false,
             "manaVisible": false,
             "labelVisible": false,
-            "labelText": "철창 Lv.1"
+            "labelText": "철창"
           },
           "attackTiming": {
-            "durationSec": 0.46,
-            "eventProgress": 0.48,
+            "durationSec": 0.38,
+            "eventProgress": 0.44,
             "targetKind": "unit",
-            "eventDelayMs": 220.79999999999998
+            "eventDelayMs": 167.20000000000002
           }
         },
         {
@@ -876,20 +983,24 @@
           "unitId": "supply_wagon",
           "role": "support",
           "laneId": "main",
-          "progress": 0.04744682400000001,
-          "laneRow": 1,
-          "hp": 54,
-          "maxHp": 54,
+          "progress": 0.08146666666666662,
+          "laneRow": -1.1210537694726364,
+          "hp": 40,
+          "maxHp": 40,
           "facingX": 1,
           "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 10.869565217391482,
-            "y": 4.347826086956502
+            "x": 16.78868333059995,
+            "y": 2.378436497248913
           },
-          "pose": "supply-wagon-se-walk-a",
-          "renderTexture": "supply-wagon-se-walk-a",
+          "pose": "supply-wagon-iron-e-walk-01",
+          "renderTexture": "supply-wagon-iron-e-walk-01",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -900,22 +1011,26 @@
           "healManaCost": 6,
           "healPower": 4,
           "presentation": {
-            "x": 1455.1942028985509,
-            "y": 3051.3038852393406,
-            "rotationRad": 0
+            "x": 1524.3828313561962,
+            "y": 3044.772015779787,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": 0,
+            "spriteDisplayWidth": 478.1964573268921,
+            "spriteDisplayHeight": 358.6473429951691
           },
           "overlay": {
-            "mode": "hidden",
+            "mode": "compact",
             "hpVisible": false,
             "manaVisible": false,
             "labelVisible": false,
-            "labelText": "보급 Lv.1"
+            "labelText": "보급"
           },
           "attackTiming": {
-            "durationSec": 0.66,
+            "durationSec": 0.56,
             "eventProgress": 0.52,
             "targetKind": "unit",
-            "eventDelayMs": 343.2
+            "eventDelayMs": 291.2
           }
         }
       ],
@@ -923,15 +1038,16 @@
         "initialized": true,
         "unlocked": true,
         "contextState": "running",
-        "currentBgmId": "bgm.battle.high",
-        "bgmState": "battle-high",
+        "currentBgmId": "bgm.age.medieval",
+        "bgmState": "battle-low",
+        "gameplayMusicTheme": "medieval",
         "activeBgmVoices": 1,
-        "activeSfxVoices": 1,
+        "activeSfxVoices": 0,
         "settings": {
-          "version": 2,
-          "masterVolume": 0.8,
-          "bgmVolume": 0.8,
-          "sfxVolume": 0.9,
+          "version": 3,
+          "masterVolume": 0.92,
+          "bgmVolume": 0.96,
+          "sfxVolume": 0.95,
           "mute": false,
           "muteWhenUnfocused": true,
           "combatSfxMode": "reduced",
@@ -939,67 +1055,67 @@
         },
         "recentEvents": [
           {
-            "id": "sfx.ui.hover",
-            "result": "played",
-            "atMs": 32078
-          },
-          {
             "id": "sfx.wave.start",
-            "result": "played",
-            "atMs": 32102
+            "result": "locked",
+            "atMs": 10038
           },
           {
             "id": "sfx.ui.hover",
-            "result": "played",
-            "atMs": 38359
+            "result": "locked",
+            "atMs": 14157
           },
           {
             "id": "sfx.ui.confirm",
             "result": "played",
-            "atMs": 38359
+            "atMs": 12
           },
           {
             "id": "sfx.ui.hover",
             "result": "played",
-            "atMs": 42400
+            "atMs": 1242
           },
           {
             "id": "sfx.wave.start",
             "result": "played",
-            "atMs": 42423
+            "atMs": 1242
+          },
+          {
+            "id": "sfx.capture.complete",
+            "result": "played",
+            "atMs": 2310
           },
           {
             "id": "sfx.ui.hover",
             "result": "played",
-            "atMs": 48506
+            "atMs": 5178
           },
           {
             "id": "sfx.ui.confirm",
             "result": "played",
-            "atMs": 48515
+            "atMs": 5190
           },
           {
-            "id": "sfx.combat.rangedFire",
+            "id": "sfx.ui.hover",
             "result": "played",
-            "atMs": 48518
+            "atMs": 7872
           },
           {
-            "id": "sfx.combat.rangedFire",
-            "result": "sampled",
-            "atMs": 48518
-          },
-          {
-            "id": "sfx.combat.meleeAttack",
+            "id": "sfx.wave.start",
             "result": "played",
-            "atMs": 49099
+            "atMs": 7872
           },
           {
-            "id": "sfx.combat.meleeAttack",
-            "result": "sampled",
-            "atMs": 49099
+            "id": "sfx.ui.hover",
+            "result": "played",
+            "atMs": 12040
+          },
+          {
+            "id": "sfx.ui.confirm",
+            "result": "played",
+            "atMs": 12051
           }
         ],
-        "skippedEventCount": 2,
+        "skippedEventCount": 3,
         "unlockAttemptCount": 1,
         "missingAssetFallback": true,
         "focusMuted": false,
@@ -1015,20 +1131,24 @@
           "unitId": "archer",
           "role": "battle",
           "laneId": "main",
-          "progress": 0.06873862000000003,
-          "laneRow": -1,
-          "hp": 30,
-          "maxHp": 30,
+          "progress": 0.13000000000000003,
+          "laneRow": 0,
+          "hp": 45,
+          "maxHp": 45,
           "facingX": 1,
-          "facingDirection": "se",
+          "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 17.391304347826008,
-            "y": 15.21739130434753
+            "x": 16.378301776987428,
+            "y": -7.566063320891317
           },
-          "pose": "archer-se-walk-b",
-          "renderTexture": "archer-se-walk-b",
+          "pose": "archer-e-walk-03",
+          "renderTexture": "archer-e-walk-03",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -1039,22 +1159,26 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1483.4550724637681,
-            "y": 2847.0028243797797,
-            "rotationRad": 0
+            "x": 1790.724499989638,
+            "y": 2997.8700859013547,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": -0.0037704824044375584,
+            "spriteDisplayWidth": 296.8115942028985,
+            "spriteDisplayHeight": 296.8115942028985
           },
           "overlay": {
             "mode": "summary",
-            "hpVisible": true,
+            "hpVisible": false,
             "manaVisible": false,
-            "labelVisible": true,
-            "labelText": "아군 ×4 · HP 100%"
+            "labelVisible": false,
+            "labelText": "활"
           },
           "attackTiming": {
-            "durationSec": 0.58,
-            "eventProgress": 0.42,
+            "durationSec": 0.46,
+            "eventProgress": 0.36,
             "targetKind": "unit",
-            "eventDelayMs": 243.6
+            "eventDelayMs": 165.6
           }
         },
         {
@@ -1063,20 +1187,24 @@
           "unitId": "knight",
           "role": "battle",
           "laneId": "main",
-          "progress": 0.07025838000000001,
-          "laneRow": 0,
-          "hp": 72,
-          "maxHp": 72,
+          "progress": 0.135,
+          "laneRow": -1,
+          "hp": 100,
+          "maxHp": 100,
           "facingX": 1,
           "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 10.869565217391482,
-            "y": -4.347826086956502
+            "x": 24.567452665480914,
+            "y": -11.349094981336293
           },
-          "pose": "knight-e-walk-a",
-          "renderTexture": "knight-e-walk-a",
+          "pose": "knight-e-walk-03",
+          "renderTexture": "knight-e-walk-03",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -1087,22 +1215,26 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1550.8463768115944,
-            "y": 2987.273715059466,
-            "rotationRad": 0
+            "x": 1788.7229928398476,
+            "y": 2930.676508189104,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": -0.006184764572617851,
+            "spriteDisplayWidth": 469.9516908212559,
+            "spriteDisplayHeight": 352.46376811594195
           },
           "overlay": {
             "mode": "hidden",
             "hpVisible": false,
             "manaVisible": false,
             "labelVisible": false,
-            "labelText": "기사 Lv.1"
+            "labelText": "기사"
           },
           "attackTiming": {
-            "durationSec": 0.46,
-            "eventProgress": 0.48,
+            "durationSec": 0.38,
+            "eventProgress": 0.44,
             "targetKind": "unit",
-            "eventDelayMs": 220.79999999999998
+            "eventDelayMs": 167.20000000000002
           }
         },
         {
@@ -1111,20 +1243,24 @@
           "unitId": "musketeer",
           "role": "battle",
           "laneId": "main",
-          "progress": 0.06759880000000001,
+          "progress": 0.13199999999999992,
           "laneRow": 1,
-          "hp": 36,
-          "maxHp": 36,
-          "facingX": -1,
-          "facingDirection": "n",
+          "hp": 50,
+          "maxHp": 50,
+          "facingX": 1,
+          "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": -2.1739130434780236,
-            "y": -21.73913043478251
+            "x": 19.65396213238455,
+            "y": -9.079275985068762
           },
-          "pose": "musketeer-n-walk-b",
-          "renderTexture": "musketeer-n-walk-b",
+          "pose": "musketeer-e-walk-01",
+          "renderTexture": "musketeer-e-walk-01",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -1135,22 +1271,26 @@
           "healManaCost": 0,
           "healPower": 0,
           "presentation": {
-            "x": 1609.5420289855074,
-            "y": 3130.3591559603724,
-            "rotationRad": 0
+            "x": 1827.334088688712,
+            "y": 3050.132757945241,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": 0.007601352531503736,
+            "spriteDisplayWidth": 302.9951690821256,
+            "spriteDisplayHeight": 302.9951690821256
           },
           "overlay": {
             "mode": "hidden",
             "hpVisible": false,
             "manaVisible": false,
             "labelVisible": false,
-            "labelText": "머스킷 Lv.1"
+            "labelText": "총병"
           },
           "attackTiming": {
-            "durationSec": 0.58,
-            "eventProgress": 0.42,
+            "durationSec": 0.46,
+            "eventProgress": 0.36,
             "targetKind": "unit",
-            "eventDelayMs": 243.6
+            "eventDelayMs": 165.6
           }
         },
         {
@@ -1159,20 +1299,24 @@
           "unitId": "supply_wagon",
           "role": "support",
           "laneId": "main",
-          "progress": 0.04744682400000001,
-          "laneRow": 0,
-          "hp": 54,
-          "maxHp": 54,
+          "progress": 0.08399999999999994,
+          "laneRow": -0.3614336590581309,
+          "hp": 40,
+          "maxHp": 40,
           "facingX": 1,
           "facingDirection": "e",
+          "travelFacingX": 1,
+          "travelFacingDirection": "e",
+          "combatFacingX": 1,
+          "combatFacingDirection": "e",
           "flipX": false,
           "tint": 16777215,
           "motion": {
-            "x": 6.521739130434753,
-            "y": -2.1739130434784784
+            "x": 27.660097382731692,
+            "y": 16.855705990367824
           },
-          "pose": "supply-wagon-ne-walk-a",
-          "renderTexture": "supply-wagon-ne-walk-a",
+          "pose": "supply-wagon-iron-e-walk-02",
+          "renderTexture": "supply-wagon-iron-e-walk-02",
           "attackAnimTime": 0,
           "attackFacingLockSec": 0,
           "combatFacingHoldSec": 0,
@@ -1183,22 +1327,26 @@
           "healManaCost": 6,
           "healPower": 4,
           "presentation": {
-            "x": 1446.4985507246377,
-            "y": 3034.0967193665815,
-            "rotationRad": 0
+            "x": 1553.9774633994582,
+            "y": 3079.0685635208506,
+            "originX": 0.5,
+            "originY": 0.875,
+            "rotationRad": 0,
+            "spriteDisplayWidth": 478.1964573268921,
+            "spriteDisplayHeight": 358.6473429951691
           },
           "overlay": {
-            "mode": "hidden",
+            "mode": "compact",
             "hpVisible": false,
             "manaVisible": false,
             "labelVisible": false,
-            "labelText": "보급 Lv.1"
+            "labelText": "보급"
           },
           "attackTiming": {
-            "durationSec": 0.66,
+            "durationSec": 0.56,
             "eventProgress": 0.52,
             "targetKind": "unit",
-            "eventDelayMs": 343.2
+            "eventDelayMs": 291.2
           }
         }
       ],
@@ -1206,15 +1354,16 @@
         "initialized": true,
         "unlocked": true,
         "contextState": "running",
-        "currentBgmId": "bgm.battle.high",
-        "bgmState": "battle-high",
+        "currentBgmId": "bgm.age.medieval",
+        "bgmState": "battle-low",
+        "gameplayMusicTheme": "medieval",
         "activeBgmVoices": 1,
-        "activeSfxVoices": 1,
+        "activeSfxVoices": 0,
         "settings": {
-          "version": 2,
-          "masterVolume": 0.8,
-          "bgmVolume": 0.8,
-          "sfxVolume": 0.9,
+          "version": 3,
+          "masterVolume": 0.92,
+          "bgmVolume": 0.96,
+          "sfxVolume": 0.95,
           "mute": false,
           "muteWhenUnfocused": true,
           "combatSfxMode": "reduced",
@@ -1222,67 +1371,67 @@
         },
         "recentEvents": [
           {
-            "id": "sfx.combat.unitDeath",
+            "id": "sfx.wave.start",
             "result": "played",
-            "atMs": 57806
+            "atMs": 1242
           },
           {
-            "id": "sfx.combat.projectileHit",
-            "result": "sampled",
-            "atMs": 57806
-          },
-          {
-            "id": "sfx.support.heal",
-            "result": "sampled",
-            "atMs": 58352
-          },
-          {
-            "id": "sfx.combat.rangedFire",
-            "result": "sampled",
-            "atMs": 58596
-          },
-          {
-            "id": "sfx.combat.rangedFire",
+            "id": "sfx.capture.complete",
             "result": "played",
-            "atMs": 58596
-          },
-          {
-            "id": "sfx.support.heal",
-            "result": "sampled",
-            "atMs": 59350
+            "atMs": 2310
           },
           {
             "id": "sfx.ui.hover",
             "result": "played",
-            "atMs": 59594
+            "atMs": 5178
           },
           {
             "id": "sfx.ui.confirm",
             "result": "played",
-            "atMs": 59594
+            "atMs": 5190
           },
           {
-            "id": "sfx.combat.projectileHit",
+            "id": "sfx.ui.hover",
             "result": "played",
-            "atMs": 59603
+            "atMs": 7872
           },
           {
-            "id": "sfx.combat.projectileHit",
-            "result": "sampled",
-            "atMs": 59606
-          },
-          {
-            "id": "sfx.combat.rangedFire",
-            "result": "sampled",
-            "atMs": 59873
-          },
-          {
-            "id": "sfx.support.heal",
+            "id": "sfx.wave.start",
             "result": "played",
-            "atMs": 60140
+            "atMs": 7872
+          },
+          {
+            "id": "sfx.ui.hover",
+            "result": "played",
+            "atMs": 12040
+          },
+          {
+            "id": "sfx.ui.confirm",
+            "result": "played",
+            "atMs": 12051
+          },
+          {
+            "id": "sfx.ui.hover",
+            "result": "played",
+            "atMs": 14698
+          },
+          {
+            "id": "sfx.wave.start",
+            "result": "played",
+            "atMs": 14698
+          },
+          {
+            "id": "sfx.ui.hover",
+            "result": "played",
+            "atMs": 18959
+          },
+          {
+            "id": "sfx.ui.confirm",
+            "result": "played",
+            "atMs": 18959
           }
         ],
-        "skippedEventCount": 38,
+        "skippedEventCount": 3,
         "unlockAttemptCount": 1,
         "missingAssetFallback": true,
         "focusMuted": false,
@@ -1294,15 +1443,16 @@
     "initialized": true,
     "unlocked": true,
     "contextState": "running",
-    "currentBgmId": "bgm.battle.high",
+    "currentBgmId": "bgm.age.medieval",
     "bgmState": "battle-high",
+    "gameplayMusicTheme": "medieval",
     "activeBgmVoices": 1,
-    "activeSfxVoices": 0,
+    "activeSfxVoices": 2,
     "settings": {
-      "version": 2,
-      "masterVolume": 0.8,
-      "bgmVolume": 0.8,
-      "sfxVolume": 0.9,
+      "version": 3,
+      "masterVolume": 0.92,
+      "bgmVolume": 0.96,
+      "sfxVolume": 0.95,
       "mute": false,
       "muteWhenUnfocused": true,
       "combatSfxMode": "reduced",
@@ -1310,67 +1460,67 @@
     },
     "recentEvents": [
       {
-        "id": "sfx.combat.meleeAttack",
+        "id": "sfx.combat.rangedFire.sling",
         "result": "sampled",
-        "atMs": 66119
+        "atMs": 23650
       },
       {
-        "id": "sfx.combat.meleeAttack",
+        "id": "sfx.combat.meleeAttack.blade",
         "result": "sampled",
-        "atMs": 66119
+        "atMs": 23661
       },
       {
-        "id": "sfx.combat.meleeAttack",
+        "id": "sfx.combat.meleeHit.polearm",
+        "result": "sampled",
+        "atMs": 23812
+      },
+      {
+        "id": "sfx.combat.meleeHit.blade",
+        "result": "sampled",
+        "atMs": 23812
+      },
+      {
+        "id": "sfx.combat.meleeAttack.blunt",
+        "result": "sampled",
+        "atMs": 23824
+      },
+      {
+        "id": "sfx.combat.meleeHit.blunt",
+        "result": "sampled",
+        "atMs": 24033
+      },
+      {
+        "id": "sfx.combat.projectileHit.sling",
+        "result": "sampled",
+        "atMs": 24033
+      },
+      {
+        "id": "sfx.combat.meleeAttack.blunt",
+        "result": "sampled",
+        "atMs": 24044
+      },
+      {
+        "id": "sfx.combat.meleeHit.blunt",
+        "result": "sampled",
+        "atMs": 24207
+      },
+      {
+        "id": "sfx.combat.projectileHit.sling",
         "result": "played",
-        "atMs": 66409
+        "atMs": 24207
       },
       {
-        "id": "sfx.combat.meleeAttack",
+        "id": "sfx.combat.projectileHit.bow",
+        "result": "duplicate",
+        "atMs": 24207
+      },
+      {
+        "id": "sfx.combat.projectileHit.sling",
         "result": "sampled",
-        "atMs": 66409
-      },
-      {
-        "id": "sfx.combat.meleeHit",
-        "result": "sampled",
-        "atMs": 66723
-      },
-      {
-        "id": "sfx.combat.meleeHit",
-        "result": "sampled",
-        "atMs": 66723
-      },
-      {
-        "id": "sfx.combat.rangedFire",
-        "result": "sampled",
-        "atMs": 66728
-      },
-      {
-        "id": "sfx.combat.rangedFire",
-        "result": "sampled",
-        "atMs": 66728
-      },
-      {
-        "id": "sfx.combat.rangedFire",
-        "result": "played",
-        "atMs": 66734
-      },
-      {
-        "id": "sfx.combat.meleeHit",
-        "result": "played",
-        "atMs": 67048
-      },
-      {
-        "id": "sfx.combat.meleeHit",
-        "result": "sampled",
-        "atMs": 67048
-      },
-      {
-        "id": "sfx.combat.unitDeath",
-        "result": "sampled",
-        "atMs": 67048
+        "atMs": 24207
       }
     ],
-    "skippedEventCount": 64,
+    "skippedEventCount": 22,
     "unlockAttemptCount": 1,
     "missingAssetFallback": true,
     "focusMuted": false,

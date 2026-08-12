@@ -126,6 +126,7 @@ import {
   createLaneRowCandidates,
 } from "../systems/lane-combat/laneOccupancy";
 import { frameLerpAlpha } from "../systems/lane-combat/frameLerp";
+import { DeterministicRandom } from "../systems/sim/deterministicRandom";
 import {
   advanceTeamAge,
   canAfford,
@@ -407,6 +408,29 @@ const CAPTURE_TOWER_DEFENDER_EQUIVALENT = 3;
  */
 const FIELD_TAP_SLOP_PX = 12;
 /**
+ * Simulation tick length. The simulation advances in whole ticks of exactly
+ * this size regardless of how fast the display runs, which is a prerequisite
+ * for lockstep PvP (both clients must step identically) and also removes a
+ * whole class of frame-rate-dependent bug on its own.
+ */
+const SIM_TICK_SEC = 1 / 30;
+/**
+ * Longest real interval fed into the accumulator. Without this, one long stall
+ * (tab in the background, GC pause) queues up a burst of catch-up ticks that
+ * costs even more time — the classic spiral of death.
+ */
+const MAX_FRAME_SEC = 0.25;
+/**
+ * Ticks a single frame may run while catching up. At 8 the simulation still
+ * keeps real time down to ~4 rendered FPS (4 x 8 = 32 >= 30 ticks/s) while
+ * staying bounded; below that the game runs in slow motion rather than
+ * freezing. Slow motion is the right failure mode here — under lockstep every
+ * client must execute every tick, so skipping ticks to catch up would desync
+ * instead of recovering.
+ */
+const MAX_SIM_STEPS_PER_FRAME = 8;
+const KILL_REWARD_KEYS = ["gold", "wood", "food"] as const;
+/**
  * How close an enemy has to come before a unit notices it and commits to
  * fighting it. Beyond this a unit simply advances down the lane.
  *
@@ -506,6 +530,14 @@ export class LaneBattleScene extends Phaser.Scene {
   private readonly scalePresetId: ScalePresetId = parseScalePreset(QUERY_PARAMS.get("scale"));
   private readonly scaleVisualConfig: PrototypeScaleConfig = getPrototypeScaleConfig(this.scalePresetId);
   private readonly verificationSeed = QUERY_PARAMS.get("seed") ?? DEFAULT_VERIFICATION_SEED;
+  /**
+   * Randomness for anything that affects simulation state. Seeded from the
+   * same value as the rest of the run so a match can be reproduced from its
+   * seed plus its commands.
+   */
+  private simRandom = new DeterministicRandom(this.verificationSeed);
+  /** Leftover real time not yet consumed by a whole simulation tick. */
+  private simAccumulatorSec = 0;
   private readonly visualValidationScenario = QUERY_PARAMS.get("scenario") === "visual-validation";
   private readonly terrainDebugInputEnabled = isTerrainDebugInputEnabled(QUERY_PARAMS.get("terrainDebug"));
   private readonly mapSpec = getBattlefieldMapSpec(QUERY_PARAMS.get("map"));
@@ -555,6 +587,8 @@ export class LaneBattleScene extends Phaser.Scene {
 
   create(): void {
     Phaser.Math.RND.sow([this.verificationSeed]);
+    this.simRandom = new DeterministicRandom(this.verificationSeed);
+    this.simAccumulatorSec = 0;
     void this.audio.initialize();
     this.audio.resetDirector("preparation");
     this.audioWiring.reset();
@@ -623,19 +657,46 @@ export class LaneBattleScene extends Phaser.Scene {
       this.updateAudioDebugOverlay();
       return;
     }
-    const deltaSec = deltaMs / 1000;
-    this.elapsedSec += deltaSec;
-    this.tickEconomy(deltaSec);
-    this.aiController.tick(deltaSec);
-    this.tickWaves(deltaSec);
-    this.tickCombat(deltaSec);
+    // The simulation advances in fixed ticks; presentation runs once per
+    // rendered frame. Keeping them separate is what makes the simulation
+    // reproducible from a seed plus a command list, which lockstep PvP needs —
+    // and it means display frame rate can no longer change game outcomes.
+    const frameSec = Math.min(deltaMs / 1000, MAX_FRAME_SEC);
+    this.simAccumulatorSec += frameSec;
+    let steps = 0;
+    while (this.simAccumulatorSec >= SIM_TICK_SEC && steps < MAX_SIM_STEPS_PER_FRAME) {
+      this.stepSimulation(SIM_TICK_SEC);
+      this.simAccumulatorSec -= SIM_TICK_SEC;
+      steps += 1;
+    }
+    if (steps === MAX_SIM_STEPS_PER_FRAME) {
+      // Too far behind to catch up this frame; drop the backlog rather than
+      // compound it. (Under lockstep this is where a stalled peer would have
+      // to be waited on instead.)
+      this.simAccumulatorSec = 0;
+    }
+
+    this.units.forEach((unit) => this.syncUnitVisual(unit, frameSec));
     this.refreshUnitOverlayDensity();
-    this.tickCapturePoints(deltaSec);
     this.syncGameplayMusicTheme();
     this.updateAudioState();
     this.refreshUi();
     this.publishDebug();
     this.updateAudioDebugOverlay();
+  }
+
+  /**
+   * One whole simulation tick. Everything that changes game state belongs here
+   * and must depend only on `deltaSec`, current state, and `simRandom` — never
+   * on real time, frame rate, or anything Phaser renders.
+   */
+  private stepSimulation(deltaSec: number): void {
+    this.elapsedSec += deltaSec;
+    this.tickEconomy(deltaSec);
+    this.aiController.tick(deltaSec);
+    this.tickWaves(deltaSec);
+    this.tickCombat(deltaSec);
+    this.tickCapturePoints(deltaSec);
   }
 
   private createUiIconTextures(): void {
@@ -2046,7 +2107,6 @@ export class LaneBattleScene extends Phaser.Scene {
     });
 
     this.enforceFriendlySpacing();
-    this.units.forEach((unit) => this.syncUnitVisual(unit, deltaSec));
     this.checkBasePressure(deltaSec);
   }
 
@@ -3875,7 +3935,7 @@ export class LaneBattleScene extends Phaser.Scene {
     const total = Math.round(getAgeBalance(ageId).killGoldBase);
     const reward = { gold: 0, wood: 0, food: 0 };
     if (total < 3) {
-      const soleKey = Phaser.Utils.Array.GetRandom(["gold", "wood", "food"] as const);
+      const soleKey = this.simRandom.pick(KILL_REWARD_KEYS);
       reward[soleKey] = 1;
       return reward;
     }
@@ -3883,7 +3943,7 @@ export class LaneBattleScene extends Phaser.Scene {
     reward.wood = 1;
     reward.food = 1;
     for (let remaining = total - 3; remaining > 0; remaining -= 1) {
-      const nextKey = Phaser.Utils.Array.GetRandom(["gold", "wood", "food"] as const);
+      const nextKey = this.simRandom.pick(KILL_REWARD_KEYS);
       reward[nextKey] += 1;
     }
     return reward;
