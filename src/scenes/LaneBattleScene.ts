@@ -4617,6 +4617,7 @@ export class LaneBattleScene extends Phaser.Scene {
       selectedDefenseTower: selectedTower,
     });
     const selectedActions = this.getSelectedCaptureActions();
+    this.hud.setCaptureActionAnchor(this.getSelectedStructureScreenPosition());
     this.hud.apply(snapshot, selectedActions);
     this.hud.setDevToolsVisible(this.devModeAvailable);
     this.hud.setDevMode(this.devModeAvailable && this.devModeEnabled);
@@ -4631,6 +4632,23 @@ export class LaneBattleScene extends Phaser.Scene {
       this.baseResearchPanel.setVisible(false);
     }
     this.refreshHudActionLabels();
+  }
+
+  /**
+   * Where the currently selected structure sits on screen, in the HUD's
+   * coordinate space, so its action buttons can be placed beside it. Returns
+   * `null` when nothing on the field is selected.
+   */
+  private getSelectedStructureScreenPosition(): { x: number; y: number } | null {
+    const point = this.capturePoints.find((entry) => entry.id === this.selectedCapturePointId);
+    const tower = this.defenseTowers.find((entry) => entry.id === this.selectedDefenseTowerId);
+    const sprite = point?.marker ?? tower?.sprite;
+    if (!sprite) return null;
+    const cam = this.cameras.main;
+    return {
+      x: (sprite.x - cam.scrollX) * cam.zoom,
+      y: (sprite.y - cam.scrollY) * cam.zoom,
+    };
   }
 
   private refreshHudActionLabels(): void {
