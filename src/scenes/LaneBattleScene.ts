@@ -203,8 +203,17 @@ const ENGAGE_GAP = 0.022;
 const FIELD_CAMERA_ZOOM = 0.46;
 const TOWER_W = 148;
 const TOWER_H = 176;
-const PLAYER_BASE_WORLD_OFFSET_X = -120;
-const ENEMY_BASE_WORLD_OFFSET_X = -260;
+/**
+ * How far each main base sits behind its own end of the lane, measured along
+ * the lane direction.
+ *
+ * The two bases used to be nudged by raw, unequal X offsets (-120 for the
+ * player, -260 for the enemy). Because the lane runs diagonally, an X-only
+ * nudge also moves a base sideways off the road, and the two different values
+ * made the sides visibly non-mirrored. One setback along the lane tangent puts
+ * both bases on the lane centreline, the same distance beyond their own end.
+ */
+const BASE_LANE_SETBACK = 190;
 const MELEE_ENGAGE_TOLERANCE_PROGRESS = 0.0022;
 const COMBAT_FORMATION_PULL_PROGRESS = 0.12;
 const CAPTURE_POINT_RUINS_VISUAL_SEC = 4;
@@ -556,7 +565,7 @@ export class LaneBattleScene extends Phaser.Scene {
       ? CENTRAL_CAPTURE_PROGRESS
       : 0.22;
     const initialFocus = this.progressToScreen(initialProgress, 0);
-    this.cameras.main.centerOn(initialFocus.x, initialFocus.y);
+    this.focusCameraOn(initialFocus.x, initialFocus.y);
 
     this.createUiIconTextures();
 
@@ -819,6 +828,26 @@ export class LaneBattleScene extends Phaser.Scene {
     });
   }
 
+  /**
+   * Keeps the camera inside the world after a programmatic move.
+   *
+   * Phaser's own clamp is disabled (`useBounds = false`, see `create()`), and
+   * the drag handler clamps by hand — but `centerOn`/`setScroll` callers did
+   * not, so focusing a structure near the map edge could scroll past the
+   * ground plane and show the empty background colour beyond it.
+   */
+  private clampCameraToWorld(): void {
+    const cam = this.cameras.main;
+    cam.scrollX = Phaser.Math.Clamp(cam.scrollX, 0, Math.max(0, WORLD_W - CANVAS_W / cam.zoom));
+    cam.scrollY = Phaser.Math.Clamp(cam.scrollY, 0, Math.max(0, WORLD_H - CANVAS_H / cam.zoom));
+  }
+
+  /** Centres the camera on a world point without leaving the ground plane. */
+  private focusCameraOn(x: number, y: number): void {
+    this.cameras.main.centerOn(x, y);
+    this.clampCameraToWorld();
+  }
+
   private setupFieldDrag(): void {
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       if (this.isPointerOnUi(pointer)) return;
@@ -868,7 +897,7 @@ export class LaneBattleScene extends Phaser.Scene {
         this.syncUnitPresentation(unit);
       });
       const focus = this.progressToScreen(0.5, 0);
-      this.cameras.main.centerOn(focus.x, focus.y);
+      this.focusCameraOn(focus.x, focus.y);
       this.refreshUi();
       this.publishDebug();
     };
@@ -880,11 +909,11 @@ export class LaneBattleScene extends Phaser.Scene {
       focusCentral: () => this.focusCentralCapture(),
       focusProgress: (progress: number) => {
         const focus = this.progressToScreen(Phaser.Math.Clamp(progress, 0, 1), 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
       },
       focusLaneProgress: (laneId: string, progress: number) => {
         const focus = this.progressToScreen(Phaser.Math.Clamp(progress, 0, 1), 0, laneId);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
       },
       setPaused: (paused: boolean) => {
         if (paused) {
@@ -954,7 +983,7 @@ export class LaneBattleScene extends Phaser.Scene {
         tower.hp = 0;
         tower.buildRemainingSec = DEFENSE_TOWER_BUILD_DURATION_SEC;
         const focus = this.progressToScreen(tower.progress, 0, tower.laneId);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.refreshDefenseTowerVisuals();
         this.publishDebug();
         this.scene.pause();
@@ -970,7 +999,7 @@ export class LaneBattleScene extends Phaser.Scene {
             ? tower.maxHp * 0.5
             : state === "critical" ? tower.maxHp * 0.2 : 0;
         const focus = this.progressToScreen(tower.progress, 0, tower.laneId);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.refreshDefenseTowerVisuals();
         this.publishDebug();
         this.scene.pause();
@@ -981,7 +1010,7 @@ export class LaneBattleScene extends Phaser.Scene {
         point.owner = owner;
         point.control = owner === "player" ? 1 : owner === "enemy" ? -1 : 0;
         const focus = this.progressToScreen(point.progress, 0, point.laneId);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.refreshCapturePointVisuals();
         this.publishDebug();
         this.scene.pause();
@@ -999,7 +1028,7 @@ export class LaneBattleScene extends Phaser.Scene {
         point.buildingId = undefined;
         point.buildingLevel = 0;
         const focus = this.progressToScreen(point.progress, 0, point.laneId);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.selectCapturePoint(point.id);
         this.publishDebug();
       },
@@ -1045,7 +1074,7 @@ export class LaneBattleScene extends Phaser.Scene {
           this.syncUnitPresentation(unit);
         });
         const focus = this.progressToScreen(0.505, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.publishDebug();
       },
       prepareTeamPaletteProbe: (unitId: BattleUnitId | SupportUnitId) => {
@@ -1059,7 +1088,7 @@ export class LaneBattleScene extends Phaser.Scene {
           this.syncUnitPresentation(unit);
         });
         const focus = this.progressToScreen(0.5, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.publishDebug();
       },
       prepareAgeWaveProbe,
@@ -1078,7 +1107,7 @@ export class LaneBattleScene extends Phaser.Scene {
         this.tickWatchtower(tower, 0);
         this.activeProjectiles.forEach((projectile) => setLaneProjectileProgress(projectile, 0.45));
         const focus = this.progressToScreen(tower.progress, 0, tower.laneId);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.publishDebug();
         this.scene.pause();
       },
@@ -1096,7 +1125,7 @@ export class LaneBattleScene extends Phaser.Scene {
           tower.hp = tower.maxHp;
         });
         const focus = this.progressToScreen(0.571, 0).add(new Phaser.Math.Vector2(0, -150));
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.refreshCapturePointVisuals();
         this.refreshDefenseTowerVisuals();
         this.publishDebug();
@@ -1117,7 +1146,7 @@ export class LaneBattleScene extends Phaser.Scene {
         const unit = this.units[0];
         unit.attackTimerSec = 0;
         const focus = this.progressToScreen(point.progress - 0.018, 0, point.laneId);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.refreshCapturePointVisuals();
         this.publishDebug();
       },
@@ -1143,7 +1172,7 @@ export class LaneBattleScene extends Phaser.Scene {
         this.syncUnitPresentation(attacker);
         this.syncUnitPresentation(target);
         const focus = this.progressToScreen(0.5, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.refreshDefenseTowerVisuals();
         this.publishDebug();
         this.scene.pause();
@@ -1164,7 +1193,7 @@ export class LaneBattleScene extends Phaser.Scene {
           unit.attackTimerSec = 0;
         });
         const focus = this.progressToScreen(0.5, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.refreshCapturePointVisuals();
         this.units.forEach((unit) => this.syncUnitPresentation(unit));
         this.refreshUnitOverlayDensity();
@@ -1241,7 +1270,7 @@ export class LaneBattleScene extends Phaser.Scene {
           this.syncUnitPresentation(unit);
         });
         const focus = this.progressToScreen(0.5, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.refreshCapturePointVisuals();
         this.publishDebug();
       },
@@ -1270,7 +1299,7 @@ export class LaneBattleScene extends Phaser.Scene {
         unit.lastPresentationX = start.x;
         unit.lastPresentationY = start.y;
         const focus = this.progressToScreen(0.5, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.syncUnitPresentation(unit);
         this.publishDebug();
       },
@@ -1301,7 +1330,7 @@ export class LaneBattleScene extends Phaser.Scene {
         unit.lastPresentationY = start.y;
         this.units.forEach((entry) => this.setUnitPresentationVisible(entry, entry === unit));
         const focus = this.progressToScreen(0.5, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.syncUnitPresentation(unit);
         this.publishDebug();
       },
@@ -1366,7 +1395,7 @@ export class LaneBattleScene extends Phaser.Scene {
         });
         [...allies, support].forEach((unit) => this.syncUnitPresentation(unit));
         const focus = this.progressToScreen(0.5, 0);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.publishDebug();
         this.scene.pause();
       },
@@ -1394,7 +1423,7 @@ export class LaneBattleScene extends Phaser.Scene {
         ally.hp = Math.max(1, ally.maxHp - 20);
         this.units.forEach((unit) => this.syncUnitPresentation(unit));
         const focus = this.progressToScreen(supportProgress, 0, support.laneId);
-        this.cameras.main.centerOn(focus.x, focus.y);
+        this.focusCameraOn(focus.x, focus.y);
         this.publishDebug();
         this.scene.pause();
       },
@@ -1461,7 +1490,7 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private focusCentralCapture(): void {
     const focus = this.progressToScreen(CENTRAL_CAPTURE_PROGRESS, 0);
-    this.cameras.main.centerOn(focus.x, focus.y);
+    this.focusCameraOn(focus.x, focus.y);
   }
 
   private isPointerOnUi(pointer: Phaser.Input.Pointer): boolean {
@@ -1544,7 +1573,7 @@ export class LaneBattleScene extends Phaser.Scene {
       );
       const progress = socket?.progress ?? definition.progress;
       const laneId = socket?.laneRef.laneId ?? this.primaryLaneSpec.id;
-      const pos = this.progressToScreen(progress, 0, laneId);
+      const pos = this.structureScreenPosition(progress, laneId);
       const ring = this.add.circle(pos.x, pos.y, 34, 0xf3cc6a, 0.2)
         .setDepth(this.getGroundDepth(pos.y, -6))
         .setStrokeStyle(4, 0xf8e2a5, 0.55);
@@ -1615,7 +1644,7 @@ export class LaneBattleScene extends Phaser.Scene {
       );
       const progress = socket?.progress ?? definition.progress;
       const laneId = socket?.laneRef.laneId ?? this.primaryLaneSpec.id;
-      const pos = this.progressToScreen(progress, 0, laneId);
+      const pos = this.structureScreenPosition(progress, laneId);
       const sprite = this.add.image(
         pos.x,
         pos.y + STRUCTURE_SOCKET_ATTACH_Y,
@@ -1673,12 +1702,12 @@ export class LaneBattleScene extends Phaser.Scene {
       };
     });
 
-    const laneStarts = this.mapSpec.lanes.map((lane) => this.progressToScreen(0, 0, lane.id));
-    const laneEnds = this.mapSpec.lanes.map((lane) => this.progressToScreen(1, 0, lane.id));
+    // Same anchor the combat code targets, so the sprite and the thing units
+    // actually attack can never drift apart.
+    const laneStarts = this.mapSpec.lanes.map((lane) => this.getBaseAnchor("player", lane.id, 0));
+    const laneEnds = this.mapSpec.lanes.map((lane) => this.getBaseAnchor("enemy", lane.id, 1));
     const playerBase = laneStarts.reduce((sum, point) => sum.add(point), new Phaser.Math.Vector2(0, 0)).scale(1 / laneStarts.length);
     const enemyBase = laneEnds.reduce((sum, point) => sum.add(point), new Phaser.Math.Vector2(0, 0)).scale(1 / laneEnds.length);
-    playerBase.x += PLAYER_BASE_WORLD_OFFSET_X;
-    enemyBase.x += ENEMY_BASE_WORLD_OFFSET_X;
     const baseVisibleWorldHeight = this.cssPxToWorld(220);
     const baseDisplaySize = baseVisibleWorldHeight / MAIN_BASE_VISIBLE_HEIGHT_RATIO;
     this.add.ellipse(playerBase.x + 8, playerBase.y + 3, 250, 82, 0x111918, 0.34)
@@ -3285,7 +3314,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.capturePoints.forEach((point) => {
       const selected = this.selectedCapturePointId === point.id;
       const ownerColor = point.owner === "player" ? 0x61c3ff : point.owner === "enemy" ? 0xff7f7f : 0xf3cc6a;
-      const rawPos = this.progressToScreen(point.progress, 0, point.laneId);
+      const rawPos = this.structureScreenPosition(point.progress, point.laneId);
       const pos = this.isPrototypeV2()
         ? this.snapWorldPointToCanvasPixel(rawPos.x, rawPos.y)
         : rawPos;
@@ -3395,7 +3424,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.defenseTowers.forEach((tower) => {
       const selected = this.selectedDefenseTowerId === tower.id;
       const ownerColor = tower.owner === "player" ? 0x61c3ff : tower.owner === "enemy" ? 0xff7f7f : 0xf3cc6a;
-      const rawPos = this.progressToScreen(tower.progress, 0, tower.laneId);
+      const rawPos = this.structureScreenPosition(tower.progress, tower.laneId);
       const pos = this.isPrototypeV2() ? this.snapWorldPointToCanvasPixel(rawPos.x, rawPos.y) : rawPos;
       const selectedScale = this.isPrototypeV2() ? 1 : selected ? 1.04 : 1;
       const visualState = this.getDefenseTowerVisualState(tower);
@@ -4976,12 +5005,15 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private getBaseAnchor(teamId: TeamId, laneId: string, fallbackProgress: number): Phaser.Math.Vector2 {
     const lanePath = this.lanePaths.get(laneId);
-    if (lanePath?.length) {
-      const point = this.progressToScreen(teamId === "player" ? 0 : 1, 0, laneId);
-      point.x += teamId === "player" ? PLAYER_BASE_WORLD_OFFSET_X : ENEMY_BASE_WORLD_OFFSET_X;
-      return point;
-    }
-    return this.progressToScreen(fallbackProgress, 0, this.primaryLaneSpec.id);
+    if (!lanePath?.length) return this.structureScreenPosition(fallbackProgress, this.primaryLaneSpec.id);
+    const isPlayer = teamId === "player";
+    const end = isPlayer ? 0 : 1;
+    // Step back along the lane rather than along world X, so the base stays on
+    // the road on a diagonal lane and both sides mirror each other.
+    const inward = this.structureScreenPosition(isPlayer ? 0.02 : 0.98, laneId);
+    const point = this.structureScreenPosition(end, laneId);
+    const outward = point.clone().subtract(inward).normalize();
+    return point.add(outward.scale(BASE_LANE_SETBACK));
   }
 
   private progressToScreen(progress: number, laneRow: number, laneId = this.primaryLaneSpec.id): Phaser.Math.Vector2 {
@@ -5002,6 +5034,21 @@ export class LaneBattleScene extends Phaser.Scene {
       .clone()
       .lerp(endNode.position, segmentProgress)
       .add(segmentPerp.scale((laneRow + LANE_ROW_WORLD_OFFSET) * LANE_ROW_SPACING));
+  }
+
+  /**
+   * Where a structure that occupies a map socket should be drawn.
+   *
+   * `progressToScreen` shifts everything sideways by `LANE_ROW_WORLD_OFFSET`
+   * so that units walk centred on the painted road, but the ground pads are
+   * rendered straight at `socket.position` (see
+   * `BattlefieldWorldRenderer.createStructureGround`). Positioning structures
+   * with a row of 0 therefore left every tower, capture marker and label
+   * floating 74px (1.2 * 62) off its own pad. Cancelling the world row offset
+   * reproduces `socket.position` exactly, without needing the socket record.
+   */
+  private structureScreenPosition(progress: number, laneId = this.primaryLaneSpec.id): Phaser.Math.Vector2 {
+    return this.progressToScreen(progress, -LANE_ROW_WORLD_OFFSET, laneId);
   }
 
   private getGroundDepth(groundY: number, offset = 0): number {

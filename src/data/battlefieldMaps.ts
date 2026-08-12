@@ -105,12 +105,23 @@ export type BattlefieldMapId =
   | "warcrest-day3-three-fronts-v1"
   | "warcrest-two-lane-v1";
 
+/**
+ * Centred in the 7000x3900 world: each endpoint now sits 1122px from its own
+ * vertical edge and 675px from its own horizontal edge.
+ *
+ * The lane used to end closer to the world edge on the enemy side (1005px
+ * right / 580px top) than on the player side (1240px left / 770px bottom), so
+ * the player's base had visibly more open ground behind it than the enemy's.
+ * Terrain in `world-surface` mode is drawn procedurally from this path — the
+ * painted backgrounds are hidden in that mode — so moving the path moves the
+ * road and every structure socket with it.
+ */
 export const LANE_PATH_NODES: LanePathNodeSpec[] = [
-  { progress: 0, position: { x: 1240, y: 3130 } },
-  { progress: 0.375, position: { x: 3080, y: 2280 } },
-  { progress: 0.588, position: { x: 4095, y: 1740 } },
-  { progress: 0.767, position: { x: 4960, y: 1305 } },
-  { progress: 1, position: { x: 5995, y: 580 } },
+  { progress: 0, position: { x: 1123, y: 3225 } },
+  { progress: 0.375, position: { x: 2963, y: 2375 } },
+  { progress: 0.588, position: { x: 3978, y: 1835 } },
+  { progress: 0.767, position: { x: 4843, y: 1400 } },
+  { progress: 1, position: { x: 5878, y: 675 } },
 ];
 
 export const MAIN_LANE_ID = "main";
