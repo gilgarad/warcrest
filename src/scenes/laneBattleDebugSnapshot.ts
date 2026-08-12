@@ -143,6 +143,9 @@ export interface LaneBattleDebugSnapshot {
   }>;
   verification: {
     seed: string;
+    /** Which mode drives this battle; PvP and single share the simulation. */
+    mode: "single" | "pvp";
+    opponentName: string | null;
     terrainMode: string;
     prototypePreset: string;
     scalePreset: string;

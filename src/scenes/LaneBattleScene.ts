@@ -127,6 +127,7 @@ import {
 } from "../systems/lane-combat/laneOccupancy";
 import { frameLerpAlpha } from "../systems/lane-combat/frameLerp";
 import { DeterministicRandom } from "../systems/sim/deterministicRandom";
+import type { GameMode, MatchDescriptor } from "../systems/net/matchTypes";
 import {
   advanceTeamAge,
   canAfford,
@@ -535,6 +536,11 @@ export class LaneBattleScene extends Phaser.Scene {
    * same value as the rest of the run so a match can be reproduced from its
    * seed plus its commands.
    */
+  private gameMode: GameMode = "single";
+  private match?: MatchDescriptor;
+  /** Seed actually driving this battle: the match's seed in PvP, otherwise the
+   * local/debug seed. */
+  private activeSeed = this.verificationSeed;
   private simRandom = new DeterministicRandom(this.verificationSeed);
   /** Leftover real time not yet consumed by a whole simulation tick. */
   private simAccumulatorSec = 0;
@@ -575,8 +581,16 @@ export class LaneBattleScene extends Phaser.Scene {
     super("run");
   }
 
-  init(data: { difficultyId?: DifficultyId }): void {
+  init(data: { difficultyId?: DifficultyId; mode?: GameMode; match?: MatchDescriptor }): void {
     this.difficulty = getDifficulty(data?.difficultyId);
+    // Single-player and PvP run this same scene and this same simulation; the
+    // mode only decides where the opposing side's commands come from. Keeping
+    // one battle implementation is what stops the two modes from drifting
+    // apart as the game keeps changing.
+    this.gameMode = data?.mode ?? "single";
+    this.match = data?.match;
+    // A PvP match dictates the seed so both peers simulate identically.
+    this.activeSeed = this.match?.seed ?? this.verificationSeed;
   }
 
   preload(): void {
@@ -586,8 +600,8 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   create(): void {
-    Phaser.Math.RND.sow([this.verificationSeed]);
-    this.simRandom = new DeterministicRandom(this.verificationSeed);
+    Phaser.Math.RND.sow([this.activeSeed]);
+    this.simRandom = new DeterministicRandom(this.activeSeed);
     this.simAccumulatorSec = 0;
     void this.audio.initialize();
     this.audio.resetDirector("preparation");
@@ -5013,7 +5027,9 @@ export class LaneBattleScene extends Phaser.Scene {
         bronze: createTowerAttackPattern("bronze"),
       },
       verification: {
-        seed: this.verificationSeed,
+        seed: this.activeSeed,
+        mode: this.gameMode,
+        opponentName: this.match?.opponentName ?? null,
         terrainMode: this.terrainMode,
         prototypePreset: this.prototypePresetId,
         scalePreset: this.scalePresetId,
