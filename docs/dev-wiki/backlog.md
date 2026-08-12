@@ -14,6 +14,55 @@ GitHub Issues own task status. This file owns planning context.
 
 ## Active Queue
 
+- **[MEASURED 2026-08-12, ready to implement] Runtime performance: per-frame
+  text rasterization + per-frame structure visual refresh** — no GitHub Issue
+  (no `gh` CLI in this environment); recorded via this entry +
+  `docs/dev-wiki/log.md` 2026-08-12 per the `AGENTS.md` fallback rule.
+  Branch: `issue-perf-ai-pvp-groundwork`.
+  - Root cause 1: `syncUnitPresentation()` calls `styleUnitNameplate()` every
+    frame for every unit; its `setFontSize`/`setStroke`/`setShadow`/
+    `setBackgroundColor`/`setPadding` chain each force a Phaser `updateText()`
+    (canvas re-raster + `texImage2D` upload) — 7 per unit per frame, on labels
+    that are invisible unless `selected || hovered`.
+  - Root cause 2: `tickCapturePoints()` runs `refreshCapturePointVisuals()` +
+    `refreshDefenseTowerVisuals()` every frame — a flat ~7ms/frame regardless
+    of unit count.
+  - Root cause 3 (secondary, scales with unit count): `findCombatSlot`,
+    `isCombatSlotFree`, `getForwardLaneCongestion`, `findNearestEnemy` each
+    scan all of `this.units` per unit per frame (~10ms at 295 units).
+  - Measured A/B at 108 units via runtime monkey-patch (source unmodified):
+    scene JS cost ~61ms -> ~11ms per frame (~5.4x) from fixing 1 and 2 alone.
+  - Implementation order: guard the nameplate restyle behind visibility +
+    a dirty check, throttle structure visual refresh to ~4Hz (event-driven
+    where possible), then add a per-frame spatial/lane bucket index for 3.
+- **[SAME ROOT CAUSE as above] Frame-rate-dependent lerps make units stand in
+  front of enemies without engaging** — the reported "때리려고 하는데 멍하니
+  서있다" symptom. All 12 `Phaser.Math.Linear(...)` calls in
+  `LaneBattleScene.ts` use fixed alphas (0.34/0.4/0.42/0.45/0.52/…) with no
+  `deltaSec` normalization. Forward movement (`progress`) *is* delta-scaled,
+  but the `laneRow` slide into a combat slot is not — so as the frame rate
+  drops, units keep advancing correctly but slide into attack slots ever more
+  slowly, parking next to an enemy without engaging. This makes the lag and
+  the idle-AI complaint one bug, not two.
+  - A 75-second headless stall probe found max ~1.0s idle gaps (matching the
+    ranged attack cooldown) and did **not** reproduce a long stall — but the
+    probe environment runs at ~3-6 FPS on software GL, so non-reproduction is
+    not evidence of absence. Re-check on real hardware after the perf fixes.
+  - Fix: convert the fixed alphas to `1 - Math.exp(-k * deltaSec)` so
+    convergence is wall-clock stable (`syncUnitVisual` already uses this form
+    — reuse it).
+- **[BLOCKER for online PvP] Simulation and rendering are fused** — before any
+  netcode work is worth starting. `LaneUnit` mixes simulation state
+  (`progress`/`hp`/`attackTimerSec`) with 8 Phaser display objects, and combat
+  logic reads `unit.sprite.x`/`.y` in **45 places**, so the simulation depends
+  on rendered pixel positions. There is no network code in the repo at all
+  (zero hits for `WebSocket`/`socket.io`/`colyseus`/`webrtc`). A deterministic
+  headless sim must be extracted first: a plain-data unit/world state, a fixed
+  timestep, an injected seeded RNG, and a presentation layer that only reads
+  that state. One known determinism leak to close along the way:
+  `rollKillResourceReward()` uses `Phaser.Utils.Array.GetRandom()`, which is
+  backed by `Math.random()` and so ignores the `Phaser.Math.RND.sow([seed])`
+  seeding used elsewhere.
 - **[PRIORITY 1 — fix as soon as reproduced] Unit sprite semi-transparency
   bug** — user-reported, screenshot-confirmed: a friendly/enemy unit
   (originally described as a supply/보급 unit) sometimes renders visibly
