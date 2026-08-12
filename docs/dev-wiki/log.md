@@ -6881,3 +6881,122 @@ CC0라도 "완전히 동일한 원본 파형을 그대로 쓰는 것" 자체가 
   공백 페이지 제거), 마지막 장에 남는 여백은 "근거 문서 지도" 절을
   추가해 채움. `pdftoppm`으로 전 페이지 육안 검수 — 표/인용 박스 넘침
   없음.
+
+## [2026-08-12] investigate | 랙/AI 정지 원인 계측 + 온라인 PvP 구조 진단
+
+- 사용자 지시: 대회 제출이 끝난 뒤 남은 실제 게임 품질 문제를 잡자는 요청.
+  "단순히 UI가 아니라 게임 운용상 랙이 걸린다거나, 상대방을 때리려고 하는데
+  멍하니 서있다거나 하는 AI적인 문제 등 여러 가지가 있음. 또한 지금 이건
+  온라인으로 pvp도 되도록 계획하는 중이야."
+- 이번 턴은 **소스 무수정 조사 턴**이다. 모든 계측 스크립트는 스크래치패드에
+  두고 실행했으며, 저장소 파일 변경은 이 기록 3종(log/backlog/ai-usage)뿐이다.
+- 계측 방법: `npm run dev` + Playwright로 실제 전장을 띄우고, TS `private`가
+  런타임에는 존재하지 않는 점을 이용해 브라우저에서 씬 메서드를 래핑
+  (`performance.now()`)해 update 단계별 CPU 시간을 프레임당 ms로 측정했다.
+  헤드리스 크로미움은 소프트웨어 GL이라 프레임 총시간(150~350ms)은 실기와
+  무관하지만, 래핑으로 잰 값은 JS 로직 비용이라 환경 비교로 유효하다.
+- **랙 원인 1 (결정적): 유닛 이름표 재래스터화.**
+  `syncUnitPresentation()`이 매 프레임 모든 유닛에 대해
+  `styleUnitNameplate()`를 호출하는데, 그 안의
+  `setFontSize/setFontStyle/setResolution/setStroke/setShadow/setBackgroundColor/setPadding`
+  는 Phaser 3에서 전부 무조건 `updateText()`를 트리거한다 = 캔버스
+  재렌더 + `texImage2D` GPU 업로드. 즉 유닛 1기당 프레임마다 텍스트
+  래스터화 7회. 게다가 이름표는 `selected || hovered`일 때만 보이므로
+  거의 전부 **보이지도 않는 라벨**을 다시 그리고 있었다.
+  CDP CPU 프로파일에서도 `texImage2D`(6.18%),
+  `updateText`/`syncFont`/`syncStyle`/`syncShadow`/`measureText`/
+  `strokeText`/`fillText`/`clearRect` 무리가 그대로 상위에 잡혔다.
+- **랙 원인 2: 구조물 비주얼 매 프레임 갱신.**
+  `tickCapturePoints()` 끝에서 `refreshCapturePointVisuals()` +
+  `refreshDefenseTowerVisuals()`를 매 프레임 호출해, 유닛 수와 무관하게
+  프레임당 약 7ms가 상시로 나간다(유닛 12기 시점에서는 이게 단일 최대
+  비용이었다).
+- **랙 원인 3 (2차): 대형 전투에서의 O(n^2) 탐색.**
+  `findCombatSlot`/`isCombatSlotFree`/`getForwardLaneCongestion`/
+  `findNearestEnemy`가 매 프레임 유닛마다 전체 `this.units`를 훑는다.
+  295기 기준 합계 약 10ms로, 위 두 원인보다는 작지만 유닛이 늘수록 커진다.
+- **A/B 실측(런타임 몽키패치, 소스 무수정, 유닛 108기 동일 상태)**:
+  | 상태 | tickCombat | syncUnitPresentation | tickCapturePoints |
+  |---|---|---|---|
+  | 현재 배포본 | 54.41ms | 45.16ms | 7.01ms |
+  | 이름표 스킵만 | 17.65ms | 7.26ms | 6.85ms |
+  | + 구조물 갱신 4Hz | 10.63ms | 7.46ms | 0.78ms |
+  씬 JS 비용 합계가 프레임당 약 61ms -> 약 11ms로 **약 5.4배** 감소.
+  두 곳 국소 수정만으로 얻은 값이다.
+- **AI "멍하니 서있음" — 이번 환경에서는 재현 실패, 다만 유력 기전 특정.**
+  유닛별로 "이동도 공격도 애니메이션도 없는" 구간을 매 tick 추적하는
+  프로브를 75초간 돌린 결과 최대 정지 구간은 약 1.0초(원거리 유닛의 공격
+  쿨다운 대기와 일치)로, 사용자가 말한 장시간 정지는 잡히지 않았다.
+  단 이 환경은 프레임당 150~350ms(약 3~6 FPS)라 실기와 조건이 다르므로
+  **재현 실패를 "버그 없음"으로 읽으면 안 된다.**
+  대신 코드 읽기에서 유력한 기전을 찾았다: `LaneBattleScene`의
+  `Phaser.Math.Linear(...)` 12곳이 전부 **deltaSec 미적용 고정 alpha**
+  (0.34/0.4/0.42/0.45/0.52 등)다. 전진(`progress`)은 deltaSec로
+  정규화돼 있는데 **전투 슬롯으로 파고드는 `laneRow` 보간은 프레임 수에
+  비례**한다. 즉 프레임이 떨어질수록 유닛은 앞으로는 정상 전진하지만
+  옆 슬롯으로 파고드는 속도만 느려져, 적 앞에 서 있는데 교전은 못 하는
+  상태가 길어진다 — 사용자가 묘사한 증상과 정확히 일치하는 기전이며,
+  랙과 AI 정지가 **같은 뿌리에서 나온 한 문제**임을 뜻한다.
+- **온라인 PvP 구조 진단**: 현재 저장소에 네트워크 코드는 전무하고
+  (`WebSocket`/`socket.io`/`colyseus`/`webrtc` 검색 결과 0건), 더 중요한
+  구조적 장벽이 있다. `LaneUnit` 인터페이스가 시뮬레이션 상태(progress/hp/
+  attackTimerSec)와 Phaser 표시 객체 8개(sprite/shadow/selectionRing/
+  hpBg/hpFill/manaBg/manaFill/label)를 한 타입에 섞어 들고 있고,
+  전투 로직이 `unit.sprite.x/y`를 **45곳**에서 직접 읽는다. 즉 시뮬레이션이
+  렌더링된 픽셀 좌표에 의존하고 있어, 헤드리스 결정론적 시뮬레이션을
+  분리할 수 없다. 결정론 누수도 하나 확인: RNG는 대체로
+  `Phaser.Math.RND.sow([seed])`로 시드가 잡혀 있으나
+  `rollKillResourceReward()`가 쓰는 `Phaser.Utils.Array.GetRandom()`은
+  내부적으로 `Math.random()`이라 시드를 타지 않는다.
+- 검증: 저장소 소스 변경 없음. 계측은 로컬 dev 서버 + Playwright 실측이며
+  수치는 위 표와 `docs/dev-wiki/backlog.md` 항목에 남겼다. 다음 단계
+  범위(성능 수정만 먼저 vs PvP 준비 리팩터까지)는 사용자 판단 대기 중.
+
+## [2026-08-12] fix | 랙 원인 2건 제거 + 전투 슬롯 진입 lerp의 프레임 의존성 제거
+
+- 위 조사 항목의 후속 구현 턴. 사용자 판단으로 이번 범위는 **성능 수정 우선**,
+  O(n^2) 탐색 최적화와 PvP용 시뮬/렌더 분리는 다음 단위로 미룸.
+  PvP 목표 형태는 **1v1 실시간 대전(서버 권위형)** 으로 확정됨.
+- **수정 1 — 유닛 이름표 재래스터화 제거.** `syncUnitPresentation()`의 라벨
+  블록 전체를 `shouldShowV2UnitLabel(unit)` 뒤로 옮겨, 보이지 않는 이름표에는
+  `setText`/`setPosition`/`setDepth`/스타일 호출이 아예 가지 않게 했다.
+  추가로 `LaneUnit`에 `nameplateStyleKey`를 두고 `styleUnitNameplate()`가
+  (폰트/스트로크/해상도/팀/강조여부) 키가 실제로 바뀔 때만 스타일을 다시
+  먹이도록 했다. legacy(비 prototype-v2) 분기도 같은 키로 1회만 적용된다.
+- **수정 2 — 구조물 비주얼 갱신 스로틀.** `tickCapturePoints()`가 매 프레임
+  호출하던 `refreshCapturePointVisuals()`/`refreshDefenseTowerVisuals()`를
+  `STRUCTURE_VISUAL_REFRESH_SEC = 0.1`(10Hz) 폴링 + `structureVisualsDirty`
+  즉시 갱신 조합으로 바꿨다. 점령/건설/철거/재건/선택은 이미 각자 명시적으로
+  refresh를 부르고 있었으므로, 여기에 `applyDamageToTower()`와 점령 소유권
+  변경 지점에만 dirty 마킹을 추가해 HP바/소유권 변화는 여전히 즉시 반영된다.
+- **수정 3 — 전투 슬롯 진입 lerp의 프레임 의존성 제거.** `laneRow` 보간
+  6곳(`advanceUnit` 2곳, `repositionTowardCombat` 2곳,
+  `pullUnitTowardOpenCombatRow`, `moveUnitTowardSlot`)이 쓰던 고정 alpha를
+  새 순수 모듈 `src/systems/lane-combat/frameLerp.ts`의
+  `frameLerpAlpha(deltaSec, alphaAt60)`로 교체했다.
+  `1 - (1 - a)^(deltaSec * 60)` 형태라 60fps에서는 기존 튜닝값이 그대로
+  보존되고, 프레임이 떨어져도 벽시계 기준 수렴 속도가 같아진다.
+  `repositionTowardCombat`/`pullUnitTowardOpenCombatRow`는 이를 위해
+  `deltaSec` 인자를 받도록 시그니처를 바꿨다.
+- **검증**:
+  - `npm run build`(tsc --noEmit + vite build) 통과
+  - `npm test` 35 files / **188 tests 통과** (신규 `frameLerp.test.ts` 5건 포함)
+  - 브라우저 실측(유닛 108기 동일 조건, 수정 전후 같은 계측 방식):
+    | 구간 | 수정 전 | 수정 후 |
+    |---|---|---|
+    | `tickCombat` | 54.41ms | **16.86ms** |
+    | `syncUnitPresentation` | 45.16ms | **6.38ms** |
+    | `styleUnitNameplate` 호출 | 유닛수 x 매프레임 | **0회** |
+  - 구조물 스로틀은 이 환경의 프레임(약 190ms)이 이미 0.1초보다 길어
+    프레임 단위로는 판별이 안 되므로, `tickCapturePoints(1/60)`을 120회
+    (=60fps 2초) 직접 돌려 게이트를 따로 검증: refresh **120회 -> 17회
+    (약 7.1배 감소)**.
+  - 기능 회귀 확인: 유닛 선택 시 이름표가 정상 표시됨
+    (`styleKey="33|2|2|player|1"`, 배경/스트로크 강조색 적용), 비선택 유닛은
+    비표시. 스크린샷으로 HUD/전장/본진 정상 렌더 확인. 콘솔/페이지 에러 0건.
+- **남은 항목**(다음 단위): O(n^2) 전투 슬롯/혼잡도 탐색의 버킷 인덱싱,
+  시뮬/렌더 분리(1v1 서버 권위형 PvP 전제), `rollKillResourceReward()`의
+  `Phaser.Utils.Array.GetRandom()` 결정론 누수.
+- **실기 확인 필요**: 이 환경은 소프트웨어 GL이라 절대 FPS가 실기와 다르다.
+  사용자 쪽에서 실제로 랙과 "멍하니 서있는" 증상이 사라졌는지 확인받아야
+  다음 단위(O(n^2) 최적화)로 갈지 판단할 수 있다.
