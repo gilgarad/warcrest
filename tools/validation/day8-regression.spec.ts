@@ -266,6 +266,17 @@ test("builds dismantles rebuilds and captures structures through production inte
     control.advanceStructureProbe(10);
     control.advanceStructureProbe(10);
   });
+  // Capturing a built point leaves rubble on the marker for a few seconds.
+  // Advance until that has expired instead of assuming three steps covered it:
+  // how long the capture itself takes is balance, and balance changes.
+  await expect.poll(async () => {
+    await page.evaluate(() => {
+      (window as unknown as {
+        __terrainPrototypeControl: { advanceStructureProbe: (seconds: number) => void };
+      }).__terrainPrototypeControl.advanceStructureProbe(5);
+    });
+    return (await snapshot(page)).battlefield.controlPoints[0].markerTexture;
+  }).toBe("capture-marker");
   current = await snapshot(page);
   expect(current.battlefield.controlPoints[0].owner).toBe("player");
   expect(current.battlefield.controlPoints[0].control).toBe(1);

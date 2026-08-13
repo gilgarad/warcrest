@@ -128,6 +128,8 @@ import {
 import { frameLerpAlpha } from "../systems/lane-combat/frameLerp";
 import { DeterministicRandom } from "../systems/sim/deterministicRandom";
 import type { GameMode, MatchDescriptor } from "../systems/net/matchTypes";
+import { hashSimulationState } from "../systems/sim/simulationHash";
+import type { SimulationStateView } from "../systems/sim/simulationState";
 import {
   advanceTeamAge,
   canAfford,
@@ -544,6 +546,8 @@ export class LaneBattleScene extends Phaser.Scene {
   private simRandom = new DeterministicRandom(this.verificationSeed);
   /** Leftover real time not yet consumed by a whole simulation tick. */
   private simAccumulatorSec = 0;
+  /** Whole simulation ticks executed so far — the clock a lockstep match runs on. */
+  private simTick = 0;
   private readonly visualValidationScenario = QUERY_PARAMS.get("scenario") === "visual-validation";
   private readonly terrainDebugInputEnabled = isTerrainDebugInputEnabled(QUERY_PARAMS.get("terrainDebug"));
   private readonly mapSpec = getBattlefieldMapSpec(QUERY_PARAMS.get("map"));
@@ -600,8 +604,14 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   create(): void {
+    // Presentation-only jitter (bob phase, walk cycle) still draws from
+    // Phaser's RNG. Anything that affects simulation state draws from
+    // `simRandom` instead, so the simulation's random stream cannot be shifted
+    // by a change in how the game is drawn — which would desync a lockstep
+    // match without touching any gameplay code.
     Phaser.Math.RND.sow([this.activeSeed]);
     this.simRandom = new DeterministicRandom(this.activeSeed);
+    this.simTick = 0;
     this.simAccumulatorSec = 0;
     void this.audio.initialize();
     this.audio.resetDirector("preparation");
@@ -705,6 +715,7 @@ export class LaneBattleScene extends Phaser.Scene {
    * on real time, frame rate, or anything Phaser renders.
    */
   private stepSimulation(deltaSec: number): void {
+    this.simTick += 1;
     this.elapsedSec += deltaSec;
     this.tickEconomy(deltaSec);
     this.aiController.tick(deltaSec);
@@ -1333,6 +1344,12 @@ export class LaneBattleScene extends Phaser.Scene {
        * wrote down when the layout looked different.
        */
       getHudButtonLayout: () => this.hud.getActionButtonLayout(),
+      /** Simulation fingerprint at the current tick — see `simulationHash.ts`. */
+      getSimulationHash: () => ({
+        tick: this.simTick,
+        hash: hashSimulationState(this.captureSimulationState()),
+      }),
+      getSimulationState: () => this.captureSimulationState(),
       setVisualAuditLayer: (layer: "ground" | "props" | "units" | "combat") => {
         this.uiCamera.setVisible(false);
         if (layer === "ground") {
@@ -3369,8 +3386,8 @@ export class LaneBattleScene extends Phaser.Scene {
     const outcome = resolveCapturedBuilding(
       point.buildingId,
       point.buildingLevel,
-      Phaser.Math.RND.frac(),
-      Phaser.Math.Between(1, 3),
+      this.simRandom.next(),
+      this.simRandom.intBetween(1, 3),
     );
     point.buildingId = outcome.buildingId;
     point.buildingLevel = outcome.buildingLevel;
@@ -4266,7 +4283,7 @@ export class LaneBattleScene extends Phaser.Scene {
       range: stats.range,
       speed: stats.speed,
       attackCooldownSec: stats.attackCooldownSec,
-      attackTimerSec: stats.attackCooldownSec * Phaser.Math.FloatBetween(0.4, 0.95),
+      attackTimerSec: stats.attackCooldownSec * this.simRandom.floatBetween(0.4, 0.95),
       attackAnimTime: 0,
       attackFacingLockSec: 0,
       combatFacingHoldSec: 0,
@@ -4884,6 +4901,80 @@ export class LaneBattleScene extends Phaser.Scene {
       })
       .filter((value): value is string => value !== null);
     return shortages.length > 0 ? shortages.join(", ") + " 부족" : "자원 부족";
+  }
+
+  /**
+   * Plain-data view of everything that decides the outcome of the battle.
+   *
+   * Deliberately excludes presentation (sprite positions, `visualProgress`,
+   * walk cycles): two clients rendering at different frame rates are not
+   * desynced, and including those fields would report that they are. See
+   * `simulationState.ts` for where that line is drawn and why.
+   */
+  private captureSimulationState(): SimulationStateView {
+    const team = (state: TeamState) => ({
+      ageId: state.ageId as string,
+      baseHp: state.baseHp,
+      baseMaxHp: state.baseMaxHp,
+      nextWaveInSec: state.nextWaveInSec,
+      instantWaveTokens: state.instantWaveTokens,
+      resources: { ...state.resources } as unknown as Record<string, number>,
+      workers: { ...state.workers } as unknown as Record<string, number>,
+    });
+    return {
+      tick: this.simTick,
+      elapsedSec: this.elapsedSec,
+      rngState: this.simRandom.getState(),
+      player: team(this.player),
+      enemy: team(this.enemy),
+      units: this.units.map((unit) => ({
+        id: unit.id,
+        team: unit.team as string,
+        unitId: unit.unitId as string,
+        role: unit.role as string,
+        laneId: unit.laneId,
+        progress: unit.progress,
+        laneRow: unit.laneRow,
+        hp: unit.hp,
+        maxHp: unit.maxHp,
+        attack: unit.attack,
+        defense: unit.defense,
+        range: unit.range,
+        speed: unit.speed,
+        attackCooldownSec: unit.attackCooldownSec,
+        attackTimerSec: unit.attackTimerSec,
+        attackAnimTime: unit.attackAnimTime,
+        attackFacingLockSec: unit.attackFacingLockSec,
+        combatFacingHoldSec: unit.combatFacingHoldSec,
+        attackTargetKind: unit.attackTargetKind as string,
+        attackSequence: unit.attackSequence,
+        manaCurrent: unit.manaCurrent,
+        manaMax: unit.manaMax,
+        attrition: unit.attrition,
+        targetId: unit.targetId ?? -1,
+      })),
+      capturePoints: this.capturePoints.map((point) => ({
+        id: point.id,
+        owner: point.owner as string,
+        control: point.control,
+        buildingId: (point.buildingId ?? "") as string,
+        buildingLevel: point.buildingLevel,
+        attackTimerSec: point.attackTimerSec,
+        incomeTimerSec: point.incomeTimerSec,
+        supplyTimerSec: point.supplyTimerSec,
+        manaCurrent: point.manaCurrent,
+      })),
+      defenseTowers: this.defenseTowers.map((tower) => ({
+        id: tower.id,
+        owner: tower.owner as string,
+        built: tower.built,
+        hp: tower.hp,
+        maxHp: tower.maxHp,
+        defense: tower.defense,
+        attackTimerSec: tower.attackTimerSec,
+        buildRemainingSec: tower.buildRemainingSec,
+      })),
+    };
   }
 
   private publishDebug(): void {
