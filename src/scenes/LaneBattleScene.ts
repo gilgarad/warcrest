@@ -131,6 +131,12 @@ import type { GameMode, MatchDescriptor } from "../systems/net/matchTypes";
 import { hashSimulationState } from "../systems/sim/simulationHash";
 import type { SimulationStateView } from "../systems/sim/simulationState";
 import {
+  CommandQueue,
+  LOCAL_INPUT_DELAY_TICKS,
+  type BattleCommand,
+  type CommandTeam,
+} from "../systems/sim/commands";
+import {
   advanceTeamAge,
   canAfford,
   createTeamState,
@@ -548,6 +554,8 @@ export class LaneBattleScene extends Phaser.Scene {
   private simAccumulatorSec = 0;
   /** Whole simulation ticks executed so far — the clock a lockstep match runs on. */
   private simTick = 0;
+  /** Player intent waiting to execute, keyed by the tick it belongs to. */
+  private readonly commands = new CommandQueue();
   private readonly visualValidationScenario = QUERY_PARAMS.get("scenario") === "visual-validation";
   private readonly terrainDebugInputEnabled = isTerrainDebugInputEnabled(QUERY_PARAMS.get("terrainDebug"));
   private readonly mapSpec = getBattlefieldMapSpec(QUERY_PARAMS.get("map"));
@@ -612,6 +620,7 @@ export class LaneBattleScene extends Phaser.Scene {
     Phaser.Math.RND.sow([this.activeSeed]);
     this.simRandom = new DeterministicRandom(this.activeSeed);
     this.simTick = 0;
+    this.commands.clear();
     this.simAccumulatorSec = 0;
     void this.audio.initialize();
     this.audio.resetDirector("preparation");
@@ -716,6 +725,11 @@ export class LaneBattleScene extends Phaser.Scene {
    */
   private stepSimulation(deltaSec: number): void {
     this.simTick += 1;
+    // Commands first, so a tick's inputs are visible to that same tick's
+    // simulation on every client.
+    for (const entry of this.commands.drain(this.simTick)) {
+      this.applyCommand(entry.team, entry.command);
+    }
     this.elapsedSec += deltaSec;
     this.tickEconomy(deltaSec);
     this.aiController.tick(deltaSec);
@@ -1886,16 +1900,16 @@ export class LaneBattleScene extends Phaser.Scene {
       this,
       this.audio,
       {
-        hireWorker: () => this.hireWorker(),
-        hireResearchWorker: () => this.hireResearchWorker(),
-        useInstantWave: () => this.tryUseInstantWaveToken(this.player),
-        ageUp: () => this.tryAgeUpPlayer(),
-        shiftWorker: (role, delta) => this.shiftWorker(role, delta),
-        rebuildDefenseTower: () => this.tryRebuildSelectedDefenseTower(),
-        buildDefenseTower: () => this.tryBuildAtSelectedPoint("defense_tower"),
-        buildSupplyDepot: () => this.tryBuildAtSelectedPoint("supply_depot"),
-        buildMint: () => this.tryBuildAtSelectedPoint("mint"),
-        dismantle: () => this.tryDismantleSelectedPoint(),
+        hireWorker: () => this.issueCommand({ type: "hire-worker" }),
+        hireResearchWorker: () => this.issueCommand({ type: "hire-research-worker" }),
+        useInstantWave: () => this.issueCommand({ type: "instant-wave" }),
+        ageUp: () => this.issueCommand({ type: "advance-age" }),
+        shiftWorker: (role, delta) => this.issueCommand({ type: "shift-worker", role, delta }),
+        rebuildDefenseTower: () => this.issueSelectedTowerCommand(),
+        buildDefenseTower: () => this.issueSelectedPointBuild("defense_tower"),
+        buildSupplyDepot: () => this.issueSelectedPointBuild("supply_depot"),
+        buildMint: () => this.issueSelectedPointBuild("mint"),
+        dismantle: () => this.issueSelectedPointDismantle(),
         toggleDevMode: () => this.toggleDevMode(),
         grantDevResearch: () => this.grantDevResearchPoints(),
         onAudioSettingsVisibilityChange: (visible) => {
@@ -1911,7 +1925,7 @@ export class LaneBattleScene extends Phaser.Scene {
       close: () => this.closeMainBasePanel(),
       browseAge: (delta) => this.browsePlayerProductionAge(delta),
       adjustStat: (unitId, stat, delta) => this.adjustPlayerResearchDraft(unitId, stat, delta),
-      apply: () => this.applyPlayerResearchDraft(),
+      apply: () => this.issueCommand({ type: "apply-research" }),
       cancel: () => this.cancelPlayerResearchDraft(),
     }, DEPTH_UI + 80);
   }
@@ -3288,8 +3302,13 @@ export class LaneBattleScene extends Phaser.Scene {
     this.refreshUi();
   }
 
-  private tryBuildAtSelectedPoint(buildingId: BuildingId): void {
-    const point = this.capturePoints.find((entry) => entry.id === this.selectedCapturePointId);
+  /**
+   * Takes the point id explicitly rather than reading the current selection:
+   * this runs from the command queue, where a remote peer's build order has to
+   * work without any knowledge of what this client has clicked.
+   */
+  private buildAtPoint(pointId: number, buildingId: BuildingId): void {
+    const point = this.capturePoints.find((entry) => entry.id === pointId);
     if (!point) {
       this.hud.setInfo("먼저 거점을 선택하십시오");
       this.audio.playSfx("sfx.ui.cancel", { eventKey: "build:no-point" });
@@ -3330,8 +3349,8 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
 
-  private tryDismantleSelectedPoint(): void {
-    const point = this.capturePoints.find((entry) => entry.id === this.selectedCapturePointId);
+  private dismantlePoint(pointId: number): void {
+    const point = this.capturePoints.find((entry) => entry.id === pointId);
     if (!point || point.owner !== "player" || !point.definition.canDemolish || !point.buildingId) {
       this.hud.setInfo("폐기할 아군 거점 건물이 없습니다");
       this.audio.playSfx("sfx.ui.cancel", { eventKey: "dismantle:invalid" });
@@ -3351,8 +3370,8 @@ export class LaneBattleScene extends Phaser.Scene {
     this.refreshCapturePointVisuals();
   }
 
-  private tryRebuildSelectedDefenseTower(): void {
-    const tower = this.defenseTowers.find((entry) => entry.id === this.selectedDefenseTowerId);
+  private rebuildDefenseTower(towerId: number): void {
+    const tower = this.defenseTowers.find((entry) => entry.id === towerId);
     if (!tower || tower.owner !== "player") {
       this.hud.setInfo("재건할 아군 타워를 선택하십시오");
       this.audio.playSfx("sfx.ui.hireFail", { eventKey: "tower:rebuild:invalid" });
@@ -4911,6 +4930,60 @@ export class LaneBattleScene extends Phaser.Scene {
    * desynced, and including those fields would report that they are. See
    * `simulationState.ts` for where that line is drawn and why.
    */
+  /**
+   * Schedules a local command. Selection-dependent actions resolve their target
+   * *here*, on the machine that has the selection, so what travels is a
+   * self-contained instruction.
+   */
+  private issueCommand(command: BattleCommand): void {
+    this.commands.enqueue({
+      tick: this.simTick + 1 + LOCAL_INPUT_DELAY_TICKS,
+      team: "player",
+      command,
+    });
+  }
+
+  private issueSelectedPointBuild(buildingId: BuildingId): void {
+    const pointId = this.selectedCapturePointId;
+    if (pointId === null) {
+      this.hud.setInfo("먼저 거점을 선택하십시오");
+      this.audio.playSfx("sfx.ui.cancel", { eventKey: "build:no-point" });
+      return;
+    }
+    this.issueCommand({ type: "build", pointId, buildingId });
+  }
+
+  private issueSelectedPointDismantle(): void {
+    const pointId = this.selectedCapturePointId;
+    if (pointId === null) return;
+    this.issueCommand({ type: "dismantle", pointId });
+  }
+
+  private issueSelectedTowerCommand(): void {
+    const towerId = this.selectedDefenseTowerId;
+    if (towerId === null) return;
+    this.issueCommand({ type: "rebuild-tower", towerId });
+  }
+
+  /**
+   * The single place a command changes the world. A remote peer's commands will
+   * arrive here too, which is why nothing in it may read local UI state.
+   */
+  private applyCommand(team: CommandTeam, command: BattleCommand): void {
+    if (team !== "player") return; // remote side arrives with the relay
+    switch (command.type) {
+      case "hire-worker": this.hireWorker(); return;
+      case "hire-research-worker": this.hireResearchWorker(); return;
+      case "shift-worker": this.shiftWorker(command.role as WorkerRole, command.delta); return;
+      case "instant-wave": this.tryUseInstantWaveToken(this.player); return;
+      case "advance-age": this.tryAgeUpPlayer(); return;
+      case "apply-research": this.applyPlayerResearchDraft(); return;
+      case "build": this.buildAtPoint(command.pointId, command.buildingId as BuildingId); return;
+      case "dismantle": this.dismantlePoint(command.pointId); return;
+      case "rebuild-tower": this.rebuildDefenseTower(command.towerId); return;
+    }
+  }
+
   private captureSimulationState(): SimulationStateView {
     const team = (state: TeamState) => ({
       ageId: state.ageId as string,
