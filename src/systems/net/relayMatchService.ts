@@ -19,6 +19,16 @@ export class RelayMatchService implements MatchService {
   private socket: WebSocket | null = null;
   private listeners = new Set<(status: MatchmakingStatus) => void>();
   private frameListeners = new Set<(frame: LockstepFrame) => void>();
+  /**
+   * Frames that arrived before anything was listening.
+   *
+   * Both peers are told they matched at the same instant, then each builds its
+   * battle scene — and whichever finishes first starts ticking and sending
+   * frames while the other is still loading. Without this buffer those early
+   * frames are dropped, the slower client never gets the opponent commands for
+   * its first gated tick, and both sides sit at "waiting for opponent" forever.
+   */
+  private bufferedFrames: LockstepFrame[] = [];
   private pending: { resolve: (m: MatchDescriptor) => void; reject: (e: Error) => void } | null = null;
   private opponentLeft: ((reason: string) => void) | null = null;
 
@@ -103,6 +113,11 @@ export class RelayMatchService implements MatchService {
   /** Frames from the opponent, delivered to the lockstep loop. */
   onFrame(listener: (frame: LockstepFrame) => void): () => void {
     this.frameListeners.add(listener);
+    if (this.bufferedFrames.length > 0) {
+      const queued = this.bufferedFrames;
+      this.bufferedFrames = [];
+      for (const frame of queued) listener(frame);
+    }
     return () => this.frameListeners.delete(listener);
   }
 
@@ -129,6 +144,8 @@ export class RelayMatchService implements MatchService {
         localTeam: message.localTeam === "enemy" ? "enemy" : "player",
         matchKind: "auto",
       };
+      // Never carry frames across matches.
+      this.bufferedFrames = [];
       this.emit({ state: "matched", match });
       this.pending?.resolve(match);
       this.pending = null;
@@ -136,7 +153,9 @@ export class RelayMatchService implements MatchService {
     }
     if (message.type === "frame") {
       const frame = message.frame as LockstepFrame | undefined;
-      if (frame) this.frameListeners.forEach((listener) => listener(frame));
+      if (!frame) return;
+      if (this.frameListeners.size === 0) this.bufferedFrames.push(frame);
+      else this.frameListeners.forEach((listener) => listener(frame));
       return;
     }
     if (message.type === "opponent-left") {
