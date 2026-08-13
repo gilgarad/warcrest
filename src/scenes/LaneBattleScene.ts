@@ -551,6 +551,16 @@ export class LaneBattleScene extends Phaser.Scene {
    * seed plus its commands.
    */
   private gameMode: GameMode = "single";
+  /**
+   * Whose command is currently being applied.
+   *
+   * The action handlers were written when only the local player could act and
+   * reach for `this.player` throughout. Rather than thread a team argument
+   * through every one of them, the command dispatcher sets this for the
+   * duration of a command and the handlers read `acting` instead — so the same
+   * handler serves whichever side issued the order.
+   */
+  private actingTeamId: CommandTeam = "player";
   private match?: MatchDescriptor;
   /** Seed actually driving this battle: the match's seed in PvP, otherwise the
    * local/debug seed. */
@@ -1959,14 +1969,16 @@ export class LaneBattleScene extends Phaser.Scene {
       .setDisplaySize(baseDisplaySize, baseDisplaySize)
       .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
       .setDepth(this.getGroundDepth(enemyBase.y));
-    const playerBaseLabel = this.add.text(playerBase.x - 8, playerBase.y - baseVisibleWorldHeight - this.cssPxToWorld(30), "아군 본진", {
+    // Labels follow which side this client plays, not which side is on the left.
+    const leftIsMine = this.match?.localTeam !== "enemy";
+    const playerBaseLabel = this.add.text(playerBase.x - 8, playerBase.y - baseVisibleWorldHeight - this.cssPxToWorld(30), leftIsMine ? "아군 본진" : "적 본진", {
       fontFamily: "Georgia, serif",
       fontSize: "46px",
       color: "#dceeff",
       stroke: "#16202a",
       strokeThickness: 6,
     }).setOrigin(0.5).setDepth(this.getGroundDepth(playerBase.y, 4));
-    const enemyBaseLabel = this.add.text(enemyBase.x + 4, enemyBase.y - baseVisibleWorldHeight - this.cssPxToWorld(30), "적 본진", {
+    const enemyBaseLabel = this.add.text(enemyBase.x + 4, enemyBase.y - baseVisibleWorldHeight - this.cssPxToWorld(30), leftIsMine ? "적 본진" : "아군 본진", {
       fontFamily: "Georgia, serif",
       fontSize: "46px",
       color: "#ffe1e1",
@@ -3376,43 +3388,43 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private adjustPlayerResearchDraft(unitId: ResearchSubjectId, stat: ResearchStatKey, delta: 1 | -1): void {
-    adjustDraftResearchLevel(this.playerResearchState, this.player.selectedProductionAgeId, unitId, stat, delta);
+    adjustDraftResearchLevel(this.actingResearch, this.acting.selectedProductionAgeId, unitId, stat, delta);
     this.audio.playSfx(delta > 0 ? "sfx.ui.confirm" : "sfx.ui.hover", {
-      eventKey: `base:research:${this.player.selectedProductionAgeId}:${unitId}:${stat}:${delta}`,
+      eventKey: `base:research:${this.acting.selectedProductionAgeId}:${unitId}:${stat}:${delta}`,
     });
     this.refreshUi();
   }
 
   private applyPlayerResearchDraft(): void {
-    const draftCost = getDraftResearchApplyCost(this.playerResearchState, this.player.selectedProductionAgeId);
+    const draftCost = getDraftResearchApplyCost(this.actingResearch, this.acting.selectedProductionAgeId);
     if (draftCost <= 0) {
       this.hud.setInfo("연구 포인트가 부족하거나 적용할 변경이 없습니다");
       this.audio.playSfx("sfx.ui.hireFail", { eventKey: "base:research:apply:fail" });
       return;
     }
     if (this.devModeEnabled) {
-      const originalResearch = this.player.resources.research;
-      if (originalResearch < draftCost) this.player.resources.research = draftCost;
-      const applied = applyResearchDraft(this.player.resources, this.playerResearchState, this.player.selectedProductionAgeId);
-      this.player.resources.research = originalResearch;
+      const originalResearch = this.acting.resources.research;
+      if (originalResearch < draftCost) this.acting.resources.research = draftCost;
+      const applied = applyResearchDraft(this.acting.resources, this.actingResearch, this.acting.selectedProductionAgeId);
+      this.acting.resources.research = originalResearch;
       if (!applied) {
         this.hud.setInfo("DEV 연구 적용에 실패했습니다");
         this.audio.playSfx("sfx.ui.hireFail", { eventKey: "base:research:apply:dev-fail" });
         return;
       }
-    } else if (!applyResearchDraft(this.player.resources, this.playerResearchState, this.player.selectedProductionAgeId)) {
+    } else if (!applyResearchDraft(this.acting.resources, this.actingResearch, this.acting.selectedProductionAgeId)) {
       this.hud.setInfo("연구 포인트가 부족하거나 적용할 변경이 없습니다");
       this.audio.playSfx("sfx.ui.hireFail", { eventKey: "base:research:apply:fail" });
       return;
     }
-    this.hud.setInfo(`${getAge(this.player.selectedProductionAgeId).label} 병력 연구를 적용했습니다`);
-    this.audio.playSfx("sfx.ui.confirm", { eventKey: `base:research:apply:${this.player.selectedProductionAgeId}` });
+    this.hud.setInfo(`${getAge(this.acting.selectedProductionAgeId).label} 병력 연구를 적용했습니다`);
+    this.audio.playSfx("sfx.ui.confirm", { eventKey: `base:research:apply:${this.acting.selectedProductionAgeId}` });
     this.refreshUi();
   }
 
   private cancelPlayerResearchDraft(): void {
-    getBrowsableAgeIds(this.player.ageId).forEach((ageId) => {
-      discardResearchDraftForAge(this.playerResearchState, ageId);
+    getBrowsableAgeIds(this.acting.ageId).forEach((ageId) => {
+      discardResearchDraftForAge(this.actingResearch, ageId);
     });
     this.audio.playSfx("sfx.ui.cancel", { eventKey: "base:research:cancel" });
     this.refreshUi();
@@ -3430,7 +3442,7 @@ export class LaneBattleScene extends Phaser.Scene {
       this.audio.playSfx("sfx.ui.cancel", { eventKey: "build:no-point" });
       return;
     }
-    if (point.owner !== "player") {
+    if (point.owner !== this.actingTeamId) {
       this.hud.setInfo("아군 점령 거점에서만 건설 가능합니다");
       this.audio.playSfx("sfx.ui.hireFail", { eventKey: `build:${point.id}:not-owned` });
       return;
@@ -3446,13 +3458,13 @@ export class LaneBattleScene extends Phaser.Scene {
       this.audio.playSfx("sfx.ui.cancel", { eventKey: `build:${point.id}:occupied` });
       return;
     }
-    const cost = getBuildingCost(buildingId, this.player.ageId);
-    if (!canAfford(this.player.resources, cost)) {
+    const cost = getBuildingCost(buildingId, this.acting.ageId);
+    if (!canAfford(this.acting.resources, cost)) {
       this.hud.setInfo(`${building.label} 건설 자원 부족`);
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `build:${point.id}:shortage:${buildingId}` });
       return;
     }
-    payCost(this.player.resources, cost);
+    payCost(this.acting.resources, cost);
     point.buildingId = buildingId;
     point.buildingLevel = 1;
     this.initializeCaptureBuildingState(point);
@@ -3467,17 +3479,17 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private dismantlePoint(pointId: number): void {
     const point = this.capturePoints.find((entry) => entry.id === pointId);
-    if (!point || point.owner !== "player" || !point.definition.canDemolish || !point.buildingId) {
+    if (!point || point.owner !== this.actingTeamId || !point.definition.canDemolish || !point.buildingId) {
       this.hud.setInfo("폐기할 아군 거점 건물이 없습니다");
       this.audio.playSfx("sfx.ui.cancel", { eventKey: "dismantle:invalid" });
       return;
     }
-    if (this.player.resources.gold < DISMANTLE_COST_GOLD) {
+    if (this.acting.resources.gold < DISMANTLE_COST_GOLD) {
       this.hud.setInfo("폐기 비용이 부족합니다");
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `dismantle:${point.id}:shortage` });
       return;
     }
-    this.player.resources.gold -= DISMANTLE_COST_GOLD;
+    this.acting.resources.gold -= DISMANTLE_COST_GOLD;
     point.buildingId = undefined;
     point.buildingLevel = 0;
     this.resetCaptureBuildingState(point);
@@ -3488,7 +3500,7 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private rebuildDefenseTower(towerId: number): void {
     const tower = this.defenseTowers.find((entry) => entry.id === towerId);
-    if (!tower || tower.owner !== "player") {
+    if (!tower || tower.owner !== this.actingTeamId) {
       this.hud.setInfo("재건할 아군 타워를 선택하십시오");
       this.audio.playSfx("sfx.ui.hireFail", { eventKey: "tower:rebuild:invalid" });
       return;
@@ -3503,13 +3515,13 @@ export class LaneBattleScene extends Phaser.Scene {
       this.audio.playSfx("sfx.ui.cancel", { eventKey: `tower:${tower.id}:active` });
       return;
     }
-    const cost = getDefenseTowerBuildCost(this.player.ageId);
-    if (!canAfford(this.player.resources, cost)) {
+    const cost = getDefenseTowerBuildCost(this.acting.ageId);
+    if (!canAfford(this.acting.resources, cost)) {
       this.hud.setInfo("타워 재건 자원 부족");
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `tower:${tower.id}:shortage` });
       return;
     }
-    payCost(this.player.resources, cost);
+    payCost(this.acting.resources, cost);
     tower.buildRemainingSec = DEFENSE_TOWER_BUILD_DURATION_SEC;
     tower.control = 1;
     this.hud.setInfo(`타워 재건을 시작했습니다 (${DEFENSE_TOWER_BUILD_DURATION_SEC}초)`);
@@ -4778,45 +4790,45 @@ export class LaneBattleScene extends Phaser.Scene {
       return;
     }
     if (delta > 0) {
-      if (this.player.workers.idle <= 0) {
+      if (this.acting.workers.idle <= 0) {
         this.audio.playSfx("sfx.ui.hireFail", { eventKey: `worker:${role}:no-idle` });
         return;
       }
-      this.player.workers.idle -= 1;
-      this.player.workers[role] += 1;
+      this.acting.workers.idle -= 1;
+      this.acting.workers[role] += 1;
     } else {
       // Each base resource keeps a floor of 1 assigned worker at all times —
       // it can be reassigned once a *replacement* worker is hired/freed
       // elsewhere, but never dropped to 0 directly from this button.
-      if (this.player.workers[role] <= 1) {
+      if (this.acting.workers[role] <= 1) {
         this.audio.playSfx("sfx.ui.cancel", { eventKey: `worker:${role}:at-floor` });
         return;
       }
-      this.player.workers[role] -= 1;
-      this.player.workers.idle += 1;
+      this.acting.workers[role] -= 1;
+      this.acting.workers.idle += 1;
     }
-    this.audio.playSfx("sfx.ui.confirm", { eventKey: `worker:${role}:${delta}:${this.player.workers[role]}` });
+    this.audio.playSfx("sfx.ui.confirm", { eventKey: `worker:${role}:${delta}:${this.acting.workers[role]}` });
   }
 
   private hireWorker(): void {
-    if (!this.devModeEnabled && !canAfford(this.player.resources, BASE_WORKER_COST)) {
+    if (!this.devModeEnabled && !canAfford(this.acting.resources, BASE_WORKER_COST)) {
       this.hud.setInfo("일꾼 고용 실패: 금/목재/식량 부족");
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "hire:worker:shortage" });
       return;
     }
-    if (!this.devModeEnabled) payCost(this.player.resources, BASE_WORKER_COST);
-    this.player.workers.idle += 1;
+    if (!this.devModeEnabled) payCost(this.acting.resources, BASE_WORKER_COST);
+    this.acting.workers.idle += 1;
     this.hud.setInfo("일꾼 1명을 고용했습니다");
-    this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:worker:${this.player.workers.idle}` });
+    this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:worker:${this.acting.workers.idle}` });
   }
 
   private hireResearchWorker(): void {
-    const cost = getResearchWorkerDirectCost(this.player.ageId);
-    if (this.devModeEnabled || canAfford(this.player.resources, cost)) {
-      if (!this.devModeEnabled) payCost(this.player.resources, cost);
-      this.player.workers.research += 1;
+    const cost = getResearchWorkerDirectCost(this.acting.ageId);
+    if (this.devModeEnabled || canAfford(this.acting.resources, cost)) {
+      if (!this.devModeEnabled) payCost(this.acting.resources, cost);
+      this.acting.workers.research += 1;
       this.hud.setInfo("연구 일꾼 1명이 즉시 연구에 배치되었습니다");
-      this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:research:direct:${this.player.workers.research}` });
+      this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:research:direct:${this.acting.workers.research}` });
       return;
     }
 
@@ -4840,22 +4852,22 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private tryAgeUpPlayer(): void {
-    const idx = AGES.findIndex((age) => age.id === this.player.ageId);
+    const idx = AGES.findIndex((age) => age.id === this.acting.ageId);
     if (idx >= AGES.length - 1) {
       this.hud.setInfo("이미 최종 시대입니다");
       this.audio.playSfx("sfx.ui.cancel", { eventKey: "age:max" });
       return;
     }
     const cost = getAgeUpCost(idx);
-    if (!this.devModeEnabled && !canAfford(this.player.resources, cost)) {
+    if (!this.devModeEnabled && !canAfford(this.acting.resources, cost)) {
       this.hud.setInfo(`시대 업 실패: ${this.formatResourceShortage(cost)}`);
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "age:shortage" });
       return;
     }
-    if (!this.devModeEnabled) payCost(this.player.resources, cost);
-    this.advanceAge(this.player);
-    this.hud.setInfo(`${getAge(this.player.ageId).label} 도달`);
-    this.audio.playSfx("sfx.ui.confirm", { eventKey: `age:${this.player.ageId}` });
+    if (!this.devModeEnabled) payCost(this.acting.resources, cost);
+    this.advanceAge(this.acting);
+    this.hud.setInfo(`${getAge(this.acting.ageId).label} 도달`);
+    this.audio.playSfx("sfx.ui.confirm", { eventKey: `age:${this.acting.ageId}` });
   }
 
   private advanceAge(team: TeamState): void {
@@ -4911,13 +4923,20 @@ export class LaneBattleScene extends Phaser.Scene {
   private refreshUi(): void {
     const selected = this.capturePoints.find((point) => point.id === this.selectedCapturePointId);
     const selectedTower = this.defenseTowers.find((tower) => tower.id === this.selectedDefenseTowerId);
+    // The HUD always shows "my" side first. The battlefield keeps one fixed
+    // orientation for both clients — the enemy-side player simply attacks
+    // right-to-left — but their resources, workers and base bar have to be
+    // their own, not the left-hand team's.
+    const localTeam = this.localTeamState;
+    const opposingTeam = localTeam === this.player ? this.enemy : this.player;
+    const localTeamId = localTeam.id;
     const snapshot = createLaneBattleHudSnapshot({
-      player: this.player,
-      enemy: this.enemy,
-      playerUnitCount: this.units.filter((unit) => unit.team === "player").length,
-      enemyUnitCount: this.units.filter((unit) => unit.team === "enemy").length,
-      playerBaseMaxHp: this.player.baseMaxHp,
-      enemyBaseMaxHp: this.enemy.baseMaxHp,
+      player: localTeam,
+      enemy: opposingTeam,
+      playerUnitCount: this.units.filter((unit) => unit.team === localTeamId).length,
+      enemyUnitCount: this.units.filter((unit) => unit.team !== localTeamId).length,
+      playerBaseMaxHp: localTeam.baseMaxHp,
+      enemyBaseMaxHp: opposingTeam.baseMaxHp,
       opponentCount: PLAYER_OPPONENT_COUNT,
       selectedCapturePoint: selected,
       selectedDefenseTower: selectedTower,
@@ -4963,40 +4982,41 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private refreshHudActionLabels(): void {
+    const localTeam = this.localTeamState;
     this.hud.setStrategicActionLabel("hire-worker", "일꾼 고용");
     this.hud.setStrategicActionCost("hire-worker", BASE_WORKER_COST);
-    this.hud.setStrategicActionEnabled("hire-worker", this.devModeEnabled || canAfford(this.player.resources, BASE_WORKER_COST));
-    const researchWorkerCost = getResearchWorkerDirectCost(this.player.ageId);
+    this.hud.setStrategicActionEnabled("hire-worker", this.devModeEnabled || canAfford(localTeam.resources, BASE_WORKER_COST));
+    const researchWorkerCost = getResearchWorkerDirectCost(localTeam.ageId);
     this.hud.setStrategicActionLabel("hire-research-worker", "연구 일꾼");
     this.hud.setStrategicActionCost("hire-research-worker", researchWorkerCost);
-    this.hud.setStrategicActionEnabled("hire-research-worker", this.devModeEnabled || canAfford(this.player.resources, researchWorkerCost));
-    const ageIndex = AGES.findIndex((age) => age.id === this.player.ageId);
+    this.hud.setStrategicActionEnabled("hire-research-worker", this.devModeEnabled || canAfford(localTeam.resources, researchWorkerCost));
+    const ageIndex = AGES.findIndex((age) => age.id === localTeam.ageId);
     const ageUpCost = ageIndex >= AGES.length - 1 ? null : getAgeUpCost(ageIndex);
     this.hud.setStrategicActionLabel("age-up", ageIndex >= AGES.length - 1 ? "시대 업\n최종 시대" : "시대 업");
     this.hud.setStrategicActionCost("age-up", ageUpCost ?? {});
-    this.hud.setStrategicActionEnabled("age-up", this.devModeEnabled || (ageUpCost ? canAfford(this.player.resources, ageUpCost) : true));
-    this.hud.setStrategicActionLabel("use-instant-wave", `즉시 웨이브\n토큰 ${this.player.instantWaveTokens}`);
+    this.hud.setStrategicActionEnabled("age-up", this.devModeEnabled || (ageUpCost ? canAfford(localTeam.resources, ageUpCost) : true));
+    this.hud.setStrategicActionLabel("use-instant-wave", `즉시 웨이브\n토큰 ${localTeam.instantWaveTokens}`);
 
     this.hud.setCaptureActionLabel("rebuild-defense-tower", "타워 재건");
-    const rebuildTowerCost = getDefenseTowerBuildCost(this.player.ageId);
+    const rebuildTowerCost = getDefenseTowerBuildCost(localTeam.ageId);
     this.hud.setCaptureActionCost("rebuild-defense-tower", rebuildTowerCost);
-    this.hud.setCaptureActionEnabled("rebuild-defense-tower", this.devModeEnabled || canAfford(this.player.resources, rebuildTowerCost));
+    this.hud.setCaptureActionEnabled("rebuild-defense-tower", this.devModeEnabled || canAfford(localTeam.resources, rebuildTowerCost));
     this.hud.setCaptureActionLabel("build-defense-tower", "타워");
-    const buildTowerCost = getBuildingCost("defense_tower", this.player.ageId);
+    const buildTowerCost = getBuildingCost("defense_tower", localTeam.ageId);
     this.hud.setCaptureActionCost("build-defense-tower", buildTowerCost);
-    this.hud.setCaptureActionEnabled("build-defense-tower", this.devModeEnabled || canAfford(this.player.resources, buildTowerCost));
+    this.hud.setCaptureActionEnabled("build-defense-tower", this.devModeEnabled || canAfford(localTeam.resources, buildTowerCost));
     this.hud.setCaptureActionLabel("build-supply-depot", "병참");
-    const supplyDepotCost = getBuildingCost("supply_depot", this.player.ageId);
+    const supplyDepotCost = getBuildingCost("supply_depot", localTeam.ageId);
     this.hud.setCaptureActionCost("build-supply-depot", supplyDepotCost);
-    this.hud.setCaptureActionEnabled("build-supply-depot", this.devModeEnabled || canAfford(this.player.resources, supplyDepotCost));
+    this.hud.setCaptureActionEnabled("build-supply-depot", this.devModeEnabled || canAfford(localTeam.resources, supplyDepotCost));
     this.hud.setCaptureActionLabel("build-mint", "조달소");
-    const mintCost = getBuildingCost("mint", this.player.ageId);
+    const mintCost = getBuildingCost("mint", localTeam.ageId);
     this.hud.setCaptureActionCost("build-mint", mintCost);
-    this.hud.setCaptureActionEnabled("build-mint", this.devModeEnabled || canAfford(this.player.resources, mintCost));
+    this.hud.setCaptureActionEnabled("build-mint", this.devModeEnabled || canAfford(localTeam.resources, mintCost));
     this.hud.setCaptureActionLabel("dismantle", "폐기");
     const dismantleCost = { gold: DISMANTLE_COST_GOLD };
     this.hud.setCaptureActionCost("dismantle", dismantleCost);
-    this.hud.setCaptureActionEnabled("dismantle", this.devModeEnabled || canAfford(this.player.resources, dismantleCost));
+    this.hud.setCaptureActionEnabled("dismantle", this.devModeEnabled || canAfford(localTeam.resources, dismantleCost));
   }
 
   private toggleDevMode(): void {
@@ -5054,10 +5074,15 @@ export class LaneBattleScene extends Phaser.Scene {
   private issueCommand(command: BattleCommand): void {
     // Networked play schedules further ahead so the command can reach the peer
     // before the tick it belongs to comes up.
-    const delay = this.lockstep ? this.lockstep.inputDelayTicks : 1 + LOCAL_INPUT_DELAY_TICKS;
+    //
+    // The +1 matters: stepping tick T already sent the frame for T + delay, so
+    // a command issued during tick T must land no earlier than T + delay + 1 or
+    // its frame has sailed and only this client will ever run it — which shows
+    // up as a desync a second later rather than as a lost click.
+    const delay = this.lockstep ? this.lockstep.inputDelayTicks + 1 : 1 + LOCAL_INPUT_DELAY_TICKS;
     this.commands.enqueue({
       tick: this.simTick + delay,
-      team: "player",
+      team: this.match?.localTeam ?? "player",
       command,
     });
   }
@@ -5088,19 +5113,36 @@ export class LaneBattleScene extends Phaser.Scene {
    * The single place a command changes the world. A remote peer's commands will
    * arrive here too, which is why nothing in it may read local UI state.
    */
+  /** The team whose command is being applied right now. */
+  private get acting(): TeamState {
+    return this.actingTeamId === "enemy" ? this.enemy : this.player;
+  }
+
+  private get actingResearch(): TeamResearchState {
+    return this.actingTeamId === "enemy" ? this.enemyResearchState : this.playerResearchState;
+  }
+
+  /** The side this client plays; in single-player always the left-hand team. */
+  private get localTeamState(): TeamState {
+    return this.match?.localTeam === "enemy" ? this.enemy : this.player;
+  }
+
   private applyCommand(team: CommandTeam, command: BattleCommand): void {
-    // KNOWN GAP (Issue #7): the action handlers below still operate on
-    // `this.player` unconditionally, so an "enemy" command cannot be executed
-    // yet. That makes the client the relay assigns to the enemy side unable to
-    // act. Dropping it here is the honest behaviour until the handlers take a
-    // team — silently applying it to the wrong side would corrupt both
-    // simulations instead of just limiting one.
-    if (team !== "player") return;
+    const previousActing = this.actingTeamId;
+    this.actingTeamId = team;
+    try {
+      this.dispatchCommand(command);
+    } finally {
+      this.actingTeamId = previousActing;
+    }
+  }
+
+  private dispatchCommand(command: BattleCommand): void {
     switch (command.type) {
       case "hire-worker": this.hireWorker(); return;
       case "hire-research-worker": this.hireResearchWorker(); return;
       case "shift-worker": this.shiftWorker(command.role as WorkerRole, command.delta); return;
-      case "instant-wave": this.tryUseInstantWaveToken(this.player); return;
+      case "instant-wave": this.tryUseInstantWaveToken(this.acting); return;
       case "advance-age": this.tryAgeUpPlayer(); return;
       case "apply-research": this.applyPlayerResearchDraft(); return;
       case "build": this.buildAtPoint(command.pointId, command.buildingId as BuildingId); return;
