@@ -131,6 +131,10 @@ import type { GameMode, MatchDescriptor } from "../systems/net/matchTypes";
 import { hashSimulationState } from "../systems/sim/simulationHash";
 import type { SimulationStateView } from "../systems/sim/simulationState";
 import {
+  NULL_PRESENTATION_EFFECTS,
+  type PresentationEffects,
+} from "../systems/sim/presentationEffects";
+import {
   CommandQueue,
   LOCAL_INPUT_DELAY_TICKS,
   type BattleCommand,
@@ -556,6 +560,12 @@ export class LaneBattleScene extends Phaser.Scene {
   private simTick = 0;
   /** Player intent waiting to execute, keyed by the tick it belongs to. */
   private readonly commands = new CommandQueue();
+  /**
+   * How the simulation asks for sounds and floating text. The scene supplies a
+   * renderer-backed implementation; a headless run uses the null one, which is
+   * why simulation code addresses effects by unit id and never by position.
+   */
+  private effects: PresentationEffects = NULL_PRESENTATION_EFFECTS;
   private readonly visualValidationScenario = QUERY_PARAMS.get("scenario") === "visual-validation";
   private readonly terrainDebugInputEnabled = isTerrainDebugInputEnabled(QUERY_PARAMS.get("terrainDebug"));
   private readonly mapSpec = getBattlefieldMapSpec(QUERY_PARAMS.get("map"));
@@ -617,6 +627,7 @@ export class LaneBattleScene extends Phaser.Scene {
     // `simRandom` instead, so the simulation's random stream cannot be shifted
     // by a change in how the game is drawn — which would desync a lockstep
     // match without touching any gameplay code.
+    this.effects = this.createPresentationEffects();
     Phaser.Math.RND.sow([this.activeSeed]);
     this.simRandom = new DeterministicRandom(this.activeSeed);
     this.simTick = 0;
@@ -723,6 +734,34 @@ export class LaneBattleScene extends Phaser.Scene {
    * and must depend only on `deltaSec`, current state, and `simRandom` — never
    * on real time, frame rate, or anything Phaser renders.
    */
+  /**
+   * Resolves an effect to a screen position at the moment it is shown, rather
+   * than having the simulation carry coordinates it has no business knowing.
+   */
+  private createPresentationEffects(): PresentationEffects {
+    const findUnit = (unitId: number) => this.units.find((unit) => unit.id === unitId);
+    return {
+      unitSfx: (assetId, unitId, eventKey) => {
+        const unit = findUnit(unitId);
+        if (!unit) return;
+        this.playWorldSfx(assetId, unit.sprite.x, unit.sprite.y, eventKey);
+      },
+      structureSfx: (assetId, structureKind, structureId, eventKey) => {
+        const sprite = structureKind === "tower"
+          ? this.defenseTowers.find((tower) => tower.id === structureId)?.sprite
+          : this.capturePoints.find((point) => point.id === structureId)?.marker;
+        if (!sprite) return;
+        this.playWorldSfx(assetId, sprite.x, sprite.y, eventKey);
+      },
+      unitToast: (text, unitId, color, verticalOffset) => {
+        const unit = findUnit(unitId);
+        if (!unit) return;
+        this.spawnToast(text, unit.sprite.x, unit.sprite.y + verticalOffset, color);
+      },
+      unitDied: () => { /* the scene tears the unit down in killUnit() */ },
+    };
+  }
+
   private stepSimulation(deltaSec: number): void {
     this.simTick += 1;
     // Commands first, so a tick's inputs are visible to that same tick's
@@ -2069,10 +2108,9 @@ export class LaneBattleScene extends Phaser.Scene {
         this.holdUnitCombatFacing(unit, enemyTower.sprite.x, enemyTower.sprite.y);
         if (unit.attackTimerSec <= 0) {
           unit.attackTimerSec = unit.attackCooldownSec;
-          this.playWorldSfx(
+          this.effects.unitSfx(
             this.isRangedUnit(unit) ? getRangedFireSfxKey(unit.unitId) : getMeleeAttackSfxKey(unit.unitId),
-            unit.sprite.x,
-            unit.sprite.y,
+            unit.id,
             `attack:${unit.id}:tower:${enemyTower.id}:${Math.round(this.elapsedSec * 1000)}`,
           );
           const damageBase = unit.attack * (1 - unit.attrition);
@@ -2118,10 +2156,9 @@ export class LaneBattleScene extends Phaser.Scene {
       this.holdUnitCombatFacing(unit, nearest.sprite.x, nearest.sprite.y);
       if (unit.attackTimerSec <= 0) {
         unit.attackTimerSec = unit.attackCooldownSec;
-        this.playWorldSfx(
+        this.effects.unitSfx(
           this.isRangedUnit(unit) ? getRangedFireSfxKey(unit.unitId) : getMeleeAttackSfxKey(unit.unitId),
-          unit.sprite.x,
-          unit.sprite.y,
+          unit.id,
           `attack:${unit.id}:unit:${nearest.id}:${Math.round(this.elapsedSec * 1000)}`,
         );
         const damageBase = unit.attack * (1 - unit.attrition);
@@ -2137,14 +2174,13 @@ export class LaneBattleScene extends Phaser.Scene {
           this.startMeleeAttack(unit, nearest.sprite.x, nearest.sprite.y, "unit", () => {
             if (!this.units.includes(nearest)) return;
             nearest.hp -= damage;
-            this.playWorldSfx(
+            this.effects.unitSfx(
               getMeleeHitSfxKey(unit.unitId),
-              nearest.sprite.x,
-              nearest.sprite.y,
+              nearest.id,
               `impact:melee:${unit.id}:${nearest.id}:${Math.round(this.elapsedSec * 1000)}`,
             );
             this.playImpactFeedback(unit, nearest, damage);
-            this.spawnToast(`${damage}`, nearest.sprite.x, nearest.sprite.y - 26, unit.team === "player" ? "#ffd67a" : "#ff8f8f");
+            this.effects.unitToast(`${damage}`, nearest.id, unit.team === "player" ? "#ffd67a" : "#ff8f8f", -26);
             if (nearest.hp <= 0) this.killUnit(nearest);
           });
         }
@@ -2262,7 +2298,7 @@ export class LaneBattleScene extends Phaser.Scene {
       unit.sprite.y,
       `support-heal:${unit.id}:${Math.round(this.elapsedSec * 1000)}`,
     );
-    this.spawnToast(`치유 ${totalHealed}`, unit.sprite.x, unit.sprite.y - 44, "#92f1a5");
+    this.effects.unitToast(`치유 ${totalHealed}`, unit.id, "#92f1a5", -44);
   }
 
   private getUnitAttackTimingRole(unit: LaneUnit): AttackTimingRole {
@@ -3114,7 +3150,7 @@ export class LaneBattleScene extends Phaser.Scene {
     point.supplyTimerSec = 1.5;
     point.manaCurrent = Math.max(0, point.manaCurrent - SUPPLY_DEPOT_SUPPORT_MANA_RESTORE);
     support.manaCurrent = Math.min(support.manaMax, support.manaCurrent + SUPPLY_DEPOT_SUPPORT_MANA_RESTORE + point.buildingLevel * 2);
-    this.spawnToast("병참", support.sprite.x, support.sprite.y - 28, "#92b8ff");
+    this.effects.unitToast("병참", support.id, "#92b8ff", -28);
   }
 
   private tickMint(point: CapturePointState, deltaSec: number): void {
@@ -3127,7 +3163,7 @@ export class LaneBattleScene extends Phaser.Scene {
     point.supplyTimerSec = 1.5;
     ally.hp = Math.min(ally.maxHp, ally.hp + 4 + point.buildingLevel * 2);
     ally.attrition = Math.max(0, ally.attrition - (0.05 + point.buildingLevel * 0.02));
-    this.spawnToast("조달", ally.sprite.x, ally.sprite.y - 28, "#92f1a5");
+    this.effects.unitToast("조달", ally.id, "#92f1a5", -28);
   }
 
   private tickCapturePointTower(point: CapturePointState, deltaSec: number): void {
