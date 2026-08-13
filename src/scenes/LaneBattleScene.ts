@@ -566,6 +566,15 @@ export class LaneBattleScene extends Phaser.Scene {
    * why simulation code addresses effects by unit id and never by position.
    */
   private effects: PresentationEffects = NULL_PRESENTATION_EFFECTS;
+  /**
+   * Attack impacts waiting to land, scheduled on simulation ticks.
+   *
+   * These used to run on `this.time.delayedCall`, i.e. Phaser's wall clock.
+   * That makes when damage lands depend on frame rate rather than on the
+   * simulation, so two lockstep peers would apply the same hit on different
+   * ticks and diverge. Impacts now resolve on a tick like everything else.
+   */
+  private pendingImpacts: { tick: number; unitId: number; sequence: number; resolve: () => void }[] = [];
   private readonly visualValidationScenario = QUERY_PARAMS.get("scenario") === "visual-validation";
   private readonly terrainDebugInputEnabled = isTerrainDebugInputEnabled(QUERY_PARAMS.get("terrainDebug"));
   private readonly mapSpec = getBattlefieldMapSpec(QUERY_PARAMS.get("map"));
@@ -632,6 +641,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.simRandom = new DeterministicRandom(this.activeSeed);
     this.simTick = 0;
     this.commands.clear();
+    this.pendingImpacts.length = 0;
     this.simAccumulatorSec = 0;
     void this.audio.initialize();
     this.audio.resetDirector("preparation");
@@ -769,6 +779,7 @@ export class LaneBattleScene extends Phaser.Scene {
     for (const entry of this.commands.drain(this.simTick)) {
       this.applyCommand(entry.team, entry.command);
     }
+    this.resolvePendingImpacts();
     this.elapsedSec += deltaSec;
     this.tickEconomy(deltaSec);
     this.aiController.tick(deltaSec);
@@ -2332,12 +2343,7 @@ export class LaneBattleScene extends Phaser.Scene {
     targetKind: AttackTargetKind,
     onContact: () => void,
   ): void {
-    const timing = this.beginAttackPresentation(unit, targetX, targetY, targetKind);
-    const sequence = ++unit.attackSequence;
-    this.time.delayedCall(timing.eventDelayMs, () => {
-      if (!this.units.includes(unit) || unit.attackSequence !== sequence) return;
-      onContact();
-    });
+    this.scheduleAttackImpact(unit, targetX, targetY, targetKind, onContact);
   }
 
   private startRangedAttack(
@@ -2347,21 +2353,53 @@ export class LaneBattleScene extends Phaser.Scene {
     targetKind: AttackTargetKind,
     onRelease: () => void,
   ): void {
-    const timing = this.beginAttackPresentation(unit, targetX, targetY, targetKind);
-    const sequence = ++unit.attackSequence;
-    this.time.delayedCall(timing.eventDelayMs, () => {
-      if (!this.units.includes(unit) || unit.attackSequence !== sequence) return;
-      onRelease();
-    });
+    this.scheduleAttackImpact(unit, targetX, targetY, targetKind, onRelease);
   }
 
   private startSupportCast(unit: LaneUnit, targetX: number, targetY: number, onCast: () => void): void {
-    const timing = this.beginAttackPresentation(unit, targetX, targetY, "unit");
+    this.scheduleAttackImpact(unit, targetX, targetY, "unit", onCast);
+  }
+
+  /**
+   * Starts the attack animation and books its impact on a future tick.
+   *
+   * The delay is rounded to whole ticks — never below one — so an impact can
+   * never resolve on the same tick it was booked, and every client resolves it
+   * on the same one.
+   */
+  private scheduleAttackImpact(
+    unit: LaneUnit,
+    targetX: number,
+    targetY: number,
+    targetKind: AttackTargetKind,
+    resolve: () => void,
+  ): void {
+    const timing = this.beginAttackPresentation(unit, targetX, targetY, targetKind);
     const sequence = ++unit.attackSequence;
-    this.time.delayedCall(timing.eventDelayMs, () => {
-      if (!this.units.includes(unit) || unit.attackSequence !== sequence) return;
-      onCast();
+    const delayTicks = Math.max(1, Math.round((timing.eventDelayMs / 1000) / SIM_TICK_SEC));
+    this.pendingImpacts.push({
+      tick: this.simTick + delayTicks,
+      unitId: unit.id,
+      sequence,
+      resolve,
     });
+  }
+
+  /**
+   * Resolves impacts booked for this tick. An impact is dropped if its attacker
+   * died, or if that attacker has since started another attack — the same
+   * check the old timer did, now on a deterministic clock.
+   */
+  private resolvePendingImpacts(): void {
+    if (this.pendingImpacts.length === 0) return;
+    const due = this.pendingImpacts.filter((impact) => impact.tick <= this.simTick);
+    if (due.length === 0) return;
+    this.pendingImpacts = this.pendingImpacts.filter((impact) => impact.tick > this.simTick);
+    for (const impact of due) {
+      const attacker = this.units.find((unit) => unit.id === impact.unitId);
+      if (!attacker || attacker.attackSequence !== impact.sequence) continue;
+      impact.resolve();
+    }
   }
 
   private holdUnitCombatFacing(
