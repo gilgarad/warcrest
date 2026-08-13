@@ -128,6 +128,8 @@ import {
 import { frameLerpAlpha } from "../systems/lane-combat/frameLerp";
 import { DeterministicRandom } from "../systems/sim/deterministicRandom";
 import type { GameMode, MatchDescriptor } from "../systems/net/matchTypes";
+import { DEFAULT_LOCKSTEP_OPTIONS, LockstepSession } from "../systems/net/lockstepSession";
+import type { RelayMatchService } from "../systems/net/relayMatchService";
 import { hashSimulationState } from "../systems/sim/simulationHash";
 import type { SimulationStateView } from "../systems/sim/simulationState";
 import {
@@ -560,6 +562,10 @@ export class LaneBattleScene extends Phaser.Scene {
   private simTick = 0;
   /** Player intent waiting to execute, keyed by the tick it belongs to. */
   private readonly commands = new CommandQueue();
+  /** Present only in a networked match; drives the tick barrier. */
+  private lockstep: LockstepSession | null = null;
+  private relay: RelayMatchService | null = null;
+  private netStalled = false;
   /**
    * How the simulation asks for sounds and floating text. The scene supplies a
    * renderer-backed implementation; a headless run uses the null one, which is
@@ -612,7 +618,12 @@ export class LaneBattleScene extends Phaser.Scene {
     super("run");
   }
 
-  init(data: { difficultyId?: DifficultyId; mode?: GameMode; match?: MatchDescriptor }): void {
+  init(data: {
+    difficultyId?: DifficultyId;
+    mode?: GameMode;
+    match?: MatchDescriptor;
+    relay?: RelayMatchService | null;
+  }): void {
     this.difficulty = getDifficulty(data?.difficultyId);
     // Single-player and PvP run this same scene and this same simulation; the
     // mode only decides where the opposing side's commands come from. Keeping
@@ -620,6 +631,12 @@ export class LaneBattleScene extends Phaser.Scene {
     // apart as the game keeps changing.
     this.gameMode = data?.mode ?? "single";
     this.match = data?.match;
+    this.relay = data?.relay ?? null;
+    // A networked match runs under the lockstep barrier; a local one has no
+    // peer to wait for and steps freely.
+    this.lockstep = this.gameMode === "pvp" && this.relay
+      ? new LockstepSession(this.match?.localTeam ?? "player", DEFAULT_LOCKSTEP_OPTIONS)
+      : null;
     // A PvP match dictates the seed so both peers simulate identically.
     this.activeSeed = this.match?.seed ?? this.verificationSeed;
   }
@@ -637,6 +654,10 @@ export class LaneBattleScene extends Phaser.Scene {
     // by a change in how the game is drawn — which would desync a lockstep
     // match without touching any gameplay code.
     this.effects = this.createPresentationEffects();
+    if (this.lockstep && this.relay) {
+      this.relay.onFrame((frame) => this.lockstep?.receiveRemoteFrame(frame));
+      this.relay.onOpponentLeft((reason) => this.hud.setInfo(reason));
+    }
     Phaser.Math.RND.sow([this.activeSeed]);
     this.simRandom = new DeterministicRandom(this.activeSeed);
     this.simTick = 0;
@@ -719,10 +740,18 @@ export class LaneBattleScene extends Phaser.Scene {
     this.simAccumulatorSec += frameSec;
     let steps = 0;
     while (this.simAccumulatorSec >= SIM_TICK_SEC && steps < MAX_SIM_STEPS_PER_FRAME) {
+      // Under lockstep, a tick may only run once the opponent's commands for it
+      // have arrived. Waiting is the point: running ahead is what desyncs.
+      if (this.lockstep && !this.lockstep.canAdvance(this.simTick + 1)) {
+        this.netStalled = true;
+        break;
+      }
+      this.netStalled = false;
       this.stepSimulation(SIM_TICK_SEC);
       this.simAccumulatorSec -= SIM_TICK_SEC;
       steps += 1;
     }
+    if (this.lockstep) this.reportNetworkState();
     if (steps === MAX_SIM_STEPS_PER_FRAME) {
       // Too far behind to catch up this frame; drop the backlog rather than
       // compound it. (Under lockstep this is where a stalled peer would have
@@ -774,15 +803,28 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private stepSimulation(deltaSec: number): void {
     this.simTick += 1;
+    if (this.lockstep) this.exchangeLockstepFrame();
     // Commands first, so a tick's inputs are visible to that same tick's
     // simulation on every client.
+    // Local commands come from the queue; a networked match also applies the
+    // opponent's commands for this tick, which the barrier guaranteed arrived.
     for (const entry of this.commands.drain(this.simTick)) {
       this.applyCommand(entry.team, entry.command);
+    }
+    if (this.lockstep) {
+      for (const entry of this.lockstep.commandsFor(this.simTick)) {
+        if (entry.team === this.match?.localTeam) continue; // already applied locally
+        this.applyCommand(entry.team, entry.command);
+      }
+      this.lockstep.release(this.simTick);
     }
     this.resolvePendingImpacts();
     this.elapsedSec += deltaSec;
     this.tickEconomy(deltaSec);
-    this.aiController.tick(deltaSec);
+    // In PvP the enemy is a person: their commands arrive over the relay, so
+    // running the AI as well would have both clients simulating a different
+    // opponent and diverging immediately.
+    if (!this.lockstep) this.aiController.tick(deltaSec);
     this.tickWaves(deltaSec);
     this.tickCombat(deltaSec);
     this.tickCapturePoints(deltaSec);
@@ -3065,9 +3107,9 @@ export class LaneBattleScene extends Phaser.Scene {
       if (point.buildingId === "mint") this.tickMint(point, deltaSec);
     });
 
-    this.aiController.autoBuildCapturePoint();
+    if (!this.lockstep) this.aiController.autoBuildCapturePoint();
     this.defenseTowers.forEach((tower) => this.tickWatchtower(tower, deltaSec));
-    this.aiController.autoRebuildDefenseTower();
+    if (!this.lockstep) this.aiController.autoRebuildDefenseTower();
 
     this.structureVisualRefreshTimerSec += deltaSec;
     if (this.structureVisualsDirty || this.structureVisualRefreshTimerSec >= STRUCTURE_VISUAL_REFRESH_SEC) {
@@ -5010,8 +5052,11 @@ export class LaneBattleScene extends Phaser.Scene {
    * self-contained instruction.
    */
   private issueCommand(command: BattleCommand): void {
+    // Networked play schedules further ahead so the command can reach the peer
+    // before the tick it belongs to comes up.
+    const delay = this.lockstep ? this.lockstep.inputDelayTicks : 1 + LOCAL_INPUT_DELAY_TICKS;
     this.commands.enqueue({
-      tick: this.simTick + 1 + LOCAL_INPUT_DELAY_TICKS,
+      tick: this.simTick + delay,
       team: "player",
       command,
     });
@@ -5044,7 +5089,13 @@ export class LaneBattleScene extends Phaser.Scene {
    * arrive here too, which is why nothing in it may read local UI state.
    */
   private applyCommand(team: CommandTeam, command: BattleCommand): void {
-    if (team !== "player") return; // remote side arrives with the relay
+    // KNOWN GAP (Issue #7): the action handlers below still operate on
+    // `this.player` unconditionally, so an "enemy" command cannot be executed
+    // yet. That makes the client the relay assigns to the enemy side unable to
+    // act. Dropping it here is the honest behaviour until the handlers take a
+    // team — silently applying it to the wrong side would corrupt both
+    // simulations instead of just limiting one.
+    if (team !== "player") return;
     switch (command.type) {
       case "hire-worker": this.hireWorker(); return;
       case "hire-research-worker": this.hireResearchWorker(); return;
@@ -5056,6 +5107,35 @@ export class LaneBattleScene extends Phaser.Scene {
       case "dismantle": this.dismantlePoint(command.pointId); return;
       case "rebuild-tower": this.rebuildDefenseTower(command.towerId); return;
     }
+  }
+
+  /**
+   * Sends this client's frame for the tick that is `inputDelayTicks` ahead, plus
+   * a periodic state hash.
+   *
+   * A frame goes out every tick even when it carries no commands: silence is
+   * indistinguishable from a stalled peer, and the other side's barrier would
+   * never open.
+   */
+  private exchangeLockstepFrame(): void {
+    if (!this.lockstep || !this.relay) return;
+    const targetTick = this.lockstep.scheduleTickFor(this.simTick);
+    const outgoing = this.commands.peek(targetTick).map((entry) => entry.command);
+    const hash = this.lockstep.shouldHashAt(this.simTick)
+      ? { tick: this.simTick, value: hashSimulationState(this.captureSimulationState()) }
+      : undefined;
+    if (hash) this.lockstep.recordLocalHash(hash.tick, hash.value);
+    this.relay.sendFrame(this.lockstep.buildLocalFrame(targetTick, outgoing, hash));
+  }
+
+  /** Surfaces waiting-for-opponent and desync states, which must never be silent. */
+  private reportNetworkState(): void {
+    const desync = this.lockstep?.getDesync();
+    if (desync) {
+      this.hud.setInfo(`동기화 오류 (tick ${desync.tick}) — 대전을 계속할 수 없습니다`);
+      return;
+    }
+    if (this.netStalled) this.hud.setInfo("상대를 기다리는 중...");
   }
 
   private captureSimulationState(): SimulationStateView {

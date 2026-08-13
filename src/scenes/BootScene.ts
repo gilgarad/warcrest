@@ -6,7 +6,7 @@ import { GAME_SUBTITLE, GAME_TAGLINE, GAME_TITLE } from "../data/gameMeta";
 import { createParallaxBackground, type ParallaxBackground } from "../gfx/parallax";
 import { areLaneBattleAssetsReady, queueLaneBattleAssets } from "./laneBattleAssetPreload";
 import { getAudioSystem } from "../systems/audio";
-import { LocalMatchService } from "../systems/net/localMatchService";
+import { RelayMatchService } from "../systems/net/relayMatchService";
 import type { MatchDescriptor } from "../systems/net/matchTypes";
 import { OnlineLobbyPanel } from "../ui/OnlineLobbyPanel";
 
@@ -27,6 +27,7 @@ export class BootScene extends Phaser.Scene {
   private startOnlineMatch?: (match: MatchDescriptor) => void;
   private onlineButton?: { rect: Phaser.GameObjects.Rectangle; text: Phaser.GameObjects.Text };
   private lobby?: OnlineLobbyPanel;
+  private relayService?: RelayMatchService;
 
   constructor() {
     super("boot");
@@ -202,6 +203,7 @@ export class BootScene extends Phaser.Scene {
         difficultyId: DIFFICULTIES[0].id,
         mode: match.mode,
         match,
+        relay: this.relayService ?? null,
       });
     };
 
@@ -241,7 +243,11 @@ export class BootScene extends Phaser.Scene {
   private async openLobby(): Promise<void> {
     if (!this.battleAssetsReady || this.lobby?.isOpen()) return;
     if (!this.lobby) {
-      this.lobby = new OnlineLobbyPanel(this, new LocalMatchService(), {
+      // Same origin as the page, so a forwarded 5173 carries the relay too and
+      // there is no second port to configure or forget.
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      this.relayService = new RelayMatchService(`${protocol}//${window.location.host}/relay`);
+      this.lobby = new OnlineLobbyPanel(this, this.relayService, {
         onMatchReady: (match) => {
           this.lobby?.hide();
           this.startOnlineMatch?.(match);
