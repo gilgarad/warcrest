@@ -264,7 +264,16 @@ const SUPPORT_ARRIVAL_EPSILON_PROGRESS = 0.003;
  */
 const STRUCTURE_VISUAL_REFRESH_SEC = 0.1;
 
-interface LaneUnit {
+/**
+ * Simulation state for a unit — everything that can change the outcome of the
+ * battle, and nothing that only decides how it looks.
+ *
+ * Kept as its own type so the compiler enforces the boundary: a function typed
+ * against `SimUnit` physically cannot reach a sprite. That is what makes the
+ * simulation movable to a headless module (Node, a Worker, a server) without
+ * auditing every line by hand.
+ */
+interface SimUnit {
   id: number;
   team: TeamId;
   role: "battle" | "support";
@@ -272,8 +281,6 @@ interface LaneUnit {
   laneId: string;
   progress: number;
   laneRow: number;
-  visualProgress: number;
-  visualLaneRow: number;
   maxHp: number;
   hp: number;
   attack: number;
@@ -293,6 +300,19 @@ interface LaneUnit {
   manaRegenPerSec: number;
   healManaCost: number;
   attrition: number;
+  /** Enemy this unit committed to on first contact; see `acquireTarget`. */
+  targetId?: number;
+}
+
+/**
+ * Everything about a unit that exists only to draw it: the Phaser objects plus
+ * the smoothed values feeding them. Frame-rate dependent by design, and
+ * deliberately absent from the state hash — two clients rendering at different
+ * rates are not desynced.
+ */
+interface UnitView {
+  visualProgress: number;
+  visualLaneRow: number;
   logicalTextureKey: string;
   bobPhase: number;
   currentTextureKey: string;
@@ -327,11 +347,12 @@ interface LaneUnit {
    * changing rather than run once per unit per frame.
    */
   nameplateStyleKey: string;
-  /** Enemy this unit committed to on first contact; see `acquireTarget`. */
-  targetId?: number;
   hovered: boolean;
   selected: boolean;
 }
+
+/** A unit as the scene holds it: simulation state plus its presentation. */
+type LaneUnit = SimUnit & UnitView;
 
 /**
  * What a unit is aiming at, named rather than positioned.
@@ -851,7 +872,14 @@ export class LaneBattleScene extends Phaser.Scene {
       },
       notice: (message) => this.hud.setInfo(message),
       globalSfx: (assetId, eventKey) => this.audio.playSfx(assetId, { eventKey }),
-      unitDied: () => { /* the scene tears the unit down in killUnit() */ },
+      unitTravelFacing: (unitId, targetProgress, targetLaneRow) => {
+        const unit = findUnit(unitId);
+        if (unit) this.setUnitTravelFacing(unit, targetProgress, targetLaneRow);
+      },
+      unitDied: (unitId) => {
+        const unit = findUnit(unitId);
+        if (unit) this.destroyUnitPresentation(unit);
+      },
     };
   }
 
@@ -2214,7 +2242,7 @@ export class LaneBattleScene extends Phaser.Scene {
             return;
           }
         }
-        this.faceTarget(unit, { kind: "tower", id: enemyTower.id });
+        this.faceTarget(unit.id, { kind: "tower", id: enemyTower.id });
         if (unit.attackTimerSec <= 0) {
           unit.attackTimerSec = unit.attackCooldownSec;
           this.effects.unitSfx(
@@ -2225,7 +2253,7 @@ export class LaneBattleScene extends Phaser.Scene {
           const damageBase = unit.attack * (1 - unit.attrition);
           const damage = Math.max(1, Math.round(damageBase * this.getAttackBuffMultiplier(unit)));
           if (this.isRangedUnit(unit)) {
-            const start = this.getUnitProjectileAnchor(unit);
+            const start = this.getUnitProjectileAnchor(unit.id);
             const end = this.getTowerProjectileAnchor(enemyTower, false);
             this.startRangedAttack(unit, { kind: "tower", id: enemyTower.id }, "structure", () => {
               this.fireProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToTower(enemyTower, damage, unit.team), 1.02);
@@ -2249,10 +2277,10 @@ export class LaneBattleScene extends Phaser.Scene {
         if (distance <= attackRange + engageTolerance) {
           if (this.isMeleeUnit(unit) && unit.attackAnimTime <= 0 && unit.attackTimerSec > 0) {
             this.advanceUnit(unit, deltaSec, nearest);
-            this.faceTarget(unit, { kind: "unit", id: nearest.id });
+            this.faceTarget(unit.id, { kind: "unit", id: nearest.id });
             return;
           }
-          this.faceTarget(unit, { kind: "unit", id: nearest.id });
+          this.faceTarget(unit.id, { kind: "unit", id: nearest.id });
         } else {
           this.advanceUnit(unit, deltaSec, nearest);
           return;
@@ -2262,7 +2290,7 @@ export class LaneBattleScene extends Phaser.Scene {
         this.advanceUnit(unit, deltaSec, nearest);
         return;
       }
-      this.faceTarget(unit, { kind: "unit", id: nearest.id });
+      this.faceTarget(unit.id, { kind: "unit", id: nearest.id });
       if (unit.attackTimerSec <= 0) {
         unit.attackTimerSec = unit.attackCooldownSec;
         this.effects.unitSfx(
@@ -2273,8 +2301,8 @@ export class LaneBattleScene extends Phaser.Scene {
         const damageBase = unit.attack * (1 - unit.attrition);
         const damage = Math.max(1, Math.round(damageBase * this.getAttackBuffMultiplier(unit) - nearest.defense));
         if (this.isRangedUnit(unit)) {
-          const start = this.getUnitProjectileAnchor(unit);
-          const end = this.getUnitProjectileAnchor(nearest);
+          const start = this.getUnitProjectileAnchor(unit.id);
+          const end = this.getUnitProjectileAnchor(nearest.id);
           this.startRangedAttack(unit, { kind: "unit", id: nearest.id }, "unit", () => {
             if (!this.units.includes(nearest)) return;
             this.fireProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToUnit(nearest, damage, unit.team === "player" ? "#ffd67a" : "#ff8f8f", unit.unitId), 1.04);
@@ -2363,7 +2391,7 @@ export class LaneBattleScene extends Phaser.Scene {
 
     // Use the full ally-relative destination for facing. A one-tick movement
     // delta is below the flip dead zone and previously left support walking backward.
-    this.setUnitTravelFacing(unit, desiredProgress, desiredLaneRow);
+    this.effects.unitTravelFacing(unit.id, desiredProgress, desiredLaneRow);
     const moveStep = unit.speed * UNIT_PROGRESS_SPEED * deltaSec;
     this.setSupportTravelFacing(unit, desiredProgress);
     unit.progress = this.moveToward(unit.progress, desiredProgress, moveStep);
@@ -2408,17 +2436,17 @@ export class LaneBattleScene extends Phaser.Scene {
     this.effects.unitToast(`치유 ${totalHealed}`, unit.id, "#92f1a5", -44);
   }
 
-  private getUnitAttackTimingRole(unit: LaneUnit): AttackTimingRole {
+  private getUnitAttackTimingRole(unit: SimUnit): AttackTimingRole {
     if (unit.role === "support") return "support";
     return this.isRangedUnit(unit) ? "ranged" : "melee";
   }
 
-  private getUnitAttackTiming(unit: LaneUnit, targetKind: AttackTargetKind): AttackTimingProfile {
+  private getUnitAttackTiming(unit: SimUnit, targetKind: AttackTargetKind): AttackTimingProfile {
     return getAttackTimingProfile(this.getUnitAttackTimingRole(unit), targetKind);
   }
 
   private beginAttackPresentation(
-    unit: LaneUnit,
+    unit: SimUnit,
     target: AttackTargetRef,
     targetKind: AttackTargetKind,
   ): AttackTimingProfile {
@@ -2427,13 +2455,12 @@ export class LaneBattleScene extends Phaser.Scene {
     unit.attackFacingLockSec = timing.durationSec;
     unit.attackTargetKind = targetKind;
     this.engagedUnitIds.add(unit.id);
-    const point = this.resolveTargetPoint(target);
-    if (point) this.holdUnitCombatFacing(unit, point.x, point.y, timing.durationSec);
+    this.faceTarget(unit.id, target, timing.durationSec);
     return timing;
   }
 
   private startMeleeAttack(
-    unit: LaneUnit,
+    unit: SimUnit,
     target: AttackTargetRef,
     targetKind: AttackTargetKind,
     onContact: () => void,
@@ -2442,7 +2469,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private startRangedAttack(
-    unit: LaneUnit,
+    unit: SimUnit,
     target: AttackTargetRef,
     targetKind: AttackTargetKind,
     onRelease: () => void,
@@ -2450,7 +2477,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.scheduleAttackImpact(unit, target, targetKind, onRelease);
   }
 
-  private startSupportCast(unit: LaneUnit, target: AttackTargetRef, onCast: () => void): void {
+  private startSupportCast(unit: SimUnit, target: AttackTargetRef, onCast: () => void): void {
     this.scheduleAttackImpact(unit, target, "unit", onCast);
   }
 
@@ -2462,7 +2489,7 @@ export class LaneBattleScene extends Phaser.Scene {
    * on the same one.
    */
   private scheduleAttackImpact(
-    unit: LaneUnit,
+    unit: SimUnit,
     target: AttackTargetRef,
     targetKind: AttackTargetKind,
     resolve: () => void,
@@ -2520,9 +2547,10 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   /** Faces a unit at a target it can only name, resolving the point here. */
-  private faceTarget(unit: LaneUnit, target: AttackTargetRef, holdSec = COMBAT_FACING_HOLD_SEC): void {
+  private faceTarget(unitId: number, target: AttackTargetRef, holdSec = COMBAT_FACING_HOLD_SEC): void {
+    const unit = this.units.find((entry) => entry.id === unitId);
     const point = this.resolveTargetPoint(target);
-    if (point) this.holdUnitCombatFacing(unit, point.x, point.y, holdSec);
+    if (unit && point) this.holdUnitCombatFacing(unit, point.x, point.y, holdSec);
   }
 
   private holdUnitCombatFacing(
@@ -2542,7 +2570,7 @@ export class LaneBattleScene extends Phaser.Scene {
     unit.combatFacingHoldSec = Math.max(unit.combatFacingHoldSec, holdSec);
   }
 
-  private advanceUnit(unit: LaneUnit, deltaSec: number, combatTarget?: LaneUnit): void {
+  private advanceUnit(unit: SimUnit, deltaSec: number, combatTarget?: SimUnit): void {
     const dir = unit.team === "player" ? 1 : -1;
     const combatTargetDistance = combatTarget
       ? progressBetween(unit.progress, combatTarget.progress)
@@ -2559,7 +2587,7 @@ export class LaneBattleScene extends Phaser.Scene {
     if (combatTarget && this.isMeleeUnit(unit) && combatTargetDistance <= COMBAT_FORMATION_PULL_PROGRESS) {
       const slot = this.findCombatSlot(unit, combatTarget);
       if (slot) {
-        this.setUnitTravelFacing(unit, slot.progress, slot.laneRow);
+        this.effects.unitTravelFacing(unit.id, slot.progress, slot.laneRow);
         unit.laneRow = simLerp(unit.laneRow, slot.laneRow, frameLerpAlpha(deltaSec, 0.34));
         const moveStep = unit.speed * UNIT_PROGRESS_SPEED * deltaSec;
         const nextProgress = this.moveToward(unit.progress, slot.progress, moveStep);
@@ -2606,7 +2634,7 @@ export class LaneBattleScene extends Phaser.Scene {
           const cappedProgress = unit.team === "player"
             ? Math.min(flankSlot.progress, friendAhead.progress - FRIENDLY_GAP)
             : Math.max(flankSlot.progress, friendAhead.progress + FRIENDLY_GAP);
-          this.setUnitTravelFacing(unit, cappedProgress, flankSlot.laneRow);
+          this.effects.unitTravelFacing(unit.id, cappedProgress, flankSlot.laneRow);
           unit.laneRow = simLerp(unit.laneRow, flankSlot.laneRow, frameLerpAlpha(deltaSec, 0.52));
           unit.progress = this.moveToward(
             unit.progress,
@@ -2620,7 +2648,7 @@ export class LaneBattleScene extends Phaser.Scene {
           const packedDesired = unit.team === "player"
             ? Math.min(desired, friendAhead.progress - 0.006)
             : Math.max(desired, friendAhead.progress + 0.006);
-          this.setUnitTravelFacing(unit, packedDesired, unit.laneRow);
+          this.effects.unitTravelFacing(unit.id, packedDesired, unit.laneRow);
           unit.progress = simClamp(packedDesired, 0.01, 0.99);
           if (enemyAhead) this.pullUnitTowardOpenCombatRow(unit, enemyAhead, deltaSec);
           this.keepUnitInPlayableLane(unit);
@@ -2629,12 +2657,12 @@ export class LaneBattleScene extends Phaser.Scene {
       }
     }
 
-    this.setUnitTravelFacing(unit, desired, unit.laneRow);
+    this.effects.unitTravelFacing(unit.id, desired, unit.laneRow);
     unit.progress = simClamp(desired, 0.01, 0.99);
     this.keepUnitInPlayableLane(unit);
   }
 
-  private repositionTowardCombat(unit: LaneUnit, enemy: LaneUnit, deltaSec: number): void {
+  private repositionTowardCombat(unit: SimUnit, enemy: SimUnit, deltaSec: number): void {
     const frontlineGap = progressBetween(unit.progress, enemy.progress);
     if (frontlineGap > COMBAT_FORMATION_PULL_PROGRESS) return;
     if (this.isMeleeUnit(unit)) {
@@ -2657,7 +2685,7 @@ export class LaneBattleScene extends Phaser.Scene {
     }
   }
 
-  private pullUnitTowardOpenCombatRow(unit: LaneUnit, enemy: LaneUnit, deltaSec: number): void {
+  private pullUnitTowardOpenCombatRow(unit: SimUnit, enemy: SimUnit, deltaSec: number): void {
     const direction = Math.sign(enemy.laneRow - unit.laneRow);
     const candidateRows = createLaneRowCandidates(
       enemy.laneRow,
@@ -2672,7 +2700,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.keepUnitInPlayableLane(unit);
   }
 
-  private tryShiftLane(unit: LaneUnit, enemy?: LaneUnit): boolean {
+  private tryShiftLane(unit: SimUnit, enemy?: SimUnit): boolean {
     const candidates = createLaneRowCandidates(unit.laneRow, 5, LANE_SHIFT_STEP);
     const preferred = enemy
       ? candidates.sort((a, b) => this.compareLaneShiftCandidates(unit, a, b, enemy))
@@ -2689,10 +2717,10 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private compareLaneShiftCandidates(
-    unit: LaneUnit,
+    unit: SimUnit,
     a: number,
     b: number,
-    enemy?: LaneUnit,
+    enemy?: SimUnit,
     preferredDirection = 0,
   ): number {
     const aCongestion = this.getForwardLaneCongestion(unit, a);
@@ -2719,7 +2747,7 @@ export class LaneBattleScene extends Phaser.Scene {
     return a - b;
   }
 
-  private getForwardLaneCongestion(unit: LaneUnit, laneRow: number): number {
+  private getForwardLaneCongestion(unit: SimUnit, laneRow: number): number {
     const forwardWindow = 0.065;
     const rearWindow = 0.016;
     const dir = unit.team === "player" ? 1 : -1;
@@ -2736,7 +2764,7 @@ export class LaneBattleScene extends Phaser.Scene {
     }, 0);
   }
 
-  private getMirrorLanePreference(unit: LaneUnit, laneRow: number, enemy?: LaneUnit): number {
+  private getMirrorLanePreference(unit: SimUnit, laneRow: number, enemy?: SimUnit): number {
     const delta = laneRow - unit.laneRow;
     if (Math.abs(delta) < 0.001) return 0;
     const desiredDirection = enemy && Math.abs(enemy.laneRow - unit.laneRow) > 0.15
@@ -2745,7 +2773,7 @@ export class LaneBattleScene extends Phaser.Scene {
     return Math.sign(delta) === desiredDirection ? 0 : 1;
   }
 
-  private isLaneRowFree(unit: LaneUnit, laneRow: number): boolean {
+  private isLaneRowFree(unit: SimUnit, laneRow: number): boolean {
     return !this.units.some((other) =>
       other.id !== unit.id
       && other.team === unit.team
@@ -2755,17 +2783,17 @@ export class LaneBattleScene extends Phaser.Scene {
     );
   }
 
-  private isMeleeUnit(unit: LaneUnit): boolean {
+  private isMeleeUnit(unit: SimUnit): boolean {
     return unit.role === "battle" && unit.range <= 2.5;
   }
 
-  private isRangedUnit(unit: LaneUnit): boolean {
+  private isRangedUnit(unit: SimUnit): boolean {
     return unit.role === "battle" && unit.range > 2.5;
   }
 
   private shouldPrioritizeUnitOverTower(
-    unit: LaneUnit,
-    enemy: LaneUnit,
+    unit: SimUnit,
+    enemy: SimUnit,
     tower: DefenseTowerState,
   ): boolean {
     const unitDistance = this.unitDistance(unit, enemy);
@@ -2778,7 +2806,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private moveUnitTowardSlot(
-    unit: LaneUnit,
+    unit: SimUnit,
     deltaSec: number,
     slot: CombatSlot,
     structureProgress: number,
@@ -2822,7 +2850,7 @@ export class LaneBattleScene extends Phaser.Scene {
     const desiredProgress = Phaser.Math.Clamp(effectiveSlot.progress, 0.01, 0.99);
     const nextProgress = this.moveToward(unit.progress, desiredProgress, progressStep);
 
-    this.setUnitTravelFacing(unit, desiredProgress, effectiveSlot.laneRow);
+    this.effects.unitTravelFacing(unit.id, desiredProgress, effectiveSlot.laneRow);
     unit.laneRow = Phaser.Math.Linear(unit.laneRow, effectiveSlot.laneRow, frameLerpAlpha(deltaSec, friendAhead ? 0.52 : 0.4));
     if (friendAhead && Math.abs(friendAhead.laneRow - unit.laneRow) < 0.62) {
       const packedLimit = dir > 0
@@ -2837,7 +2865,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.keepUnitInPlayableLane(unit);
   }
 
-  private getFriendlySlotCongestion(unit: LaneUnit, progress: number, laneRow: number): number {
+  private getFriendlySlotCongestion(unit: SimUnit, progress: number, laneRow: number): number {
     const progressWindow = 0.03;
     return this.units.reduce((score, other) => {
       if (other.id === unit.id || other.team !== unit.team || other.laneId !== unit.laneId) return score;
@@ -2851,7 +2879,7 @@ export class LaneBattleScene extends Phaser.Scene {
     }, 0);
   }
 
-  private findCombatSlot(unit: LaneUnit, enemy: LaneUnit): CombatSlot | undefined {
+  private findCombatSlot(unit: SimUnit, enemy: SimUnit): CombatSlot | undefined {
     const direction = unit.team === "player" ? -1 : 1;
     const laneCandidates = createLaneRowCandidates(
       enemy.laneRow,
@@ -2887,7 +2915,7 @@ export class LaneBattleScene extends Phaser.Scene {
     return best;
   }
 
-  private canAttackEnemyFromSlot(unit: LaneUnit, slot: CombatSlot, enemy: LaneUnit): boolean {
+  private canAttackEnemyFromSlot(unit: SimUnit, slot: CombatSlot, enemy: SimUnit): boolean {
     const progressDistance = progressBetween(slot.progress, enemy.progress);
     const rowDistance = Math.abs(slot.laneRow - enemy.laneRow) * 0.01;
     const distance = Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
@@ -2895,7 +2923,7 @@ export class LaneBattleScene extends Phaser.Scene {
     return distance <= unit.range * RANGE_TO_PROGRESS + tolerance;
   }
 
-  private isCombatSlotFree(unit: LaneUnit, slot: CombatSlot, enemy: LaneUnit): boolean {
+  private isCombatSlotFree(unit: SimUnit, slot: CombatSlot, enemy: SimUnit): boolean {
     if (Math.abs(slot.laneRow - enemy.laneRow) > COMBAT_ROW_REACH + 0.001) return false;
     return !this.units.some((other) =>
       other.id !== unit.id &&
@@ -2907,7 +2935,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private findStructureAttackSlot(
-    unit: LaneUnit,
+    unit: SimUnit,
     structureProgress: number,
     halfDepthProgress: number = TOWER_HALF_DEPTH_PROGRESS,
     halfWidthRows: number = TOWER_HALF_WIDTH_ROWS,
@@ -2947,7 +2975,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private canAttackStructureFromSlot(
-    unit: LaneUnit,
+    unit: SimUnit,
     slot: CombatSlot,
     structureProgress: number,
     halfDepthProgress: number = TOWER_HALF_DEPTH_PROGRESS,
@@ -2960,7 +2988,7 @@ export class LaneBattleScene extends Phaser.Scene {
     return distance <= Math.max(unit.range * RANGE_TO_PROGRESS, MIN_TOWER_STANDOFF_PROGRESS) + tolerance;
   }
 
-  private isStructureSlotFree(unit: LaneUnit, slot: CombatSlot): boolean {
+  private isStructureSlotFree(unit: SimUnit, slot: CombatSlot): boolean {
     return !this.units.some((other) =>
       other.id !== unit.id
       && other.team === unit.team
@@ -3027,7 +3055,7 @@ export class LaneBattleScene extends Phaser.Scene {
    * aiming at a committed target instead of hitting whoever was in reach.
    * Nearest-enemy stays until there is evidence for something better.
    */
-  private findNearestEnemy(unit: LaneUnit): LaneUnit | undefined {
+  private findNearestEnemy(unit: SimUnit): LaneUnit | undefined {
     let best: LaneUnit | undefined;
     let bestDistance = Number.POSITIVE_INFINITY;
     for (const other of this.units) {
@@ -3054,7 +3082,7 @@ export class LaneBattleScene extends Phaser.Scene {
    * constantly, they just did it with hysteresis. Committing on first contact
    * and holding is the behaviour that was actually wanted.
    */
-  private acquireTarget(unit: LaneUnit): LaneUnit | undefined {
+  private acquireTarget(unit: SimUnit): LaneUnit | undefined {
     if (unit.targetId !== undefined) {
       const held = this.units.find((other) => other.id === unit.targetId);
       if (held && held.laneId === unit.laneId && this.unitDistance(unit, held) <= AGGRO_LEASH_PROGRESS) {
@@ -3078,7 +3106,7 @@ export class LaneBattleScene extends Phaser.Scene {
     return nearest;
   }
 
-  private findNearestEnemyTower(unit: LaneUnit): DefenseTowerState | undefined {
+  private findNearestEnemyTower(unit: SimUnit): DefenseTowerState | undefined {
     let best: DefenseTowerState | undefined;
     let bestDistance = Number.POSITIVE_INFINITY;
     this.defenseTowers.forEach((tower) => {
@@ -3096,7 +3124,7 @@ export class LaneBattleScene extends Phaser.Scene {
     return owner === "enemy" ? this.enemy.ageId : this.player.ageId;
   }
 
-  private unitDistance(a: LaneUnit, b: LaneUnit): number {
+  private unitDistance(a: SimUnit, b: SimUnit): number {
     const progressDistance = progressBetween(a.progress, b.progress);
     const rowDistance = Math.abs(a.laneRow - b.laneRow) * 0.01;
     return Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
@@ -3114,13 +3142,13 @@ export class LaneBattleScene extends Phaser.Scene {
     return Math.max(0, progressBetween(progress, structureProgress) - halfDepthProgress);
   }
 
-  private towerDistance(unit: LaneUnit, tower: DefenseTowerState): number {
+  private towerDistance(unit: SimUnit, tower: DefenseTowerState): number {
     const progressDistance = this.getStructureProgressDistance(unit.progress, tower.progress, TOWER_HALF_DEPTH_PROGRESS);
     const rowDistance = this.getStructureRowDistance(unit.laneRow, TOWER_HALF_WIDTH_ROWS);
     return Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
   }
 
-  private forwardTowerBlockLimit(unit: LaneUnit, dir: 1 | -1): number | undefined {
+  private forwardTowerBlockLimit(unit: SimUnit, dir: 1 | -1): number | undefined {
     const blockingTower = this.defenseTowers
       .filter((tower) => tower.owner !== unit.team && tower.built && tower.laneId === unit.laneId)
       .filter((tower) => (dir > 0 ? tower.progress > unit.progress : tower.progress < unit.progress))
@@ -3134,7 +3162,7 @@ export class LaneBattleScene extends Phaser.Scene {
       : blockingTower.progress + TOWER_HALF_DEPTH_PROGRESS + progressBudget;
   }
 
-  private keepUnitInPlayableLane(unit: LaneUnit): void {
+  private keepUnitInPlayableLane(unit: SimUnit): void {
     unit.laneRow = simClamp(unit.laneRow, LANE_ROW_MIN, LANE_ROW_MAX);
     this.laneObstacles.forEach((obstacle) => {
       if (progressBetween(unit.progress, obstacle.progress) > obstacle.radiusProgress) return;
@@ -3267,7 +3295,7 @@ export class LaneBattleScene extends Phaser.Scene {
         centeredIndex * spec.spreadWorldPx,
         -centeredIndex * 4,
       ));
-      const aim = this.getUnitProjectileAnchor(target).add(new Phaser.Math.Vector2(offset, index * 3));
+      const aim = this.getUnitProjectileAnchor(target.id).add(new Phaser.Math.Vector2(offset, index * 3));
       this.fireProjectile(
         launch,
         aim,
@@ -3349,7 +3377,7 @@ export class LaneBattleScene extends Phaser.Scene {
       const centeredIndex = index - (spec.projectileCount - 1) / 2;
       const offset = centeredIndex * spec.spreadWorldPx * 2;
       const launch = start.clone().add(new Phaser.Math.Vector2(centeredIndex * spec.spreadWorldPx, -centeredIndex * 4));
-      const aim = this.getUnitProjectileAnchor(target).add(new Phaser.Math.Vector2(offset, index * 3));
+      const aim = this.getUnitProjectileAnchor(target.id).add(new Phaser.Math.Vector2(offset, index * 3));
       this.fireProjectile(
         launch,
         aim,
@@ -3881,7 +3909,7 @@ export class LaneBattleScene extends Phaser.Scene {
     return hpRatio > 0.66 ? "full" : hpRatio > 0.33 ? "damaged" : "critical";
   }
 
-  private getAttackBuffMultiplier(unit: LaneUnit): number {
+  private getAttackBuffMultiplier(unit: SimUnit): number {
     return this.capturePoints.some((point) =>
       point.owner === unit.team
       && point.buildingId === "supply_depot"
@@ -3917,14 +3945,14 @@ export class LaneBattleScene extends Phaser.Scene {
     point.manaRegenPerSec = 0;
   }
 
-  private baseDistance(unit: LaneUnit, targetTeamId: TeamId): number {
+  private baseDistance(unit: SimUnit, targetTeamId: TeamId): number {
     const targetProgress = targetTeamId === "player" ? 0 : 1;
     const progressDistance = this.getStructureProgressDistance(unit.progress, targetProgress, BASE_HALF_DEPTH_PROGRESS);
     const rowDistance = this.getStructureRowDistance(unit.laneRow);
     return Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
   }
 
-  private forwardBaseBlockLimit(unit: LaneUnit, dir: 1 | -1): number | undefined {
+  private forwardBaseBlockLimit(unit: SimUnit, dir: 1 | -1): number | undefined {
     const targetTeamId = dir > 0 ? "enemy" : "player";
     const engageRange = Math.max(unit.range * RANGE_TO_PROGRESS, MIN_TOWER_STANDOFF_PROGRESS);
     if (progressBetween(unit.progress, targetTeamId === "enemy" ? 1 : 0) > Math.max(0.09, engageRange + 0.045)) {
@@ -3937,7 +3965,14 @@ export class LaneBattleScene extends Phaser.Scene {
       : BASE_HALF_DEPTH_PROGRESS + progressBudget;
   }
 
-  private getUnitProjectileAnchor(unit: LaneUnit): Phaser.Math.Vector2 {
+  /**
+   * Muzzle point for a unit's projectile. Takes an id rather than the unit so
+   * simulation code — which is typed against `SimUnit` and cannot see a
+   * sprite — is still able to ask for it.
+   */
+  private getUnitProjectileAnchor(unitId: number): Phaser.Math.Vector2 {
+    const unit = this.units.find((entry) => entry.id === unitId);
+    if (!unit) return new Phaser.Math.Vector2(0, 0);
     const visibleHeight = unit.sprite.displayHeight
       * (resolveUnitFramePresentation(unit.unitId, 1, 1, unit.currentTextureKey).referenceVisibleHeight
         / resolveUnitFramePresentation(unit.unitId, 1, 1, unit.currentTextureKey).spriteHeight);
@@ -4044,8 +4079,8 @@ export class LaneBattleScene extends Phaser.Scene {
     });
   }
 
-  private applyDamageToUnit(target: LaneUnit, damage: number, color: string, attackerUnitId?: LaneUnitId): void {
-    if (!this.units.includes(target)) return;
+  private applyDamageToUnit(target: SimUnit, damage: number, color: string, attackerUnitId?: LaneUnitId): void {
+    if (!this.units.some((entry) => entry.id === target.id)) return;
     target.hp -= damage;
     this.effects.unitSfx(
       attackerUnitId ? getProjectileHitSfxKey(attackerUnitId) : "sfx.combat.projectileHit",
@@ -4102,7 +4137,7 @@ export class LaneBattleScene extends Phaser.Scene {
     if (this.enemy.baseHp <= 0) this.scene.start("gameover", { win: true, squadSize: 0, summary: "적 본진을 돌파했습니다." });
   }
 
-  private tryAttackBase(unit: LaneUnit, targetTeam: TeamState): void {
+  private tryAttackBase(unit: SimUnit, targetTeam: TeamState): void {
     if (unit.attackTimerSec > 0) return;
     unit.attackTimerSec = unit.attackCooldownSec;
     const targetProgress = targetTeam.id === "player" ? 0 : 1;
@@ -4121,7 +4156,7 @@ export class LaneBattleScene extends Phaser.Scene {
     };
 
     if (this.isRangedUnit(unit)) {
-      const start = this.getUnitProjectileAnchor(unit);
+      const start = this.getUnitProjectileAnchor(unit.id);
       const end = target.clone().add(new Phaser.Math.Vector2(0, -96));
       this.startRangedAttack(unit, { kind: "base", team: targetTeam.id }, "structure", () => {
         this.fireProjectile(start, end, getProjectileKeyForUnit(unit.unitId), applyDamage, 1.05);
@@ -4148,7 +4183,7 @@ export class LaneBattleScene extends Phaser.Scene {
     team.baseAttackTimerSec = spec.cooldownSec;
     const start = this.getBaseAnchor(team.id, this.primaryLaneSpec.id, targetProgress);
     threats.forEach((target, index) => {
-      const anchor = this.getUnitProjectileAnchor(target);
+      const anchor = this.getUnitProjectileAnchor(target.id);
       const centeredIndex = index - (threats.length - 1) / 2;
       const launch = start.clone().add(new Phaser.Math.Vector2(centeredIndex * spec.spreadWorldPx, -Math.abs(centeredIndex) * 4 - 54));
       this.playWorldSfx(
@@ -4167,14 +4202,13 @@ export class LaneBattleScene extends Phaser.Scene {
     });
   }
 
-  private killUnit(unit: LaneUnit): void {
-    if (!this.units.includes(unit)) return;
+  private killUnit(unit: SimUnit): void {
+    if (!this.units.some((entry) => entry.id === unit.id)) return;
     // Sound before removal: the effects layer resolves the position from the
     // unit, which stops existing on the next line.
     this.effects.unitSfx("sfx.combat.unitDeath", unit.id, `death:${unit.id}`);
     this.effects.unitDied(unit.id);
     this.units = this.units.filter((entry) => entry.id !== unit.id);
-    this.destroyUnitPresentation(unit);
 
     if (unit.team === "enemy") {
       const reward = this.rollKillResourceReward(this.enemy.ageId);

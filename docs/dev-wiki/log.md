@@ -8135,3 +8135,51 @@ tick으로 옮겼지만, 그 콜백이 다시 `launchProjectile`을 호출하므
 시뮬 상태(`units`/`capturePoints`/`defenseTowers`)를 `LaneSimulation`으로
 옮기는 본체 작업. 그 전 단계인 **의존 제거는 사실상 끝났다** — 시뮬 메서드에
 표시 객체 참조 0, `Phaser.Math` 0, 지연 작업은 전부 tick 큐 경유다.
+
+## [2026-08-14] refactor | `SimUnit`/`UnitView` 타입 분리 — 컴파일러가 경계를 강제하게 함 (Issue #7)
+
+### 접근 경로 163곳을 고치는 대신 타입을 쪼갰다
+
+`LaneUnit`이 시뮬 상태와 Phaser 객체 8개를 한 타입에 들고 있었다. 표시 객체
+접근이 코드 전반에 163곳(sprite 84, label 35, hpBg 17 ...) 있는데, 이걸 전부
+`unit.view.sprite` 식으로 고치는 것은 위험 대비 이득이 없다. 게다가 `.label`은
+거점·타워에도 있어 기계적 치환이 오작동하기 쉽다.
+
+대신 **타입만 쪼갰다**:
+
+- `SimUnit` — 전투 결과를 바꿀 수 있는 27개 필드
+- `UnitView` — 그리기 위해서만 존재하는 31개 필드(Phaser 객체 8개 + 보간값)
+- `type LaneUnit = SimUnit & UnitView` — 씬이 들고 다니는 것
+
+접근 경로는 **한 줄도 바뀌지 않았다.** 대신 시뮬 메서드 시그니처 45곳을
+`LaneUnit` -> `SimUnit`으로 좁혔다. 그러자 **컴파일러가 남은 누수 11곳을
+정확히 지목**했다 — 이것이 이 방식의 요점이다. 손으로 감사하는 대신 타입
+검사가 증명한다.
+
+### 컴파일러가 잡아낸 누수와 처리
+
+| 누수 | 처리 |
+|---|---|
+| `setUnitTravelFacing(unit, ...)` 5곳 | `effects.unitTravelFacing(unitId, ...)`로. 이동 방향은 시뮬이 알지만 그것이 어느 쪽을 보게 하는지는 표현의 판단이다 |
+| `this.units.includes(x)` 2곳 | id 비교로. `SimUnit`은 저장된 `LaneUnit`과 객체 동일성이 다르다 |
+| `destroyUnitPresentation(unit)` | `effects.unitDied(unitId)` 안으로 이동 |
+| `getUnitProjectileAnchor(unit)` | id로 조회하도록 변경 |
+| `startMeleeAttack`/`startRangedAttack`/`startSupportCast`/`beginAttackPresentation` | 전부 `SimUnit`으로 좁히고, 조준은 `faceTarget(unitId, ...)`가 id로 조회 |
+
+### 지금 보장되는 것
+
+시뮬레이션 메서드는 **타입 수준에서** 스프라이트에 접근할 수 없다.
+누가 실수로 시뮬 코드에서 `unit.sprite`를 쓰면 빌드가 깨진다 — 리뷰나 관례가
+아니라 컴파일러가 막는다. 헤드리스 이동의 전제가 이것이다.
+
+### 검증
+
+`npm test` 259 통과, `simulation-determinism` 2/2(**해시 불변**),
+`day8-regression` 2/2, 2인 실제 대전 정상(desync 없음).
+타입만 쪼갰으므로 런타임 동작이 바뀌지 않았음을 해시가 확인해 준다.
+
+### 남은 것
+
+`this.units: LaneUnit[]`를 `SimUnit[]` + `Map<id, UnitView>`로 실제 분리하고,
+시뮬 메서드 묶음을 `LaneSimulation`으로 옮기는 일. 타입 경계가 이미 강제되고
+있으므로 이 단계는 기계적이며, 옮기다 실수하면 컴파일러가 잡는다.

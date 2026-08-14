@@ -44,7 +44,14 @@ export interface PresentationEffects {
   /** A sound with no position — UI feedback, capture stings, alerts. */
   globalSfx(assetId: string, eventKey: string): void;
 
-  /** A unit died. */
+  /**
+   * The unit is moving toward a point in lane space; the renderer decides which
+   * way that makes it face. Facing is presentation — it never changes the
+   * outcome — but only the simulation knows where the unit is headed.
+   */
+  unitTravelFacing(unitId: SimUnitRef, targetProgress: number, targetLaneRow: number): void;
+
+  /** A unit died: the renderer tears down its display objects. */
   unitDied(unitId: SimUnitRef): void;
 }
 
@@ -61,6 +68,7 @@ export const NULL_PRESENTATION_EFFECTS: PresentationEffects = {
   structureImpact: () => {},
   notice: () => {},
   globalSfx: () => {},
+  unitTravelFacing: () => {},
   unitDied: () => {},
 };
 
@@ -94,6 +102,10 @@ export class RecordingPresentationEffects implements PresentationEffects {
 
   globalSfx(assetId: string, eventKey: string): void {
     this.emitted.push({ kind: "globalSfx", detail: { assetId, eventKey } });
+  }
+
+  unitTravelFacing(unitId: SimUnitRef, targetProgress: number, targetLaneRow: number): void {
+    this.emitted.push({ kind: "unitTravelFacing", detail: { unitId, targetProgress, targetLaneRow } });
   }
 
   unitDied(unitId: SimUnitRef): void {
