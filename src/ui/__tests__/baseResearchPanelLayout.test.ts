@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   BASE_RESEARCH_PANEL_LAYOUT,
+  MAX_RESEARCH_ROWS,
   PANEL_CONTROL_KEYS,
+  RESEARCH_ROWS_AREA,
   panelBoxEdges,
+  researchRowLayout,
   type PanelBox,
 } from "../BaseResearchPanel";
+import { AGES } from "../../data/ages";
+import { getWaveRoster } from "../../data/unitRosters";
 
 /**
  * The panel's buttons were positioned by eye and drifted: apply and revert hung
@@ -71,5 +76,55 @@ describe("base research panel layout", () => {
 
   it("leaves the right-hand controls clear of the frame", () => {
     expect(frame.right - panelBoxEdges(layout.revert).right).toBeGreaterThanOrEqual(12);
+  });
+});
+
+describe("research row layout", () => {
+  const rowCounts = Array.from({ length: MAX_RESEARCH_ROWS }, (_, index) => index + 1);
+
+  it.each(rowCounts)("keeps %i rows inside the row area", (count) => {
+    const { centres, height } = researchRowLayout(count);
+    expect(centres).toHaveLength(count);
+    for (const centre of centres) {
+      expect(centre - height / 2).toBeGreaterThanOrEqual(RESEARCH_ROWS_AREA.top);
+      expect(centre + height / 2).toBeLessThanOrEqual(RESEARCH_ROWS_AREA.bottom);
+    }
+  });
+
+  it.each(rowCounts)("never lets %i rows touch the footer buttons", (count) => {
+    const { centres, height } = researchRowLayout(count);
+    const footerTop = panelBoxEdges(layout.apply).top;
+    const lowest = Math.max(...centres) + height / 2;
+    // The old fixed 84px pitch put the sixth row at y=945, past both the footer
+    // and the bottom of the canvas.
+    expect(lowest).toBeLessThan(footerTop);
+  });
+
+  it.each(rowCounts)("does not let %i rows overlap each other", (count) => {
+    const { centres, height } = researchRowLayout(count);
+    for (let index = 1; index < centres.length; index += 1) {
+      expect(centres[index] - height / 2).toBeGreaterThanOrEqual(centres[index - 1] + height / 2);
+    }
+  });
+
+  it("still uses the roomy spacing when there are few rows", () => {
+    // The stone age case must not get worse for the sake of the crowded ones.
+    expect(researchRowLayout(3).height).toBe(66);
+  });
+
+  it("fits the canvas without covering the resource readout", () => {
+    // 1600x900 game canvas; the top HUD band occupies the first 250px and holds
+    // the resource counters the player is spending from while this is open.
+    expect(frame.top).toBeGreaterThanOrEqual(250);
+    expect(frame.bottom).toBeLessThanOrEqual(900);
+  });
+
+  it("covers the largest roster any age actually produces", () => {
+    const worst = Math.max(...AGES.map((age) => {
+      const subjects = new Set(getWaveRoster(age.id).battleline.map((entry) => entry.unitId));
+      return subjects.size + 1; // plus the defence tower
+    }));
+    // Guards the panel against a roster change quietly outgrowing it.
+    expect(worst).toBeLessThanOrEqual(MAX_RESEARCH_ROWS);
   });
 });

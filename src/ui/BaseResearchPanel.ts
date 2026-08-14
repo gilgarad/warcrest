@@ -14,9 +14,13 @@ import type { BaseResearchPanelSnapshot } from "./baseResearchPanelModel";
  */
 const PANEL = {
   centreX: 800,
-  centreY: 522,
+  // Grown downward only. The top edge stays clear of the resource readout in
+  // the top HUD band, which matters here because this panel quotes costs and
+  // the player needs to see what they hold while spending it. The old 528-tall
+  // frame could not fit the six rows the later ages produce.
+  centreY: 571,
   width: 792,
-  height: 528,
+  height: 626,
   /** Header bar, measured from the panel's own top edge. */
   headerHeight: 78,
   /** Breathing room between the frame and anything inside it. */
@@ -100,7 +104,54 @@ export const BASE_RESEARCH_PANEL_LAYOUT = (() => {
 /** Controls that must never overlap one another. */
 export const PANEL_CONTROL_KEYS = ["close", "prev", "next", "apply", "revert"] as const;
 
+/** Most subject rows any age produces (unique battle units plus the tower). */
+export const MAX_RESEARCH_ROWS = 6;
+/** Just below the column headers, which are the last thing above the rows. */
+const ROWS_TOP = 452;
+const ROWS_BOTTOM = panelBoxEdges(BASE_RESEARCH_PANEL_LAYOUT.apply).top - 16;
+/** Roomy spacing, used whenever there are few enough rows to afford it. */
+const MAX_ROW_PITCH = 84;
+const MAX_ROW_HEIGHT = 66;
+/** Vertical air between one row's box and the next. */
+const ROW_SPACING = 12;
+
+export interface ResearchRowLayout {
+  pitch: number;
+  height: number;
+  centres: number[];
+}
+
+/**
+ * Row geometry for a given number of rows.
+ *
+ * Derived rather than fixed because the row count is not fixed: the stone age
+ * has three subjects and the late modern ages have six. The previous constant
+ * 84px pitch was sized for the three-row case, so at six rows the last row
+ * landed at y=945 — past the panel and past the bottom of the canvas. Rows
+ * compress only as far as they must, so the common case still looks the same.
+ */
+export function researchRowLayout(rowCount: number): ResearchRowLayout {
+  const available = ROWS_BOTTOM - ROWS_TOP;
+  const pitch = rowCount <= 0 ? MAX_ROW_PITCH : Math.min(MAX_ROW_PITCH, available / rowCount);
+  const height = Math.min(MAX_ROW_HEIGHT, pitch - ROW_SPACING);
+  return {
+    pitch,
+    height,
+    centres: Array.from({ length: Math.max(0, rowCount) }, (_, index) => ROWS_TOP + pitch * (index + 0.5)),
+  };
+}
+
+export const RESEARCH_ROWS_AREA = { top: ROWS_TOP, bottom: ROWS_BOTTOM } as const;
+
+interface RowMember {
+  object: { y: number };
+  /** Distance from the row's centre line, captured when the row was built. */
+  offsetY: number;
+}
+
 interface PanelRowView {
+  /** Everything that moves with the row, so repositioning cannot miss a piece. */
+  members: RowMember[];
   background: Phaser.GameObjects.Rectangle;
   icon: Phaser.GameObjects.Image;
   label: Phaser.GameObjects.Text;
@@ -190,9 +241,11 @@ export class BaseResearchPanel {
     this.setButtonEnabled(this.applyButton, snapshot.applyEnabled);
     this.applyButton.text.setText(snapshot.applyLabel);
     this.setButtonEnabled(this.cancelButton, true);
+    const rowLayout = researchRowLayout(Math.min(snapshot.rows.length, MAX_RESEARCH_ROWS));
     this.rows.forEach((rowView, index) => {
       const row = snapshot.rows[index];
       const visible = Boolean(row);
+      if (row) this.positionRow(rowView, rowLayout.centres[index], rowLayout.height);
       rowView.background.setVisible(visible);
       rowView.icon.setVisible(visible);
       rowView.label.setVisible(visible);
@@ -279,11 +332,9 @@ export class BaseResearchPanel {
     this.applyButton = this.buttonFromBox(layout.apply, "적용", this.callbacks.apply);
     this.cancelButton = this.buttonFromBox(layout.revert, "되돌리기", this.callbacks.cancel);
 
-    let rowY = 492;
-    for (let index = 0; index < 6; index += 1) {
-      this.rows.push(this.createRow(rowY));
-      rowY += 84;
-    }
+    // Built at the origin; `applySnapshot` places them once it knows how many
+    // rows this age actually has.
+    for (let index = 0; index < MAX_RESEARCH_ROWS; index += 1) this.rows.push(this.createRow(0));
 
     this.objects.push(
       background,
@@ -364,7 +415,17 @@ export class BaseResearchPanel {
     const defenseMinus = this.createStatButton(1058, y, "-");
     const defensePlus = this.createStatButton(1102, y, "+");
     this.objects.push(rowBackground);
+    // Built at y = 0, so each object's own y *is* its offset from the row's
+    // centre line. Reading the offsets back rather than restating them means a
+    // later tweak to any element's position cannot fall out of step with the
+    // repositioning code.
+    const members: RowMember[] = [
+      rowBackground, icon, label, attackValue, attackMeta, defenseValue, defenseMeta,
+      attackMinus.rect, attackMinus.text, attackPlus.rect, attackPlus.text,
+      defenseMinus.rect, defenseMinus.text, defensePlus.rect, defensePlus.text,
+    ].map((object) => ({ object, offsetY: object.y }));
     return {
+      members,
       background: rowBackground,
       icon,
       label,
@@ -377,6 +438,15 @@ export class BaseResearchPanel {
       defenseMinus,
       defensePlus,
     };
+  }
+
+  /** Moves a whole row onto a centre line and resizes it to the given height. */
+  private positionRow(row: PanelRowView, centreY: number, height: number): void {
+    for (const member of row.members) member.object.y = centreY + member.offsetY;
+    row.background.setSize(712, height);
+    // The portrait fills the row box, so it has to shrink with it.
+    const iconSize = Math.min(MAX_ROW_HEIGHT, height);
+    row.icon.setDisplaySize(iconSize, iconSize);
   }
 
   private buttonFromBox(target: PanelBox, label: string, onClick: () => void): PanelButton {
