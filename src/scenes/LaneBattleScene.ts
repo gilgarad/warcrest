@@ -841,6 +841,16 @@ export class LaneBattleScene extends Phaser.Scene {
         });
         this.spawnToast(`${damage}`, unit.sprite.x, unit.sprite.y - 26, color);
       },
+      structureImpact: (structureKind, structureId, damage, color) => {
+        const sprite = structureKind === "tower"
+          ? this.defenseTowers.find((tower) => tower.id === structureId)?.sprite
+          : this.capturePoints.find((point) => point.id === structureId)?.marker;
+        if (!sprite) return;
+        this.tweens.add({ targets: sprite, alpha: 0.45, duration: 70, yoyo: true });
+        this.spawnToast(`${damage}`, sprite.x, sprite.y - 58, color);
+      },
+      notice: (message) => this.hud.setInfo(message),
+      globalSfx: (assetId, eventKey) => this.audio.playSfx(assetId, { eventKey }),
       unitDied: () => { /* the scene tears the unit down in killUnit() */ },
     };
   }
@@ -2390,10 +2400,9 @@ export class LaneBattleScene extends Phaser.Scene {
       totalHealed += applied;
     }
     if (totalHealed <= 0) return;
-    this.playWorldSfx(
+    this.effects.unitSfx(
       "sfx.support.heal",
-      unit.sprite.x,
-      unit.sprite.y,
+      unit.id,
       `support-heal:${unit.id}:${Math.round(this.elapsedSec * 1000)}`,
     );
     this.effects.unitToast(`치유 ${totalHealed}`, unit.id, "#92f1a5", -44);
@@ -3158,9 +3167,9 @@ export class LaneBattleScene extends Phaser.Scene {
       if (prevOwner !== point.owner) {
         this.structureVisualsDirty = true;
         if (point.owner === "player") {
-          this.audio.playSfx("sfx.capture.complete", { eventKey: `capture:${point.id}:player` });
+          this.effects.globalSfx("sfx.capture.complete", `capture:${point.id}:player`);
         } else if (prevOwner === "player") {
-          this.audio.playSfx("sfx.capture.lost", { eventKey: `capture:${point.id}:lost` });
+          this.effects.globalSfx("sfx.capture.lost", `capture:${point.id}:lost`);
         }
       }
 
@@ -3197,10 +3206,10 @@ export class LaneBattleScene extends Phaser.Scene {
         );
         tower.hp = tower.maxHp;
         tower.attackTimerSec = 0.3;
-        if (tower.owner === "player") this.hud.setInfo("타워 재건축 완료");
+        if (tower.owner === (this.match?.localTeam ?? "player")) this.effects.notice("타워 재건축 완료");
         if (tower.owner === "player") {
-          this.audio.playSfx("sfx.construction.complete", { eventKey: `tower:${tower.id}:complete` });
-          this.audio.playSfx("sfx.fortress.rebuilt", { eventKey: `tower:${tower.id}:rebuilt` });
+          this.effects.globalSfx("sfx.construction.complete", `tower:${tower.id}:complete`);
+          this.effects.globalSfx("sfx.fortress.rebuilt", `tower:${tower.id}:rebuilt`);
         }
       }
       return;
@@ -4011,27 +4020,21 @@ export class LaneBattleScene extends Phaser.Scene {
     const mitigatedDamage = Math.max(1, Math.round(damage - point.defense));
     point.hp = Math.max(0, point.hp - mitigatedDamage);
     this.structureVisualsDirty = true;
-    this.playWorldSfx(
+    this.effects.structureSfx(
       "sfx.combat.towerHit",
-      point.sprite.x,
-      point.sprite.y,
+      "tower",
+      point.id,
       `impact:tower:${point.id}:${Math.round(this.elapsedSec * 1000)}`,
     );
-    this.tweens.add({
-      targets: point.sprite,
-      alpha: 0.45,
-      duration: 70,
-      yoyo: true,
-    });
-    this.spawnToast(`${mitigatedDamage}`, point.sprite.x, point.sprite.y - 58, attackerTeam === "player" ? "#ffd67a" : "#ff8f8f");
+    this.effects.structureImpact("tower", point.id, mitigatedDamage, attackerTeam === "player" ? "#ffd67a" : "#ff8f8f");
     if (point.hp <= 0) {
       point.built = false;
       point.owner = "neutral";
       point.control = 0;
       point.attackTimerSec = 0;
       point.buildRemainingSec = 0;
-      this.audio.playSfx("sfx.fortress.destroyed", { eventKey: `tower:${point.id}:destroyed` });
-      if (attackerTeam === "player") this.hud.setInfo("적 타워를 파괴했습니다");
+      this.effects.structureSfx("sfx.fortress.destroyed", "tower", point.id, `tower:${point.id}:destroyed`);
+      if (attackerTeam === (this.match?.localTeam ?? "player")) this.effects.notice("적 타워를 파괴했습니다");
     }
   }
 
@@ -4125,12 +4128,10 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private killUnit(unit: LaneUnit): void {
     if (!this.units.includes(unit)) return;
-    this.playWorldSfx(
-      "sfx.combat.unitDeath",
-      unit.sprite.x,
-      unit.sprite.y,
-      `death:${unit.id}`,
-    );
+    // Sound before removal: the effects layer resolves the position from the
+    // unit, which stops existing on the next line.
+    this.effects.unitSfx("sfx.combat.unitDeath", unit.id, `death:${unit.id}`);
+    this.effects.unitDied(unit.id);
     this.units = this.units.filter((entry) => entry.id !== unit.id);
     this.destroyUnitPresentation(unit);
 

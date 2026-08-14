@@ -8043,3 +8043,50 @@ color)` 한 호출로 묶어 seam 뒤로 보냈다. 시뮬은 "누가 얼마 맞
 
 남은 표시 객체 참조 10곳 정리 -> 시뮬 상태(`this.units` 등)를
 `LaneSimulation`으로 이동 -> Node에서 실행 가능해지면 브라우저와 해시 대조.
+
+## [2026-08-14] refactor | 시뮬 이관 2차: 시뮬 메서드의 표시 객체 참조 0 달성 (Issue #7)
+
+1차에서 37 -> 10으로 줄인 나머지를 마저 끊었다.
+
+- `applyDamageToTower()` — 타워 피격의 알파 플래시·데미지 토스트·파괴 효과음을
+  `structureImpact`/`structureSfx`/`notice`로 이관.
+- `killUnit()` — 사망 효과음이 `unit.sprite`를 읽고 있었는데, 바로 다음 줄에서
+  그 유닛을 목록에서 제거한다. **제거 전에 seam으로 넘기고 위치 해소는 효과
+  계층이 하도록** 순서를 명시했다(주석에 남김).
+- `applySupportHeal()` — 치유 효과음.
+- 점령 성공/상실, 타워 재건 완료 효과음과 안내 문구 — `globalSfx`/`notice` 신설.
+  위치가 없는 소리(UI 피드백, 점령 스팅)는 좌표를 지어낼 이유가 없다.
+
+`notice`가 붙으면서 안내 문구의 대상도 바로잡았다. 기존에는
+`if (attackerTeam === "player")`처럼 **왼쪽 진영에게만** 문구를 띄웠는데,
+PvP에서 enemy 진영을 맡은 클라이언트에게는 남의 소식이 뜨는 셈이었다.
+`this.match?.localTeam` 기준으로 바꿨다.
+(작성 중 `attackerTeam === this.match?.localTeam ?? "player"`로 썼다가
+`(a === b) ?? "player"`로 파싱되어 타입체커가 잡았다 — 괄호로 수정.)
+
+### 결과
+
+| 항목 | 시작 | 1차 후 | **2차 후** |
+|---|---|---|---|
+| 시뮬 메서드의 표시 객체 참조 | 37 | 10 | **0** |
+| 시뮬 메서드의 `Phaser.Math` | 21 | 0 | 0 |
+| 시뮬 메서드의 남은 결합 총합 | — | 27 | **10** |
+
+**시뮬레이션 메서드가 더 이상 표시 객체를 만지지 않는다.**
+남은 10곳은 구조물 투사체 발사 경로(`tickWatchtower`,
+`tickCapturePointTower`, `tryAttackBase`)의 `Phaser.Math.Vector2` 앵커와 그에
+딸린 효과음뿐이며, 같은 패턴(발사 사실만 알리고 궤적은 표현이 담당)으로
+처리 가능하다.
+
+### 검증
+
+- `npm test` **259 통과**.
+- `simulation-determinism` 2/2 — **리플레이 해시 불변**. 이번에도 결과는
+  한 비트도 바뀌지 않았다.
+- `day8-regression` 2/2.
+- 2인 실제 대전 재확인: enemy 진영 조작 ✓, 상대 시뮬 반영 ✓, desync 없음 ✓.
+
+### 다음
+
+투사체 앵커 10곳 정리 -> 시뮬 상태(`units`/`capturePoints`/`defenseTowers`)를
+`LaneSimulation`으로 이동 -> Node 실행 -> 브라우저와 해시 대조.

@@ -35,6 +35,15 @@ export interface PresentationEffects {
    */
   unitImpact(unitId: SimUnitRef, damage: number, color: string): void;
 
+  /** A structure took damage: flash plus the damage number. */
+  structureImpact(structureKind: "tower" | "capture-point", structureId: number, damage: number, color: string): void;
+
+  /** Short status line for the local player. Ignored by a headless run. */
+  notice(message: string): void;
+
+  /** A sound with no position — UI feedback, capture stings, alerts. */
+  globalSfx(assetId: string, eventKey: string): void;
+
   /** A unit died. */
   unitDied(unitId: SimUnitRef): void;
 }
@@ -49,6 +58,9 @@ export const NULL_PRESENTATION_EFFECTS: PresentationEffects = {
   structureSfx: () => {},
   unitToast: () => {},
   unitImpact: () => {},
+  structureImpact: () => {},
+  notice: () => {},
+  globalSfx: () => {},
   unitDied: () => {},
 };
 
@@ -70,6 +82,18 @@ export class RecordingPresentationEffects implements PresentationEffects {
 
   unitImpact(unitId: SimUnitRef, damage: number, color: string): void {
     this.emitted.push({ kind: "unitImpact", detail: { unitId, damage, color } });
+  }
+
+  structureImpact(structureKind: string, structureId: number, damage: number, color: string): void {
+    this.emitted.push({ kind: "structureImpact", detail: { structureKind, structureId, damage, color } });
+  }
+
+  notice(message: string): void {
+    this.emitted.push({ kind: "notice", detail: { message } });
+  }
+
+  globalSfx(assetId: string, eventKey: string): void {
+    this.emitted.push({ kind: "globalSfx", detail: { assetId, eventKey } });
   }
 
   unitDied(unitId: SimUnitRef): void {
