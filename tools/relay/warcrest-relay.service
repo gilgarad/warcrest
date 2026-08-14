@@ -10,6 +10,11 @@
 #           /etc/systemd/system/warcrest-relay.service
 #   sudo systemctl daemon-reload
 #   sudo systemctl enable --now warcrest-relay.service
+#
+# ExecStart points at the conda interpreter rather than /usr/bin/node: 104 has
+# no system Node package and installing one needs root, so the runtime lives in
+# a user-scoped env (see docs/deploy/relay-104.md). If that env is ever rebuilt
+# somewhere else, this line has to move with it.
 
 [Unit]
 Description=Warcrest PvP lockstep relay
@@ -24,7 +29,7 @@ Environment=RELAY_PORT=8790
 # Loopback only: nginx terminates TLS and is the sole client, so this port is
 # never reachable from outside the host and no firewall rule is needed.
 Environment=RELAY_HOST=127.0.0.1
-ExecStart=/usr/bin/node --experimental-strip-types tools/relay/relayServer.ts
+ExecStart=/home/gilgarad/miniconda3/envs/warcrest/bin/node --experimental-strip-types tools/relay/relayServer.ts
 Restart=always
 RestartSec=3
 # The relay holds no game state: a restart drops matches in progress but

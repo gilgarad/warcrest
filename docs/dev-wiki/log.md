@@ -8345,3 +8345,50 @@ nginx가 TLS를 종단하고 릴레이의 유일한 클라이언트이므로, �
 
 배포 키 발급/등록, 104 체크아웃, systemd 등록, nginx `location` 추가.
 절차는 `docs/deploy/relay-104.md`. PR은 배포·테스트 후에 올린다.
+
+## 2026-08-14 — 104 배포 실행 (릴레이 검증까지, systemd/nginx는 root 대기)
+
+브랜치 `issue-7-pvp-sim-render-split` / Issue #7 / 페이지
+`docs/deploy/relay-104.md`.
+
+104에 직접 접속해 배포를 진행했다. **런북의 전제 두 개가 실제와 달랐고**,
+둘 다 그대로 따랐으면 실패했을 것이다.
+
+### 런북이 틀렸던 곳
+
+1. **`sudo`를 비밀번호 없이 쓸 수 없다.** 런북은 `sudo mkdir`, systemd 설치,
+   nginx 수정을 전제로 쓰여 있었다. 그런데 `/data/projects`는 이미 `gilgarad`
+   소유라 `sudo mkdir`은 애초에 필요 없었고, 나머지 둘만 실제 root 작업이다.
+2. **104에 Node가 아예 없다.** `apt`에 후보(22.22.1)만 있고 미설치이며 설치엔
+   root가 필요하다. `ExecStart=/usr/bin/node`는 **존재하지 않는 경로**였다 —
+   유닛을 그대로 설치했다면 기동에 실패했다.
+
+### 대신 택한 것
+
+- **배포 키를 만들지 않았다.** `gilgarad/warcrest`가 public이라 HTTPS로 그냥
+  clone된다. 프로덕션에 자격증명을 두지 않게 되므로 키를 만드는 쪽보다 낫다.
+  104에 이미 있는 GitHub 키는 `stock_predict` 전용 deploy key라 어차피 이
+  저장소엔 못 쓴다.
+- **Node는 conda 사용자 env로 깔았다**(`~/miniconda3/envs/warcrest`, v26.6.0).
+  root가 필요 없고, 104가 이미 쓰는 방식이다(`stmarket`, `merchant_empires`).
+  `warcrest-relay.service`의 `ExecStart`를 이 경로로 고쳤다.
+
+### 104에서 실측한 것
+
+`RELAY_HOST=127.0.0.1 RELAY_PORT=8790`으로 띄워 `ss`로 **loopback 전용
+바인딩**을 확인했고, 실제 WebSocket 클라이언트 2개를 붙여 전 항목을 통과했다:
+한 명만 대기 시 짝지어지지 않음 ✓, 두 명이면 같은 시드 ✓ 반대 진영 ✓,
+프레임이 상대에게만 중계(에코 없음) ✓, 이탈 통보 ✓.
+
+검증 후 이 프로세스는 **정리했다.** 관리되지 않는 foreground 프로세스는 104의
+운영 규칙에 어긋나고, 무엇보다 8790을 점유한 채로 두면 나중에 systemd 기동이
+`EADDRINUSE`로 실패한다.
+
+### 남은 것 (root 필요)
+
+systemd 유닛 설치와 nginx `location /warcrest-relay` 추가뿐이다. nginx 대상은
+`/etc/nginx/sites-enabled/stock_predict`의 `profitablestock.co.kr` 443 블록으로
+특정해 런북에 적었다. 이 파일은 **운영 중인 본 서비스를 함께 서빙**하므로
+백업 후 `nginx -t`가 통과할 때만 reload하도록 절차에 못박았다.
+
+PR은 배포·테스트가 끝난 뒤에 올린다.
