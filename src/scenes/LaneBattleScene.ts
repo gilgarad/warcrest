@@ -1856,6 +1856,12 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private isPointerOnUi(pointer: Phaser.Input.Pointer): boolean {
     if (this.audioSettingsOpen || pointer.y <= 250 || pointer.y >= CANVAS_H - 260) return true;
+    // The base research panel is a modal in the middle of the screen, outside
+    // the bands above. Without this a press on any of its buttons also counted
+    // as a tap on open ground, which cleared the selection and closed the panel
+    // out from under the press.
+    // Optional: input can arrive before the scene has finished assembling.
+    if (this.baseResearchPanel?.isPointerOver(pointer.x, pointer.y)) return true;
     // Capture/tower action buttons now sit beside the selected structure, well
     // inside the field area, so the band check above no longer covers them.
     return this.hud.isPointerOverActionButton(pointer.x, pointer.y);

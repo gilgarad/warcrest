@@ -4,6 +4,78 @@ import type { ResearchStatKey } from "../systems/lane-economy/researchRules";
 import type { ResearchSubjectId } from "../systems/lane-economy/researchSubjects";
 import type { BaseResearchPanelSnapshot } from "./baseResearchPanelModel";
 
+/**
+ * Panel geometry, derived from one frame rather than hand-placed per element.
+ *
+ * The buttons were previously positioned by eye and drifted out of the frame:
+ * apply and revert hung below the bottom edge and overlapped each other, and
+ * close sat above the header bar instead of on it. Naming the edges means an
+ * element is placed relative to something real.
+ */
+const PANEL = {
+  centreX: 800,
+  centreY: 522,
+  width: 792,
+  height: 528,
+  /** Header bar, measured from the panel's own top edge. */
+  headerHeight: 78,
+  /** Breathing room between the frame and anything inside it. */
+  padding: 20,
+  /** Space between two adjacent buttons. */
+  gap: 12,
+} as const;
+
+const PANEL_LEFT = PANEL.centreX - PANEL.width / 2;
+const PANEL_RIGHT = PANEL.centreX + PANEL.width / 2;
+const PANEL_TOP = PANEL.centreY - PANEL.height / 2;
+const PANEL_BOTTOM = PANEL.centreY + PANEL.height / 2;
+const HEADER_CENTRE_Y = PANEL_TOP + PANEL.headerHeight / 2;
+const FOOTER_HEIGHT = 48;
+const FOOTER_CENTRE_Y = PANEL_BOTTOM - PANEL.padding - FOOTER_HEIGHT / 2;
+
+export interface PanelBox {
+  centreX: number;
+  centreY: number;
+  width: number;
+  height: number;
+}
+
+const box = (centreX: number, centreY: number, width: number, height: number): PanelBox =>
+  ({ centreX, centreY, width, height });
+
+const rightAligned = (width: number, centreY: number, height: number, rightEdge: number): PanelBox =>
+  box(rightEdge - width / 2, centreY, width, height);
+
+/**
+ * Where the framed elements sit, exported so the alignment can be asserted
+ * instead of inspected in a screenshot. Every position is derived from the panel
+ * frame, which is what stops them drifting outside it again.
+ */
+export const BASE_RESEARCH_PANEL_LAYOUT = (() => {
+  const close = rightAligned(74, HEADER_CENTRE_Y, 38, PANEL_RIGHT - PANEL.padding);
+  const revert = rightAligned(110, FOOTER_CENTRE_Y, FOOTER_HEIGHT, PANEL_RIGHT - PANEL.padding);
+  const apply = rightAligned(
+    206,
+    FOOTER_CENTRE_Y,
+    FOOTER_HEIGHT,
+    revert.centreX - revert.width / 2 - PANEL.gap,
+  );
+  return {
+    panel: box(PANEL.centreX, PANEL.centreY, PANEL.width, PANEL.height),
+    header: box(PANEL.centreX, HEADER_CENTRE_Y, PANEL.width, PANEL.headerHeight),
+    close,
+    apply,
+    revert,
+  };
+})();
+
+export const panelBoxEdges = (target: PanelBox) => ({
+  left: target.centreX - target.width / 2,
+  right: target.centreX + target.width / 2,
+  top: target.centreY - target.height / 2,
+  bottom: target.centreY + target.height / 2,
+});
+
 interface PanelRowView {
   background: Phaser.GameObjects.Rectangle;
   icon: Phaser.GameObjects.Image;
@@ -44,6 +116,7 @@ export class BaseResearchPanel {
   private nextButton!: PanelButton;
   private applyButton!: PanelButton;
   private cancelButton!: PanelButton;
+  private visible = false;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -54,7 +127,23 @@ export class BaseResearchPanel {
     this.setVisible(false);
   }
 
+  /**
+   * Whether the pointer is inside the open panel.
+   *
+   * The battle scene treats a tap on bare ground as "clear the selection", and
+   * it decided what counted as UI from fixed screen bands. This panel floats in
+   * the middle, outside those bands, so pressing one of its buttons registered
+   * as a tap on the field: the stat did increment, and then the selection was
+   * cleared and the panel closed itself. Coordinates are in the same space as
+   * `Pointer.x`/`y`, since everything here is fixed to the camera.
+   */
+  isPointerOver(x: number, y: number): boolean {
+    if (!this.visible) return false;
+    return x >= PANEL_LEFT && x <= PANEL_RIGHT && y >= PANEL_TOP && y <= PANEL_BOTTOM;
+  }
+
   setVisible(visible: boolean): void {
+    this.visible = visible;
     this.objects.forEach((object) => object.setVisible(visible));
     if (!visible) {
       this.disableRowInteractions();
@@ -106,11 +195,11 @@ export class BaseResearchPanel {
   }
 
   private create(): void {
-    const background = this.scene.add.rectangle(800, 522, 792, 528, 0x0a1320, 0.95)
+    const background = this.scene.add.rectangle(PANEL.centreX, PANEL.centreY, PANEL.width, PANEL.height, 0x0a1320, 0.95)
       .setStrokeStyle(2, 0xc3b58a, 0.22)
       .setDepth(this.depth)
       .setScrollFactor(0);
-    const panelTop = this.scene.add.rectangle(800, 318, 792, 78, 0x13263b, 0.98)
+    const panelTop = this.scene.add.rectangle(PANEL.centreX, HEADER_CENTRE_Y, PANEL.width, PANEL.headerHeight, 0x13263b, 0.98)
       .setDepth(this.depth + 1)
       .setScrollFactor(0);
     this.title = this.scene.add.text(472, 286, "", {
@@ -157,9 +246,14 @@ export class BaseResearchPanel {
     const unitHeader = this.scene.add.text(522, 424, "병력", { fontFamily: "sans-serif", fontSize: "15px", color: "#a6bfdc" }).setDepth(this.depth + 2).setScrollFactor(0);
     const attackHeader = this.scene.add.text(730, 424, "공격", { fontFamily: "sans-serif", fontSize: "15px", color: "#a6bfdc" }).setDepth(this.depth + 2).setScrollFactor(0);
     const defenseHeader = this.scene.add.text(964, 424, "방어", { fontFamily: "sans-serif", fontSize: "15px", color: "#a6bfdc" }).setDepth(this.depth + 2).setScrollFactor(0);
-    this.closeButton = this.createButton(1144, 286, 74, 38, "닫기", this.callbacks.close);
-    this.applyButton = this.createButton(1016, 774, 206, 48, "적용", this.callbacks.apply);
-    this.cancelButton = this.createButton(1150, 774, 92, 48, "취소", this.callbacks.cancel);
+    // Close sits centred on the header bar; apply and revert are laid out
+    // right-to-left inside the footer so the two cannot overlap.
+    // "취소" was the old label and read as "close this dialog". This button
+    // discards the pending changes and leaves the panel open, so it says so.
+    const layout = BASE_RESEARCH_PANEL_LAYOUT;
+    this.closeButton = this.buttonFromBox(layout.close, "닫기", this.callbacks.close);
+    this.applyButton = this.buttonFromBox(layout.apply, "적용", this.callbacks.apply);
+    this.cancelButton = this.buttonFromBox(layout.revert, "되돌리기", this.callbacks.cancel);
 
     let rowY = 492;
     for (let index = 0; index < 6; index += 1) {
@@ -259,6 +353,10 @@ export class BaseResearchPanel {
       defenseMinus,
       defensePlus,
     };
+  }
+
+  private buttonFromBox(target: PanelBox, label: string, onClick: () => void): PanelButton {
+    return this.createButton(target.centreX, target.centreY, target.width, target.height, label, onClick);
   }
 
   private createButton(x: number, y: number, width: number, height: number, label: string, onClick: () => void): PanelButton {
