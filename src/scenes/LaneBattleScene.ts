@@ -127,6 +127,7 @@ import {
 } from "../systems/lane-combat/laneOccupancy";
 import { frameLerpAlpha } from "../systems/lane-combat/frameLerp";
 import { clamp as simClamp, lerp as simLerp, progressBetween } from "../systems/sim/simMath";
+import { LaneSimulation } from "../systems/sim/laneSimulation";
 import {
   canAttackEnemyFromSlot as steerCanAttackFromSlot,
   getForwardLaneCongestion as steerForwardCongestion,
@@ -149,7 +150,6 @@ import {
   type PresentationEffects,
 } from "../systems/sim/presentationEffects";
 import {
-  CommandQueue,
   LOCAL_INPUT_DELAY_TICKS,
   type BattleCommand,
   type CommandTeam,
@@ -382,7 +382,6 @@ interface CombatSlot {
   laneRow: number;
 }
 
-
 interface LaneObstacle {
   textureKey: string;
   progress: number;
@@ -606,13 +605,32 @@ export class LaneBattleScene extends Phaser.Scene {
   /** Seed actually driving this battle: the match's seed in PvP, otherwise the
    * local/debug seed. */
   private activeSeed = this.verificationSeed;
-  private simRandom = new DeterministicRandom(this.verificationSeed);
+  /**
+   * The determinism-critical runtime: tick clock, RNG, command queue and
+   * deferred work. Battle rules still live on this scene and are injected.
+   */
+  private simulation = new LaneSimulation({
+    seed: this.verificationSeed,
+    tickSec: SIM_TICK_SEC,
+    maxFrameSec: MAX_FRAME_SEC,
+    maxStepsPerFrame: MAX_SIM_STEPS_PER_FRAME,
+    hooks: {
+      applyCommand: (entry) => this.applyCommand(entry.team, entry.command),
+      stepRules: (deltaSec) => this.stepRules(deltaSec),
+    },
+  });
   /** Leftover real time not yet consumed by a whole simulation tick. */
-  private simAccumulatorSec = 0;
+
   /** Whole simulation ticks executed so far — the clock a lockstep match runs on. */
-  private simTick = 0;
+  private get simTick(): number {
+    return this.simulation.tick;
+  }
+
+  private get simRandom(): DeterministicRandom {
+    return this.simulation.random;
+  }
   /** Player intent waiting to execute, keyed by the tick it belongs to. */
-  private readonly commands = new CommandQueue();
+
   /** Present only in a networked match; drives the tick barrier. */
   private lockstep: LockstepSession | null = null;
   private relay: RelayMatchService | null = null;
@@ -631,7 +649,7 @@ export class LaneBattleScene extends Phaser.Scene {
    * simulation, so two lockstep peers would apply the same hit on different
    * ticks and diverge. Impacts now resolve on a tick like everything else.
    */
-  private pendingImpacts: { tick: number; guard: () => boolean; resolve: () => void }[] = [];
+
   private readonly visualValidationScenario = QUERY_PARAMS.get("scenario") === "visual-validation";
   private readonly terrainDebugInputEnabled = isTerrainDebugInputEnabled(QUERY_PARAMS.get("terrainDebug"));
   private readonly mapSpec = getBattlefieldMapSpec(QUERY_PARAMS.get("map"));
@@ -663,7 +681,6 @@ export class LaneBattleScene extends Phaser.Scene {
     { textureKey: "tree-cluster", progress: 0.69, laneRow: 10.3, radiusProgress: 0.035, radiusRows: 1.4, width: 138, height: 184 },
     { textureKey: "rock-cluster", progress: 0.87, laneRow: -10.2, radiusProgress: 0.028, radiusRows: 1.1, width: 154, height: 116 },
   ];
-
 
   constructor() {
     super("run");
@@ -710,11 +727,7 @@ export class LaneBattleScene extends Phaser.Scene {
       this.relay.onOpponentLeft((reason) => this.hud.setInfo(reason));
     }
     Phaser.Math.RND.sow([this.activeSeed]);
-    this.simRandom = new DeterministicRandom(this.activeSeed);
-    this.simTick = 0;
-    this.commands.clear();
-    this.pendingImpacts.length = 0;
-    this.simAccumulatorSec = 0;
+    this.simulation.reset(this.activeSeed);
     void this.audio.initialize();
     this.audio.resetDirector("preparation");
     this.audioWiring.reset();
@@ -787,28 +800,17 @@ export class LaneBattleScene extends Phaser.Scene {
     // rendered frame. Keeping them separate is what makes the simulation
     // reproducible from a seed plus a command list, which lockstep PvP needs —
     // and it means display frame rate can no longer change game outcomes.
-    const frameSec = Math.min(deltaMs / 1000, MAX_FRAME_SEC);
-    this.simAccumulatorSec += frameSec;
-    let steps = 0;
-    while (this.simAccumulatorSec >= SIM_TICK_SEC && steps < MAX_SIM_STEPS_PER_FRAME) {
+    const frameSec = deltaMs / 1000;
+    const stepped = this.simulation.advance(frameSec, (tick) => {
       // Under lockstep, a tick may only run once the opponent's commands for it
       // have arrived. Waiting is the point: running ahead is what desyncs.
-      if (this.lockstep && !this.lockstep.canAdvance(this.simTick + 1)) {
-        this.netStalled = true;
-        break;
-      }
-      this.netStalled = false;
-      this.stepSimulation(SIM_TICK_SEC);
-      this.simAccumulatorSec -= SIM_TICK_SEC;
-      steps += 1;
-    }
+      if (!this.lockstep) return true;
+      const ready = this.lockstep.canAdvance(tick);
+      this.netStalled = !ready;
+      return ready;
+    });
+    if (stepped > 0) this.netStalled = false;
     if (this.lockstep) this.reportNetworkState();
-    if (steps === MAX_SIM_STEPS_PER_FRAME) {
-      // Too far behind to catch up this frame; drop the backlog rather than
-      // compound it. (Under lockstep this is where a stalled peer would have
-      // to be waited on instead.)
-      this.simAccumulatorSec = 0;
-    }
 
     this.units.forEach((unit) => this.syncUnitVisual(unit, frameSec));
     this.refreshUnitOverlayDensity();
@@ -890,24 +892,25 @@ export class LaneBattleScene extends Phaser.Scene {
     };
   }
 
-  private stepSimulation(deltaSec: number): void {
-    this.simTick += 1;
-    if (this.lockstep) this.exchangeLockstepFrame();
-    // Commands first, so a tick's inputs are visible to that same tick's
-    // simulation on every client.
-    // Local commands come from the queue; a networked match also applies the
-    // opponent's commands for this tick, which the barrier guaranteed arrived.
-    for (const entry of this.commands.drain(this.simTick)) {
-      this.applyCommand(entry.team, entry.command);
-    }
+  /**
+   * The battle rules for one tick.
+   *
+   * `LaneSimulation` owns the clock, the RNG, the command queue and deferred
+   * work; this is the part still living on the scene, injected as its rules
+   * hook. The runtime calls it once per tick, after that tick's commands have
+   * been applied.
+   */
+  private stepRules(deltaSec: number): void {
     if (this.lockstep) {
+      this.exchangeLockstepFrame();
+      // The opponent's commands for this tick; the barrier guaranteed they
+      // arrived. Local ones already went through the runtime's own queue.
       for (const entry of this.lockstep.commandsFor(this.simTick)) {
-        if (entry.team === this.match?.localTeam) continue; // already applied locally
+        if (entry.team === this.match?.localTeam) continue;
         this.applyCommand(entry.team, entry.command);
       }
       this.lockstep.release(this.simTick);
     }
-    this.resolvePendingImpacts();
     this.elapsedSec += deltaSec;
     this.tickEconomy(deltaSec);
     // In PvP the enemy is a person: their commands arrive over the relay, so
@@ -2184,7 +2187,6 @@ export class LaneBattleScene extends Phaser.Scene {
     );
   }
 
-
   private tickWaves(deltaSec: number): void {
     const playerClock = tickWaveClock(this.player, deltaSec);
     if (playerClock.prepareWarning) {
@@ -2520,23 +2522,7 @@ export class LaneBattleScene extends Phaser.Scene {
    * count and not of how fast this machine renders.
    */
   private scheduleImpact(delayTicks: number, resolve: () => void, guard: () => boolean = () => true): void {
-    this.pendingImpacts.push({ tick: this.simTick + Math.max(1, delayTicks), guard, resolve });
-  }
-
-  /**
-   * Resolves impacts booked for this tick. An impact is dropped if its attacker
-   * died, or if that attacker has since started another attack — the same
-   * check the old timer did, now on a deterministic clock.
-   */
-  private resolvePendingImpacts(): void {
-    if (this.pendingImpacts.length === 0) return;
-    const due = this.pendingImpacts.filter((impact) => impact.tick <= this.simTick);
-    if (due.length === 0) return;
-    this.pendingImpacts = this.pendingImpacts.filter((impact) => impact.tick > this.simTick);
-    for (const impact of due) {
-      if (!impact.guard()) continue;
-      impact.resolve();
-    }
+    this.simulation.defer(delayTicks, resolve, guard);
   }
 
   /** Screen point for a target reference; presentation-only. */
@@ -3532,7 +3518,6 @@ export class LaneBattleScene extends Phaser.Scene {
     });
     this.refreshCapturePointVisuals();
   }
-
 
   private dismantlePoint(pointId: number): void {
     const point = this.capturePoints.find((entry) => entry.id === pointId);
@@ -5149,7 +5134,7 @@ export class LaneBattleScene extends Phaser.Scene {
     // its frame has sailed and only this client will ever run it — which shows
     // up as a desync a second later rather than as a lost click.
     const delay = this.lockstep ? this.lockstep.inputDelayTicks + 1 : 1 + LOCAL_INPUT_DELAY_TICKS;
-    this.commands.enqueue({
+    this.simulation.enqueueCommand({
       tick: this.simTick + delay,
       team: this.match?.localTeam ?? "player",
       command,
@@ -5231,7 +5216,7 @@ export class LaneBattleScene extends Phaser.Scene {
   private exchangeLockstepFrame(): void {
     if (!this.lockstep || !this.relay) return;
     const targetTick = this.lockstep.scheduleTickFor(this.simTick);
-    const outgoing = this.commands.peek(targetTick).map((entry) => entry.command);
+    const outgoing = this.simulation.peekCommands(targetTick).map((entry) => entry.command);
     const hash = this.lockstep.shouldHashAt(this.simTick)
       ? { tick: this.simTick, value: hashSimulationState(this.captureSimulationState()) }
       : undefined;

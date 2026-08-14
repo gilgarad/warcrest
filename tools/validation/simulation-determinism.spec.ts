@@ -39,11 +39,13 @@ async function recordHashes(page: Page): Promise<HashSample[]> {
       __terrainPrototypeControl: { getSimulationHash: () => { tick: number; hash: number } };
     }).__terrainPrototypeControl;
 
-    const step = scene.stepSimulation as (deltaSec: number) => void;
+    // Step the simulation runtime directly. It owns the tick clock, the RNG and
+    // the command queue, so this is the same path a real frame takes minus the
+    // wall-clock accumulator — which is the point: no real time may elapse.
+    const simulation = scene.simulation as { step: () => void };
     const samples: { tick: number; hash: number }[] = [];
-    const tickSec = 1 / 30;
     for (let i = 0; i < ticks; i += 1) {
-      step.call(scene, tickSec);
+      simulation.step();
       if ((i + 1) % sampleEvery === 0) samples.push(control.getSimulationHash());
     }
     return samples;
