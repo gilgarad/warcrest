@@ -8183,3 +8183,57 @@ tick으로 옮겼지만, 그 콜백이 다시 `launchProjectile`을 호출하므
 `this.units: LaneUnit[]`를 `SimUnit[]` + `Map<id, UnitView>`로 실제 분리하고,
 시뮬 메서드 묶음을 `LaneSimulation`으로 옮기는 일. 타입 경계가 이미 강제되고
 있으므로 이 단계는 기계적이며, 옮기다 실수하면 컴파일러가 잡는다.
+
+## [2026-08-14] refactor | 레인 조향/교전 기하를 헤드리스 모듈로 추출 (Issue #7)
+
+### 배열을 쪼갤 필요가 없다는 판단
+
+`this.units: LaneUnit[]`를 `SimUnit[]` + `Map<id, UnitView>`로 분리하려다
+멈췄다. **`LaneUnit[]`은 `SimUnit[]`에 그대로 대입 가능하다.** 시뮬은 같은
+배열을 `SimUnit[]`로만 보면 되고, 헤드리스에서는 view 없는 `SimUnit`을 넣으면
+동일하게 동작한다. 배열을 물리적으로 쪼개는 것은 이득 없이 117곳을 건드리는
+일이라 하지 않았다.
+
+### 추출
+
+의존성을 먼저 실측했더니 후보 12개 중 8개가 **완전 순수**, 4개가 `units`
+배열만 필요했다. 즉 이미 뽑을 수 있는 상태였고, 씬에 얹혀 있다는 이유만으로
+Phaser 없이는 호출도 테스트도 불가능했던 것이다.
+
+`systems/sim/laneSteering.ts`로 옮긴 것:
+`unitDistance`, `isLaneRowFree`, `isCombatSlotFree`, `canAttackEnemyFromSlot`,
+`getForwardLaneCongestion`, `getFriendlySlotCongestion`,
+`getMirrorLanePreference`, `isMeleeUnit`, `isRangedUnit`.
+
+- 파라미터 타입은 `SteeringUnit` — 시뮬 유닛의 구조적 부분집합이라 **스프라이트를
+  실수로도 볼 수 없다.**
+- 씬은 얇게 위임만 한다. 구현을 복제하지 않았다(두 벌이면 반드시 갈라진다).
+- `progressBetween`이 씬 파일 안에 갇혀 있어 `simMath`로 함께 옮겼다.
+
+### 테스트: 브라우저 없이 도는 전투 로직
+
+`laneSteering.test.ts` 12건이 **Node에서** 돈다. 누가 누구와 싸울지 정하는
+로직인데, 이전에는 게임을 띄워야만 닿을 수 있었다. 경계 사례를 명시적으로
+고정해 뒀다 — 지원 유닛은 근접도 원거리도 아님, 적/타 레인은 혼잡도에 안 셈,
+적이 없을 때는 유닛 id로 방향을 갈라 한 열이 동시에 같은 쪽으로 꺾이지 않게 함.
+
+### 검증
+
+- `npm test` **271 통과**(42 파일).
+- `simulation-determinism` 2/2(**해시 불변**), `day8-regression` 2/2.
+- 2인 실제 대전, **반칙 없이 235 tick 관찰 — desync 없음.**
+
+### desync 감지기가 내 테스트의 반칙을 잡은 건
+
+추출 직후 `pvp4` 프로브가 tick 90에서 desync를 보고했다. 원인은 코드가 아니라
+**프로브가 한쪽 클라이언트에만 `devModeEnabled`를 켠 것**이다. 명령 계층을
+우회한 일방적 상태 변경이므로 두 시뮬이 갈리는 게 정상이고, 감지기가 그것을
+잡았다. 반칙을 뺀 깨끗한 조건에서는 235 tick 동안 완전 일치했다.
+"테스트가 빨간불이면 코드가 틀렸다"가 항상 참은 아니라는 기록으로 남긴다.
+
+### 남은 것
+
+시뮬 메서드 묶음을 `LaneSimulation` 클래스로 모으는 일. 타입 경계가 이미
+컴파일러로 강제되고 순수 함수들이 빠져나왔으므로, 남은 것은 씬 상태
+(`player`/`enemy`/`capturePoints`/`defenseTowers`)를 주입받는 형태로 바꾸는
+기계적 작업이다.

@@ -41,3 +41,14 @@ export function moveToward(current: number, target: number, maxDelta: number): n
 export function distance(dx: number, dy: number): number {
   return Math.sqrt(dx * dx + dy * dy);
 }
+
+/**
+ * Distance between two positions along a lane.
+ *
+ * Trivially absolute difference today, but lanes are conceptually a path, so
+ * every comparison goes through this rather than open-coding `Math.abs` — if
+ * lane progress ever wraps or becomes non-linear, there is one place to change.
+ */
+export function progressBetween(a: number, b: number): number {
+  return Math.abs(a - b);
+}

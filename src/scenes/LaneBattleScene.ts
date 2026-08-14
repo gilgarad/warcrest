@@ -126,7 +126,18 @@ import {
   createLaneRowCandidates,
 } from "../systems/lane-combat/laneOccupancy";
 import { frameLerpAlpha } from "../systems/lane-combat/frameLerp";
-import { clamp as simClamp, lerp as simLerp } from "../systems/sim/simMath";
+import { clamp as simClamp, lerp as simLerp, progressBetween } from "../systems/sim/simMath";
+import {
+  canAttackEnemyFromSlot as steerCanAttackFromSlot,
+  getForwardLaneCongestion as steerForwardCongestion,
+  getFriendlySlotCongestion as steerSlotCongestion,
+  getMirrorLanePreference as steerMirrorPreference,
+  isCombatSlotFree as steerCombatSlotFree,
+  isLaneRowFree as steerLaneRowFree,
+  isMeleeUnit as steerIsMelee,
+  isRangedUnit as steerIsRanged,
+  unitDistance as steerUnitDistance,
+} from "../systems/sim/laneSteering";
 import { DeterministicRandom } from "../systems/sim/deterministicRandom";
 import type { GameMode, MatchDescriptor } from "../systems/net/matchTypes";
 import { DEFAULT_LOCKSTEP_OPTIONS, LockstepSession } from "../systems/net/lockstepSession";
@@ -533,10 +544,6 @@ function resolveGameplayMusicTheme(group: AgeProductionGroup): "stone" | "bronze
     case "modern":
       return "modern";
   }
-}
-
-function progressBetween(a: number, b: number): number {
-  return Math.abs(a - b);
 }
 
 export class LaneBattleScene extends Phaser.Scene {
@@ -2748,47 +2755,23 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private getForwardLaneCongestion(unit: SimUnit, laneRow: number): number {
-    const forwardWindow = 0.065;
-    const rearWindow = 0.016;
-    const dir = unit.team === "player" ? 1 : -1;
-    return this.units.reduce((score, other) => {
-      if (other.id === unit.id || other.team !== unit.team || other.laneId !== unit.laneId) return score;
-      if (Math.abs(other.laneRow - laneRow) >= 0.6) return score;
-      const relativeProgress = (other.progress - unit.progress) * dir;
-      if (relativeProgress < -rearWindow || relativeProgress > forwardWindow) return score;
-      const rowWeight = 1 - Math.min(1, Math.abs(other.laneRow - laneRow) / 0.6);
-      const progressWeight = relativeProgress >= 0
-        ? 1 - Math.min(1, relativeProgress / forwardWindow)
-        : 0.4 * (1 - Math.min(1, Math.abs(relativeProgress) / rearWindow));
-      return score + rowWeight * progressWeight;
-    }, 0);
+    return steerForwardCongestion(this.units, unit, laneRow);
   }
 
   private getMirrorLanePreference(unit: SimUnit, laneRow: number, enemy?: SimUnit): number {
-    const delta = laneRow - unit.laneRow;
-    if (Math.abs(delta) < 0.001) return 0;
-    const desiredDirection = enemy && Math.abs(enemy.laneRow - unit.laneRow) > 0.15
-      ? Math.sign(enemy.laneRow - unit.laneRow)
-      : (unit.id % 2 === 0 ? 1 : -1);
-    return Math.sign(delta) === desiredDirection ? 0 : 1;
+    return steerMirrorPreference(unit, laneRow, enemy);
   }
 
   private isLaneRowFree(unit: SimUnit, laneRow: number): boolean {
-    return !this.units.some((other) =>
-      other.id !== unit.id
-      && other.team === unit.team
-      && other.laneId === unit.laneId
-      && Math.abs(other.laneRow - laneRow) < COMBAT_ROW_CLEARANCE
-      && progressBetween(other.progress, unit.progress) < FRIENDLY_GAP,
-    );
+    return steerLaneRowFree(this.units, unit, laneRow);
   }
 
   private isMeleeUnit(unit: SimUnit): boolean {
-    return unit.role === "battle" && unit.range <= 2.5;
+    return steerIsMelee(unit);
   }
 
   private isRangedUnit(unit: SimUnit): boolean {
-    return unit.role === "battle" && unit.range > 2.5;
+    return steerIsRanged(unit);
   }
 
   private shouldPrioritizeUnitOverTower(
@@ -2866,17 +2849,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private getFriendlySlotCongestion(unit: SimUnit, progress: number, laneRow: number): number {
-    const progressWindow = 0.03;
-    return this.units.reduce((score, other) => {
-      if (other.id === unit.id || other.team !== unit.team || other.laneId !== unit.laneId) return score;
-      const progressDistance = progressBetween(other.progress, progress);
-      if (progressDistance >= progressWindow) return score;
-      const rowDistance = Math.abs(other.laneRow - laneRow);
-      if (rowDistance >= 1.2) return score;
-      const progressWeight = 1 - progressDistance / progressWindow;
-      const rowWeight = 1 - Math.min(1, rowDistance / 1.2);
-      return score + progressWeight * rowWeight;
-    }, 0);
+    return steerSlotCongestion(this.units, unit, progress, laneRow);
   }
 
   private findCombatSlot(unit: SimUnit, enemy: SimUnit): CombatSlot | undefined {
@@ -2916,22 +2889,11 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private canAttackEnemyFromSlot(unit: SimUnit, slot: CombatSlot, enemy: SimUnit): boolean {
-    const progressDistance = progressBetween(slot.progress, enemy.progress);
-    const rowDistance = Math.abs(slot.laneRow - enemy.laneRow) * 0.01;
-    const distance = Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
-    const tolerance = this.isMeleeUnit(unit) ? MELEE_ENGAGE_TOLERANCE_PROGRESS : 0;
-    return distance <= unit.range * RANGE_TO_PROGRESS + tolerance;
+    return steerCanAttackFromSlot(unit, slot, enemy);
   }
 
   private isCombatSlotFree(unit: SimUnit, slot: CombatSlot, enemy: SimUnit): boolean {
-    if (Math.abs(slot.laneRow - enemy.laneRow) > COMBAT_ROW_REACH + 0.001) return false;
-    return !this.units.some((other) =>
-      other.id !== unit.id &&
-      other.team === unit.team &&
-      other.laneId === unit.laneId &&
-      progressBetween(other.progress, slot.progress) < COMBAT_PROGRESS_CLEARANCE &&
-      Math.abs(other.laneRow - slot.laneRow) < COMBAT_ROW_CLEARANCE,
-    );
+    return steerCombatSlotFree(this.units, unit, slot, enemy);
   }
 
   private findStructureAttackSlot(
@@ -3125,9 +3087,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private unitDistance(a: SimUnit, b: SimUnit): number {
-    const progressDistance = progressBetween(a.progress, b.progress);
-    const rowDistance = Math.abs(a.laneRow - b.laneRow) * 0.01;
-    return Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
+    return steerUnitDistance(a, b);
   }
 
   private getStructureRowDistance(laneRow: number, halfWidthRows: number = BASE_HALF_WIDTH_ROWS): number {
