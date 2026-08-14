@@ -460,6 +460,15 @@ const CAPTURE_RATE_PER_SEC = 0.36;
  * rather than walked past.
  */
 const CAPTURE_TOWER_DEFENDER_EQUIVALENT = 3;
+
+/**
+ * How long the lockstep barrier must hold before the player is told about it.
+ *
+ * Short waits are what lockstep does every tick; announcing them is noise. Half
+ * a second is long enough that a healthy match never trips it and short enough
+ * that a real dropout is reported promptly.
+ */
+const NET_STALL_NOTICE_MS = 500;
 /**
  * Pointer travel (screen px) still counted as a tap rather than a field pan.
  * Touch input always drifts a few pixels, so requiring an exact zero would
@@ -635,6 +644,8 @@ export class LaneBattleScene extends Phaser.Scene {
   private lockstep: LockstepSession | null = null;
   private relay: RelayMatchService | null = null;
   private netStalled = false;
+  /** When the current uninterrupted barrier wait began, or null if not waiting. */
+  private netStallSinceMs: number | null = null;
   /** Set while the opponent is disconnected but still expected back. */
   private opponentWaitingReason: string | null = null;
   /** Set once the match is over for a network reason; outranks everything else. */
@@ -818,15 +829,24 @@ export class LaneBattleScene extends Phaser.Scene {
     // reproducible from a seed plus a command list, which lockstep PvP needs —
     // and it means display frame rate can no longer change game outcomes.
     const frameSec = deltaMs / 1000;
+    let barrierBlocked = false;
     const stepped = this.simulation.advance(frameSec, (tick) => {
       // Under lockstep, a tick may only run once the opponent's commands for it
       // have arrived. Waiting is the point: running ahead is what desyncs.
       if (!this.lockstep) return true;
       const ready = this.lockstep.canAdvance(tick);
-      this.netStalled = !ready;
+      if (!ready) barrierBlocked = true;
       return ready;
     });
-    if (stepped > 0) this.netStalled = false;
+    // Hitting the barrier is the normal state of a lockstep client, not a
+    // fault: it happens briefly on most ticks while the peer's next frame is in
+    // flight. Reporting it the instant it happens put "waiting for opponent" on
+    // screen during completely healthy play. Only a stall that outlasts the
+    // threshold is worth telling the player about.
+    if (stepped > 0) this.netStallSinceMs = null;
+    else if (barrierBlocked && this.netStallSinceMs === null) this.netStallSinceMs = this.time.now;
+    this.netStalled = this.netStallSinceMs !== null
+      && this.time.now - this.netStallSinceMs >= NET_STALL_NOTICE_MS;
     if (this.lockstep) this.reportNetworkState();
 
     this.units.forEach((unit) => this.syncUnitVisual(unit, frameSec));
