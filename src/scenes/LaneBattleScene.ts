@@ -3441,8 +3441,8 @@ export class LaneBattleScene extends Phaser.Scene {
   private applyPlayerResearchDraft(): void {
     const draftCost = getDraftResearchApplyCost(this.actingResearch, this.acting.selectedProductionAgeId);
     if (draftCost <= 0) {
-      this.hud.setInfo("연구 포인트가 부족하거나 적용할 변경이 없습니다");
-      this.audio.playSfx("sfx.ui.hireFail", { eventKey: "base:research:apply:fail" });
+      this.effects.notice("연구 포인트가 부족하거나 적용할 변경이 없습니다");
+      this.effects.globalSfx("sfx.ui.hireFail", "base:research:apply:fail");
       return;
     }
     if (this.devModeEnabled) {
@@ -3451,16 +3451,16 @@ export class LaneBattleScene extends Phaser.Scene {
       const applied = applyResearchDraft(this.acting.resources, this.actingResearch, this.acting.selectedProductionAgeId);
       this.acting.resources.research = originalResearch;
       if (!applied) {
-        this.hud.setInfo("DEV 연구 적용에 실패했습니다");
-        this.audio.playSfx("sfx.ui.hireFail", { eventKey: "base:research:apply:dev-fail" });
+        this.effects.notice("DEV 연구 적용에 실패했습니다");
+        this.effects.globalSfx("sfx.ui.hireFail", "base:research:apply:dev-fail");
         return;
       }
     } else if (!applyResearchDraft(this.acting.resources, this.actingResearch, this.acting.selectedProductionAgeId)) {
-      this.hud.setInfo("연구 포인트가 부족하거나 적용할 변경이 없습니다");
-      this.audio.playSfx("sfx.ui.hireFail", { eventKey: "base:research:apply:fail" });
+      this.effects.notice("연구 포인트가 부족하거나 적용할 변경이 없습니다");
+      this.effects.globalSfx("sfx.ui.hireFail", "base:research:apply:fail");
       return;
     }
-    this.hud.setInfo(`${getAge(this.acting.selectedProductionAgeId).label} 병력 연구를 적용했습니다`);
+    this.effects.notice(`${getAge(this.acting.selectedProductionAgeId).label} 병력 연구를 적용했습니다`);
     this.audio.playSfx("sfx.ui.confirm", { eventKey: `base:research:apply:${this.acting.selectedProductionAgeId}` });
     this.refreshUi();
   }
@@ -3469,7 +3469,7 @@ export class LaneBattleScene extends Phaser.Scene {
     getBrowsableAgeIds(this.acting.ageId).forEach((ageId) => {
       discardResearchDraftForAge(this.actingResearch, ageId);
     });
-    this.audio.playSfx("sfx.ui.cancel", { eventKey: "base:research:cancel" });
+    this.effects.globalSfx("sfx.ui.cancel", "base:research:cancel");
     this.refreshUi();
   }
 
@@ -3481,29 +3481,29 @@ export class LaneBattleScene extends Phaser.Scene {
   private buildAtPoint(pointId: number, buildingId: BuildingId): void {
     const point = this.capturePoints.find((entry) => entry.id === pointId);
     if (!point) {
-      this.hud.setInfo("먼저 거점을 선택하십시오");
-      this.audio.playSfx("sfx.ui.cancel", { eventKey: "build:no-point" });
+      this.effects.notice("먼저 거점을 선택하십시오");
+      this.effects.globalSfx("sfx.ui.cancel", "build:no-point");
       return;
     }
     if (point.owner !== this.actingTeamId) {
-      this.hud.setInfo("아군 점령 거점에서만 건설 가능합니다");
+      this.effects.notice("아군 점령 거점에서만 건설 가능합니다");
       this.audio.playSfx("sfx.ui.hireFail", { eventKey: `build:${point.id}:not-owned` });
       return;
     }
     if (!point.definition.allowedBuildingTypes.includes(buildingId)) {
-      this.hud.setInfo("이 거점에는 해당 건물을 건설할 수 없습니다");
+      this.effects.notice("이 거점에는 해당 건물을 건설할 수 없습니다");
       this.audio.playSfx("sfx.ui.hireFail", { eventKey: `build:${point.id}:not-allowed:${buildingId}` });
       return;
     }
     const building = getBuildingDefinition(buildingId);
     if (point.buildingId) {
-      this.hud.setInfo("이미 건설된 거점입니다");
+      this.effects.notice("이미 건설된 거점입니다");
       this.audio.playSfx("sfx.ui.cancel", { eventKey: `build:${point.id}:occupied` });
       return;
     }
     const cost = getBuildingCost(buildingId, this.acting.ageId);
     if (!canAfford(this.acting.resources, cost)) {
-      this.hud.setInfo(`${building.label} 건설 자원 부족`);
+      this.effects.notice(`${building.label} 건설 자원 부족`);
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `build:${point.id}:shortage:${buildingId}` });
       return;
     }
@@ -3511,7 +3511,7 @@ export class LaneBattleScene extends Phaser.Scene {
     point.buildingId = buildingId;
     point.buildingLevel = 1;
     this.initializeCaptureBuildingState(point);
-    this.hud.setInfo(`${building.label} 건설 완료`);
+    this.effects.notice(`${building.label} 건설 완료`);
     this.audio.playSfx("sfx.construction.start", { eventKey: `build:${point.id}:start:${buildingId}` });
     this.time.delayedCall(180, () => {
       this.audio.playSfx("sfx.construction.complete", { eventKey: `build:${point.id}:complete:${buildingId}` });
@@ -3522,12 +3522,12 @@ export class LaneBattleScene extends Phaser.Scene {
   private dismantlePoint(pointId: number): void {
     const point = this.capturePoints.find((entry) => entry.id === pointId);
     if (!point || point.owner !== this.actingTeamId || !point.definition.canDemolish || !point.buildingId) {
-      this.hud.setInfo("폐기할 아군 거점 건물이 없습니다");
-      this.audio.playSfx("sfx.ui.cancel", { eventKey: "dismantle:invalid" });
+      this.effects.notice("폐기할 아군 거점 건물이 없습니다");
+      this.effects.globalSfx("sfx.ui.cancel", "dismantle:invalid");
       return;
     }
     if (this.acting.resources.gold < DISMANTLE_COST_GOLD) {
-      this.hud.setInfo("폐기 비용이 부족합니다");
+      this.effects.notice("폐기 비용이 부족합니다");
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `dismantle:${point.id}:shortage` });
       return;
     }
@@ -3535,7 +3535,7 @@ export class LaneBattleScene extends Phaser.Scene {
     point.buildingId = undefined;
     point.buildingLevel = 0;
     this.resetCaptureBuildingState(point);
-    this.hud.setInfo(`거점 건물을 폐기했습니다 (-${DISMANTLE_COST_GOLD}G)`);
+    this.effects.notice(`거점 건물을 폐기했습니다 (-${DISMANTLE_COST_GOLD}G)`);
     this.audio.playSfx("sfx.ui.confirm", { eventKey: `dismantle:${point.id}:complete` });
     this.refreshCapturePointVisuals();
   }
@@ -3543,30 +3543,30 @@ export class LaneBattleScene extends Phaser.Scene {
   private rebuildDefenseTower(towerId: number): void {
     const tower = this.defenseTowers.find((entry) => entry.id === towerId);
     if (!tower || tower.owner !== this.actingTeamId) {
-      this.hud.setInfo("재건할 아군 타워를 선택하십시오");
-      this.audio.playSfx("sfx.ui.hireFail", { eventKey: "tower:rebuild:invalid" });
+      this.effects.notice("재건할 아군 타워를 선택하십시오");
+      this.effects.globalSfx("sfx.ui.hireFail", "tower:rebuild:invalid");
       return;
     }
     if (tower.buildRemainingSec > 0) {
-      this.hud.setInfo(`타워 재건 중 (${Math.ceil(tower.buildRemainingSec)}초)`);
+      this.effects.notice(`타워 재건 중 (${Math.ceil(tower.buildRemainingSec)}초)`);
       this.audio.playSfx("sfx.ui.cancel", { eventKey: `tower:${tower.id}:busy` });
       return;
     }
     if (tower.built) {
-      this.hud.setInfo("선택한 타워가 이미 가동 중입니다");
+      this.effects.notice("선택한 타워가 이미 가동 중입니다");
       this.audio.playSfx("sfx.ui.cancel", { eventKey: `tower:${tower.id}:active` });
       return;
     }
     const cost = getDefenseTowerBuildCost(this.acting.ageId);
     if (!canAfford(this.acting.resources, cost)) {
-      this.hud.setInfo("타워 재건 자원 부족");
+      this.effects.notice("타워 재건 자원 부족");
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `tower:${tower.id}:shortage` });
       return;
     }
     payCost(this.acting.resources, cost);
     tower.buildRemainingSec = DEFENSE_TOWER_BUILD_DURATION_SEC;
     tower.control = 1;
-    this.hud.setInfo(`타워 재건을 시작했습니다 (${DEFENSE_TOWER_BUILD_DURATION_SEC}초)`);
+    this.effects.notice(`타워 재건을 시작했습니다 (${DEFENSE_TOWER_BUILD_DURATION_SEC}초)`);
     this.audio.playSfx("sfx.construction.start", { eventKey: `tower:${tower.id}:start` });
     this.refreshDefenseTowerVisuals();
   }
@@ -3593,14 +3593,14 @@ export class LaneBattleScene extends Phaser.Scene {
     }
     if (outcome.result === "none") return;
     if (outcome.result === "destroyed") {
-      if (toOwner === "player") this.hud.setInfo("적 거점 건물이 파괴되었습니다");
+      if (toOwner === "player") this.effects.notice("적 거점 건물이 파괴되었습니다");
       return;
     }
     if (outcome.result === "collapsed") {
-      if (toOwner === "player") this.hud.setInfo("적 건물을 접수하려 했지만 붕괴했습니다");
+      if (toOwner === "player") this.effects.notice("적 건물을 접수하려 했지만 붕괴했습니다");
       return;
     }
-    if (toOwner === "player") this.hud.setInfo(`적 건물을 접수했습니다 (레벨 -${outcome.levelDrop})`);
+    if (toOwner === "player") this.effects.notice(`적 건물을 접수했습니다 (레벨 -${outcome.levelDrop})`);
   }
 
   private isPrototypeV2(): boolean {
@@ -4866,13 +4866,13 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private hireWorker(): void {
     if (!this.devModeEnabled && !canAfford(this.acting.resources, BASE_WORKER_COST)) {
-      this.hud.setInfo("일꾼 고용 실패: 금/목재/식량 부족");
-      this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "hire:worker:shortage" });
+      this.effects.notice("일꾼 고용 실패: 금/목재/식량 부족");
+      this.effects.globalSfx("sfx.state.resourceShortage", "hire:worker:shortage");
       return;
     }
     if (!this.devModeEnabled) payCost(this.acting.resources, BASE_WORKER_COST);
     this.acting.workers.idle += 1;
-    this.hud.setInfo("일꾼 1명을 고용했습니다");
+    this.effects.notice("일꾼 1명을 고용했습니다");
     this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:worker:${this.acting.workers.idle}` });
   }
 
@@ -4881,25 +4881,25 @@ export class LaneBattleScene extends Phaser.Scene {
     if (this.devModeEnabled || canAfford(this.acting.resources, cost)) {
       if (!this.devModeEnabled) payCost(this.acting.resources, cost);
       this.acting.workers.research += 1;
-      this.hud.setInfo("연구 일꾼 1명이 즉시 연구에 배치되었습니다");
+      this.effects.notice("연구 일꾼 1명이 즉시 연구에 배치되었습니다");
       this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:research:direct:${this.acting.workers.research}` });
       return;
     }
 
-    this.hud.setInfo("연구 일꾼 고용 자원 부족");
-    this.audio.playSfx("sfx.ui.hireFail", { eventKey: "hire:research:failed" });
+    this.effects.notice("연구 일꾼 고용 자원 부족");
+    this.effects.globalSfx("sfx.ui.hireFail", "hire:research:failed");
   }
 
   private tryUseInstantWaveToken(team: TeamState): void {
     const eligibility = getInstantWaveEligibility(team);
     if (eligibility === "no-token") {
-      if (team.id === "player") this.hud.setInfo("즉시 웨이브 토큰이 없습니다");
-      if (team.id === "player") this.audio.playSfx("sfx.ui.hireFail", { eventKey: "wave:instant:no-token" });
+      if (team.id === "player") this.effects.notice("즉시 웨이브 토큰이 없습니다");
+      if (team.id === "player") this.effects.globalSfx("sfx.ui.hireFail", "wave:instant:no-token");
       return;
     }
     if (eligibility === "cooldown") {
-      if (team.id === "player") this.hud.setInfo("직전 웨이브 후 5초 뒤 사용 가능");
-      if (team.id === "player") this.audio.playSfx("sfx.ui.cancel", { eventKey: "wave:instant:cooldown" });
+      if (team.id === "player") this.effects.notice("직전 웨이브 후 5초 뒤 사용 가능");
+      if (team.id === "player") this.effects.globalSfx("sfx.ui.cancel", "wave:instant:cooldown");
       return;
     }
     if (this.trySpawnWave(team, true)) team.instantWaveTokens -= 1;
@@ -4908,19 +4908,19 @@ export class LaneBattleScene extends Phaser.Scene {
   private tryAgeUpPlayer(): void {
     const idx = AGES.findIndex((age) => age.id === this.acting.ageId);
     if (idx >= AGES.length - 1) {
-      this.hud.setInfo("이미 최종 시대입니다");
-      this.audio.playSfx("sfx.ui.cancel", { eventKey: "age:max" });
+      this.effects.notice("이미 최종 시대입니다");
+      this.effects.globalSfx("sfx.ui.cancel", "age:max");
       return;
     }
     const cost = getAgeUpCost(idx);
     if (!this.devModeEnabled && !canAfford(this.acting.resources, cost)) {
-      this.hud.setInfo(`시대 업 실패: ${this.formatResourceShortage(cost)}`);
-      this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "age:shortage" });
+      this.effects.notice(`시대 업 실패: ${this.formatResourceShortage(cost)}`);
+      this.effects.globalSfx("sfx.state.resourceShortage", "age:shortage");
       return;
     }
     if (!this.devModeEnabled) payCost(this.acting.resources, cost);
     this.advanceAge(this.acting);
-    this.hud.setInfo(`${getAge(this.acting.ageId).label} 도달`);
+    this.effects.notice(`${getAge(this.acting.ageId).label} 도달`);
     this.audio.playSfx("sfx.ui.confirm", { eventKey: `age:${this.acting.ageId}` });
   }
 
