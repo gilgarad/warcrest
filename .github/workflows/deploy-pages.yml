@@ -33,6 +33,11 @@ jobs:
         run: npm ci
       - name: Build
         run: npm run build
+        env:
+          # The game is static on Pages but the relay is a process on the 104
+          # server, so the address cannot be derived from window.location the
+          # way it can in local development.
+          VITE_RELAY_URL: wss://profitablestock.co.kr/warcrest-relay
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload Pages artifact
