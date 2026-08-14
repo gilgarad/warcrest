@@ -7,6 +7,7 @@ import { createParallaxBackground, type ParallaxBackground } from "../gfx/parall
 import { areLaneBattleAssetsReady, queueLaneBattleAssets } from "./laneBattleAssetPreload";
 import { getAudioSystem } from "../systems/audio";
 import { RelayMatchService } from "../systems/net/relayMatchService";
+import { isMixedContentRelay, resolveRelayUrl } from "../config/relayUrl";
 import type { MatchDescriptor } from "../systems/net/matchTypes";
 import { OnlineLobbyPanel } from "../ui/OnlineLobbyPanel";
 
@@ -243,10 +244,13 @@ export class BootScene extends Phaser.Scene {
   private async openLobby(): Promise<void> {
     if (!this.battleAssetsReady || this.lobby?.isOpen()) return;
     if (!this.lobby) {
-      // Same origin as the page, so a forwarded 5173 carries the relay too and
-      // there is no second port to configure or forget.
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      this.relayService = new RelayMatchService(`${protocol}//${window.location.host}/relay`);
+      const relayUrl = resolveRelayUrl();
+      if (isMixedContentRelay(relayUrl)) {
+        // Fail loudly here rather than letting the browser block the socket and
+        // report an opaque connection error.
+        console.warn(`[warcrest] HTTPS 페이지에서 ws:// 릴레이(${relayUrl})는 차단됩니다. wss:// 주소가 필요합니다.`);
+      }
+      this.relayService = new RelayMatchService(relayUrl);
       this.lobby = new OnlineLobbyPanel(this, this.relayService, {
         onMatchReady: (match) => {
           this.lobby?.hide();

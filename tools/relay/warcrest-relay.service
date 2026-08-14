@@ -1,0 +1,33 @@
+# Warcrest PvP relay — 104 production unit.
+#
+# The 104 server's fixed rule (documents/ENVIRONMENT_META.md in the
+# stock_predict repo) is that production runs under systemd only, never as a
+# foreground process. This unit exists so the relay follows that rule rather
+# than being started by hand and disappearing on the next reboot.
+#
+# Install:
+#   sudo cp /data/projects/warcrest/tools/relay/warcrest-relay.service \
+#           /etc/systemd/system/warcrest-relay.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now warcrest-relay.service
+
+[Unit]
+Description=Warcrest PvP lockstep relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=gilgarad
+WorkingDirectory=/data/projects/warcrest
+Environment=RELAY_PORT=8790
+ExecStart=/usr/bin/node --experimental-strip-types tools/relay/relayServer.ts
+Restart=always
+RestartSec=3
+# The relay holds no game state: a restart drops matches in progress but
+# corrupts nothing, so restarting freely is the right policy.
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
