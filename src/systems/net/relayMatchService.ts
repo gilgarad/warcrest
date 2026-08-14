@@ -7,6 +7,18 @@ import type {
 } from "./matchTypes";
 
 const FRIENDS_STORAGE_KEY = "warcrest.friends.v1";
+const PLAYER_ID_STORAGE_KEY = "warcrest.playerId.v1";
+
+/**
+ * How the opponent's connection is doing, for the parts of the UI that have to
+ * say something about it.
+ *
+ * `waiting` is recoverable and `left` is not, and the difference matters to the
+ * player: one asks them to hold on, the other ends the match.
+ */
+export type OpponentPresence =
+  | { state: "waiting"; reason: string; graceSec: number }
+  | { state: "returned"; opponentName: string };
 
 /**
  * `MatchService` backed by the relay in `tools/relay/relayServer.ts`.
@@ -31,11 +43,34 @@ export class RelayMatchService implements MatchService {
   private bufferedFrames: LockstepFrame[] = [];
   private pending: { resolve: (m: MatchDescriptor) => void; reject: (e: Error) => void } | null = null;
   private opponentLeft: ((reason: string) => void) | null = null;
+  private opponentPresence: ((presence: OpponentPresence) => void) | null = null;
 
   constructor(
     private readonly url: string,
     private readonly storage: Storage | null = safeLocalStorage(),
   ) {}
+
+  /**
+   * Stands in for a real account.
+   *
+   * The relay holds a player's seat across a reconnect, which needs a name for
+   * that seat that outlives the socket. There are no accounts yet, so this is a
+   * random id kept in local storage and asserted by the client — enough to get
+   * back into your own match, and deliberately not enough to be trusted. See
+   * `docs/dev-wiki/pvp-reconnect.md`.
+   */
+  private localPlayerId(): string {
+    const existing = this.storage?.getItem(PLAYER_ID_STORAGE_KEY);
+    if (existing) return existing;
+    const generated = `p-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e9).toString(36)}`;
+    try {
+      this.storage?.setItem(PLAYER_ID_STORAGE_KEY, generated);
+    } catch {
+      // Without storage the id lasts one session; reconnect stops working, but
+      // nothing else does.
+    }
+    return generated;
+  }
 
   async connect(): Promise<void> {
     if (this.socket && this.socket.readyState <= WebSocket.OPEN) return;
@@ -45,6 +80,9 @@ export class RelayMatchService implements MatchService {
       socket.addEventListener("open", () => {
         this.socket = socket;
         socket.removeEventListener("error", failed);
+        // Sent before anything else: it is what lets the relay recognise a
+        // returning player and put them back in the seat they left.
+        this.send({ type: "identify", playerId: this.localPlayerId() });
         resolve();
       }, { once: true });
       socket.addEventListener("error", failed, { once: true });
@@ -125,6 +163,11 @@ export class RelayMatchService implements MatchService {
     this.opponentLeft = listener;
   }
 
+  /** Recoverable connection trouble on the opponent's side, distinct from a leave. */
+  onOpponentPresence(listener: (presence: OpponentPresence) => void): void {
+    this.opponentPresence = listener;
+  }
+
   sendFrame(frame: LockstepFrame): void {
     this.send({ type: "frame", frame });
   }
@@ -156,6 +199,18 @@ export class RelayMatchService implements MatchService {
       if (!frame) return;
       if (this.frameListeners.size === 0) this.bufferedFrames.push(frame);
       else this.frameListeners.forEach((listener) => listener(frame));
+      return;
+    }
+    if (message.type === "opponent-disconnected") {
+      this.opponentPresence?.({
+        state: "waiting",
+        reason: String(message.reason ?? "상대의 연결이 끊겼습니다"),
+        graceSec: typeof message.graceSec === "number" ? message.graceSec : 0,
+      });
+      return;
+    }
+    if (message.type === "opponent-returned") {
+      this.opponentPresence?.({ state: "returned", opponentName: String(message.opponentName ?? "상대") });
       return;
     }
     if (message.type === "opponent-left") {

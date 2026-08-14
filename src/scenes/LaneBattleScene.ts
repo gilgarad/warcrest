@@ -635,6 +635,10 @@ export class LaneBattleScene extends Phaser.Scene {
   private lockstep: LockstepSession | null = null;
   private relay: RelayMatchService | null = null;
   private netStalled = false;
+  /** Set while the opponent is disconnected but still expected back. */
+  private opponentWaitingReason: string | null = null;
+  /** Set once the match is over for a network reason; outranks everything else. */
+  private matchEndedReason: string | null = null;
   /**
    * How the simulation asks for sounds and floating text. The scene supplies a
    * renderer-backed implementation; a headless run uses the null one, which is
@@ -724,7 +728,15 @@ export class LaneBattleScene extends Phaser.Scene {
     this.effects = this.createPresentationEffects();
     if (this.lockstep && this.relay) {
       this.relay.onFrame((frame) => this.lockstep?.receiveRemoteFrame(frame));
-      this.relay.onOpponentLeft((reason) => this.hud.setInfo(reason));
+      // A leave is terminal, so it goes on the standing line and stays there;
+      // a dropout is recoverable and clears itself if the opponent returns.
+      this.relay.onOpponentLeft((reason) => { this.matchEndedReason = reason; });
+      this.relay.onOpponentPresence((presence) => {
+        this.opponentWaitingReason = presence.state === "waiting"
+          ? `${presence.reason} (${presence.graceSec}초)`
+          : null;
+        if (presence.state === "returned") this.hud.setInfo(`${presence.opponentName} 님이 돌아왔습니다`);
+      });
     }
     Phaser.Math.RND.sow([this.activeSeed]);
     this.simulation.reset(this.activeSeed);
@@ -747,9 +759,14 @@ export class LaneBattleScene extends Phaser.Scene {
     // itself is otherwise unused elsewhere in this codebase.
     this.cameras.main.useBounds = false;
     this.cameras.main.setZoom(FIELD_CAMERA_ZOOM);
-    const initialProgress = new URLSearchParams(window.location.search).get("camera") === "central"
-      ? CENTRAL_CAPTURE_PROGRESS
-      : 0.22;
+    // Progress runs 0 (left/"player" base) to 1 (right/"enemy" base), so a
+    // fixed 0.22 opens the camera on the left base for both sides. Mirroring it
+    // for the right-hand player is what makes them start looking at their own
+    // base rather than the opponent's. The central override is already
+    // symmetric, so only the home-base case flips.
+    const search = new URLSearchParams(window.location.search);
+    const homeProgress = this.match?.localTeam === "enemy" ? 1 - 0.22 : 0.22;
+    const initialProgress = search.get("camera") === "central" ? CENTRAL_CAPTURE_PROGRESS : homeProgress;
     const initialFocus = this.progressToScreen(initialProgress, 0);
     this.focusCameraOn(initialFocus.x, initialFocus.y);
 
@@ -1992,7 +2009,7 @@ export class LaneBattleScene extends Phaser.Scene {
       const label = this.add.text(pos.x, pos.y - 190, `방어 타워 ${definition.id + 1}`, {
         fontFamily: "sans-serif", fontSize: "14px", color: "#fff4cf", stroke: "#1a130a", strokeThickness: 3,
       }).setOrigin(0.5).setDepth(this.getGroundDepth(pos.y, 7));
-      const ownerText = this.add.text(pos.x, pos.y + 34, definition.owner === "player" ? "아군 타워" : "적 타워", {
+      const ownerText = this.add.text(pos.x, pos.y + 34, definition.owner === this.localTeamId ? "아군 타워" : "적 타워", {
         fontFamily: "sans-serif", fontSize: "12px", color: "#d3d8e8", stroke: "#132033", strokeThickness: 3,
       }).setOrigin(0.5).setDepth(this.getGroundDepth(pos.y, 7));
       const statusText = this.add.text(pos.x, pos.y + 52, "가동 중", {
@@ -2119,7 +2136,7 @@ export class LaneBattleScene extends Phaser.Scene {
   private getSelectedCaptureActions(): (CapturePointAction | DefenseTowerAction)[] {
     const tower = this.defenseTowers.find((entry) => entry.id === this.selectedDefenseTowerId);
     if (tower) {
-      return tower.owner === "player" && !tower.built && tower.buildRemainingSec <= 0
+      return tower.owner === this.localTeamId && !tower.built && tower.buildRemainingSec <= 0
         ? ["rebuild-defense-tower"]
         : [];
     }
@@ -2134,11 +2151,14 @@ export class LaneBattleScene extends Phaser.Scene {
       const engagementDistance = Math.max(ENGAGE_GAP * 2.6, unit.range * RANGE_TO_PROGRESS * 1.35);
       return this.unitDistance(unit, nearest) <= engagementDistance;
     }).length;
-    const playerTower = this.defenseTowers.find((tower) => tower.owner === "player");
+    // Music intensity tracks the danger *this* client is in, so both the base
+    // and the fortress come from the local side rather than the left one.
+    const localTeam = this.localTeamState;
+    const playerTower = this.defenseTowers.find((tower) => tower.owner === this.localTeamId);
     this.audioWiring.update(this.elapsedSec, {
       engagedUnits,
       activeProjectiles: this.activeProjectiles.size,
-      playerBaseHpRatio: this.player.baseMaxHp > 0 ? this.player.baseHp / this.player.baseMaxHp : 1,
+      playerBaseHpRatio: localTeam.baseMaxHp > 0 ? localTeam.baseHp / localTeam.baseMaxHp : 1,
       playerFortressHpRatio: playerTower
         ? playerTower.built ? playerTower.hp / playerTower.maxHp : 0
         : 1,
@@ -2146,7 +2166,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private syncGameplayMusicTheme(): void {
-    const theme = resolveGameplayMusicTheme(getAge(this.player.ageId).productionGroup);
+    const theme = resolveGameplayMusicTheme(getAge(this.localTeamState.ageId).productionGroup);
     this.audio.setGameplayMusicTheme(theme);
   }
 
@@ -3150,9 +3170,12 @@ export class LaneBattleScene extends Phaser.Scene {
       }
       if (prevOwner !== point.owner) {
         this.structureVisualsDirty = true;
-        if (point.owner === "player") {
-          this.effects.globalSfx("sfx.capture.complete", `capture:${point.id}:player`);
-        } else if (prevOwner === "player") {
+        // Gained-vs-lost is relative to the viewer. These are `effects` calls,
+        // so the two clients legitimately emit different sounds for the same
+        // simulated event and no simulation state depends on the branch.
+        if (point.owner === this.localTeamId) {
+          this.effects.globalSfx("sfx.capture.complete", `capture:${point.id}:gained`);
+        } else if (prevOwner === this.localTeamId) {
           this.effects.globalSfx("sfx.capture.lost", `capture:${point.id}:lost`);
         }
       }
@@ -3190,8 +3213,8 @@ export class LaneBattleScene extends Phaser.Scene {
         );
         tower.hp = tower.maxHp;
         tower.attackTimerSec = 0.3;
-        if (tower.owner === (this.match?.localTeam ?? "player")) this.effects.notice("타워 재건축 완료");
-        if (tower.owner === "player") {
+        if (tower.owner === this.localTeamId) {
+          this.effects.notice("타워 재건축 완료");
           this.effects.globalSfx("sfx.construction.complete", `tower:${tower.id}:complete`);
           this.effects.globalSfx("sfx.fortress.rebuilt", `tower:${tower.id}:rebuilt`);
         }
@@ -3407,8 +3430,10 @@ export class LaneBattleScene extends Phaser.Scene {
     this.selectedDefenseTowerId = null;
     this.refreshCapturePointVisuals();
     this.refreshDefenseTowerVisuals();
-    if (team === "player") {
-      this.audio.playSfx("sfx.ui.buildSelect", { eventKey: "base:select:player" });
+    // The confirmation sound belongs to selecting *your own* base, so it keys
+    // off the local side rather than the left-hand one.
+    if (team === this.localTeamId) {
+      this.audio.playSfx("sfx.ui.buildSelect", { eventKey: `base:select:${team}` });
     }
     this.refreshUi();
   }
@@ -3421,11 +3446,15 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private browsePlayerProductionAge(delta: 1 | -1): void {
-    const browsable = getBrowsableAgeIds(this.player.ageId);
-    const currentIndex = browsable.indexOf(this.player.selectedProductionAgeId);
+    // Browsing is local view state, so it must move the viewer's own team.
+    // Reading `player` here meant the right-hand player's clicks silently
+    // retargeted the opponent's production age instead of their own.
+    const team = this.localTeamState;
+    const browsable = getBrowsableAgeIds(team.ageId);
+    const currentIndex = browsable.indexOf(team.selectedProductionAgeId);
     const nextAgeId = browsable[Phaser.Math.Clamp(currentIndex + delta, 0, browsable.length - 1)];
-    if (!nextAgeId || nextAgeId === this.player.selectedProductionAgeId) return;
-    this.player.selectedProductionAgeId = nextAgeId;
+    if (!nextAgeId || nextAgeId === team.selectedProductionAgeId) return;
+    team.selectedProductionAgeId = nextAgeId;
     this.audio.playSfx("sfx.ui.hover", { eventKey: `base:browse:${nextAgeId}` });
     this.refreshUi();
   }
@@ -3592,15 +3621,18 @@ export class LaneBattleScene extends Phaser.Scene {
       point.ruinsVisualOwner = "neutral";
     }
     if (outcome.result === "none") return;
+    // These read "적 …" from the taker's point of view, so they may only fire
+    // for the client that did the taking.
+    const takenByMe = toOwner === this.localTeamId;
     if (outcome.result === "destroyed") {
-      if (toOwner === "player") this.effects.notice("적 거점 건물이 파괴되었습니다");
+      if (takenByMe) this.effects.notice("적 거점 건물이 파괴되었습니다");
       return;
     }
     if (outcome.result === "collapsed") {
-      if (toOwner === "player") this.effects.notice("적 건물을 접수하려 했지만 붕괴했습니다");
+      if (takenByMe) this.effects.notice("적 건물을 접수하려 했지만 붕괴했습니다");
       return;
     }
-    if (toOwner === "player") this.effects.notice(`적 건물을 접수했습니다 (레벨 -${outcome.levelDrop})`);
+    if (takenByMe) this.effects.notice(`적 건물을 접수했습니다 (레벨 -${outcome.levelDrop})`);
   }
 
   private isPrototypeV2(): boolean {
@@ -3723,7 +3755,7 @@ export class LaneBattleScene extends Phaser.Scene {
         .setDisplaySize(markerHeight * frameAspectRatio(point.marker), markerHeight)
         .setDepth(this.getGroundDepth(pos.y))
         .setVisible(this.terrainMode === "world-surface");
-      point.ownerText.setText(point.owner === "player" ? "아군 점령" : point.owner === "enemy" ? "적 점령" : "중립");
+      point.ownerText.setText(point.owner === this.localTeamId ? "아군 점령" : point.owner === "neutral" ? "중립" : "적 점령");
       point.ownerText.setColor(point.owner === "player" ? "#cfeeff" : point.owner === "enemy" ? "#ffd8d8" : "#eadfb3");
       const labelY = pos.y - (
         this.terrainMode === "world-surface"
@@ -3833,7 +3865,7 @@ export class LaneBattleScene extends Phaser.Scene {
         .setText(tower.buildRemainingSec > 0 ? `재건 ${Math.ceil(tower.buildRemainingSec)}초` : tower.built ? "가동 중" : tower.owner === "neutral" ? "중립 폐허" : "재건 가능");
       tower.label.setVisible(selected);
       tower.ownerText
-        .setText(tower.owner === "player" ? "아군 타워" : tower.owner === "enemy" ? "적 타워" : "중립 타워 거점")
+        .setText(tower.owner === this.localTeamId ? "아군 타워" : tower.owner === "neutral" ? "중립 타워 거점" : "적 타워")
         .setVisible(selected);
       tower.statusText.setVisible(selected);
       tower.groundPresentation?.shadow.setVisible(this.terrainMode === "prototype" && tower.built);
@@ -4078,8 +4110,18 @@ export class LaneBattleScene extends Phaser.Scene {
     playerThreat.forEach((unit) => this.tryAttackBase(unit, this.player));
     enemyThreat.forEach((unit) => this.tryAttackBase(unit, this.enemy));
 
-    if (this.player.baseHp <= 0) this.scene.start("gameover", { win: false, squadSize: 0, summary: "아군 본진이 붕괴했습니다." });
-    if (this.enemy.baseHp <= 0) this.scene.start("gameover", { win: true, squadSize: 0, summary: "적 본진을 돌파했습니다." });
+    // Which base falling counts as a loss depends on the side this client
+    // plays, not on which base is on the left. Hard-coding it told the
+    // right-hand player they had won at the exact moment they lost.
+    const fallen = this.player.baseHp <= 0 ? "player" : this.enemy.baseHp <= 0 ? "enemy" : null;
+    if (fallen) {
+      const lost = fallen === this.localTeamId;
+      this.scene.start("gameover", {
+        win: !lost,
+        squadSize: 0,
+        summary: lost ? "아군 본진이 붕괴했습니다." : "적 본진을 돌파했습니다.",
+      });
+    }
   }
 
   private tryAttackBase(unit: SimUnit, targetTeam: TeamState): void {
@@ -4190,7 +4232,7 @@ export class LaneBattleScene extends Phaser.Scene {
     team.resources.gold += reward.gold;
     team.resources.wood += reward.wood;
     team.resources.food += reward.food;
-    if (team.id === "player" && toastX !== undefined && toastY !== undefined) {
+    if (team.id === this.localTeamId && toastX !== undefined && toastY !== undefined) {
       this.spawnToast(`+${reward.gold}G +${reward.wood}W +${reward.food}F`, toastX, toastY, "#f4d35e");
     }
   }
@@ -4198,11 +4240,11 @@ export class LaneBattleScene extends Phaser.Scene {
   private trySpawnWave(team: TeamState, forced: boolean): boolean {
     const plan = createWaveDeploymentPlan(team, PLAYER_OPPONENT_COUNT);
     if (!plan.canDeploy) {
-      if (team.id === "player" && shouldAnnounceWaveFoodShortage(team, forced, this.elapsedSec)) {
+      if (team.id === this.localTeamId && shouldAnnounceWaveFoodShortage(team, forced, this.elapsedSec)) {
         this.hud.setInfo("식량이 부족합니다", { color: "#ff6b6b" });
         team.lastFoodShortageNoticeSec = this.elapsedSec;
       }
-      if (team.id === "player") this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "wave:food-shortage" });
+      if (team.id === this.localTeamId) this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "wave:food-shortage" });
       team.waveBlockedByFood = true;
       scheduleWaveRetry(team);
       return false;
@@ -4217,8 +4259,8 @@ export class LaneBattleScene extends Phaser.Scene {
     }
     this.spawnWaveUnits(team, plan.roster);
 
-    if (team.id === "player") this.hud.setInfo(forced ? "즉시 웨이브를 투입했습니다" : "정규 웨이브가 출전했습니다");
-    if (team.id === "player") {
+    if (team.id === this.localTeamId) this.hud.setInfo(forced ? "즉시 웨이브를 투입했습니다" : "정규 웨이브가 출전했습니다");
+    if (team.id === this.localTeamId) {
       this.audio.playSfx("sfx.wave.start", { eventKey: `wave:start:${Math.round(this.elapsedSec * 10)}` });
       this.audio.setDirectorState("battle-low");
       this.audioWiring.recordCombatEvent(this.elapsedSec);
@@ -5000,11 +5042,13 @@ export class LaneBattleScene extends Phaser.Scene {
     this.hud.apply(snapshot, selectedActions);
     this.hud.setDevToolsVisible(this.devModeAvailable);
     this.hud.setDevMode(this.devModeAvailable && this.devModeEnabled);
-    if (this.selectedMainBaseTeam === "player") {
+    // Opens for whichever base is this client's own, not for the left one.
+    if (this.selectedMainBaseTeam === this.localTeamId) {
+      const team = this.localTeamState;
       this.baseResearchPanel.applySnapshot(createBaseResearchPanelSnapshot({
-        team: this.player,
-        researchState: this.playerResearchState,
-        viewedAgeId: this.player.selectedProductionAgeId,
+        team,
+        researchState: this.localResearchState,
+        viewedAgeId: team.selectedProductionAgeId,
         freeApply: this.devModeEnabled,
       }));
     } else {
@@ -5176,9 +5220,25 @@ export class LaneBattleScene extends Phaser.Scene {
     return this.actingTeamId === "enemy" ? this.enemyResearchState : this.playerResearchState;
   }
 
-  /** The side this client plays; in single-player always the left-hand team. */
+  /**
+   * The side this client plays; in single-player always the left-hand team.
+   *
+   * Anything the viewer sees or controls must go through this rather than
+   * `player`/`enemy` directly. Those two name *positions on the map* — left and
+   * right — which is right for simulation rules but wrong for the UI: taking
+   * `"player"` to mean "me" left the right-hand player unable to open their own
+   * base and being told they had won when they had lost.
+   */
+  private get localTeamId(): TeamId {
+    return this.match?.localTeam === "enemy" ? "enemy" : "player";
+  }
+
   private get localTeamState(): TeamState {
-    return this.match?.localTeam === "enemy" ? this.enemy : this.player;
+    return this.localTeamId === "enemy" ? this.enemy : this.player;
+  }
+
+  private get localResearchState(): TeamResearchState {
+    return this.localTeamId === "enemy" ? this.enemyResearchState : this.playerResearchState;
   }
 
   private applyCommand(team: CommandTeam, command: BattleCommand): void {
@@ -5225,13 +5285,30 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   /** Surfaces waiting-for-opponent and desync states, which must never be silent. */
+  /**
+   * Runs every frame, so it must describe the current state rather than
+   * announce a change — including clearing the line once the stall is over.
+   */
   private reportNetworkState(): void {
-    const desync = this.lockstep?.getDesync();
-    if (desync) {
-      this.hud.setInfo(`동기화 오류 (tick ${desync.tick}) — 대전을 계속할 수 없습니다`);
+    if (this.matchEndedReason) {
+      this.hud.setNetworkStatus(this.matchEndedReason, { color: "#ff8f8f" });
       return;
     }
-    if (this.netStalled) this.hud.setInfo("상대를 기다리는 중...");
+    const desync = this.lockstep?.getDesync();
+    if (desync) {
+      this.hud.setNetworkStatus(
+        `동기화 오류 (tick ${desync.tick}) — 대전을 계속할 수 없습니다`,
+        { color: "#ff8f8f" },
+      );
+      return;
+    }
+    // A known dropout is more informative than the generic stall it also
+    // causes, so it wins; both clear on their own once the peer is back.
+    if (this.opponentWaitingReason) {
+      this.hud.setNetworkStatus(this.opponentWaitingReason, { color: "#ffd67a" });
+      return;
+    }
+    this.hud.setNetworkStatus(this.netStalled ? "상대를 기다리는 중..." : null);
   }
 
   private captureSimulationState(): SimulationStateView {

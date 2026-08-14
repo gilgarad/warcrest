@@ -23,5 +23,15 @@ const PORT = Number(process.env.RELAY_PORT ?? 8787);
  */
 const HOST = process.env.RELAY_HOST ?? "127.0.0.1";
 const server = new WebSocketServer({ host: HOST, port: PORT });
-attachRelay(server, { log: (message) => process.stdout.write(`[relay] ${message}\n`) });
+const relay = attachRelay(server, { log: (message) => process.stdout.write(`[relay] ${message}\n`) });
 process.stdout.write(`[relay] listening on ws://${HOST}:${PORT}\n`);
+
+// systemd sends SIGTERM on restart. Closing explicitly stops the heartbeat
+// timer and drops the retained frame logs, rather than leaving that to however
+// abruptly the process happens to die.
+for (const signal of ["SIGTERM", "SIGINT"] as const) {
+  process.on(signal, () => {
+    relay.close();
+    server.close(() => process.exit(0));
+  });
+}
