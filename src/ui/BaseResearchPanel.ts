@@ -32,6 +32,8 @@ const PANEL_BOTTOM = PANEL.centreY + PANEL.height / 2;
 const HEADER_CENTRE_Y = PANEL_TOP + PANEL.headerHeight / 2;
 const FOOTER_HEIGHT = 48;
 const FOOTER_CENTRE_Y = PANEL_BOTTOM - PANEL.padding - FOOTER_HEIGHT / 2;
+const ARROW_WIDTH = 44;
+const ARROW_HEIGHT = 40;
 
 export interface PanelBox {
   centreX: number;
@@ -46,6 +48,13 @@ const box = (centreX: number, centreY: number, width: number, height: number): P
 const rightAligned = (width: number, centreY: number, height: number, rightEdge: number): PanelBox =>
   box(rightEdge - width / 2, centreY, width, height);
 
+export const panelBoxEdges = (target: PanelBox) => ({
+  left: target.centreX - target.width / 2,
+  right: target.centreX + target.width / 2,
+  top: target.centreY - target.height / 2,
+  bottom: target.centreY + target.height / 2,
+});
+
 /**
  * Where the framed elements sit, exported so the alignment can be asserted
  * instead of inspected in a screenshot. Every position is derived from the panel
@@ -53,6 +62,23 @@ const rightAligned = (width: number, centreY: number, height: number, rightEdge:
  */
 export const BASE_RESEARCH_PANEL_LAYOUT = (() => {
   const close = rightAligned(74, HEADER_CENTRE_Y, 38, PANEL_RIGHT - PANEL.padding);
+  // The age arrows sit on their own line under the header, and are pulled left
+  // of the close button's column. They used to be placed independently and
+  // clipped its lower-left corner: close occupied x 1102-1176 / y 278-316 and
+  // the forward arrow x 1064-1108 / y 300-340, which intersect.
+  const arrowsY = panelBoxEdges(close).bottom + PANEL.gap / 2 + ARROW_HEIGHT / 2;
+  const next = rightAligned(
+    ARROW_WIDTH,
+    arrowsY,
+    ARROW_HEIGHT,
+    panelBoxEdges(close).left - PANEL.gap,
+  );
+  const prev = rightAligned(
+    ARROW_WIDTH,
+    arrowsY,
+    ARROW_HEIGHT,
+    next.centreX - next.width / 2 - 8,
+  );
   const revert = rightAligned(110, FOOTER_CENTRE_Y, FOOTER_HEIGHT, PANEL_RIGHT - PANEL.padding);
   const apply = rightAligned(
     206,
@@ -64,17 +90,15 @@ export const BASE_RESEARCH_PANEL_LAYOUT = (() => {
     panel: box(PANEL.centreX, PANEL.centreY, PANEL.width, PANEL.height),
     header: box(PANEL.centreX, HEADER_CENTRE_Y, PANEL.width, PANEL.headerHeight),
     close,
+    prev,
+    next,
     apply,
     revert,
   };
 })();
 
-export const panelBoxEdges = (target: PanelBox) => ({
-  left: target.centreX - target.width / 2,
-  right: target.centreX + target.width / 2,
-  top: target.centreY - target.height / 2,
-  bottom: target.centreY + target.height / 2,
-});
+/** Controls that must never overlap one another. */
+export const PANEL_CONTROL_KEYS = ["close", "prev", "next", "apply", "revert"] as const;
 
 interface PanelRowView {
   background: Phaser.GameObjects.Rectangle;
@@ -241,8 +265,8 @@ export class BaseResearchPanel {
       color: "#aac1db",
       lineSpacing: 3,
     }).setDepth(this.depth + 2).setScrollFactor(0);
-    this.prevButton = this.createButton(1030, 320, 44, 40, "<", () => this.callbacks.browseAge(-1));
-    this.nextButton = this.createButton(1086, 320, 44, 40, ">", () => this.callbacks.browseAge(1));
+    this.prevButton = this.buttonFromBox(BASE_RESEARCH_PANEL_LAYOUT.prev, "<", () => this.callbacks.browseAge(-1));
+    this.nextButton = this.buttonFromBox(BASE_RESEARCH_PANEL_LAYOUT.next, ">", () => this.callbacks.browseAge(1));
     const unitHeader = this.scene.add.text(522, 424, "병력", { fontFamily: "sans-serif", fontSize: "15px", color: "#a6bfdc" }).setDepth(this.depth + 2).setScrollFactor(0);
     const attackHeader = this.scene.add.text(730, 424, "공격", { fontFamily: "sans-serif", fontSize: "15px", color: "#a6bfdc" }).setDepth(this.depth + 2).setScrollFactor(0);
     const defenseHeader = this.scene.add.text(964, 424, "방어", { fontFamily: "sans-serif", fontSize: "15px", color: "#a6bfdc" }).setDepth(this.depth + 2).setScrollFactor(0);

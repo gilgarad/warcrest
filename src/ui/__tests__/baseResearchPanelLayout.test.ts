@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { BASE_RESEARCH_PANEL_LAYOUT, panelBoxEdges, type PanelBox } from "../BaseResearchPanel";
+import {
+  BASE_RESEARCH_PANEL_LAYOUT,
+  PANEL_CONTROL_KEYS,
+  panelBoxEdges,
+  type PanelBox,
+} from "../BaseResearchPanel";
 
 /**
  * The panel's buttons were positioned by eye and drifted: apply and revert hung
@@ -35,8 +40,19 @@ describe("base research panel layout", () => {
     }
   });
 
-  it("does not overlap apply with revert", () => {
-    expect(overlaps(layout.apply, layout.revert)).toBe(false);
+  /**
+   * Every pair, not a chosen one. The first version of this checked only apply
+   * against revert, and close went on to clip the age arrows — a pair nobody
+   * had thought to name. Enumerating them removes the need to guess which
+   * collisions are possible.
+   */
+  it("keeps every pair of controls clear of each other", () => {
+    for (let i = 0; i < PANEL_CONTROL_KEYS.length; i += 1) {
+      for (let j = i + 1; j < PANEL_CONTROL_KEYS.length; j += 1) {
+        const [first, second] = [PANEL_CONTROL_KEYS[i], PANEL_CONTROL_KEYS[j]];
+        expect(overlaps(layout[first], layout[second]), `${first} overlaps ${second}`).toBe(false);
+      }
+    }
   });
 
   it("centres close on the header bar", () => {
