@@ -603,7 +603,7 @@ export class LaneBattleScene extends Phaser.Scene {
    * simulation, so two lockstep peers would apply the same hit on different
    * ticks and diverge. Impacts now resolve on a tick like everything else.
    */
-  private pendingImpacts: { tick: number; unitId: number; sequence: number; resolve: () => void }[] = [];
+  private pendingImpacts: { tick: number; guard: () => boolean; resolve: () => void }[] = [];
   private readonly visualValidationScenario = QUERY_PARAMS.get("scenario") === "visual-validation";
   private readonly terrainDebugInputEnabled = isTerrainDebugInputEnabled(QUERY_PARAMS.get("terrainDebug"));
   private readonly mapSpec = getBattlefieldMapSpec(QUERY_PARAMS.get("map"));
@@ -2228,7 +2228,7 @@ export class LaneBattleScene extends Phaser.Scene {
             const start = this.getUnitProjectileAnchor(unit);
             const end = this.getTowerProjectileAnchor(enemyTower, false);
             this.startRangedAttack(unit, { kind: "tower", id: enemyTower.id }, "structure", () => {
-              this.launchProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToTower(enemyTower, damage, unit.team), 1.02);
+              this.fireProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToTower(enemyTower, damage, unit.team), 1.02);
             });
           } else {
             this.startMeleeAttack(unit, { kind: "tower", id: enemyTower.id }, "structure", () => {
@@ -2277,7 +2277,7 @@ export class LaneBattleScene extends Phaser.Scene {
           const end = this.getUnitProjectileAnchor(nearest);
           this.startRangedAttack(unit, { kind: "unit", id: nearest.id }, "unit", () => {
             if (!this.units.includes(nearest)) return;
-            this.launchProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToUnit(nearest, damage, unit.team === "player" ? "#ffd67a" : "#ff8f8f", unit.unitId), 1.04);
+            this.fireProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToUnit(nearest, damage, unit.team === "player" ? "#ffd67a" : "#ff8f8f", unit.unitId), 1.04);
           });
         } else {
           this.startMeleeAttack(unit, { kind: "unit", id: nearest.id }, "unit", () => {
@@ -2470,12 +2470,23 @@ export class LaneBattleScene extends Phaser.Scene {
     const timing = this.beginAttackPresentation(unit, target, targetKind);
     const sequence = ++unit.attackSequence;
     const delayTicks = Math.max(1, Math.round((timing.eventDelayMs / 1000) / SIM_TICK_SEC));
-    this.pendingImpacts.push({
-      tick: this.simTick + delayTicks,
-      unitId: unit.id,
-      sequence,
-      resolve,
+    const attackerId = unit.id;
+    this.scheduleImpact(delayTicks, resolve, () => {
+      const attacker = this.units.find((entry) => entry.id === attackerId);
+      // Dropped if the attacker died, or has since begun another attack.
+      return Boolean(attacker) && attacker!.attackSequence === sequence;
     });
+  }
+
+  /**
+   * Books work to run `delayTicks` simulation ticks from now.
+   *
+   * Everything delayed inside the simulation goes through here rather than
+   * `this.time.delayedCall`, so *when* it happens is a function of the tick
+   * count and not of how fast this machine renders.
+   */
+  private scheduleImpact(delayTicks: number, resolve: () => void, guard: () => boolean = () => true): void {
+    this.pendingImpacts.push({ tick: this.simTick + Math.max(1, delayTicks), guard, resolve });
   }
 
   /**
@@ -2489,8 +2500,7 @@ export class LaneBattleScene extends Phaser.Scene {
     if (due.length === 0) return;
     this.pendingImpacts = this.pendingImpacts.filter((impact) => impact.tick > this.simTick);
     for (const impact of due) {
-      const attacker = this.units.find((unit) => unit.id === impact.unitId);
-      if (!attacker || attacker.attackSequence !== impact.sequence) continue;
+      if (!impact.guard()) continue;
       impact.resolve();
     }
   }
@@ -3258,7 +3268,7 @@ export class LaneBattleScene extends Phaser.Scene {
         -centeredIndex * 4,
       ));
       const aim = this.getUnitProjectileAnchor(target).add(new Phaser.Math.Vector2(offset, index * 3));
-      this.launchProjectile(
+      this.fireProjectile(
         launch,
         aim,
         spec.projectileKey,
@@ -3340,7 +3350,7 @@ export class LaneBattleScene extends Phaser.Scene {
       const offset = centeredIndex * spec.spreadWorldPx * 2;
       const launch = start.clone().add(new Phaser.Math.Vector2(centeredIndex * spec.spreadWorldPx, -centeredIndex * 4));
       const aim = this.getUnitProjectileAnchor(target).add(new Phaser.Math.Vector2(offset, index * 3));
-      this.launchProjectile(
+      this.fireProjectile(
         launch,
         aim,
         spec.projectileKey,
@@ -3966,6 +3976,37 @@ export class LaneBattleScene extends Phaser.Scene {
     );
   }
 
+  /**
+   * How long a projectile takes to deliver its damage, in simulation ticks.
+   *
+   * Constant rather than derived from flight distance: the visual arc is timed
+   * from screen geometry, and tying damage to that would make when a hit lands
+   * depend on rendering. Five ticks is ~167ms, inside the 150-360ms the visual
+   * takes, so the number still appears about when the projectile arrives.
+   */
+  private projectileImpactTicks(): number {
+    return 5;
+  }
+
+  /**
+   * Fires a projectile: the arc is presentation, the damage is simulation.
+   *
+   * These used to be one thing — `launchProjectile`'s `onHit` ran on tween
+   * completion, i.e. Phaser's wall clock — which made ranged, tower and base
+   * damage land at a time that depended on frame rate. Two lockstep peers would
+   * apply the same hit on different ticks and diverge.
+   */
+  private fireProjectile(
+    start: Phaser.Math.Vector2,
+    end: Phaser.Math.Vector2,
+    projectileKey: string,
+    applyDamage: () => void,
+    durationScale = 1,
+  ): void {
+    this.launchProjectile(start, end, projectileKey, () => { /* visual only */ }, durationScale);
+    this.scheduleImpact(this.projectileImpactTicks(), applyDamage);
+  }
+
   private launchProjectile(
     start: Phaser.Math.Vector2,
     end: Phaser.Math.Vector2,
@@ -4083,7 +4124,7 @@ export class LaneBattleScene extends Phaser.Scene {
       const start = this.getUnitProjectileAnchor(unit);
       const end = target.clone().add(new Phaser.Math.Vector2(0, -96));
       this.startRangedAttack(unit, { kind: "base", team: targetTeam.id }, "structure", () => {
-        this.launchProjectile(start, end, getProjectileKeyForUnit(unit.unitId), applyDamage, 1.05);
+        this.fireProjectile(start, end, getProjectileKeyForUnit(unit.unitId), applyDamage, 1.05);
       });
     } else {
       this.startMeleeAttack(unit, { kind: "base", team: targetTeam.id }, "structure", applyDamage);
@@ -4116,7 +4157,7 @@ export class LaneBattleScene extends Phaser.Scene {
         launch.y,
         `base:${team.id}:fire:${target.id}:${Math.round(this.elapsedSec * 1000)}:${index}`,
       );
-      this.launchProjectile(
+      this.fireProjectile(
         launch,
         anchor,
         spec.projectileKey,
