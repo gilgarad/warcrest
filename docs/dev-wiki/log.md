@@ -7983,3 +7983,63 @@ tick T를 밟을 때 `T + inputDelay`용 프레임을 보내는데, tick T **도
 
 `npm test` 253 통과, `simulation-determinism` 2/2, `day8-regression` 2/2.
 싱글 플레이는 `localTeam`이 없으므로 기존과 동일하게 왼쪽 진영을 조작한다.
+
+## [2026-08-14] refactor | 시뮬 이관 1차: Phaser 의존 제거 (Issue #7)
+
+`LaneSimulation` 클래스로 통째로 옮기기 전에, **시뮬 메서드가 엔진에 매달려
+있는 지점을 먼저 끊었다.** 상태를 옮기는 것보다 이쪽이 먼저다 — 의존이 남은
+채로 클래스만 분리하면 그 클래스가 여전히 Phaser를 import한다.
+
+### 1. `systems/sim/simMath.ts` — 순수 수학
+
+시뮬이 `Phaser.Math.Clamp`/`Phaser.Math.Linear`를 쓰고 있었다. 한 줄짜리
+함수들이지만, 이것 때문에 **시뮬 전체가 Phaser 없이는 돌 수 없었다**(Node,
+Worker, 서버 어디서도). `clamp`/`lerp`/`moveToward`/`distance`로 대체해
+시뮬 메서드 18줄에서 걷어냈다.
+
+전부 `+ - * /`와 비교, 그리고 IEEE-754가 정확 반올림을 규정하는 `sqrt`만
+쓴다 — 락스텝이 의존하는 성질이다. 테스트에 **재현 가능한 값 자체를 고정**해
+두어, 누가 `Math.pow`나 근사식으로 "최적화"하면 desync 전에 잡히도록 했다.
+
+### 2. 피해 처리에서 표현 분리
+
+`applyDamageToUnit()`이 hp를 깎으면서 동시에 틴트 플래시, 임팩트 원 tween,
+데미지 토스트까지 직접 그리고 있었다. 이걸 `effects.unitImpact(unitId, damage,
+color)` 한 호출로 묶어 seam 뒤로 보냈다. 시뮬은 "누가 얼마 맞았다"만 알면
+되고, 그중 무엇을 보여줄지는 렌더러의 판단이다.
+
+### 3. 공격 대상을 좌표가 아니라 **참조**로
+
+이게 마지막으로 시뮬이 `sprite.x/y`를 읽게 만들던 이유였다.
+`startMeleeAttack(unit, targetX, targetY, ...)`처럼 좌표를 넘기고 있었으니,
+전투 루프가 화면 좌표를 알아야 했다.
+
+`AttackTargetRef`(`{kind:"unit"|"tower"|"base", ...}`)를 도입해 시뮬은
+**누구를 노리는지만** 말하고, 위치 해소는 표현 시점에 `resolveTargetPoint()`가
+한다. 조준 방향 유지(`faceTarget`)도 같은 방식으로 바꿨다.
+
+### 결과
+
+| | 이관 전 | 이관 후 |
+|---|---|---|
+| 시뮬 메서드의 표시 객체 참조 | 37곳 | **10곳** |
+| 그중 `tickCombat` | 16곳 | **0곳** |
+| 시뮬 메서드의 `Phaser.Math` | 21곳 | 0곳 |
+
+`tickCombat` — 전투 루프 전체가 이제 표시 객체를 한 번도 만지지 않는다.
+남은 10곳은 `applyDamageToTower`(5), `applySupportHeal`(2), `killUnit`(2) 등
+구조물·정리 경로이며 같은 방식으로 처리 가능하다.
+
+### 검증
+
+- `npm test` **259 통과**(신규 6건).
+- `simulation-determinism` 2/2 — **리플레이 해시가 그대로**다. 즉 옮긴 것은
+  경로뿐이고 시뮬 결과는 한 비트도 바뀌지 않았다.
+- `day8-regression` 2/2.
+- 2인 실제 대전 재확인: enemy 진영 조작 가능 ✓, 상대 시뮬에 반영 ✓,
+  desync 없음 ✓.
+
+### 다음
+
+남은 표시 객체 참조 10곳 정리 -> 시뮬 상태(`this.units` 등)를
+`LaneSimulation`으로 이동 -> Node에서 실행 가능해지면 브라우저와 해시 대조.

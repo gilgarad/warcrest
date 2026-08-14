@@ -27,6 +27,14 @@ export interface PresentationEffects {
   /** Floating text above a unit (damage numbers, heal amounts, labels). */
   unitToast(text: string, unitId: SimUnitRef, color: string, verticalOffset: number): void;
 
+  /**
+   * The whole "this unit just got hit" flourish — tint flash, impact ring and
+   * damage number. Grouped into one call because the simulation has no opinion
+   * about which of those the renderer chooses to show; it only knows a unit
+   * took `damage`.
+   */
+  unitImpact(unitId: SimUnitRef, damage: number, color: string): void;
+
   /** A unit died. */
   unitDied(unitId: SimUnitRef): void;
 }
@@ -40,6 +48,7 @@ export const NULL_PRESENTATION_EFFECTS: PresentationEffects = {
   unitSfx: () => {},
   structureSfx: () => {},
   unitToast: () => {},
+  unitImpact: () => {},
   unitDied: () => {},
 };
 
@@ -57,6 +66,10 @@ export class RecordingPresentationEffects implements PresentationEffects {
 
   unitToast(text: string, unitId: SimUnitRef, color: string, verticalOffset: number): void {
     this.emitted.push({ kind: "unitToast", detail: { text, unitId, color, verticalOffset } });
+  }
+
+  unitImpact(unitId: SimUnitRef, damage: number, color: string): void {
+    this.emitted.push({ kind: "unitImpact", detail: { unitId, damage, color } });
   }
 
   unitDied(unitId: SimUnitRef): void {
