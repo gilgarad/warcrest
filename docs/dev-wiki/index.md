@@ -73,6 +73,11 @@ repository work.
   게임 전반, 음악/오디오) — scope, owned files per track, current status,
   and the shared-file rule for `LaneBattleScene.ts`. Every handoff prompt
   should be labeled with one of these tracks; read this before writing one
+- `pvp-reconnect.md`: how the relay holds a disconnected player's seat, the
+  frame log that makes resuming possible, what the provisional `playerId` does
+  and does not guarantee, and — read this part — the client-side resume path
+  that is deliberately **not** wired yet
+- `refactoring-review.md`: dated refactoring inspections; append, never edit
 - `../knowledge/`: durable project knowledge
 - `../patterns/`: reusable implementation patterns
 - `../wiki/`: human-facing documentation and wiki policy

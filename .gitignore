@@ -19,3 +19,6 @@ test-results/
 # Python bytecode cache from tools/asset-qa/*.py runs
 __pycache__/
 *.pyc
+
+# Scratch output from local image generation; not part of the build.
+tmp/

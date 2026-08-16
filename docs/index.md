@@ -61,3 +61,6 @@ first — a maintained snapshot of current status/architecture/next-steps.
 ## Harness
 
 - [Local Harness Notes](harness/index.md)
+
+- 리팩터링 점검 일지: `docs/dev-wiki/refactoring-review.md`
+- 릴레이 배포(104): `docs/deploy/relay-104.md`

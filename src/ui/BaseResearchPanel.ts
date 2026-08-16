@@ -4,7 +4,154 @@ import type { ResearchStatKey } from "../systems/lane-economy/researchRules";
 import type { ResearchSubjectId } from "../systems/lane-economy/researchSubjects";
 import type { BaseResearchPanelSnapshot } from "./baseResearchPanelModel";
 
+/**
+ * Panel geometry, derived from one frame rather than hand-placed per element.
+ *
+ * The buttons were previously positioned by eye and drifted out of the frame:
+ * apply and revert hung below the bottom edge and overlapped each other, and
+ * close sat above the header bar instead of on it. Naming the edges means an
+ * element is placed relative to something real.
+ */
+const PANEL = {
+  centreX: 800,
+  // Grown downward only. The top edge stays clear of the resource readout in
+  // the top HUD band, which matters here because this panel quotes costs and
+  // the player needs to see what they hold while spending it. The old 528-tall
+  // frame could not fit the six rows the later ages produce.
+  centreY: 571,
+  width: 792,
+  height: 626,
+  /** Header bar, measured from the panel's own top edge. */
+  headerHeight: 78,
+  /** Breathing room between the frame and anything inside it. */
+  padding: 20,
+  /** Space between two adjacent buttons. */
+  gap: 12,
+} as const;
+
+const PANEL_LEFT = PANEL.centreX - PANEL.width / 2;
+const PANEL_RIGHT = PANEL.centreX + PANEL.width / 2;
+const PANEL_TOP = PANEL.centreY - PANEL.height / 2;
+const PANEL_BOTTOM = PANEL.centreY + PANEL.height / 2;
+const HEADER_CENTRE_Y = PANEL_TOP + PANEL.headerHeight / 2;
+const FOOTER_HEIGHT = 48;
+const FOOTER_CENTRE_Y = PANEL_BOTTOM - PANEL.padding - FOOTER_HEIGHT / 2;
+const ARROW_WIDTH = 44;
+const ARROW_HEIGHT = 40;
+
+export interface PanelBox {
+  centreX: number;
+  centreY: number;
+  width: number;
+  height: number;
+}
+
+const box = (centreX: number, centreY: number, width: number, height: number): PanelBox =>
+  ({ centreX, centreY, width, height });
+
+const rightAligned = (width: number, centreY: number, height: number, rightEdge: number): PanelBox =>
+  box(rightEdge - width / 2, centreY, width, height);
+
+export const panelBoxEdges = (target: PanelBox) => ({
+  left: target.centreX - target.width / 2,
+  right: target.centreX + target.width / 2,
+  top: target.centreY - target.height / 2,
+  bottom: target.centreY + target.height / 2,
+});
+
+/**
+ * Where the framed elements sit, exported so the alignment can be asserted
+ * instead of inspected in a screenshot. Every position is derived from the panel
+ * frame, which is what stops them drifting outside it again.
+ */
+export const BASE_RESEARCH_PANEL_LAYOUT = (() => {
+  const close = rightAligned(74, HEADER_CENTRE_Y, 38, PANEL_RIGHT - PANEL.padding);
+  // The age arrows sit on their own line under the header, and are pulled left
+  // of the close button's column. They used to be placed independently and
+  // clipped its lower-left corner: close occupied x 1102-1176 / y 278-316 and
+  // the forward arrow x 1064-1108 / y 300-340, which intersect.
+  const arrowsY = panelBoxEdges(close).bottom + PANEL.gap / 2 + ARROW_HEIGHT / 2;
+  const next = rightAligned(
+    ARROW_WIDTH,
+    arrowsY,
+    ARROW_HEIGHT,
+    panelBoxEdges(close).left - PANEL.gap,
+  );
+  const prev = rightAligned(
+    ARROW_WIDTH,
+    arrowsY,
+    ARROW_HEIGHT,
+    next.centreX - next.width / 2 - 8,
+  );
+  const revert = rightAligned(110, FOOTER_CENTRE_Y, FOOTER_HEIGHT, PANEL_RIGHT - PANEL.padding);
+  const apply = rightAligned(
+    206,
+    FOOTER_CENTRE_Y,
+    FOOTER_HEIGHT,
+    revert.centreX - revert.width / 2 - PANEL.gap,
+  );
+  return {
+    panel: box(PANEL.centreX, PANEL.centreY, PANEL.width, PANEL.height),
+    header: box(PANEL.centreX, HEADER_CENTRE_Y, PANEL.width, PANEL.headerHeight),
+    close,
+    prev,
+    next,
+    apply,
+    revert,
+  };
+})();
+
+/** Controls that must never overlap one another. */
+export const PANEL_CONTROL_KEYS = ["close", "prev", "next", "apply", "revert"] as const;
+
+/** Most subject rows any age produces (unique battle units plus the tower). */
+export const MAX_RESEARCH_ROWS = 6;
+/** Just below the column headers, which are the last thing above the rows. */
+const ROWS_TOP = 452;
+const ROWS_BOTTOM = panelBoxEdges(BASE_RESEARCH_PANEL_LAYOUT.apply).top - 16;
+/** Roomy spacing, used whenever there are few enough rows to afford it. */
+const MAX_ROW_PITCH = 84;
+const MAX_ROW_HEIGHT = 66;
+/** Vertical air between one row's box and the next. */
+const ROW_SPACING = 12;
+
+export interface ResearchRowLayout {
+  pitch: number;
+  height: number;
+  centres: number[];
+}
+
+/**
+ * Row geometry for a given number of rows.
+ *
+ * Derived rather than fixed because the row count is not fixed: the stone age
+ * has three subjects and the late modern ages have six. The previous constant
+ * 84px pitch was sized for the three-row case, so at six rows the last row
+ * landed at y=945 — past the panel and past the bottom of the canvas. Rows
+ * compress only as far as they must, so the common case still looks the same.
+ */
+export function researchRowLayout(rowCount: number): ResearchRowLayout {
+  const available = ROWS_BOTTOM - ROWS_TOP;
+  const pitch = rowCount <= 0 ? MAX_ROW_PITCH : Math.min(MAX_ROW_PITCH, available / rowCount);
+  const height = Math.min(MAX_ROW_HEIGHT, pitch - ROW_SPACING);
+  return {
+    pitch,
+    height,
+    centres: Array.from({ length: Math.max(0, rowCount) }, (_, index) => ROWS_TOP + pitch * (index + 0.5)),
+  };
+}
+
+export const RESEARCH_ROWS_AREA = { top: ROWS_TOP, bottom: ROWS_BOTTOM } as const;
+
+interface RowMember {
+  object: { y: number };
+  /** Distance from the row's centre line, captured when the row was built. */
+  offsetY: number;
+}
+
 interface PanelRowView {
+  /** Everything that moves with the row, so repositioning cannot miss a piece. */
+  members: RowMember[];
   background: Phaser.GameObjects.Rectangle;
   icon: Phaser.GameObjects.Image;
   label: Phaser.GameObjects.Text;
@@ -44,6 +191,7 @@ export class BaseResearchPanel {
   private nextButton!: PanelButton;
   private applyButton!: PanelButton;
   private cancelButton!: PanelButton;
+  private visible = false;
 
   constructor(
     private readonly scene: Phaser.Scene,
@@ -54,7 +202,23 @@ export class BaseResearchPanel {
     this.setVisible(false);
   }
 
+  /**
+   * Whether the pointer is inside the open panel.
+   *
+   * The battle scene treats a tap on bare ground as "clear the selection", and
+   * it decided what counted as UI from fixed screen bands. This panel floats in
+   * the middle, outside those bands, so pressing one of its buttons registered
+   * as a tap on the field: the stat did increment, and then the selection was
+   * cleared and the panel closed itself. Coordinates are in the same space as
+   * `Pointer.x`/`y`, since everything here is fixed to the camera.
+   */
+  isPointerOver(x: number, y: number): boolean {
+    if (!this.visible) return false;
+    return x >= PANEL_LEFT && x <= PANEL_RIGHT && y >= PANEL_TOP && y <= PANEL_BOTTOM;
+  }
+
   setVisible(visible: boolean): void {
+    this.visible = visible;
     this.objects.forEach((object) => object.setVisible(visible));
     if (!visible) {
       this.disableRowInteractions();
@@ -77,9 +241,11 @@ export class BaseResearchPanel {
     this.setButtonEnabled(this.applyButton, snapshot.applyEnabled);
     this.applyButton.text.setText(snapshot.applyLabel);
     this.setButtonEnabled(this.cancelButton, true);
+    const rowLayout = researchRowLayout(Math.min(snapshot.rows.length, MAX_RESEARCH_ROWS));
     this.rows.forEach((rowView, index) => {
       const row = snapshot.rows[index];
       const visible = Boolean(row);
+      if (row) this.positionRow(rowView, rowLayout.centres[index], rowLayout.height);
       rowView.background.setVisible(visible);
       rowView.icon.setVisible(visible);
       rowView.label.setVisible(visible);
@@ -106,11 +272,11 @@ export class BaseResearchPanel {
   }
 
   private create(): void {
-    const background = this.scene.add.rectangle(800, 522, 792, 528, 0x0a1320, 0.95)
+    const background = this.scene.add.rectangle(PANEL.centreX, PANEL.centreY, PANEL.width, PANEL.height, 0x0a1320, 0.95)
       .setStrokeStyle(2, 0xc3b58a, 0.22)
       .setDepth(this.depth)
       .setScrollFactor(0);
-    const panelTop = this.scene.add.rectangle(800, 318, 792, 78, 0x13263b, 0.98)
+    const panelTop = this.scene.add.rectangle(PANEL.centreX, HEADER_CENTRE_Y, PANEL.width, PANEL.headerHeight, 0x13263b, 0.98)
       .setDepth(this.depth + 1)
       .setScrollFactor(0);
     this.title = this.scene.add.text(472, 286, "", {
@@ -152,20 +318,23 @@ export class BaseResearchPanel {
       color: "#aac1db",
       lineSpacing: 3,
     }).setDepth(this.depth + 2).setScrollFactor(0);
-    this.prevButton = this.createButton(1030, 320, 44, 40, "<", () => this.callbacks.browseAge(-1));
-    this.nextButton = this.createButton(1086, 320, 44, 40, ">", () => this.callbacks.browseAge(1));
+    this.prevButton = this.buttonFromBox(BASE_RESEARCH_PANEL_LAYOUT.prev, "<", () => this.callbacks.browseAge(-1));
+    this.nextButton = this.buttonFromBox(BASE_RESEARCH_PANEL_LAYOUT.next, ">", () => this.callbacks.browseAge(1));
     const unitHeader = this.scene.add.text(522, 424, "병력", { fontFamily: "sans-serif", fontSize: "15px", color: "#a6bfdc" }).setDepth(this.depth + 2).setScrollFactor(0);
     const attackHeader = this.scene.add.text(730, 424, "공격", { fontFamily: "sans-serif", fontSize: "15px", color: "#a6bfdc" }).setDepth(this.depth + 2).setScrollFactor(0);
     const defenseHeader = this.scene.add.text(964, 424, "방어", { fontFamily: "sans-serif", fontSize: "15px", color: "#a6bfdc" }).setDepth(this.depth + 2).setScrollFactor(0);
-    this.closeButton = this.createButton(1144, 286, 74, 38, "닫기", this.callbacks.close);
-    this.applyButton = this.createButton(1016, 774, 206, 48, "적용", this.callbacks.apply);
-    this.cancelButton = this.createButton(1150, 774, 92, 48, "취소", this.callbacks.cancel);
+    // Close sits centred on the header bar; apply and revert are laid out
+    // right-to-left inside the footer so the two cannot overlap.
+    // "취소" was the old label and read as "close this dialog". This button
+    // discards the pending changes and leaves the panel open, so it says so.
+    const layout = BASE_RESEARCH_PANEL_LAYOUT;
+    this.closeButton = this.buttonFromBox(layout.close, "닫기", this.callbacks.close);
+    this.applyButton = this.buttonFromBox(layout.apply, "적용", this.callbacks.apply);
+    this.cancelButton = this.buttonFromBox(layout.revert, "되돌리기", this.callbacks.cancel);
 
-    let rowY = 492;
-    for (let index = 0; index < 6; index += 1) {
-      this.rows.push(this.createRow(rowY));
-      rowY += 84;
-    }
+    // Built at the origin; `applySnapshot` places them once it knows how many
+    // rows this age actually has.
+    for (let index = 0; index < MAX_RESEARCH_ROWS; index += 1) this.rows.push(this.createRow(0));
 
     this.objects.push(
       background,
@@ -246,7 +415,17 @@ export class BaseResearchPanel {
     const defenseMinus = this.createStatButton(1058, y, "-");
     const defensePlus = this.createStatButton(1102, y, "+");
     this.objects.push(rowBackground);
+    // Built at y = 0, so each object's own y *is* its offset from the row's
+    // centre line. Reading the offsets back rather than restating them means a
+    // later tweak to any element's position cannot fall out of step with the
+    // repositioning code.
+    const members: RowMember[] = [
+      rowBackground, icon, label, attackValue, attackMeta, defenseValue, defenseMeta,
+      attackMinus.rect, attackMinus.text, attackPlus.rect, attackPlus.text,
+      defenseMinus.rect, defenseMinus.text, defensePlus.rect, defensePlus.text,
+    ].map((object) => ({ object, offsetY: object.y }));
     return {
+      members,
       background: rowBackground,
       icon,
       label,
@@ -259,6 +438,19 @@ export class BaseResearchPanel {
       defenseMinus,
       defensePlus,
     };
+  }
+
+  /** Moves a whole row onto a centre line and resizes it to the given height. */
+  private positionRow(row: PanelRowView, centreY: number, height: number): void {
+    for (const member of row.members) member.object.y = centreY + member.offsetY;
+    row.background.setSize(712, height);
+    // The portrait fills the row box, so it has to shrink with it.
+    const iconSize = Math.min(MAX_ROW_HEIGHT, height);
+    row.icon.setDisplaySize(iconSize, iconSize);
+  }
+
+  private buttonFromBox(target: PanelBox, label: string, onClick: () => void): PanelButton {
+    return this.createButton(target.centreX, target.centreY, target.width, target.height, label, onClick);
   }
 
   private createButton(x: number, y: number, width: number, height: number, label: string, onClick: () => void): PanelButton {

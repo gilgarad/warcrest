@@ -87,6 +87,8 @@ export class LaneBattleHudView {
   private workerSummaryText?: Phaser.GameObjects.Text;
   private researchSummaryText?: Phaser.GameObjects.Text;
   private audioDebugText?: Phaser.GameObjects.Text;
+  private networkStatusText?: Phaser.GameObjects.Text;
+  private networkStatus = "";
   private audioSettingsPanel!: AudioSettingsPanel;
   private devToggleButton?: ActionButton;
   private devResearchButton?: ActionButton;
@@ -112,6 +114,10 @@ export class LaneBattleHudView {
    * only way a player learns *why* a button press did nothing, so they now
    * surface as a floating toast over the worker/action panel instead of a
    * static line that's either empty or stale.
+   *
+   * Every call spawns a new fading object, so this may only be called on
+   * discrete events. Calling it from a per-frame path stacks a new toast every
+   * frame — see `setNetworkStatus` for the standing-condition case.
    */
   setInfo(text: string, options: InfoMessageOptions = {}): void {
     if (!text) return;
@@ -132,6 +138,38 @@ export class LaneBattleHudView {
       duration: 500,
       onComplete: () => toast.destroy(),
     });
+  }
+
+  /**
+   * A standing condition rather than an event: waiting for the opponent,
+   * reconnecting, desynced. One persistent line that is set and cleared, not a
+   * toast — network state is evaluated every frame, and routing it through
+   * `setInfo` created a fresh Text object per frame. Those piled up into a
+   * permanently visible smear that never disappeared when the stall ended, and
+   * each one forced a canvas re-raster.
+   *
+   * Passing an empty string (or null) clears it.
+   */
+  setNetworkStatus(text: string | null, options: InfoMessageOptions = {}): void {
+    const next = text ?? "";
+    if (next === this.networkStatus) return; // Restyling a Text re-rasterises it.
+    this.networkStatus = next;
+    if (!next) {
+      this.networkStatusText?.setVisible(false);
+      return;
+    }
+    if (!this.networkStatusText) {
+      this.networkStatusText = this.scene.add.text(this.canvasWidth / 2, 168, "", {
+        fontFamily: "sans-serif",
+        fontSize: "22px",
+        color: "#f4e6c5",
+        stroke: "#132033",
+        strokeThickness: 5,
+        align: "center",
+      }).setOrigin(0.5, 0).setDepth(this.depth + 32).setScrollFactor(0);
+      this.scene.cameras.main.ignore(this.networkStatusText);
+    }
+    this.networkStatusText.setText(next).setColor(options.color ?? "#f4e6c5").setVisible(true);
   }
 
   openAudioSettings(): void {

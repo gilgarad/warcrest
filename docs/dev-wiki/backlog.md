@@ -14,6 +14,24 @@ GitHub Issues own task status. This file owns planning context.
 
 ## Active Queue
 
+- **[IN PROGRESS] Online 1v1 PvP — Issue #7, branch `issue-7-pvp-sim-render-split`**
+  — architecture review done, implementation not started. Findings and the
+  option comparison live in `pvp-architecture-plan.md`.
+  - Readiness measured: 85 of `LaneBattleScene`'s 150 methods (951 lines) are
+    already presentation-free; only 2 of 69 modules on the simulation side
+    import Phaser; the genuinely entangled gameplay code is ~335 lines.
+  - Determinism risks are small and enumerated: 2 unseeded RNG calls
+    (`rollKillResourceReward` via `Phaser.Utils.Array.GetRandom`), one
+    `Math.pow` in `frameLerpAlpha` that a fixed timestep removes outright, and
+    the current variable timestep. Simulation transcendentals are otherwise
+    `Math.sqrt` only, which is bit-exact per IEEE-754.
+  - Recommended: deterministic lockstep + thin relay, because the player never
+    controls units directly — input is ~7 discrete commands a few times a
+    minute, so exchanging commands costs ~5 B/s where snapshot sync would cost
+    ~60 KB/s.
+  - **All three candidate architectures need the headless deterministic sim
+    first**, so phase 1 can start before the final choice is locked.
+
 - **[NEXT] Melee "blocked by ally" flow (~11.9% of melee unit-frames)** —
   branch `issue-gameplay-issues-followup` measured the current combat loop
   under natural wave pacing (no artificial spawning, 45s, 547 melee /

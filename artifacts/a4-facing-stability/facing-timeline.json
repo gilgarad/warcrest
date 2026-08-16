@@ -8,17 +8,17 @@
       "facingDirection": "e",
       "motionX": 0,
       "motionY": 0,
-      "attackFacingLockSec": 0.44333333333333336,
-      "combatFacingHoldSec": 0.44333333333333336,
-      "pose": "stone-axeman-e-attack"
+      "attackFacingLockSec": 0.38,
+      "combatFacingHoldSec": 0.38,
+      "pose": "stone-axeman-e-idle"
     },
     {
       "tMs": 100,
       "facingDirection": "e",
       "motionX": 0,
       "motionY": 0,
-      "attackFacingLockSec": 0.4266666666666667,
-      "combatFacingHoldSec": 0.4266666666666667,
+      "attackFacingLockSec": 0.3466666666666667,
+      "combatFacingHoldSec": 0.3466666666666667,
       "pose": "stone-axeman-e-attack"
     },
     {
@@ -26,8 +26,8 @@
       "facingDirection": "e",
       "motionX": 0,
       "motionY": 0,
-      "attackFacingLockSec": 0.41000000000000003,
-      "combatFacingHoldSec": 0.41000000000000003,
+      "attackFacingLockSec": 0.3466666666666667,
+      "combatFacingHoldSec": 0.3466666666666667,
       "pose": "stone-axeman-e-attack"
     },
     {
@@ -35,8 +35,8 @@
       "facingDirection": "e",
       "motionX": 0,
       "motionY": 0,
-      "attackFacingLockSec": 0.39333333333333337,
-      "combatFacingHoldSec": 0.39333333333333337,
+      "attackFacingLockSec": 0.31333333333333335,
+      "combatFacingHoldSec": 0.31333333333333335,
       "pose": "stone-axeman-e-attack"
     },
     {
@@ -44,8 +44,8 @@
       "facingDirection": "e",
       "motionX": 0,
       "motionY": 0,
-      "attackFacingLockSec": 0.22500000000000006,
-      "combatFacingHoldSec": 0.22500000000000006,
+      "attackFacingLockSec": 0.18000000000000005,
+      "combatFacingHoldSec": 0.2,
       "pose": "stone-axeman-e-attack"
     },
     {
@@ -53,7 +53,7 @@
       "facingDirection": "e",
       "motionX": 0,
       "motionY": 0,
-      "attackFacingLockSec": 0.17333666666666678,
+      "attackFacingLockSec": 0.14666666666666672,
       "combatFacingHoldSec": 0.2,
       "pose": "stone-axeman-e-attack"
     },
@@ -62,7 +62,7 @@
       "facingDirection": "e",
       "motionX": 0,
       "motionY": 0,
-      "attackFacingLockSec": 0.10334000000000021,
+      "attackFacingLockSec": 0.14666666666666672,
       "combatFacingHoldSec": 0.2,
       "pose": "stone-axeman-e-attack"
     },
@@ -71,7 +71,7 @@
       "facingDirection": "e",
       "motionX": 0,
       "motionY": 0,
-      "attackFacingLockSec": 0.016680000000000014,
+      "attackFacingLockSec": 0.1133333333333334,
       "combatFacingHoldSec": 0.2,
       "pose": "stone-axeman-e-attack"
     },
@@ -80,26 +80,26 @@
       "facingDirection": "e",
       "motionX": 0,
       "motionY": 0,
-      "attackFacingLockSec": 0,
+      "attackFacingLockSec": 0.1133333333333334,
       "combatFacingHoldSec": 0.2,
-      "pose": "stone-axeman-e-idle"
+      "pose": "stone-axeman-e-attack"
     },
     {
       "tMs": 900,
       "facingDirection": "e",
       "motionX": 0,
       "motionY": 0,
-      "attackFacingLockSec": 0,
+      "attackFacingLockSec": 0.08000000000000007,
       "combatFacingHoldSec": 0.2,
-      "pose": "stone-axeman-e-idle"
+      "pose": "stone-axeman-e-attack"
     },
     {
       "tMs": 1000,
       "facingDirection": "e",
       "motionX": 0,
       "motionY": 0,
-      "attackFacingLockSec": 0.46,
-      "combatFacingHoldSec": 0.46,
+      "attackFacingLockSec": 0,
+      "combatFacingHoldSec": 0.2,
       "pose": "stone-axeman-e-idle"
     },
     {
@@ -107,18 +107,18 @@
       "facingDirection": "e",
       "motionX": 0,
       "motionY": 0,
-      "attackFacingLockSec": 0.29500000000000004,
-      "combatFacingHoldSec": 0.29500000000000004,
-      "pose": "stone-axeman-e-attack"
+      "attackFacingLockSec": 0,
+      "combatFacingHoldSec": 0.2,
+      "pose": "stone-axeman-e-idle"
     },
     {
       "tMs": 1200,
       "facingDirection": "e",
       "motionX": 0,
       "motionY": 0,
-      "attackFacingLockSec": 0.12668000000000032,
+      "attackFacingLockSec": 0,
       "combatFacingHoldSec": 0.2,
-      "pose": "stone-axeman-e-attack"
+      "pose": "stone-axeman-e-idle"
     },
     {
       "tMs": 1300,
@@ -152,9 +152,9 @@
       "facingDirection": "e",
       "motionX": 0,
       "motionY": 0,
-      "attackFacingLockSec": 0.10669000000000015,
+      "attackFacingLockSec": 0,
       "combatFacingHoldSec": 0.2,
-      "pose": "stone-axeman-e-attack"
+      "pose": "stone-axeman-e-idle"
     },
     {
       "tMs": 1700,

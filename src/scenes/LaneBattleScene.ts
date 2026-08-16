@@ -126,6 +126,34 @@ import {
   createLaneRowCandidates,
 } from "../systems/lane-combat/laneOccupancy";
 import { frameLerpAlpha } from "../systems/lane-combat/frameLerp";
+import { clamp as simClamp, lerp as simLerp, progressBetween } from "../systems/sim/simMath";
+import { LaneSimulation } from "../systems/sim/laneSimulation";
+import {
+  canAttackEnemyFromSlot as steerCanAttackFromSlot,
+  getForwardLaneCongestion as steerForwardCongestion,
+  getFriendlySlotCongestion as steerSlotCongestion,
+  getMirrorLanePreference as steerMirrorPreference,
+  isCombatSlotFree as steerCombatSlotFree,
+  isLaneRowFree as steerLaneRowFree,
+  isMeleeUnit as steerIsMelee,
+  isRangedUnit as steerIsRanged,
+  unitDistance as steerUnitDistance,
+} from "../systems/sim/laneSteering";
+import { DeterministicRandom } from "../systems/sim/deterministicRandom";
+import type { GameMode, MatchDescriptor } from "../systems/net/matchTypes";
+import { DEFAULT_LOCKSTEP_OPTIONS, LockstepSession } from "../systems/net/lockstepSession";
+import type { RelayMatchService } from "../systems/net/relayMatchService";
+import { hashSimulationState } from "../systems/sim/simulationHash";
+import type { SimulationStateView } from "../systems/sim/simulationState";
+import {
+  NULL_PRESENTATION_EFFECTS,
+  type PresentationEffects,
+} from "../systems/sim/presentationEffects";
+import {
+  LOCAL_INPUT_DELAY_TICKS,
+  type BattleCommand,
+  type CommandTeam,
+} from "../systems/sim/commands";
 import {
   advanceTeamAge,
   canAfford,
@@ -247,7 +275,16 @@ const SUPPORT_ARRIVAL_EPSILON_PROGRESS = 0.003;
  */
 const STRUCTURE_VISUAL_REFRESH_SEC = 0.1;
 
-interface LaneUnit {
+/**
+ * Simulation state for a unit — everything that can change the outcome of the
+ * battle, and nothing that only decides how it looks.
+ *
+ * Kept as its own type so the compiler enforces the boundary: a function typed
+ * against `SimUnit` physically cannot reach a sprite. That is what makes the
+ * simulation movable to a headless module (Node, a Worker, a server) without
+ * auditing every line by hand.
+ */
+interface SimUnit {
   id: number;
   team: TeamId;
   role: "battle" | "support";
@@ -255,8 +292,6 @@ interface LaneUnit {
   laneId: string;
   progress: number;
   laneRow: number;
-  visualProgress: number;
-  visualLaneRow: number;
   maxHp: number;
   hp: number;
   attack: number;
@@ -276,6 +311,19 @@ interface LaneUnit {
   manaRegenPerSec: number;
   healManaCost: number;
   attrition: number;
+  /** Enemy this unit committed to on first contact; see `acquireTarget`. */
+  targetId?: number;
+}
+
+/**
+ * Everything about a unit that exists only to draw it: the Phaser objects plus
+ * the smoothed values feeding them. Frame-rate dependent by design, and
+ * deliberately absent from the state hash — two clients rendering at different
+ * rates are not desynced.
+ */
+interface UnitView {
+  visualProgress: number;
+  visualLaneRow: number;
   logicalTextureKey: string;
   bobPhase: number;
   currentTextureKey: string;
@@ -310,17 +358,29 @@ interface LaneUnit {
    * changing rather than run once per unit per frame.
    */
   nameplateStyleKey: string;
-  /** Enemy this unit committed to on first contact; see `acquireTarget`. */
-  targetId?: number;
   hovered: boolean;
   selected: boolean;
 }
+
+/** A unit as the scene holds it: simulation state plus its presentation. */
+type LaneUnit = SimUnit & UnitView;
+
+/**
+ * What a unit is aiming at, named rather than positioned.
+ *
+ * The simulation knows *who* is being attacked; only the renderer knows where
+ * that is on screen. Passing coordinates from the combat loop was the last
+ * thing forcing simulation code to read `sprite.x/y`.
+ */
+type AttackTargetRef =
+  | { kind: "unit"; id: number }
+  | { kind: "tower"; id: number }
+  | { kind: "base"; team: TeamId };
 
 interface CombatSlot {
   progress: number;
   laneRow: number;
 }
-
 
 interface LaneObstacle {
   textureKey: string;
@@ -400,12 +460,44 @@ const CAPTURE_RATE_PER_SEC = 0.36;
  * rather than walked past.
  */
 const CAPTURE_TOWER_DEFENDER_EQUIVALENT = 3;
+
+/**
+ * How long the lockstep barrier must hold before the player is told about it.
+ *
+ * Short waits are what lockstep does every tick; announcing them is noise. Half
+ * a second is long enough that a healthy match never trips it and short enough
+ * that a real dropout is reported promptly.
+ */
+const NET_STALL_NOTICE_MS = 500;
 /**
  * Pointer travel (screen px) still counted as a tap rather than a field pan.
  * Touch input always drifts a few pixels, so requiring an exact zero would
  * make "tap empty ground to deselect" fail on a phone.
  */
 const FIELD_TAP_SLOP_PX = 12;
+/**
+ * Simulation tick length. The simulation advances in whole ticks of exactly
+ * this size regardless of how fast the display runs, which is a prerequisite
+ * for lockstep PvP (both clients must step identically) and also removes a
+ * whole class of frame-rate-dependent bug on its own.
+ */
+const SIM_TICK_SEC = 1 / 30;
+/**
+ * Longest real interval fed into the accumulator. Without this, one long stall
+ * (tab in the background, GC pause) queues up a burst of catch-up ticks that
+ * costs even more time — the classic spiral of death.
+ */
+const MAX_FRAME_SEC = 0.25;
+/**
+ * Ticks a single frame may run while catching up. At 8 the simulation still
+ * keeps real time down to ~4 rendered FPS (4 x 8 = 32 >= 30 ticks/s) while
+ * staying bounded; below that the game runs in slow motion rather than
+ * freezing. Slow motion is the right failure mode here — under lockstep every
+ * client must execute every tick, so skipping ticks to catch up would desync
+ * instead of recovering.
+ */
+const MAX_SIM_STEPS_PER_FRAME = 8;
+const KILL_REWARD_KEYS = ["gold", "wood", "food"] as const;
 /**
  * How close an enemy has to come before a unit notices it and commits to
  * fighting it. Beyond this a unit simply advances down the lane.
@@ -462,10 +554,6 @@ function resolveGameplayMusicTheme(group: AgeProductionGroup): "stone" | "bronze
   }
 }
 
-function progressBetween(a: number, b: number): number {
-  return Math.abs(a - b);
-}
-
 export class LaneBattleScene extends Phaser.Scene {
   private battlefield!: BattlefieldResult;
   private units: LaneUnit[] = [];
@@ -506,6 +594,77 @@ export class LaneBattleScene extends Phaser.Scene {
   private readonly scalePresetId: ScalePresetId = parseScalePreset(QUERY_PARAMS.get("scale"));
   private readonly scaleVisualConfig: PrototypeScaleConfig = getPrototypeScaleConfig(this.scalePresetId);
   private readonly verificationSeed = QUERY_PARAMS.get("seed") ?? DEFAULT_VERIFICATION_SEED;
+  /**
+   * Randomness for anything that affects simulation state. Seeded from the
+   * same value as the rest of the run so a match can be reproduced from its
+   * seed plus its commands.
+   */
+  private gameMode: GameMode = "single";
+  /**
+   * Whose command is currently being applied.
+   *
+   * The action handlers were written when only the local player could act and
+   * reach for `this.player` throughout. Rather than thread a team argument
+   * through every one of them, the command dispatcher sets this for the
+   * duration of a command and the handlers read `acting` instead — so the same
+   * handler serves whichever side issued the order.
+   */
+  private actingTeamId: CommandTeam = "player";
+  private match?: MatchDescriptor;
+  /** Seed actually driving this battle: the match's seed in PvP, otherwise the
+   * local/debug seed. */
+  private activeSeed = this.verificationSeed;
+  /**
+   * The determinism-critical runtime: tick clock, RNG, command queue and
+   * deferred work. Battle rules still live on this scene and are injected.
+   */
+  private simulation = new LaneSimulation({
+    seed: this.verificationSeed,
+    tickSec: SIM_TICK_SEC,
+    maxFrameSec: MAX_FRAME_SEC,
+    maxStepsPerFrame: MAX_SIM_STEPS_PER_FRAME,
+    hooks: {
+      applyCommand: (entry) => this.applyCommand(entry.team, entry.command),
+      stepRules: (deltaSec) => this.stepRules(deltaSec),
+    },
+  });
+  /** Leftover real time not yet consumed by a whole simulation tick. */
+
+  /** Whole simulation ticks executed so far — the clock a lockstep match runs on. */
+  private get simTick(): number {
+    return this.simulation.tick;
+  }
+
+  private get simRandom(): DeterministicRandom {
+    return this.simulation.random;
+  }
+  /** Player intent waiting to execute, keyed by the tick it belongs to. */
+
+  /** Present only in a networked match; drives the tick barrier. */
+  private lockstep: LockstepSession | null = null;
+  private relay: RelayMatchService | null = null;
+  private netStalled = false;
+  /** When the current uninterrupted barrier wait began, or null if not waiting. */
+  private netStallSinceMs: number | null = null;
+  /** Set while the opponent is disconnected but still expected back. */
+  private opponentWaitingReason: string | null = null;
+  /** Set once the match is over for a network reason; outranks everything else. */
+  private matchEndedReason: string | null = null;
+  /**
+   * How the simulation asks for sounds and floating text. The scene supplies a
+   * renderer-backed implementation; a headless run uses the null one, which is
+   * why simulation code addresses effects by unit id and never by position.
+   */
+  private effects: PresentationEffects = NULL_PRESENTATION_EFFECTS;
+  /**
+   * Attack impacts waiting to land, scheduled on simulation ticks.
+   *
+   * These used to run on `this.time.delayedCall`, i.e. Phaser's wall clock.
+   * That makes when damage lands depend on frame rate rather than on the
+   * simulation, so two lockstep peers would apply the same hit on different
+   * ticks and diverge. Impacts now resolve on a tick like everything else.
+   */
+
   private readonly visualValidationScenario = QUERY_PARAMS.get("scenario") === "visual-validation";
   private readonly terrainDebugInputEnabled = isTerrainDebugInputEnabled(QUERY_PARAMS.get("terrainDebug"));
   private readonly mapSpec = getBattlefieldMapSpec(QUERY_PARAMS.get("map"));
@@ -538,13 +697,31 @@ export class LaneBattleScene extends Phaser.Scene {
     { textureKey: "rock-cluster", progress: 0.87, laneRow: -10.2, radiusProgress: 0.028, radiusRows: 1.1, width: 154, height: 116 },
   ];
 
-
   constructor() {
     super("run");
   }
 
-  init(data: { difficultyId?: DifficultyId }): void {
+  init(data: {
+    difficultyId?: DifficultyId;
+    mode?: GameMode;
+    match?: MatchDescriptor;
+    relay?: RelayMatchService | null;
+  }): void {
     this.difficulty = getDifficulty(data?.difficultyId);
+    // Single-player and PvP run this same scene and this same simulation; the
+    // mode only decides where the opposing side's commands come from. Keeping
+    // one battle implementation is what stops the two modes from drifting
+    // apart as the game keeps changing.
+    this.gameMode = data?.mode ?? "single";
+    this.match = data?.match;
+    this.relay = data?.relay ?? null;
+    // A networked match runs under the lockstep barrier; a local one has no
+    // peer to wait for and steps freely.
+    this.lockstep = this.gameMode === "pvp" && this.relay
+      ? new LockstepSession(this.match?.localTeam ?? "player", DEFAULT_LOCKSTEP_OPTIONS)
+      : null;
+    // A PvP match dictates the seed so both peers simulate identically.
+    this.activeSeed = this.match?.seed ?? this.verificationSeed;
   }
 
   preload(): void {
@@ -554,7 +731,26 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   create(): void {
-    Phaser.Math.RND.sow([this.verificationSeed]);
+    // Presentation-only jitter (bob phase, walk cycle) still draws from
+    // Phaser's RNG. Anything that affects simulation state draws from
+    // `simRandom` instead, so the simulation's random stream cannot be shifted
+    // by a change in how the game is drawn — which would desync a lockstep
+    // match without touching any gameplay code.
+    this.effects = this.createPresentationEffects();
+    if (this.lockstep && this.relay) {
+      this.relay.onFrame((frame) => this.lockstep?.receiveRemoteFrame(frame));
+      // A leave is terminal, so it goes on the standing line and stays there;
+      // a dropout is recoverable and clears itself if the opponent returns.
+      this.relay.onOpponentLeft((reason) => { this.matchEndedReason = reason; });
+      this.relay.onOpponentPresence((presence) => {
+        this.opponentWaitingReason = presence.state === "waiting"
+          ? `${presence.reason} (${presence.graceSec}초)`
+          : null;
+        if (presence.state === "returned") this.hud.setInfo(`${presence.opponentName} 님이 돌아왔습니다`);
+      });
+    }
+    Phaser.Math.RND.sow([this.activeSeed]);
+    this.simulation.reset(this.activeSeed);
     void this.audio.initialize();
     this.audio.resetDirector("preparation");
     this.audioWiring.reset();
@@ -574,9 +770,14 @@ export class LaneBattleScene extends Phaser.Scene {
     // itself is otherwise unused elsewhere in this codebase.
     this.cameras.main.useBounds = false;
     this.cameras.main.setZoom(FIELD_CAMERA_ZOOM);
-    const initialProgress = new URLSearchParams(window.location.search).get("camera") === "central"
-      ? CENTRAL_CAPTURE_PROGRESS
-      : 0.22;
+    // Progress runs 0 (left/"player" base) to 1 (right/"enemy" base), so a
+    // fixed 0.22 opens the camera on the left base for both sides. Mirroring it
+    // for the right-hand player is what makes them start looking at their own
+    // base rather than the opponent's. The central override is already
+    // symmetric, so only the home-base case flips.
+    const search = new URLSearchParams(window.location.search);
+    const homeProgress = this.match?.localTeam === "enemy" ? 1 - 0.22 : 0.22;
+    const initialProgress = search.get("camera") === "central" ? CENTRAL_CAPTURE_PROGRESS : homeProgress;
     const initialFocus = this.progressToScreen(initialProgress, 0);
     this.focusCameraOn(initialFocus.x, initialFocus.y);
 
@@ -623,19 +824,139 @@ export class LaneBattleScene extends Phaser.Scene {
       this.updateAudioDebugOverlay();
       return;
     }
-    const deltaSec = deltaMs / 1000;
-    this.elapsedSec += deltaSec;
-    this.tickEconomy(deltaSec);
-    this.aiController.tick(deltaSec);
-    this.tickWaves(deltaSec);
-    this.tickCombat(deltaSec);
+    // The simulation advances in fixed ticks; presentation runs once per
+    // rendered frame. Keeping them separate is what makes the simulation
+    // reproducible from a seed plus a command list, which lockstep PvP needs —
+    // and it means display frame rate can no longer change game outcomes.
+    const frameSec = deltaMs / 1000;
+    let barrierBlocked = false;
+    const stepped = this.simulation.advance(frameSec, (tick) => {
+      // Under lockstep, a tick may only run once the opponent's commands for it
+      // have arrived. Waiting is the point: running ahead is what desyncs.
+      if (!this.lockstep) return true;
+      const ready = this.lockstep.canAdvance(tick);
+      if (!ready) barrierBlocked = true;
+      return ready;
+    });
+    // Hitting the barrier is the normal state of a lockstep client, not a
+    // fault: it happens briefly on most ticks while the peer's next frame is in
+    // flight. Reporting it the instant it happens put "waiting for opponent" on
+    // screen during completely healthy play. Only a stall that outlasts the
+    // threshold is worth telling the player about.
+    if (stepped > 0) this.netStallSinceMs = null;
+    else if (barrierBlocked && this.netStallSinceMs === null) this.netStallSinceMs = this.time.now;
+    this.netStalled = this.netStallSinceMs !== null
+      && this.time.now - this.netStallSinceMs >= NET_STALL_NOTICE_MS;
+    if (this.lockstep) this.reportNetworkState();
+
+    this.units.forEach((unit) => this.syncUnitVisual(unit, frameSec));
     this.refreshUnitOverlayDensity();
-    this.tickCapturePoints(deltaSec);
     this.syncGameplayMusicTheme();
     this.updateAudioState();
     this.refreshUi();
     this.publishDebug();
     this.updateAudioDebugOverlay();
+  }
+
+  /**
+   * One whole simulation tick. Everything that changes game state belongs here
+   * and must depend only on `deltaSec`, current state, and `simRandom` — never
+   * on real time, frame rate, or anything Phaser renders.
+   */
+  /**
+   * Resolves an effect to a screen position at the moment it is shown, rather
+   * than having the simulation carry coordinates it has no business knowing.
+   */
+  private createPresentationEffects(): PresentationEffects {
+    const findUnit = (unitId: number) => this.units.find((unit) => unit.id === unitId);
+    return {
+      unitSfx: (assetId, unitId, eventKey) => {
+        const unit = findUnit(unitId);
+        if (!unit) return;
+        this.playWorldSfx(assetId, unit.sprite.x, unit.sprite.y, eventKey);
+      },
+      structureSfx: (assetId, structureKind, structureId, eventKey) => {
+        const sprite = structureKind === "tower"
+          ? this.defenseTowers.find((tower) => tower.id === structureId)?.sprite
+          : this.capturePoints.find((point) => point.id === structureId)?.marker;
+        if (!sprite) return;
+        this.playWorldSfx(assetId, sprite.x, sprite.y, eventKey);
+      },
+      unitToast: (text, unitId, color, verticalOffset) => {
+        const unit = findUnit(unitId);
+        if (!unit) return;
+        this.spawnToast(text, unit.sprite.x, unit.sprite.y + verticalOffset, color);
+      },
+      unitImpact: (unitId, damage, color) => {
+        const unit = findUnit(unitId);
+        if (!unit) return;
+        unit.sprite.setTint(0xffc49b);
+        this.time.delayedCall(80, () => {
+          if (!unit.sprite.active) return;
+          unit.sprite.clearTint();
+        });
+        const impact = this.add.circle(unit.sprite.x, unit.sprite.y - 2, 10 + Math.min(10, damage), 0xffffff, 0.24)
+          .setDepth(unit.sprite.depth - 1);
+        this.uiCamera?.ignore(impact);
+        this.tweens.add({
+          targets: impact,
+          scaleX: 1.6,
+          scaleY: 1.6,
+          alpha: 0,
+          duration: 160,
+          onComplete: () => impact.destroy(),
+        });
+        this.spawnToast(`${damage}`, unit.sprite.x, unit.sprite.y - 26, color);
+      },
+      structureImpact: (structureKind, structureId, damage, color) => {
+        const sprite = structureKind === "tower"
+          ? this.defenseTowers.find((tower) => tower.id === structureId)?.sprite
+          : this.capturePoints.find((point) => point.id === structureId)?.marker;
+        if (!sprite) return;
+        this.tweens.add({ targets: sprite, alpha: 0.45, duration: 70, yoyo: true });
+        this.spawnToast(`${damage}`, sprite.x, sprite.y - 58, color);
+      },
+      notice: (message) => this.hud.setInfo(message),
+      globalSfx: (assetId, eventKey) => this.audio.playSfx(assetId, { eventKey }),
+      unitTravelFacing: (unitId, targetProgress, targetLaneRow) => {
+        const unit = findUnit(unitId);
+        if (unit) this.setUnitTravelFacing(unit, targetProgress, targetLaneRow);
+      },
+      unitDied: (unitId) => {
+        const unit = findUnit(unitId);
+        if (unit) this.destroyUnitPresentation(unit);
+      },
+    };
+  }
+
+  /**
+   * The battle rules for one tick.
+   *
+   * `LaneSimulation` owns the clock, the RNG, the command queue and deferred
+   * work; this is the part still living on the scene, injected as its rules
+   * hook. The runtime calls it once per tick, after that tick's commands have
+   * been applied.
+   */
+  private stepRules(deltaSec: number): void {
+    if (this.lockstep) {
+      this.exchangeLockstepFrame();
+      // The opponent's commands for this tick; the barrier guaranteed they
+      // arrived. Local ones already went through the runtime's own queue.
+      for (const entry of this.lockstep.commandsFor(this.simTick)) {
+        if (entry.team === this.match?.localTeam) continue;
+        this.applyCommand(entry.team, entry.command);
+      }
+      this.lockstep.release(this.simTick);
+    }
+    this.elapsedSec += deltaSec;
+    this.tickEconomy(deltaSec);
+    // In PvP the enemy is a person: their commands arrive over the relay, so
+    // running the AI as well would have both clients simulating a different
+    // opponent and diverging immediately.
+    if (!this.lockstep) this.aiController.tick(deltaSec);
+    this.tickWaves(deltaSec);
+    this.tickCombat(deltaSec);
+    this.tickCapturePoints(deltaSec);
   }
 
   private createUiIconTextures(): void {
@@ -1258,6 +1579,12 @@ export class LaneBattleScene extends Phaser.Scene {
        * wrote down when the layout looked different.
        */
       getHudButtonLayout: () => this.hud.getActionButtonLayout(),
+      /** Simulation fingerprint at the current tick — see `simulationHash.ts`. */
+      getSimulationHash: () => ({
+        tick: this.simTick,
+        hash: hashSimulationState(this.captureSimulationState()),
+      }),
+      getSimulationState: () => this.captureSimulationState(),
       setVisualAuditLayer: (layer: "ground" | "props" | "units" | "combat") => {
         this.uiCamera.setVisible(false);
         if (layer === "ground") {
@@ -1529,6 +1856,12 @@ export class LaneBattleScene extends Phaser.Scene {
 
   private isPointerOnUi(pointer: Phaser.Input.Pointer): boolean {
     if (this.audioSettingsOpen || pointer.y <= 250 || pointer.y >= CANVAS_H - 260) return true;
+    // The base research panel is a modal in the middle of the screen, outside
+    // the bands above. Without this a press on any of its buttons also counted
+    // as a tap on open ground, which cleared the selection and closed the panel
+    // out from under the press.
+    // Optional: input can arrive before the scene has finished assembling.
+    if (this.baseResearchPanel?.isPointerOver(pointer.x, pointer.y)) return true;
     // Capture/tower action buttons now sit beside the selected structure, well
     // inside the field area, so the band check above no longer covers them.
     return this.hud.isPointerOverActionButton(pointer.x, pointer.y);
@@ -1702,7 +2035,7 @@ export class LaneBattleScene extends Phaser.Scene {
       const label = this.add.text(pos.x, pos.y - 190, `방어 타워 ${definition.id + 1}`, {
         fontFamily: "sans-serif", fontSize: "14px", color: "#fff4cf", stroke: "#1a130a", strokeThickness: 3,
       }).setOrigin(0.5).setDepth(this.getGroundDepth(pos.y, 7));
-      const ownerText = this.add.text(pos.x, pos.y + 34, definition.owner === "player" ? "아군 타워" : "적 타워", {
+      const ownerText = this.add.text(pos.x, pos.y + 34, definition.owner === this.localTeamId ? "아군 타워" : "적 타워", {
         fontFamily: "sans-serif", fontSize: "12px", color: "#d3d8e8", stroke: "#132033", strokeThickness: 3,
       }).setOrigin(0.5).setDepth(this.getGroundDepth(pos.y, 7));
       const statusText = this.add.text(pos.x, pos.y + 52, "가동 중", {
@@ -1761,14 +2094,16 @@ export class LaneBattleScene extends Phaser.Scene {
       .setDisplaySize(baseDisplaySize, baseDisplaySize)
       .setOrigin(STRUCTURE_GROUND_ORIGIN.x, STRUCTURE_GROUND_ORIGIN.y)
       .setDepth(this.getGroundDepth(enemyBase.y));
-    const playerBaseLabel = this.add.text(playerBase.x - 8, playerBase.y - baseVisibleWorldHeight - this.cssPxToWorld(30), "아군 본진", {
+    // Labels follow which side this client plays, not which side is on the left.
+    const leftIsMine = this.match?.localTeam !== "enemy";
+    const playerBaseLabel = this.add.text(playerBase.x - 8, playerBase.y - baseVisibleWorldHeight - this.cssPxToWorld(30), leftIsMine ? "아군 본진" : "적 본진", {
       fontFamily: "Georgia, serif",
       fontSize: "46px",
       color: "#dceeff",
       stroke: "#16202a",
       strokeThickness: 6,
     }).setOrigin(0.5).setDepth(this.getGroundDepth(playerBase.y, 4));
-    const enemyBaseLabel = this.add.text(enemyBase.x + 4, enemyBase.y - baseVisibleWorldHeight - this.cssPxToWorld(30), "적 본진", {
+    const enemyBaseLabel = this.add.text(enemyBase.x + 4, enemyBase.y - baseVisibleWorldHeight - this.cssPxToWorld(30), leftIsMine ? "적 본진" : "아군 본진", {
       fontFamily: "Georgia, serif",
       fontSize: "46px",
       color: "#ffe1e1",
@@ -1794,16 +2129,16 @@ export class LaneBattleScene extends Phaser.Scene {
       this,
       this.audio,
       {
-        hireWorker: () => this.hireWorker(),
-        hireResearchWorker: () => this.hireResearchWorker(),
-        useInstantWave: () => this.tryUseInstantWaveToken(this.player),
-        ageUp: () => this.tryAgeUpPlayer(),
-        shiftWorker: (role, delta) => this.shiftWorker(role, delta),
-        rebuildDefenseTower: () => this.tryRebuildSelectedDefenseTower(),
-        buildDefenseTower: () => this.tryBuildAtSelectedPoint("defense_tower"),
-        buildSupplyDepot: () => this.tryBuildAtSelectedPoint("supply_depot"),
-        buildMint: () => this.tryBuildAtSelectedPoint("mint"),
-        dismantle: () => this.tryDismantleSelectedPoint(),
+        hireWorker: () => this.issueCommand({ type: "hire-worker" }),
+        hireResearchWorker: () => this.issueCommand({ type: "hire-research-worker" }),
+        useInstantWave: () => this.issueCommand({ type: "instant-wave" }),
+        ageUp: () => this.issueCommand({ type: "advance-age" }),
+        shiftWorker: (role, delta) => this.issueCommand({ type: "shift-worker", role, delta }),
+        rebuildDefenseTower: () => this.issueSelectedTowerCommand(),
+        buildDefenseTower: () => this.issueSelectedPointBuild("defense_tower"),
+        buildSupplyDepot: () => this.issueSelectedPointBuild("supply_depot"),
+        buildMint: () => this.issueSelectedPointBuild("mint"),
+        dismantle: () => this.issueSelectedPointDismantle(),
         toggleDevMode: () => this.toggleDevMode(),
         grantDevResearch: () => this.grantDevResearchPoints(),
         onAudioSettingsVisibilityChange: (visible) => {
@@ -1819,7 +2154,7 @@ export class LaneBattleScene extends Phaser.Scene {
       close: () => this.closeMainBasePanel(),
       browseAge: (delta) => this.browsePlayerProductionAge(delta),
       adjustStat: (unitId, stat, delta) => this.adjustPlayerResearchDraft(unitId, stat, delta),
-      apply: () => this.applyPlayerResearchDraft(),
+      apply: () => this.issueCommand({ type: "apply-research" }),
       cancel: () => this.cancelPlayerResearchDraft(),
     }, DEPTH_UI + 80);
   }
@@ -1827,7 +2162,7 @@ export class LaneBattleScene extends Phaser.Scene {
   private getSelectedCaptureActions(): (CapturePointAction | DefenseTowerAction)[] {
     const tower = this.defenseTowers.find((entry) => entry.id === this.selectedDefenseTowerId);
     if (tower) {
-      return tower.owner === "player" && !tower.built && tower.buildRemainingSec <= 0
+      return tower.owner === this.localTeamId && !tower.built && tower.buildRemainingSec <= 0
         ? ["rebuild-defense-tower"]
         : [];
     }
@@ -1842,11 +2177,14 @@ export class LaneBattleScene extends Phaser.Scene {
       const engagementDistance = Math.max(ENGAGE_GAP * 2.6, unit.range * RANGE_TO_PROGRESS * 1.35);
       return this.unitDistance(unit, nearest) <= engagementDistance;
     }).length;
-    const playerTower = this.defenseTowers.find((tower) => tower.owner === "player");
+    // Music intensity tracks the danger *this* client is in, so both the base
+    // and the fortress come from the local side rather than the left one.
+    const localTeam = this.localTeamState;
+    const playerTower = this.defenseTowers.find((tower) => tower.owner === this.localTeamId);
     this.audioWiring.update(this.elapsedSec, {
       engagedUnits,
       activeProjectiles: this.activeProjectiles.size,
-      playerBaseHpRatio: this.player.baseMaxHp > 0 ? this.player.baseHp / this.player.baseMaxHp : 1,
+      playerBaseHpRatio: localTeam.baseMaxHp > 0 ? localTeam.baseHp / localTeam.baseMaxHp : 1,
       playerFortressHpRatio: playerTower
         ? playerTower.built ? playerTower.hp / playerTower.maxHp : 0
         : 1,
@@ -1854,7 +2192,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private syncGameplayMusicTheme(): void {
-    const theme = resolveGameplayMusicTheme(getAge(this.player.ageId).productionGroup);
+    const theme = resolveGameplayMusicTheme(getAge(this.localTeamState.ageId).productionGroup);
     this.audio.setGameplayMusicTheme(theme);
   }
 
@@ -1895,7 +2233,6 @@ export class LaneBattleScene extends Phaser.Scene {
     );
   }
 
-
   private tickWaves(deltaSec: number): void {
     const playerClock = tickWaveClock(this.player, deltaSec);
     if (playerClock.prepareWarning) {
@@ -1910,8 +2247,8 @@ export class LaneBattleScene extends Phaser.Scene {
     const enemyHasSupply = this.units.some((unit) => unit.team === "enemy" && unit.role === "support");
 
     this.units.forEach((unit) => {
-      if (unit.team === "player" && unit.role === "battle") unit.attrition = Phaser.Math.Clamp(unit.attrition + (playerHasSupply ? -0.18 : 0.12) * deltaSec, 0, 0.7);
-      if (unit.team === "enemy" && unit.role === "battle") unit.attrition = Phaser.Math.Clamp(unit.attrition + (enemyHasSupply ? -0.18 : 0.12) * deltaSec, 0, 0.7);
+      if (unit.team === "player" && unit.role === "battle") unit.attrition = simClamp(unit.attrition + (playerHasSupply ? -0.18 : 0.12) * deltaSec, 0, 0.7);
+      if (unit.team === "enemy" && unit.role === "battle") unit.attrition = simClamp(unit.attrition + (enemyHasSupply ? -0.18 : 0.12) * deltaSec, 0, 0.7);
     });
 
     this.units.forEach((unit) => {
@@ -1960,25 +2297,24 @@ export class LaneBattleScene extends Phaser.Scene {
             return;
           }
         }
-        this.holdUnitCombatFacing(unit, enemyTower.sprite.x, enemyTower.sprite.y);
+        this.faceTarget(unit.id, { kind: "tower", id: enemyTower.id });
         if (unit.attackTimerSec <= 0) {
           unit.attackTimerSec = unit.attackCooldownSec;
-          this.playWorldSfx(
+          this.effects.unitSfx(
             this.isRangedUnit(unit) ? getRangedFireSfxKey(unit.unitId) : getMeleeAttackSfxKey(unit.unitId),
-            unit.sprite.x,
-            unit.sprite.y,
+            unit.id,
             `attack:${unit.id}:tower:${enemyTower.id}:${Math.round(this.elapsedSec * 1000)}`,
           );
           const damageBase = unit.attack * (1 - unit.attrition);
           const damage = Math.max(1, Math.round(damageBase * this.getAttackBuffMultiplier(unit)));
           if (this.isRangedUnit(unit)) {
-            const start = this.getUnitProjectileAnchor(unit);
+            const start = this.getUnitProjectileAnchor(unit.id);
             const end = this.getTowerProjectileAnchor(enemyTower, false);
-            this.startRangedAttack(unit, enemyTower.sprite.x, enemyTower.sprite.y, "structure", () => {
-              this.launchProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToTower(enemyTower, damage, unit.team), 1.02);
+            this.startRangedAttack(unit, { kind: "tower", id: enemyTower.id }, "structure", () => {
+              this.fireProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToTower(enemyTower, damage, unit.team), 1.02);
             });
           } else {
-            this.startMeleeAttack(unit, enemyTower.sprite.x, enemyTower.sprite.y, "structure", () => {
+            this.startMeleeAttack(unit, { kind: "tower", id: enemyTower.id }, "structure", () => {
               this.applyDamageToTower(enemyTower, damage, unit.team);
             });
           }
@@ -1996,10 +2332,10 @@ export class LaneBattleScene extends Phaser.Scene {
         if (distance <= attackRange + engageTolerance) {
           if (this.isMeleeUnit(unit) && unit.attackAnimTime <= 0 && unit.attackTimerSec > 0) {
             this.advanceUnit(unit, deltaSec, nearest);
-            this.holdUnitCombatFacing(unit, nearest.sprite.x, nearest.sprite.y);
+            this.faceTarget(unit.id, { kind: "unit", id: nearest.id });
             return;
           }
-          this.holdUnitCombatFacing(unit, nearest.sprite.x, nearest.sprite.y);
+          this.faceTarget(unit.id, { kind: "unit", id: nearest.id });
         } else {
           this.advanceUnit(unit, deltaSec, nearest);
           return;
@@ -2009,36 +2345,34 @@ export class LaneBattleScene extends Phaser.Scene {
         this.advanceUnit(unit, deltaSec, nearest);
         return;
       }
-      this.holdUnitCombatFacing(unit, nearest.sprite.x, nearest.sprite.y);
+      this.faceTarget(unit.id, { kind: "unit", id: nearest.id });
       if (unit.attackTimerSec <= 0) {
         unit.attackTimerSec = unit.attackCooldownSec;
-        this.playWorldSfx(
+        this.effects.unitSfx(
           this.isRangedUnit(unit) ? getRangedFireSfxKey(unit.unitId) : getMeleeAttackSfxKey(unit.unitId),
-          unit.sprite.x,
-          unit.sprite.y,
+          unit.id,
           `attack:${unit.id}:unit:${nearest.id}:${Math.round(this.elapsedSec * 1000)}`,
         );
         const damageBase = unit.attack * (1 - unit.attrition);
         const damage = Math.max(1, Math.round(damageBase * this.getAttackBuffMultiplier(unit) - nearest.defense));
         if (this.isRangedUnit(unit)) {
-          const start = this.getUnitProjectileAnchor(unit);
-          const end = this.getUnitProjectileAnchor(nearest);
-          this.startRangedAttack(unit, nearest.sprite.x, nearest.sprite.y, "unit", () => {
+          const start = this.getUnitProjectileAnchor(unit.id);
+          const end = this.getUnitProjectileAnchor(nearest.id);
+          this.startRangedAttack(unit, { kind: "unit", id: nearest.id }, "unit", () => {
             if (!this.units.includes(nearest)) return;
-            this.launchProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToUnit(nearest, damage, unit.team === "player" ? "#ffd67a" : "#ff8f8f", unit.unitId), 1.04);
+            this.fireProjectile(start, end, getProjectileKeyForUnit(unit.unitId), () => this.applyDamageToUnit(nearest, damage, unit.team === "player" ? "#ffd67a" : "#ff8f8f", unit.unitId), 1.04);
           });
         } else {
-          this.startMeleeAttack(unit, nearest.sprite.x, nearest.sprite.y, "unit", () => {
+          this.startMeleeAttack(unit, { kind: "unit", id: nearest.id }, "unit", () => {
             if (!this.units.includes(nearest)) return;
             nearest.hp -= damage;
-            this.playWorldSfx(
+            this.effects.unitSfx(
               getMeleeHitSfxKey(unit.unitId),
-              nearest.sprite.x,
-              nearest.sprite.y,
+              nearest.id,
               `impact:melee:${unit.id}:${nearest.id}:${Math.round(this.elapsedSec * 1000)}`,
             );
             this.playImpactFeedback(unit, nearest, damage);
-            this.spawnToast(`${damage}`, nearest.sprite.x, nearest.sprite.y - 26, unit.team === "player" ? "#ffd67a" : "#ff8f8f");
+            this.effects.unitToast(`${damage}`, nearest.id, unit.team === "player" ? "#ffd67a" : "#ff8f8f", -26);
             if (nearest.hp <= 0) this.killUnit(nearest);
           });
         }
@@ -2046,7 +2380,6 @@ export class LaneBattleScene extends Phaser.Scene {
     });
 
     this.enforceFriendlySpacing();
-    this.units.forEach((unit) => this.syncUnitVisual(unit, deltaSec));
     this.checkBasePressure(deltaSec);
   }
 
@@ -2070,8 +2403,7 @@ export class LaneBattleScene extends Phaser.Scene {
       unit.manaCurrent -= unit.healManaCost;
       this.startSupportCast(
         unit,
-        injuredInRange[0].sprite.x,
-        injuredInRange[0].sprite.y,
+        { kind: "unit", id: injuredInRange[0].id },
         () => this.applySupportHeal(unit),
       );
       return;
@@ -2114,7 +2446,7 @@ export class LaneBattleScene extends Phaser.Scene {
 
     // Use the full ally-relative destination for facing. A one-tick movement
     // delta is below the flip dead zone and previously left support walking backward.
-    this.setUnitTravelFacing(unit, desiredProgress, desiredLaneRow);
+    this.effects.unitTravelFacing(unit.id, desiredProgress, desiredLaneRow);
     const moveStep = unit.speed * UNIT_PROGRESS_SPEED * deltaSec;
     this.setSupportTravelFacing(unit, desiredProgress);
     unit.progress = this.moveToward(unit.progress, desiredProgress, moveStep);
@@ -2151,28 +2483,26 @@ export class LaneBattleScene extends Phaser.Scene {
       totalHealed += applied;
     }
     if (totalHealed <= 0) return;
-    this.playWorldSfx(
+    this.effects.unitSfx(
       "sfx.support.heal",
-      unit.sprite.x,
-      unit.sprite.y,
+      unit.id,
       `support-heal:${unit.id}:${Math.round(this.elapsedSec * 1000)}`,
     );
-    this.spawnToast(`치유 ${totalHealed}`, unit.sprite.x, unit.sprite.y - 44, "#92f1a5");
+    this.effects.unitToast(`치유 ${totalHealed}`, unit.id, "#92f1a5", -44);
   }
 
-  private getUnitAttackTimingRole(unit: LaneUnit): AttackTimingRole {
+  private getUnitAttackTimingRole(unit: SimUnit): AttackTimingRole {
     if (unit.role === "support") return "support";
     return this.isRangedUnit(unit) ? "ranged" : "melee";
   }
 
-  private getUnitAttackTiming(unit: LaneUnit, targetKind: AttackTargetKind): AttackTimingProfile {
+  private getUnitAttackTiming(unit: SimUnit, targetKind: AttackTargetKind): AttackTimingProfile {
     return getAttackTimingProfile(this.getUnitAttackTimingRole(unit), targetKind);
   }
 
   private beginAttackPresentation(
-    unit: LaneUnit,
-    targetX: number,
-    targetY: number,
+    unit: SimUnit,
+    target: AttackTargetRef,
     targetKind: AttackTargetKind,
   ): AttackTimingProfile {
     const timing = this.getUnitAttackTiming(unit, targetKind);
@@ -2180,47 +2510,86 @@ export class LaneBattleScene extends Phaser.Scene {
     unit.attackFacingLockSec = timing.durationSec;
     unit.attackTargetKind = targetKind;
     this.engagedUnitIds.add(unit.id);
-    this.holdUnitCombatFacing(unit, targetX, targetY, timing.durationSec);
+    this.faceTarget(unit.id, target, timing.durationSec);
     return timing;
   }
 
   private startMeleeAttack(
-    unit: LaneUnit,
-    targetX: number,
-    targetY: number,
+    unit: SimUnit,
+    target: AttackTargetRef,
     targetKind: AttackTargetKind,
     onContact: () => void,
   ): void {
-    const timing = this.beginAttackPresentation(unit, targetX, targetY, targetKind);
-    const sequence = ++unit.attackSequence;
-    this.time.delayedCall(timing.eventDelayMs, () => {
-      if (!this.units.includes(unit) || unit.attackSequence !== sequence) return;
-      onContact();
-    });
+    this.scheduleAttackImpact(unit, target, targetKind, onContact);
   }
 
   private startRangedAttack(
-    unit: LaneUnit,
-    targetX: number,
-    targetY: number,
+    unit: SimUnit,
+    target: AttackTargetRef,
     targetKind: AttackTargetKind,
     onRelease: () => void,
   ): void {
-    const timing = this.beginAttackPresentation(unit, targetX, targetY, targetKind);
+    this.scheduleAttackImpact(unit, target, targetKind, onRelease);
+  }
+
+  private startSupportCast(unit: SimUnit, target: AttackTargetRef, onCast: () => void): void {
+    this.scheduleAttackImpact(unit, target, "unit", onCast);
+  }
+
+  /**
+   * Starts the attack animation and books its impact on a future tick.
+   *
+   * The delay is rounded to whole ticks — never below one — so an impact can
+   * never resolve on the same tick it was booked, and every client resolves it
+   * on the same one.
+   */
+  private scheduleAttackImpact(
+    unit: SimUnit,
+    target: AttackTargetRef,
+    targetKind: AttackTargetKind,
+    resolve: () => void,
+  ): void {
+    const timing = this.beginAttackPresentation(unit, target, targetKind);
     const sequence = ++unit.attackSequence;
-    this.time.delayedCall(timing.eventDelayMs, () => {
-      if (!this.units.includes(unit) || unit.attackSequence !== sequence) return;
-      onRelease();
+    const delayTicks = Math.max(1, Math.round((timing.eventDelayMs / 1000) / SIM_TICK_SEC));
+    const attackerId = unit.id;
+    this.scheduleImpact(delayTicks, resolve, () => {
+      const attacker = this.units.find((entry) => entry.id === attackerId);
+      // Dropped if the attacker died, or has since begun another attack.
+      return Boolean(attacker) && attacker!.attackSequence === sequence;
     });
   }
 
-  private startSupportCast(unit: LaneUnit, targetX: number, targetY: number, onCast: () => void): void {
-    const timing = this.beginAttackPresentation(unit, targetX, targetY, "unit");
-    const sequence = ++unit.attackSequence;
-    this.time.delayedCall(timing.eventDelayMs, () => {
-      if (!this.units.includes(unit) || unit.attackSequence !== sequence) return;
-      onCast();
-    });
+  /**
+   * Books work to run `delayTicks` simulation ticks from now.
+   *
+   * Everything delayed inside the simulation goes through here rather than
+   * `this.time.delayedCall`, so *when* it happens is a function of the tick
+   * count and not of how fast this machine renders.
+   */
+  private scheduleImpact(delayTicks: number, resolve: () => void, guard: () => boolean = () => true): void {
+    this.simulation.defer(delayTicks, resolve, guard);
+  }
+
+  /** Screen point for a target reference; presentation-only. */
+  private resolveTargetPoint(target: AttackTargetRef): { x: number; y: number } | null {
+    if (target.kind === "unit") {
+      const unit = this.units.find((entry) => entry.id === target.id);
+      return unit ? { x: unit.sprite.x, y: unit.sprite.y } : null;
+    }
+    if (target.kind === "tower") {
+      const tower = this.defenseTowers.find((entry) => entry.id === target.id);
+      return tower ? { x: tower.sprite.x, y: tower.sprite.y } : null;
+    }
+    const anchor = this.getBaseAnchor(target.team, this.primaryLaneSpec.id, target.team === "player" ? 0 : 1);
+    return { x: anchor.x, y: anchor.y };
+  }
+
+  /** Faces a unit at a target it can only name, resolving the point here. */
+  private faceTarget(unitId: number, target: AttackTargetRef, holdSec = COMBAT_FACING_HOLD_SEC): void {
+    const unit = this.units.find((entry) => entry.id === unitId);
+    const point = this.resolveTargetPoint(target);
+    if (unit && point) this.holdUnitCombatFacing(unit, point.x, point.y, holdSec);
   }
 
   private holdUnitCombatFacing(
@@ -2240,7 +2609,7 @@ export class LaneBattleScene extends Phaser.Scene {
     unit.combatFacingHoldSec = Math.max(unit.combatFacingHoldSec, holdSec);
   }
 
-  private advanceUnit(unit: LaneUnit, deltaSec: number, combatTarget?: LaneUnit): void {
+  private advanceUnit(unit: SimUnit, deltaSec: number, combatTarget?: SimUnit): void {
     const dir = unit.team === "player" ? 1 : -1;
     const combatTargetDistance = combatTarget
       ? progressBetween(unit.progress, combatTarget.progress)
@@ -2257,8 +2626,8 @@ export class LaneBattleScene extends Phaser.Scene {
     if (combatTarget && this.isMeleeUnit(unit) && combatTargetDistance <= COMBAT_FORMATION_PULL_PROGRESS) {
       const slot = this.findCombatSlot(unit, combatTarget);
       if (slot) {
-        this.setUnitTravelFacing(unit, slot.progress, slot.laneRow);
-        unit.laneRow = Phaser.Math.Linear(unit.laneRow, slot.laneRow, frameLerpAlpha(deltaSec, 0.34));
+        this.effects.unitTravelFacing(unit.id, slot.progress, slot.laneRow);
+        unit.laneRow = simLerp(unit.laneRow, slot.laneRow, frameLerpAlpha(deltaSec, 0.34));
         const moveStep = unit.speed * UNIT_PROGRESS_SPEED * deltaSec;
         const nextProgress = this.moveToward(unit.progress, slot.progress, moveStep);
         unit.progress = forwardLimit === undefined
@@ -2304,11 +2673,11 @@ export class LaneBattleScene extends Phaser.Scene {
           const cappedProgress = unit.team === "player"
             ? Math.min(flankSlot.progress, friendAhead.progress - FRIENDLY_GAP)
             : Math.max(flankSlot.progress, friendAhead.progress + FRIENDLY_GAP);
-          this.setUnitTravelFacing(unit, cappedProgress, flankSlot.laneRow);
-          unit.laneRow = Phaser.Math.Linear(unit.laneRow, flankSlot.laneRow, frameLerpAlpha(deltaSec, 0.52));
+          this.effects.unitTravelFacing(unit.id, cappedProgress, flankSlot.laneRow);
+          unit.laneRow = simLerp(unit.laneRow, flankSlot.laneRow, frameLerpAlpha(deltaSec, 0.52));
           unit.progress = this.moveToward(
             unit.progress,
-            Phaser.Math.Clamp(cappedProgress, 0.01, 0.99),
+            simClamp(cappedProgress, 0.01, 0.99),
             unit.speed * UNIT_PROGRESS_SPEED * deltaSec,
           );
           this.keepUnitInPlayableLane(unit);
@@ -2318,8 +2687,8 @@ export class LaneBattleScene extends Phaser.Scene {
           const packedDesired = unit.team === "player"
             ? Math.min(desired, friendAhead.progress - 0.006)
             : Math.max(desired, friendAhead.progress + 0.006);
-          this.setUnitTravelFacing(unit, packedDesired, unit.laneRow);
-          unit.progress = Phaser.Math.Clamp(packedDesired, 0.01, 0.99);
+          this.effects.unitTravelFacing(unit.id, packedDesired, unit.laneRow);
+          unit.progress = simClamp(packedDesired, 0.01, 0.99);
           if (enemyAhead) this.pullUnitTowardOpenCombatRow(unit, enemyAhead, deltaSec);
           this.keepUnitInPlayableLane(unit);
           return;
@@ -2327,23 +2696,23 @@ export class LaneBattleScene extends Phaser.Scene {
       }
     }
 
-    this.setUnitTravelFacing(unit, desired, unit.laneRow);
-    unit.progress = Phaser.Math.Clamp(desired, 0.01, 0.99);
+    this.effects.unitTravelFacing(unit.id, desired, unit.laneRow);
+    unit.progress = simClamp(desired, 0.01, 0.99);
     this.keepUnitInPlayableLane(unit);
   }
 
-  private repositionTowardCombat(unit: LaneUnit, enemy: LaneUnit, deltaSec: number): void {
+  private repositionTowardCombat(unit: SimUnit, enemy: SimUnit, deltaSec: number): void {
     const frontlineGap = progressBetween(unit.progress, enemy.progress);
     if (frontlineGap > COMBAT_FORMATION_PULL_PROGRESS) return;
     if (this.isMeleeUnit(unit)) {
       const slot = this.findCombatSlot(unit, enemy);
       if (slot) {
-        unit.laneRow = Phaser.Math.Linear(unit.laneRow, slot.laneRow, frameLerpAlpha(deltaSec, 0.4));
+        unit.laneRow = simLerp(unit.laneRow, slot.laneRow, frameLerpAlpha(deltaSec, 0.4));
         return;
       }
     }
     if (frontlineGap < 0.08 && Math.abs(enemy.laneRow - unit.laneRow) < 1.2) {
-      unit.laneRow = Phaser.Math.Linear(unit.laneRow, enemy.laneRow, frameLerpAlpha(deltaSec, 0.45));
+      unit.laneRow = simLerp(unit.laneRow, enemy.laneRow, frameLerpAlpha(deltaSec, 0.45));
       return;
     }
     if (Math.abs(enemy.laneRow - unit.laneRow) < 0.45) return;
@@ -2351,11 +2720,11 @@ export class LaneBattleScene extends Phaser.Scene {
       ? unit.laneRow + LANE_SHIFT_STEP
       : unit.laneRow - LANE_SHIFT_STEP;
     if (this.isLaneRowFree(unit, targetRow)) {
-      unit.laneRow = Phaser.Math.Clamp(targetRow, LANE_ROW_MIN, LANE_ROW_MAX);
+      unit.laneRow = simClamp(targetRow, LANE_ROW_MIN, LANE_ROW_MAX);
     }
   }
 
-  private pullUnitTowardOpenCombatRow(unit: LaneUnit, enemy: LaneUnit, deltaSec: number): void {
+  private pullUnitTowardOpenCombatRow(unit: SimUnit, enemy: SimUnit, deltaSec: number): void {
     const direction = Math.sign(enemy.laneRow - unit.laneRow);
     const candidateRows = createLaneRowCandidates(
       enemy.laneRow,
@@ -2366,11 +2735,11 @@ export class LaneBattleScene extends Phaser.Scene {
       .sort((a, b) => this.compareLaneShiftCandidates(unit, a, b, enemy, direction));
     const nextRow = candidateRows.find((row) => this.isLaneRowFree(unit, row));
     if (nextRow === undefined) return;
-    unit.laneRow = Phaser.Math.Linear(unit.laneRow, nextRow, frameLerpAlpha(deltaSec, 0.42));
+    unit.laneRow = simLerp(unit.laneRow, nextRow, frameLerpAlpha(deltaSec, 0.42));
     this.keepUnitInPlayableLane(unit);
   }
 
-  private tryShiftLane(unit: LaneUnit, enemy?: LaneUnit): boolean {
+  private tryShiftLane(unit: SimUnit, enemy?: SimUnit): boolean {
     const candidates = createLaneRowCandidates(unit.laneRow, 5, LANE_SHIFT_STEP);
     const preferred = enemy
       ? candidates.sort((a, b) => this.compareLaneShiftCandidates(unit, a, b, enemy))
@@ -2387,10 +2756,10 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private compareLaneShiftCandidates(
-    unit: LaneUnit,
+    unit: SimUnit,
     a: number,
     b: number,
-    enemy?: LaneUnit,
+    enemy?: SimUnit,
     preferredDirection = 0,
   ): number {
     const aCongestion = this.getForwardLaneCongestion(unit, a);
@@ -2417,53 +2786,29 @@ export class LaneBattleScene extends Phaser.Scene {
     return a - b;
   }
 
-  private getForwardLaneCongestion(unit: LaneUnit, laneRow: number): number {
-    const forwardWindow = 0.065;
-    const rearWindow = 0.016;
-    const dir = unit.team === "player" ? 1 : -1;
-    return this.units.reduce((score, other) => {
-      if (other.id === unit.id || other.team !== unit.team || other.laneId !== unit.laneId) return score;
-      if (Math.abs(other.laneRow - laneRow) >= 0.6) return score;
-      const relativeProgress = (other.progress - unit.progress) * dir;
-      if (relativeProgress < -rearWindow || relativeProgress > forwardWindow) return score;
-      const rowWeight = 1 - Math.min(1, Math.abs(other.laneRow - laneRow) / 0.6);
-      const progressWeight = relativeProgress >= 0
-        ? 1 - Math.min(1, relativeProgress / forwardWindow)
-        : 0.4 * (1 - Math.min(1, Math.abs(relativeProgress) / rearWindow));
-      return score + rowWeight * progressWeight;
-    }, 0);
+  private getForwardLaneCongestion(unit: SimUnit, laneRow: number): number {
+    return steerForwardCongestion(this.units, unit, laneRow);
   }
 
-  private getMirrorLanePreference(unit: LaneUnit, laneRow: number, enemy?: LaneUnit): number {
-    const delta = laneRow - unit.laneRow;
-    if (Math.abs(delta) < 0.001) return 0;
-    const desiredDirection = enemy && Math.abs(enemy.laneRow - unit.laneRow) > 0.15
-      ? Math.sign(enemy.laneRow - unit.laneRow)
-      : (unit.id % 2 === 0 ? 1 : -1);
-    return Math.sign(delta) === desiredDirection ? 0 : 1;
+  private getMirrorLanePreference(unit: SimUnit, laneRow: number, enemy?: SimUnit): number {
+    return steerMirrorPreference(unit, laneRow, enemy);
   }
 
-  private isLaneRowFree(unit: LaneUnit, laneRow: number): boolean {
-    return !this.units.some((other) =>
-      other.id !== unit.id
-      && other.team === unit.team
-      && other.laneId === unit.laneId
-      && Math.abs(other.laneRow - laneRow) < COMBAT_ROW_CLEARANCE
-      && progressBetween(other.progress, unit.progress) < FRIENDLY_GAP,
-    );
+  private isLaneRowFree(unit: SimUnit, laneRow: number): boolean {
+    return steerLaneRowFree(this.units, unit, laneRow);
   }
 
-  private isMeleeUnit(unit: LaneUnit): boolean {
-    return unit.role === "battle" && unit.range <= 2.5;
+  private isMeleeUnit(unit: SimUnit): boolean {
+    return steerIsMelee(unit);
   }
 
-  private isRangedUnit(unit: LaneUnit): boolean {
-    return unit.role === "battle" && unit.range > 2.5;
+  private isRangedUnit(unit: SimUnit): boolean {
+    return steerIsRanged(unit);
   }
 
   private shouldPrioritizeUnitOverTower(
-    unit: LaneUnit,
-    enemy: LaneUnit,
+    unit: SimUnit,
+    enemy: SimUnit,
     tower: DefenseTowerState,
   ): boolean {
     const unitDistance = this.unitDistance(unit, enemy);
@@ -2476,7 +2821,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private moveUnitTowardSlot(
-    unit: LaneUnit,
+    unit: SimUnit,
     deltaSec: number,
     slot: CombatSlot,
     structureProgress: number,
@@ -2520,7 +2865,7 @@ export class LaneBattleScene extends Phaser.Scene {
     const desiredProgress = Phaser.Math.Clamp(effectiveSlot.progress, 0.01, 0.99);
     const nextProgress = this.moveToward(unit.progress, desiredProgress, progressStep);
 
-    this.setUnitTravelFacing(unit, desiredProgress, effectiveSlot.laneRow);
+    this.effects.unitTravelFacing(unit.id, desiredProgress, effectiveSlot.laneRow);
     unit.laneRow = Phaser.Math.Linear(unit.laneRow, effectiveSlot.laneRow, frameLerpAlpha(deltaSec, friendAhead ? 0.52 : 0.4));
     if (friendAhead && Math.abs(friendAhead.laneRow - unit.laneRow) < 0.62) {
       const packedLimit = dir > 0
@@ -2535,21 +2880,11 @@ export class LaneBattleScene extends Phaser.Scene {
     this.keepUnitInPlayableLane(unit);
   }
 
-  private getFriendlySlotCongestion(unit: LaneUnit, progress: number, laneRow: number): number {
-    const progressWindow = 0.03;
-    return this.units.reduce((score, other) => {
-      if (other.id === unit.id || other.team !== unit.team || other.laneId !== unit.laneId) return score;
-      const progressDistance = progressBetween(other.progress, progress);
-      if (progressDistance >= progressWindow) return score;
-      const rowDistance = Math.abs(other.laneRow - laneRow);
-      if (rowDistance >= 1.2) return score;
-      const progressWeight = 1 - progressDistance / progressWindow;
-      const rowWeight = 1 - Math.min(1, rowDistance / 1.2);
-      return score + progressWeight * rowWeight;
-    }, 0);
+  private getFriendlySlotCongestion(unit: SimUnit, progress: number, laneRow: number): number {
+    return steerSlotCongestion(this.units, unit, progress, laneRow);
   }
 
-  private findCombatSlot(unit: LaneUnit, enemy: LaneUnit): CombatSlot | undefined {
+  private findCombatSlot(unit: SimUnit, enemy: SimUnit): CombatSlot | undefined {
     const direction = unit.team === "player" ? -1 : 1;
     const laneCandidates = createLaneRowCandidates(
       enemy.laneRow,
@@ -2569,7 +2904,7 @@ export class LaneBattleScene extends Phaser.Scene {
     let bestScore = Number.POSITIVE_INFINITY;
     for (const progress of progressCandidates) {
       for (const laneRow of laneCandidates) {
-        const slot = { progress: Phaser.Math.Clamp(progress, 0.02, 0.98), laneRow };
+        const slot = { progress: simClamp(progress, 0.02, 0.98), laneRow };
         if (this.isMeleeUnit(unit) && !this.canAttackEnemyFromSlot(unit, slot, enemy)) continue;
         if (!this.isCombatSlotFree(unit, slot, enemy)) continue;
         const score =
@@ -2585,27 +2920,16 @@ export class LaneBattleScene extends Phaser.Scene {
     return best;
   }
 
-  private canAttackEnemyFromSlot(unit: LaneUnit, slot: CombatSlot, enemy: LaneUnit): boolean {
-    const progressDistance = progressBetween(slot.progress, enemy.progress);
-    const rowDistance = Math.abs(slot.laneRow - enemy.laneRow) * 0.01;
-    const distance = Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
-    const tolerance = this.isMeleeUnit(unit) ? MELEE_ENGAGE_TOLERANCE_PROGRESS : 0;
-    return distance <= unit.range * RANGE_TO_PROGRESS + tolerance;
+  private canAttackEnemyFromSlot(unit: SimUnit, slot: CombatSlot, enemy: SimUnit): boolean {
+    return steerCanAttackFromSlot(unit, slot, enemy);
   }
 
-  private isCombatSlotFree(unit: LaneUnit, slot: CombatSlot, enemy: LaneUnit): boolean {
-    if (Math.abs(slot.laneRow - enemy.laneRow) > COMBAT_ROW_REACH + 0.001) return false;
-    return !this.units.some((other) =>
-      other.id !== unit.id &&
-      other.team === unit.team &&
-      other.laneId === unit.laneId &&
-      progressBetween(other.progress, slot.progress) < COMBAT_PROGRESS_CLEARANCE &&
-      Math.abs(other.laneRow - slot.laneRow) < COMBAT_ROW_CLEARANCE,
-    );
+  private isCombatSlotFree(unit: SimUnit, slot: CombatSlot, enemy: SimUnit): boolean {
+    return steerCombatSlotFree(this.units, unit, slot, enemy);
   }
 
   private findStructureAttackSlot(
-    unit: LaneUnit,
+    unit: SimUnit,
     structureProgress: number,
     halfDepthProgress: number = TOWER_HALF_DEPTH_PROGRESS,
     halfWidthRows: number = TOWER_HALF_WIDTH_ROWS,
@@ -2645,7 +2969,7 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private canAttackStructureFromSlot(
-    unit: LaneUnit,
+    unit: SimUnit,
     slot: CombatSlot,
     structureProgress: number,
     halfDepthProgress: number = TOWER_HALF_DEPTH_PROGRESS,
@@ -2658,7 +2982,7 @@ export class LaneBattleScene extends Phaser.Scene {
     return distance <= Math.max(unit.range * RANGE_TO_PROGRESS, MIN_TOWER_STANDOFF_PROGRESS) + tolerance;
   }
 
-  private isStructureSlotFree(unit: LaneUnit, slot: CombatSlot): boolean {
+  private isStructureSlotFree(unit: SimUnit, slot: CombatSlot): boolean {
     return !this.units.some((other) =>
       other.id !== unit.id
       && other.team === unit.team
@@ -2687,10 +3011,10 @@ export class LaneBattleScene extends Phaser.Scene {
         if (Math.abs(current.laneRow - previous.laneRow) >= 0.58) continue;
         const gap = current.progress - previous.progress;
         if (gap >= minGap) continue;
-        const separatedProgress = Phaser.Math.Clamp(previous.progress + minGap, 0.01, 0.99);
+        const separatedProgress = simClamp(previous.progress + minGap, 0.01, 0.99);
         current.progress = Math.max(current.progress, separatedProgress);
         if (current.progress >= 0.99 && previous.progress > 0.01) {
-          previous.progress = Phaser.Math.Clamp(current.progress - minGap, 0.01, 0.99);
+          previous.progress = simClamp(current.progress - minGap, 0.01, 0.99);
         }
       }
     });
@@ -2725,7 +3049,7 @@ export class LaneBattleScene extends Phaser.Scene {
    * aiming at a committed target instead of hitting whoever was in reach.
    * Nearest-enemy stays until there is evidence for something better.
    */
-  private findNearestEnemy(unit: LaneUnit): LaneUnit | undefined {
+  private findNearestEnemy(unit: SimUnit): LaneUnit | undefined {
     let best: LaneUnit | undefined;
     let bestDistance = Number.POSITIVE_INFINITY;
     for (const other of this.units) {
@@ -2752,7 +3076,7 @@ export class LaneBattleScene extends Phaser.Scene {
    * constantly, they just did it with hysteresis. Committing on first contact
    * and holding is the behaviour that was actually wanted.
    */
-  private acquireTarget(unit: LaneUnit): LaneUnit | undefined {
+  private acquireTarget(unit: SimUnit): LaneUnit | undefined {
     if (unit.targetId !== undefined) {
       const held = this.units.find((other) => other.id === unit.targetId);
       if (held && held.laneId === unit.laneId && this.unitDistance(unit, held) <= AGGRO_LEASH_PROGRESS) {
@@ -2776,7 +3100,7 @@ export class LaneBattleScene extends Phaser.Scene {
     return nearest;
   }
 
-  private findNearestEnemyTower(unit: LaneUnit): DefenseTowerState | undefined {
+  private findNearestEnemyTower(unit: SimUnit): DefenseTowerState | undefined {
     let best: DefenseTowerState | undefined;
     let bestDistance = Number.POSITIVE_INFINITY;
     this.defenseTowers.forEach((tower) => {
@@ -2794,10 +3118,8 @@ export class LaneBattleScene extends Phaser.Scene {
     return owner === "enemy" ? this.enemy.ageId : this.player.ageId;
   }
 
-  private unitDistance(a: LaneUnit, b: LaneUnit): number {
-    const progressDistance = progressBetween(a.progress, b.progress);
-    const rowDistance = Math.abs(a.laneRow - b.laneRow) * 0.01;
-    return Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
+  private unitDistance(a: SimUnit, b: SimUnit): number {
+    return steerUnitDistance(a, b);
   }
 
   private getStructureRowDistance(laneRow: number, halfWidthRows: number = BASE_HALF_WIDTH_ROWS): number {
@@ -2812,13 +3134,13 @@ export class LaneBattleScene extends Phaser.Scene {
     return Math.max(0, progressBetween(progress, structureProgress) - halfDepthProgress);
   }
 
-  private towerDistance(unit: LaneUnit, tower: DefenseTowerState): number {
+  private towerDistance(unit: SimUnit, tower: DefenseTowerState): number {
     const progressDistance = this.getStructureProgressDistance(unit.progress, tower.progress, TOWER_HALF_DEPTH_PROGRESS);
     const rowDistance = this.getStructureRowDistance(unit.laneRow, TOWER_HALF_WIDTH_ROWS);
     return Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
   }
 
-  private forwardTowerBlockLimit(unit: LaneUnit, dir: 1 | -1): number | undefined {
+  private forwardTowerBlockLimit(unit: SimUnit, dir: 1 | -1): number | undefined {
     const blockingTower = this.defenseTowers
       .filter((tower) => tower.owner !== unit.team && tower.built && tower.laneId === unit.laneId)
       .filter((tower) => (dir > 0 ? tower.progress > unit.progress : tower.progress < unit.progress))
@@ -2832,15 +3154,15 @@ export class LaneBattleScene extends Phaser.Scene {
       : blockingTower.progress + TOWER_HALF_DEPTH_PROGRESS + progressBudget;
   }
 
-  private keepUnitInPlayableLane(unit: LaneUnit): void {
-    unit.laneRow = Phaser.Math.Clamp(unit.laneRow, LANE_ROW_MIN, LANE_ROW_MAX);
+  private keepUnitInPlayableLane(unit: SimUnit): void {
+    unit.laneRow = simClamp(unit.laneRow, LANE_ROW_MIN, LANE_ROW_MAX);
     this.laneObstacles.forEach((obstacle) => {
       if (progressBetween(unit.progress, obstacle.progress) > obstacle.radiusProgress) return;
       if (Math.abs(unit.laneRow - obstacle.laneRow) > obstacle.radiusRows) return;
       const pushDir = unit.laneRow >= obstacle.laneRow ? 1 : -1;
       unit.laneRow = obstacle.laneRow + pushDir * (obstacle.radiusRows + 0.4);
     });
-    unit.laneRow = Phaser.Math.Clamp(unit.laneRow, LANE_ROW_MIN, LANE_ROW_MAX);
+    unit.laneRow = simClamp(unit.laneRow, LANE_ROW_MIN, LANE_ROW_MAX);
   }
 
   private tickCapturePoints(deltaSec: number): void {
@@ -2861,9 +3183,9 @@ export class LaneBattleScene extends Phaser.Scene {
         : 0;
       const playerStrength = nearbyPlayer + (point.owner === "player" ? towerDefenders : 0);
       const enemyStrength = nearbyEnemy + (point.owner === "enemy" ? towerDefenders : 0);
-      const pressure = Phaser.Math.Clamp((playerStrength - enemyStrength) * CAPTURE_RATE_PER_SEC * deltaSec, -0.8, 0.8);
+      const pressure = simClamp((playerStrength - enemyStrength) * CAPTURE_RATE_PER_SEC * deltaSec, -0.8, 0.8);
 
-      if (pressure !== 0) point.control = Phaser.Math.Clamp(point.control + pressure, -1, 1);
+      if (pressure !== 0) point.control = simClamp(point.control + pressure, -1, 1);
 
       if (point.control >= 1) point.owner = "player";
       else if (point.control <= -1) point.owner = "enemy";
@@ -2874,10 +3196,13 @@ export class LaneBattleScene extends Phaser.Scene {
       }
       if (prevOwner !== point.owner) {
         this.structureVisualsDirty = true;
-        if (point.owner === "player") {
-          this.audio.playSfx("sfx.capture.complete", { eventKey: `capture:${point.id}:player` });
-        } else if (prevOwner === "player") {
-          this.audio.playSfx("sfx.capture.lost", { eventKey: `capture:${point.id}:lost` });
+        // Gained-vs-lost is relative to the viewer. These are `effects` calls,
+        // so the two clients legitimately emit different sounds for the same
+        // simulated event and no simulation state depends on the branch.
+        if (point.owner === this.localTeamId) {
+          this.effects.globalSfx("sfx.capture.complete", `capture:${point.id}:gained`);
+        } else if (prevOwner === this.localTeamId) {
+          this.effects.globalSfx("sfx.capture.lost", `capture:${point.id}:lost`);
         }
       }
 
@@ -2886,9 +3211,9 @@ export class LaneBattleScene extends Phaser.Scene {
       if (point.buildingId === "mint") this.tickMint(point, deltaSec);
     });
 
-    this.aiController.autoBuildCapturePoint();
+    if (!this.lockstep) this.aiController.autoBuildCapturePoint();
     this.defenseTowers.forEach((tower) => this.tickWatchtower(tower, deltaSec));
-    this.aiController.autoRebuildDefenseTower();
+    if (!this.lockstep) this.aiController.autoRebuildDefenseTower();
 
     this.structureVisualRefreshTimerSec += deltaSec;
     if (this.structureVisualsDirty || this.structureVisualRefreshTimerSec >= STRUCTURE_VISUAL_REFRESH_SEC) {
@@ -2914,10 +3239,10 @@ export class LaneBattleScene extends Phaser.Scene {
         );
         tower.hp = tower.maxHp;
         tower.attackTimerSec = 0.3;
-        if (tower.owner === "player") this.hud.setInfo("타워 재건축 완료");
-        if (tower.owner === "player") {
-          this.audio.playSfx("sfx.construction.complete", { eventKey: `tower:${tower.id}:complete` });
-          this.audio.playSfx("sfx.fortress.rebuilt", { eventKey: `tower:${tower.id}:rebuilt` });
+        if (tower.owner === this.localTeamId) {
+          this.effects.notice("타워 재건축 완료");
+          this.effects.globalSfx("sfx.construction.complete", `tower:${tower.id}:complete`);
+          this.effects.globalSfx("sfx.fortress.rebuilt", `tower:${tower.id}:rebuilt`);
         }
       }
       return;
@@ -2965,8 +3290,8 @@ export class LaneBattleScene extends Phaser.Scene {
         centeredIndex * spec.spreadWorldPx,
         -centeredIndex * 4,
       ));
-      const aim = this.getUnitProjectileAnchor(target).add(new Phaser.Math.Vector2(offset, index * 3));
-      this.launchProjectile(
+      const aim = this.getUnitProjectileAnchor(target.id).add(new Phaser.Math.Vector2(offset, index * 3));
+      this.fireProjectile(
         launch,
         aim,
         spec.projectileKey,
@@ -3009,7 +3334,7 @@ export class LaneBattleScene extends Phaser.Scene {
     point.supplyTimerSec = 1.5;
     point.manaCurrent = Math.max(0, point.manaCurrent - SUPPLY_DEPOT_SUPPORT_MANA_RESTORE);
     support.manaCurrent = Math.min(support.manaMax, support.manaCurrent + SUPPLY_DEPOT_SUPPORT_MANA_RESTORE + point.buildingLevel * 2);
-    this.spawnToast("병참", support.sprite.x, support.sprite.y - 28, "#92b8ff");
+    this.effects.unitToast("병참", support.id, "#92b8ff", -28);
   }
 
   private tickMint(point: CapturePointState, deltaSec: number): void {
@@ -3022,7 +3347,7 @@ export class LaneBattleScene extends Phaser.Scene {
     point.supplyTimerSec = 1.5;
     ally.hp = Math.min(ally.maxHp, ally.hp + 4 + point.buildingLevel * 2);
     ally.attrition = Math.max(0, ally.attrition - (0.05 + point.buildingLevel * 0.02));
-    this.spawnToast("조달", ally.sprite.x, ally.sprite.y - 28, "#92f1a5");
+    this.effects.unitToast("조달", ally.id, "#92f1a5", -28);
   }
 
   private tickCapturePointTower(point: CapturePointState, deltaSec: number): void {
@@ -3047,8 +3372,8 @@ export class LaneBattleScene extends Phaser.Scene {
       const centeredIndex = index - (spec.projectileCount - 1) / 2;
       const offset = centeredIndex * spec.spreadWorldPx * 2;
       const launch = start.clone().add(new Phaser.Math.Vector2(centeredIndex * spec.spreadWorldPx, -centeredIndex * 4));
-      const aim = this.getUnitProjectileAnchor(target).add(new Phaser.Math.Vector2(offset, index * 3));
-      this.launchProjectile(
+      const aim = this.getUnitProjectileAnchor(target.id).add(new Phaser.Math.Vector2(offset, index * 3));
+      this.fireProjectile(
         launch,
         aim,
         spec.projectileKey,
@@ -3131,8 +3456,10 @@ export class LaneBattleScene extends Phaser.Scene {
     this.selectedDefenseTowerId = null;
     this.refreshCapturePointVisuals();
     this.refreshDefenseTowerVisuals();
-    if (team === "player") {
-      this.audio.playSfx("sfx.ui.buildSelect", { eventKey: "base:select:player" });
+    // The confirmation sound belongs to selecting *your own* base, so it keys
+    // off the local side rather than the left-hand one.
+    if (team === this.localTeamId) {
+      this.audio.playSfx("sfx.ui.buildSelect", { eventKey: `base:select:${team}` });
     }
     this.refreshUi();
   }
@@ -3145,92 +3472,101 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private browsePlayerProductionAge(delta: 1 | -1): void {
-    const browsable = getBrowsableAgeIds(this.player.ageId);
-    const currentIndex = browsable.indexOf(this.player.selectedProductionAgeId);
+    // Browsing is local view state, so it must move the viewer's own team.
+    // Reading `player` here meant the right-hand player's clicks silently
+    // retargeted the opponent's production age instead of their own.
+    const team = this.localTeamState;
+    const browsable = getBrowsableAgeIds(team.ageId);
+    const currentIndex = browsable.indexOf(team.selectedProductionAgeId);
     const nextAgeId = browsable[Phaser.Math.Clamp(currentIndex + delta, 0, browsable.length - 1)];
-    if (!nextAgeId || nextAgeId === this.player.selectedProductionAgeId) return;
-    this.player.selectedProductionAgeId = nextAgeId;
+    if (!nextAgeId || nextAgeId === team.selectedProductionAgeId) return;
+    team.selectedProductionAgeId = nextAgeId;
     this.audio.playSfx("sfx.ui.hover", { eventKey: `base:browse:${nextAgeId}` });
     this.refreshUi();
   }
 
   private adjustPlayerResearchDraft(unitId: ResearchSubjectId, stat: ResearchStatKey, delta: 1 | -1): void {
-    adjustDraftResearchLevel(this.playerResearchState, this.player.selectedProductionAgeId, unitId, stat, delta);
+    adjustDraftResearchLevel(this.actingResearch, this.acting.selectedProductionAgeId, unitId, stat, delta);
     this.audio.playSfx(delta > 0 ? "sfx.ui.confirm" : "sfx.ui.hover", {
-      eventKey: `base:research:${this.player.selectedProductionAgeId}:${unitId}:${stat}:${delta}`,
+      eventKey: `base:research:${this.acting.selectedProductionAgeId}:${unitId}:${stat}:${delta}`,
     });
     this.refreshUi();
   }
 
   private applyPlayerResearchDraft(): void {
-    const draftCost = getDraftResearchApplyCost(this.playerResearchState, this.player.selectedProductionAgeId);
+    const draftCost = getDraftResearchApplyCost(this.actingResearch, this.acting.selectedProductionAgeId);
     if (draftCost <= 0) {
-      this.hud.setInfo("연구 포인트가 부족하거나 적용할 변경이 없습니다");
-      this.audio.playSfx("sfx.ui.hireFail", { eventKey: "base:research:apply:fail" });
+      this.effects.notice("연구 포인트가 부족하거나 적용할 변경이 없습니다");
+      this.effects.globalSfx("sfx.ui.hireFail", "base:research:apply:fail");
       return;
     }
     if (this.devModeEnabled) {
-      const originalResearch = this.player.resources.research;
-      if (originalResearch < draftCost) this.player.resources.research = draftCost;
-      const applied = applyResearchDraft(this.player.resources, this.playerResearchState, this.player.selectedProductionAgeId);
-      this.player.resources.research = originalResearch;
+      const originalResearch = this.acting.resources.research;
+      if (originalResearch < draftCost) this.acting.resources.research = draftCost;
+      const applied = applyResearchDraft(this.acting.resources, this.actingResearch, this.acting.selectedProductionAgeId);
+      this.acting.resources.research = originalResearch;
       if (!applied) {
-        this.hud.setInfo("DEV 연구 적용에 실패했습니다");
-        this.audio.playSfx("sfx.ui.hireFail", { eventKey: "base:research:apply:dev-fail" });
+        this.effects.notice("DEV 연구 적용에 실패했습니다");
+        this.effects.globalSfx("sfx.ui.hireFail", "base:research:apply:dev-fail");
         return;
       }
-    } else if (!applyResearchDraft(this.player.resources, this.playerResearchState, this.player.selectedProductionAgeId)) {
-      this.hud.setInfo("연구 포인트가 부족하거나 적용할 변경이 없습니다");
-      this.audio.playSfx("sfx.ui.hireFail", { eventKey: "base:research:apply:fail" });
+    } else if (!applyResearchDraft(this.acting.resources, this.actingResearch, this.acting.selectedProductionAgeId)) {
+      this.effects.notice("연구 포인트가 부족하거나 적용할 변경이 없습니다");
+      this.effects.globalSfx("sfx.ui.hireFail", "base:research:apply:fail");
       return;
     }
-    this.hud.setInfo(`${getAge(this.player.selectedProductionAgeId).label} 병력 연구를 적용했습니다`);
-    this.audio.playSfx("sfx.ui.confirm", { eventKey: `base:research:apply:${this.player.selectedProductionAgeId}` });
+    this.effects.notice(`${getAge(this.acting.selectedProductionAgeId).label} 병력 연구를 적용했습니다`);
+    this.audio.playSfx("sfx.ui.confirm", { eventKey: `base:research:apply:${this.acting.selectedProductionAgeId}` });
     this.refreshUi();
   }
 
   private cancelPlayerResearchDraft(): void {
-    getBrowsableAgeIds(this.player.ageId).forEach((ageId) => {
-      discardResearchDraftForAge(this.playerResearchState, ageId);
+    getBrowsableAgeIds(this.acting.ageId).forEach((ageId) => {
+      discardResearchDraftForAge(this.actingResearch, ageId);
     });
-    this.audio.playSfx("sfx.ui.cancel", { eventKey: "base:research:cancel" });
+    this.effects.globalSfx("sfx.ui.cancel", "base:research:cancel");
     this.refreshUi();
   }
 
-  private tryBuildAtSelectedPoint(buildingId: BuildingId): void {
-    const point = this.capturePoints.find((entry) => entry.id === this.selectedCapturePointId);
+  /**
+   * Takes the point id explicitly rather than reading the current selection:
+   * this runs from the command queue, where a remote peer's build order has to
+   * work without any knowledge of what this client has clicked.
+   */
+  private buildAtPoint(pointId: number, buildingId: BuildingId): void {
+    const point = this.capturePoints.find((entry) => entry.id === pointId);
     if (!point) {
-      this.hud.setInfo("먼저 거점을 선택하십시오");
-      this.audio.playSfx("sfx.ui.cancel", { eventKey: "build:no-point" });
+      this.effects.notice("먼저 거점을 선택하십시오");
+      this.effects.globalSfx("sfx.ui.cancel", "build:no-point");
       return;
     }
-    if (point.owner !== "player") {
-      this.hud.setInfo("아군 점령 거점에서만 건설 가능합니다");
+    if (point.owner !== this.actingTeamId) {
+      this.effects.notice("아군 점령 거점에서만 건설 가능합니다");
       this.audio.playSfx("sfx.ui.hireFail", { eventKey: `build:${point.id}:not-owned` });
       return;
     }
     if (!point.definition.allowedBuildingTypes.includes(buildingId)) {
-      this.hud.setInfo("이 거점에는 해당 건물을 건설할 수 없습니다");
+      this.effects.notice("이 거점에는 해당 건물을 건설할 수 없습니다");
       this.audio.playSfx("sfx.ui.hireFail", { eventKey: `build:${point.id}:not-allowed:${buildingId}` });
       return;
     }
     const building = getBuildingDefinition(buildingId);
     if (point.buildingId) {
-      this.hud.setInfo("이미 건설된 거점입니다");
+      this.effects.notice("이미 건설된 거점입니다");
       this.audio.playSfx("sfx.ui.cancel", { eventKey: `build:${point.id}:occupied` });
       return;
     }
-    const cost = getBuildingCost(buildingId, this.player.ageId);
-    if (!canAfford(this.player.resources, cost)) {
-      this.hud.setInfo(`${building.label} 건설 자원 부족`);
+    const cost = getBuildingCost(buildingId, this.acting.ageId);
+    if (!canAfford(this.acting.resources, cost)) {
+      this.effects.notice(`${building.label} 건설 자원 부족`);
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `build:${point.id}:shortage:${buildingId}` });
       return;
     }
-    payCost(this.player.resources, cost);
+    payCost(this.acting.resources, cost);
     point.buildingId = buildingId;
     point.buildingLevel = 1;
     this.initializeCaptureBuildingState(point);
-    this.hud.setInfo(`${building.label} 건설 완료`);
+    this.effects.notice(`${building.label} 건설 완료`);
     this.audio.playSfx("sfx.construction.start", { eventKey: `build:${point.id}:start:${buildingId}` });
     this.time.delayedCall(180, () => {
       this.audio.playSfx("sfx.construction.complete", { eventKey: `build:${point.id}:complete:${buildingId}` });
@@ -3238,55 +3574,54 @@ export class LaneBattleScene extends Phaser.Scene {
     this.refreshCapturePointVisuals();
   }
 
-
-  private tryDismantleSelectedPoint(): void {
-    const point = this.capturePoints.find((entry) => entry.id === this.selectedCapturePointId);
-    if (!point || point.owner !== "player" || !point.definition.canDemolish || !point.buildingId) {
-      this.hud.setInfo("폐기할 아군 거점 건물이 없습니다");
-      this.audio.playSfx("sfx.ui.cancel", { eventKey: "dismantle:invalid" });
+  private dismantlePoint(pointId: number): void {
+    const point = this.capturePoints.find((entry) => entry.id === pointId);
+    if (!point || point.owner !== this.actingTeamId || !point.definition.canDemolish || !point.buildingId) {
+      this.effects.notice("폐기할 아군 거점 건물이 없습니다");
+      this.effects.globalSfx("sfx.ui.cancel", "dismantle:invalid");
       return;
     }
-    if (this.player.resources.gold < DISMANTLE_COST_GOLD) {
-      this.hud.setInfo("폐기 비용이 부족합니다");
+    if (this.acting.resources.gold < DISMANTLE_COST_GOLD) {
+      this.effects.notice("폐기 비용이 부족합니다");
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `dismantle:${point.id}:shortage` });
       return;
     }
-    this.player.resources.gold -= DISMANTLE_COST_GOLD;
+    this.acting.resources.gold -= DISMANTLE_COST_GOLD;
     point.buildingId = undefined;
     point.buildingLevel = 0;
     this.resetCaptureBuildingState(point);
-    this.hud.setInfo(`거점 건물을 폐기했습니다 (-${DISMANTLE_COST_GOLD}G)`);
+    this.effects.notice(`거점 건물을 폐기했습니다 (-${DISMANTLE_COST_GOLD}G)`);
     this.audio.playSfx("sfx.ui.confirm", { eventKey: `dismantle:${point.id}:complete` });
     this.refreshCapturePointVisuals();
   }
 
-  private tryRebuildSelectedDefenseTower(): void {
-    const tower = this.defenseTowers.find((entry) => entry.id === this.selectedDefenseTowerId);
-    if (!tower || tower.owner !== "player") {
-      this.hud.setInfo("재건할 아군 타워를 선택하십시오");
-      this.audio.playSfx("sfx.ui.hireFail", { eventKey: "tower:rebuild:invalid" });
+  private rebuildDefenseTower(towerId: number): void {
+    const tower = this.defenseTowers.find((entry) => entry.id === towerId);
+    if (!tower || tower.owner !== this.actingTeamId) {
+      this.effects.notice("재건할 아군 타워를 선택하십시오");
+      this.effects.globalSfx("sfx.ui.hireFail", "tower:rebuild:invalid");
       return;
     }
     if (tower.buildRemainingSec > 0) {
-      this.hud.setInfo(`타워 재건 중 (${Math.ceil(tower.buildRemainingSec)}초)`);
+      this.effects.notice(`타워 재건 중 (${Math.ceil(tower.buildRemainingSec)}초)`);
       this.audio.playSfx("sfx.ui.cancel", { eventKey: `tower:${tower.id}:busy` });
       return;
     }
     if (tower.built) {
-      this.hud.setInfo("선택한 타워가 이미 가동 중입니다");
+      this.effects.notice("선택한 타워가 이미 가동 중입니다");
       this.audio.playSfx("sfx.ui.cancel", { eventKey: `tower:${tower.id}:active` });
       return;
     }
-    const cost = getDefenseTowerBuildCost(this.player.ageId);
-    if (!canAfford(this.player.resources, cost)) {
-      this.hud.setInfo("타워 재건 자원 부족");
+    const cost = getDefenseTowerBuildCost(this.acting.ageId);
+    if (!canAfford(this.acting.resources, cost)) {
+      this.effects.notice("타워 재건 자원 부족");
       this.audio.playSfx("sfx.state.resourceShortage", { eventKey: `tower:${tower.id}:shortage` });
       return;
     }
-    payCost(this.player.resources, cost);
+    payCost(this.acting.resources, cost);
     tower.buildRemainingSec = DEFENSE_TOWER_BUILD_DURATION_SEC;
     tower.control = 1;
-    this.hud.setInfo(`타워 재건을 시작했습니다 (${DEFENSE_TOWER_BUILD_DURATION_SEC}초)`);
+    this.effects.notice(`타워 재건을 시작했습니다 (${DEFENSE_TOWER_BUILD_DURATION_SEC}초)`);
     this.audio.playSfx("sfx.construction.start", { eventKey: `tower:${tower.id}:start` });
     this.refreshDefenseTowerVisuals();
   }
@@ -3295,8 +3630,8 @@ export class LaneBattleScene extends Phaser.Scene {
     const outcome = resolveCapturedBuilding(
       point.buildingId,
       point.buildingLevel,
-      Phaser.Math.RND.frac(),
-      Phaser.Math.Between(1, 3),
+      this.simRandom.next(),
+      this.simRandom.intBetween(1, 3),
     );
     point.buildingId = outcome.buildingId;
     point.buildingLevel = outcome.buildingLevel;
@@ -3312,15 +3647,18 @@ export class LaneBattleScene extends Phaser.Scene {
       point.ruinsVisualOwner = "neutral";
     }
     if (outcome.result === "none") return;
+    // These read "적 …" from the taker's point of view, so they may only fire
+    // for the client that did the taking.
+    const takenByMe = toOwner === this.localTeamId;
     if (outcome.result === "destroyed") {
-      if (toOwner === "player") this.hud.setInfo("적 거점 건물이 파괴되었습니다");
+      if (takenByMe) this.effects.notice("적 거점 건물이 파괴되었습니다");
       return;
     }
     if (outcome.result === "collapsed") {
-      if (toOwner === "player") this.hud.setInfo("적 건물을 접수하려 했지만 붕괴했습니다");
+      if (takenByMe) this.effects.notice("적 건물을 접수하려 했지만 붕괴했습니다");
       return;
     }
-    if (toOwner === "player") this.hud.setInfo(`적 건물을 접수했습니다 (레벨 -${outcome.levelDrop})`);
+    if (takenByMe) this.effects.notice(`적 건물을 접수했습니다 (레벨 -${outcome.levelDrop})`);
   }
 
   private isPrototypeV2(): boolean {
@@ -3443,7 +3781,7 @@ export class LaneBattleScene extends Phaser.Scene {
         .setDisplaySize(markerHeight * frameAspectRatio(point.marker), markerHeight)
         .setDepth(this.getGroundDepth(pos.y))
         .setVisible(this.terrainMode === "world-surface");
-      point.ownerText.setText(point.owner === "player" ? "아군 점령" : point.owner === "enemy" ? "적 점령" : "중립");
+      point.ownerText.setText(point.owner === this.localTeamId ? "아군 점령" : point.owner === "neutral" ? "중립" : "적 점령");
       point.ownerText.setColor(point.owner === "player" ? "#cfeeff" : point.owner === "enemy" ? "#ffd8d8" : "#eadfb3");
       const labelY = pos.y - (
         this.terrainMode === "world-surface"
@@ -3553,7 +3891,7 @@ export class LaneBattleScene extends Phaser.Scene {
         .setText(tower.buildRemainingSec > 0 ? `재건 ${Math.ceil(tower.buildRemainingSec)}초` : tower.built ? "가동 중" : tower.owner === "neutral" ? "중립 폐허" : "재건 가능");
       tower.label.setVisible(selected);
       tower.ownerText
-        .setText(tower.owner === "player" ? "아군 타워" : tower.owner === "enemy" ? "적 타워" : "중립 타워 거점")
+        .setText(tower.owner === this.localTeamId ? "아군 타워" : tower.owner === "neutral" ? "중립 타워 거점" : "적 타워")
         .setVisible(selected);
       tower.statusText.setVisible(selected);
       tower.groundPresentation?.shadow.setVisible(this.terrainMode === "prototype" && tower.built);
@@ -3574,7 +3912,7 @@ export class LaneBattleScene extends Phaser.Scene {
     return hpRatio > 0.66 ? "full" : hpRatio > 0.33 ? "damaged" : "critical";
   }
 
-  private getAttackBuffMultiplier(unit: LaneUnit): number {
+  private getAttackBuffMultiplier(unit: SimUnit): number {
     return this.capturePoints.some((point) =>
       point.owner === unit.team
       && point.buildingId === "supply_depot"
@@ -3610,14 +3948,14 @@ export class LaneBattleScene extends Phaser.Scene {
     point.manaRegenPerSec = 0;
   }
 
-  private baseDistance(unit: LaneUnit, targetTeamId: TeamId): number {
+  private baseDistance(unit: SimUnit, targetTeamId: TeamId): number {
     const targetProgress = targetTeamId === "player" ? 0 : 1;
     const progressDistance = this.getStructureProgressDistance(unit.progress, targetProgress, BASE_HALF_DEPTH_PROGRESS);
     const rowDistance = this.getStructureRowDistance(unit.laneRow);
     return Math.sqrt(progressDistance * progressDistance + rowDistance * rowDistance);
   }
 
-  private forwardBaseBlockLimit(unit: LaneUnit, dir: 1 | -1): number | undefined {
+  private forwardBaseBlockLimit(unit: SimUnit, dir: 1 | -1): number | undefined {
     const targetTeamId = dir > 0 ? "enemy" : "player";
     const engageRange = Math.max(unit.range * RANGE_TO_PROGRESS, MIN_TOWER_STANDOFF_PROGRESS);
     if (progressBetween(unit.progress, targetTeamId === "enemy" ? 1 : 0) > Math.max(0.09, engageRange + 0.045)) {
@@ -3630,7 +3968,14 @@ export class LaneBattleScene extends Phaser.Scene {
       : BASE_HALF_DEPTH_PROGRESS + progressBudget;
   }
 
-  private getUnitProjectileAnchor(unit: LaneUnit): Phaser.Math.Vector2 {
+  /**
+   * Muzzle point for a unit's projectile. Takes an id rather than the unit so
+   * simulation code — which is typed against `SimUnit` and cannot see a
+   * sprite — is still able to ask for it.
+   */
+  private getUnitProjectileAnchor(unitId: number): Phaser.Math.Vector2 {
+    const unit = this.units.find((entry) => entry.id === unitId);
+    if (!unit) return new Phaser.Math.Vector2(0, 0);
     const visibleHeight = unit.sprite.displayHeight
       * (resolveUnitFramePresentation(unit.unitId, 1, 1, unit.currentTextureKey).referenceVisibleHeight
         / resolveUnitFramePresentation(unit.unitId, 1, 1, unit.currentTextureKey).spriteHeight);
@@ -3667,6 +4012,37 @@ export class LaneBattleScene extends Phaser.Scene {
           : launch ? 18 : 12
       ),
     );
+  }
+
+  /**
+   * How long a projectile takes to deliver its damage, in simulation ticks.
+   *
+   * Constant rather than derived from flight distance: the visual arc is timed
+   * from screen geometry, and tying damage to that would make when a hit lands
+   * depend on rendering. Five ticks is ~167ms, inside the 150-360ms the visual
+   * takes, so the number still appears about when the projectile arrives.
+   */
+  private projectileImpactTicks(): number {
+    return 5;
+  }
+
+  /**
+   * Fires a projectile: the arc is presentation, the damage is simulation.
+   *
+   * These used to be one thing — `launchProjectile`'s `onHit` ran on tween
+   * completion, i.e. Phaser's wall clock — which made ranged, tower and base
+   * damage land at a time that depended on frame rate. Two lockstep peers would
+   * apply the same hit on different ticks and diverge.
+   */
+  private fireProjectile(
+    start: Phaser.Math.Vector2,
+    end: Phaser.Math.Vector2,
+    projectileKey: string,
+    applyDamage: () => void,
+    durationScale = 1,
+  ): void {
+    this.launchProjectile(start, end, projectileKey, () => { /* visual only */ }, durationScale);
+    this.scheduleImpact(this.projectileImpactTicks(), applyDamage);
   }
 
   private launchProjectile(
@@ -3706,32 +4082,15 @@ export class LaneBattleScene extends Phaser.Scene {
     });
   }
 
-  private applyDamageToUnit(target: LaneUnit, damage: number, color: string, attackerUnitId?: LaneUnitId): void {
-    if (!this.units.includes(target)) return;
+  private applyDamageToUnit(target: SimUnit, damage: number, color: string, attackerUnitId?: LaneUnitId): void {
+    if (!this.units.some((entry) => entry.id === target.id)) return;
     target.hp -= damage;
-    this.playWorldSfx(
+    this.effects.unitSfx(
       attackerUnitId ? getProjectileHitSfxKey(attackerUnitId) : "sfx.combat.projectileHit",
-      target.sprite.x,
-      target.sprite.y,
+      target.id,
       `impact:projectile:${target.id}:${Math.round(this.elapsedSec * 1000)}`,
     );
-    target.sprite.setTint(0xffc49b);
-    this.time.delayedCall(80, () => {
-      if (!target.sprite.active) return;
-      target.sprite.clearTint();
-    });
-    const impact = this.add.circle(target.sprite.x, target.sprite.y - 2, 10 + Math.min(10, damage), 0xffffff, 0.24)
-      .setDepth(target.sprite.depth - 1);
-    this.uiCamera?.ignore(impact);
-    this.tweens.add({
-      targets: impact,
-      scaleX: 1.6,
-      scaleY: 1.6,
-      alpha: 0,
-      duration: 160,
-      onComplete: () => impact.destroy(),
-    });
-    this.spawnToast(`${damage}`, target.sprite.x, target.sprite.y - 26, color);
+    this.effects.unitImpact(target.id, damage, color);
     if (target.hp <= 0) this.killUnit(target);
   }
 
@@ -3740,27 +4099,21 @@ export class LaneBattleScene extends Phaser.Scene {
     const mitigatedDamage = Math.max(1, Math.round(damage - point.defense));
     point.hp = Math.max(0, point.hp - mitigatedDamage);
     this.structureVisualsDirty = true;
-    this.playWorldSfx(
+    this.effects.structureSfx(
       "sfx.combat.towerHit",
-      point.sprite.x,
-      point.sprite.y,
+      "tower",
+      point.id,
       `impact:tower:${point.id}:${Math.round(this.elapsedSec * 1000)}`,
     );
-    this.tweens.add({
-      targets: point.sprite,
-      alpha: 0.45,
-      duration: 70,
-      yoyo: true,
-    });
-    this.spawnToast(`${mitigatedDamage}`, point.sprite.x, point.sprite.y - 58, attackerTeam === "player" ? "#ffd67a" : "#ff8f8f");
+    this.effects.structureImpact("tower", point.id, mitigatedDamage, attackerTeam === "player" ? "#ffd67a" : "#ff8f8f");
     if (point.hp <= 0) {
       point.built = false;
       point.owner = "neutral";
       point.control = 0;
       point.attackTimerSec = 0;
       point.buildRemainingSec = 0;
-      this.audio.playSfx("sfx.fortress.destroyed", { eventKey: `tower:${point.id}:destroyed` });
-      if (attackerTeam === "player") this.hud.setInfo("적 타워를 파괴했습니다");
+      this.effects.structureSfx("sfx.fortress.destroyed", "tower", point.id, `tower:${point.id}:destroyed`);
+      if (attackerTeam === (this.match?.localTeam ?? "player")) this.effects.notice("적 타워를 파괴했습니다");
     }
   }
 
@@ -3783,11 +4136,21 @@ export class LaneBattleScene extends Phaser.Scene {
     playerThreat.forEach((unit) => this.tryAttackBase(unit, this.player));
     enemyThreat.forEach((unit) => this.tryAttackBase(unit, this.enemy));
 
-    if (this.player.baseHp <= 0) this.scene.start("gameover", { win: false, squadSize: 0, summary: "아군 본진이 붕괴했습니다." });
-    if (this.enemy.baseHp <= 0) this.scene.start("gameover", { win: true, squadSize: 0, summary: "적 본진을 돌파했습니다." });
+    // Which base falling counts as a loss depends on the side this client
+    // plays, not on which base is on the left. Hard-coding it told the
+    // right-hand player they had won at the exact moment they lost.
+    const fallen = this.player.baseHp <= 0 ? "player" : this.enemy.baseHp <= 0 ? "enemy" : null;
+    if (fallen) {
+      const lost = fallen === this.localTeamId;
+      this.scene.start("gameover", {
+        win: !lost,
+        squadSize: 0,
+        summary: lost ? "아군 본진이 붕괴했습니다." : "적 본진을 돌파했습니다.",
+      });
+    }
   }
 
-  private tryAttackBase(unit: LaneUnit, targetTeam: TeamState): void {
+  private tryAttackBase(unit: SimUnit, targetTeam: TeamState): void {
     if (unit.attackTimerSec > 0) return;
     unit.attackTimerSec = unit.attackCooldownSec;
     const targetProgress = targetTeam.id === "player" ? 0 : 1;
@@ -3806,13 +4169,13 @@ export class LaneBattleScene extends Phaser.Scene {
     };
 
     if (this.isRangedUnit(unit)) {
-      const start = this.getUnitProjectileAnchor(unit);
+      const start = this.getUnitProjectileAnchor(unit.id);
       const end = target.clone().add(new Phaser.Math.Vector2(0, -96));
-      this.startRangedAttack(unit, target.x, target.y, "structure", () => {
-        this.launchProjectile(start, end, getProjectileKeyForUnit(unit.unitId), applyDamage, 1.05);
+      this.startRangedAttack(unit, { kind: "base", team: targetTeam.id }, "structure", () => {
+        this.fireProjectile(start, end, getProjectileKeyForUnit(unit.unitId), applyDamage, 1.05);
       });
     } else {
-      this.startMeleeAttack(unit, target.x, target.y, "structure", applyDamage);
+      this.startMeleeAttack(unit, { kind: "base", team: targetTeam.id }, "structure", applyDamage);
     }
   }
 
@@ -3833,7 +4196,7 @@ export class LaneBattleScene extends Phaser.Scene {
     team.baseAttackTimerSec = spec.cooldownSec;
     const start = this.getBaseAnchor(team.id, this.primaryLaneSpec.id, targetProgress);
     threats.forEach((target, index) => {
-      const anchor = this.getUnitProjectileAnchor(target);
+      const anchor = this.getUnitProjectileAnchor(target.id);
       const centeredIndex = index - (threats.length - 1) / 2;
       const launch = start.clone().add(new Phaser.Math.Vector2(centeredIndex * spec.spreadWorldPx, -Math.abs(centeredIndex) * 4 - 54));
       this.playWorldSfx(
@@ -3842,7 +4205,7 @@ export class LaneBattleScene extends Phaser.Scene {
         launch.y,
         `base:${team.id}:fire:${target.id}:${Math.round(this.elapsedSec * 1000)}:${index}`,
       );
-      this.launchProjectile(
+      this.fireProjectile(
         launch,
         anchor,
         spec.projectileKey,
@@ -3852,16 +4215,13 @@ export class LaneBattleScene extends Phaser.Scene {
     });
   }
 
-  private killUnit(unit: LaneUnit): void {
-    if (!this.units.includes(unit)) return;
-    this.playWorldSfx(
-      "sfx.combat.unitDeath",
-      unit.sprite.x,
-      unit.sprite.y,
-      `death:${unit.id}`,
-    );
+  private killUnit(unit: SimUnit): void {
+    if (!this.units.some((entry) => entry.id === unit.id)) return;
+    // Sound before removal: the effects layer resolves the position from the
+    // unit, which stops existing on the next line.
+    this.effects.unitSfx("sfx.combat.unitDeath", unit.id, `death:${unit.id}`);
+    this.effects.unitDied(unit.id);
     this.units = this.units.filter((entry) => entry.id !== unit.id);
-    this.destroyUnitPresentation(unit);
 
     if (unit.team === "enemy") {
       const reward = this.rollKillResourceReward(this.enemy.ageId);
@@ -3875,7 +4235,7 @@ export class LaneBattleScene extends Phaser.Scene {
     const total = Math.round(getAgeBalance(ageId).killGoldBase);
     const reward = { gold: 0, wood: 0, food: 0 };
     if (total < 3) {
-      const soleKey = Phaser.Utils.Array.GetRandom(["gold", "wood", "food"] as const);
+      const soleKey = this.simRandom.pick(KILL_REWARD_KEYS);
       reward[soleKey] = 1;
       return reward;
     }
@@ -3883,7 +4243,7 @@ export class LaneBattleScene extends Phaser.Scene {
     reward.wood = 1;
     reward.food = 1;
     for (let remaining = total - 3; remaining > 0; remaining -= 1) {
-      const nextKey = Phaser.Utils.Array.GetRandom(["gold", "wood", "food"] as const);
+      const nextKey = this.simRandom.pick(KILL_REWARD_KEYS);
       reward[nextKey] += 1;
     }
     return reward;
@@ -3898,7 +4258,7 @@ export class LaneBattleScene extends Phaser.Scene {
     team.resources.gold += reward.gold;
     team.resources.wood += reward.wood;
     team.resources.food += reward.food;
-    if (team.id === "player" && toastX !== undefined && toastY !== undefined) {
+    if (team.id === this.localTeamId && toastX !== undefined && toastY !== undefined) {
       this.spawnToast(`+${reward.gold}G +${reward.wood}W +${reward.food}F`, toastX, toastY, "#f4d35e");
     }
   }
@@ -3906,11 +4266,11 @@ export class LaneBattleScene extends Phaser.Scene {
   private trySpawnWave(team: TeamState, forced: boolean): boolean {
     const plan = createWaveDeploymentPlan(team, PLAYER_OPPONENT_COUNT);
     if (!plan.canDeploy) {
-      if (team.id === "player" && shouldAnnounceWaveFoodShortage(team, forced, this.elapsedSec)) {
+      if (team.id === this.localTeamId && shouldAnnounceWaveFoodShortage(team, forced, this.elapsedSec)) {
         this.hud.setInfo("식량이 부족합니다", { color: "#ff6b6b" });
         team.lastFoodShortageNoticeSec = this.elapsedSec;
       }
-      if (team.id === "player") this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "wave:food-shortage" });
+      if (team.id === this.localTeamId) this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "wave:food-shortage" });
       team.waveBlockedByFood = true;
       scheduleWaveRetry(team);
       return false;
@@ -3925,8 +4285,8 @@ export class LaneBattleScene extends Phaser.Scene {
     }
     this.spawnWaveUnits(team, plan.roster);
 
-    if (team.id === "player") this.hud.setInfo(forced ? "즉시 웨이브를 투입했습니다" : "정규 웨이브가 출전했습니다");
-    if (team.id === "player") {
+    if (team.id === this.localTeamId) this.hud.setInfo(forced ? "즉시 웨이브를 투입했습니다" : "정규 웨이브가 출전했습니다");
+    if (team.id === this.localTeamId) {
       this.audio.playSfx("sfx.wave.start", { eventKey: `wave:start:${Math.round(this.elapsedSec * 10)}` });
       this.audio.setDirectorState("battle-low");
       this.audioWiring.recordCombatEvent(this.elapsedSec);
@@ -4192,7 +4552,7 @@ export class LaneBattleScene extends Phaser.Scene {
       range: stats.range,
       speed: stats.speed,
       attackCooldownSec: stats.attackCooldownSec,
-      attackTimerSec: stats.attackCooldownSec * Phaser.Math.FloatBetween(0.4, 0.95),
+      attackTimerSec: stats.attackCooldownSec * this.simRandom.floatBetween(0.4, 0.95),
       attackAnimTime: 0,
       attackFacingLockSec: 0,
       combatFacingHoldSec: 0,
@@ -4552,84 +4912,84 @@ export class LaneBattleScene extends Phaser.Scene {
       return;
     }
     if (delta > 0) {
-      if (this.player.workers.idle <= 0) {
+      if (this.acting.workers.idle <= 0) {
         this.audio.playSfx("sfx.ui.hireFail", { eventKey: `worker:${role}:no-idle` });
         return;
       }
-      this.player.workers.idle -= 1;
-      this.player.workers[role] += 1;
+      this.acting.workers.idle -= 1;
+      this.acting.workers[role] += 1;
     } else {
       // Each base resource keeps a floor of 1 assigned worker at all times —
       // it can be reassigned once a *replacement* worker is hired/freed
       // elsewhere, but never dropped to 0 directly from this button.
-      if (this.player.workers[role] <= 1) {
+      if (this.acting.workers[role] <= 1) {
         this.audio.playSfx("sfx.ui.cancel", { eventKey: `worker:${role}:at-floor` });
         return;
       }
-      this.player.workers[role] -= 1;
-      this.player.workers.idle += 1;
+      this.acting.workers[role] -= 1;
+      this.acting.workers.idle += 1;
     }
-    this.audio.playSfx("sfx.ui.confirm", { eventKey: `worker:${role}:${delta}:${this.player.workers[role]}` });
+    this.audio.playSfx("sfx.ui.confirm", { eventKey: `worker:${role}:${delta}:${this.acting.workers[role]}` });
   }
 
   private hireWorker(): void {
-    if (!this.devModeEnabled && !canAfford(this.player.resources, BASE_WORKER_COST)) {
-      this.hud.setInfo("일꾼 고용 실패: 금/목재/식량 부족");
-      this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "hire:worker:shortage" });
+    if (!this.devModeEnabled && !canAfford(this.acting.resources, BASE_WORKER_COST)) {
+      this.effects.notice("일꾼 고용 실패: 금/목재/식량 부족");
+      this.effects.globalSfx("sfx.state.resourceShortage", "hire:worker:shortage");
       return;
     }
-    if (!this.devModeEnabled) payCost(this.player.resources, BASE_WORKER_COST);
-    this.player.workers.idle += 1;
-    this.hud.setInfo("일꾼 1명을 고용했습니다");
-    this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:worker:${this.player.workers.idle}` });
+    if (!this.devModeEnabled) payCost(this.acting.resources, BASE_WORKER_COST);
+    this.acting.workers.idle += 1;
+    this.effects.notice("일꾼 1명을 고용했습니다");
+    this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:worker:${this.acting.workers.idle}` });
   }
 
   private hireResearchWorker(): void {
-    const cost = getResearchWorkerDirectCost(this.player.ageId);
-    if (this.devModeEnabled || canAfford(this.player.resources, cost)) {
-      if (!this.devModeEnabled) payCost(this.player.resources, cost);
-      this.player.workers.research += 1;
-      this.hud.setInfo("연구 일꾼 1명이 즉시 연구에 배치되었습니다");
-      this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:research:direct:${this.player.workers.research}` });
+    const cost = getResearchWorkerDirectCost(this.acting.ageId);
+    if (this.devModeEnabled || canAfford(this.acting.resources, cost)) {
+      if (!this.devModeEnabled) payCost(this.acting.resources, cost);
+      this.acting.workers.research += 1;
+      this.effects.notice("연구 일꾼 1명이 즉시 연구에 배치되었습니다");
+      this.audio.playSfx("sfx.ui.hireSuccess", { eventKey: `hire:research:direct:${this.acting.workers.research}` });
       return;
     }
 
-    this.hud.setInfo("연구 일꾼 고용 자원 부족");
-    this.audio.playSfx("sfx.ui.hireFail", { eventKey: "hire:research:failed" });
+    this.effects.notice("연구 일꾼 고용 자원 부족");
+    this.effects.globalSfx("sfx.ui.hireFail", "hire:research:failed");
   }
 
   private tryUseInstantWaveToken(team: TeamState): void {
     const eligibility = getInstantWaveEligibility(team);
     if (eligibility === "no-token") {
-      if (team.id === "player") this.hud.setInfo("즉시 웨이브 토큰이 없습니다");
-      if (team.id === "player") this.audio.playSfx("sfx.ui.hireFail", { eventKey: "wave:instant:no-token" });
+      if (team.id === "player") this.effects.notice("즉시 웨이브 토큰이 없습니다");
+      if (team.id === "player") this.effects.globalSfx("sfx.ui.hireFail", "wave:instant:no-token");
       return;
     }
     if (eligibility === "cooldown") {
-      if (team.id === "player") this.hud.setInfo("직전 웨이브 후 5초 뒤 사용 가능");
-      if (team.id === "player") this.audio.playSfx("sfx.ui.cancel", { eventKey: "wave:instant:cooldown" });
+      if (team.id === "player") this.effects.notice("직전 웨이브 후 5초 뒤 사용 가능");
+      if (team.id === "player") this.effects.globalSfx("sfx.ui.cancel", "wave:instant:cooldown");
       return;
     }
     if (this.trySpawnWave(team, true)) team.instantWaveTokens -= 1;
   }
 
   private tryAgeUpPlayer(): void {
-    const idx = AGES.findIndex((age) => age.id === this.player.ageId);
+    const idx = AGES.findIndex((age) => age.id === this.acting.ageId);
     if (idx >= AGES.length - 1) {
-      this.hud.setInfo("이미 최종 시대입니다");
-      this.audio.playSfx("sfx.ui.cancel", { eventKey: "age:max" });
+      this.effects.notice("이미 최종 시대입니다");
+      this.effects.globalSfx("sfx.ui.cancel", "age:max");
       return;
     }
     const cost = getAgeUpCost(idx);
-    if (!this.devModeEnabled && !canAfford(this.player.resources, cost)) {
-      this.hud.setInfo(`시대 업 실패: ${this.formatResourceShortage(cost)}`);
-      this.audio.playSfx("sfx.state.resourceShortage", { eventKey: "age:shortage" });
+    if (!this.devModeEnabled && !canAfford(this.acting.resources, cost)) {
+      this.effects.notice(`시대 업 실패: ${this.formatResourceShortage(cost)}`);
+      this.effects.globalSfx("sfx.state.resourceShortage", "age:shortage");
       return;
     }
-    if (!this.devModeEnabled) payCost(this.player.resources, cost);
-    this.advanceAge(this.player);
-    this.hud.setInfo(`${getAge(this.player.ageId).label} 도달`);
-    this.audio.playSfx("sfx.ui.confirm", { eventKey: `age:${this.player.ageId}` });
+    if (!this.devModeEnabled) payCost(this.acting.resources, cost);
+    this.advanceAge(this.acting);
+    this.effects.notice(`${getAge(this.acting.ageId).label} 도달`);
+    this.audio.playSfx("sfx.ui.confirm", { eventKey: `age:${this.acting.ageId}` });
   }
 
   private advanceAge(team: TeamState): void {
@@ -4685,13 +5045,20 @@ export class LaneBattleScene extends Phaser.Scene {
   private refreshUi(): void {
     const selected = this.capturePoints.find((point) => point.id === this.selectedCapturePointId);
     const selectedTower = this.defenseTowers.find((tower) => tower.id === this.selectedDefenseTowerId);
+    // The HUD always shows "my" side first. The battlefield keeps one fixed
+    // orientation for both clients — the enemy-side player simply attacks
+    // right-to-left — but their resources, workers and base bar have to be
+    // their own, not the left-hand team's.
+    const localTeam = this.localTeamState;
+    const opposingTeam = localTeam === this.player ? this.enemy : this.player;
+    const localTeamId = localTeam.id;
     const snapshot = createLaneBattleHudSnapshot({
-      player: this.player,
-      enemy: this.enemy,
-      playerUnitCount: this.units.filter((unit) => unit.team === "player").length,
-      enemyUnitCount: this.units.filter((unit) => unit.team === "enemy").length,
-      playerBaseMaxHp: this.player.baseMaxHp,
-      enemyBaseMaxHp: this.enemy.baseMaxHp,
+      player: localTeam,
+      enemy: opposingTeam,
+      playerUnitCount: this.units.filter((unit) => unit.team === localTeamId).length,
+      enemyUnitCount: this.units.filter((unit) => unit.team !== localTeamId).length,
+      playerBaseMaxHp: localTeam.baseMaxHp,
+      enemyBaseMaxHp: opposingTeam.baseMaxHp,
       opponentCount: PLAYER_OPPONENT_COUNT,
       selectedCapturePoint: selected,
       selectedDefenseTower: selectedTower,
@@ -4701,11 +5068,13 @@ export class LaneBattleScene extends Phaser.Scene {
     this.hud.apply(snapshot, selectedActions);
     this.hud.setDevToolsVisible(this.devModeAvailable);
     this.hud.setDevMode(this.devModeAvailable && this.devModeEnabled);
-    if (this.selectedMainBaseTeam === "player") {
+    // Opens for whichever base is this client's own, not for the left one.
+    if (this.selectedMainBaseTeam === this.localTeamId) {
+      const team = this.localTeamState;
       this.baseResearchPanel.applySnapshot(createBaseResearchPanelSnapshot({
-        team: this.player,
-        researchState: this.playerResearchState,
-        viewedAgeId: this.player.selectedProductionAgeId,
+        team,
+        researchState: this.localResearchState,
+        viewedAgeId: team.selectedProductionAgeId,
         freeApply: this.devModeEnabled,
       }));
     } else {
@@ -4737,40 +5106,41 @@ export class LaneBattleScene extends Phaser.Scene {
   }
 
   private refreshHudActionLabels(): void {
+    const localTeam = this.localTeamState;
     this.hud.setStrategicActionLabel("hire-worker", "일꾼 고용");
     this.hud.setStrategicActionCost("hire-worker", BASE_WORKER_COST);
-    this.hud.setStrategicActionEnabled("hire-worker", this.devModeEnabled || canAfford(this.player.resources, BASE_WORKER_COST));
-    const researchWorkerCost = getResearchWorkerDirectCost(this.player.ageId);
+    this.hud.setStrategicActionEnabled("hire-worker", this.devModeEnabled || canAfford(localTeam.resources, BASE_WORKER_COST));
+    const researchWorkerCost = getResearchWorkerDirectCost(localTeam.ageId);
     this.hud.setStrategicActionLabel("hire-research-worker", "연구 일꾼");
     this.hud.setStrategicActionCost("hire-research-worker", researchWorkerCost);
-    this.hud.setStrategicActionEnabled("hire-research-worker", this.devModeEnabled || canAfford(this.player.resources, researchWorkerCost));
-    const ageIndex = AGES.findIndex((age) => age.id === this.player.ageId);
+    this.hud.setStrategicActionEnabled("hire-research-worker", this.devModeEnabled || canAfford(localTeam.resources, researchWorkerCost));
+    const ageIndex = AGES.findIndex((age) => age.id === localTeam.ageId);
     const ageUpCost = ageIndex >= AGES.length - 1 ? null : getAgeUpCost(ageIndex);
     this.hud.setStrategicActionLabel("age-up", ageIndex >= AGES.length - 1 ? "시대 업\n최종 시대" : "시대 업");
     this.hud.setStrategicActionCost("age-up", ageUpCost ?? {});
-    this.hud.setStrategicActionEnabled("age-up", this.devModeEnabled || (ageUpCost ? canAfford(this.player.resources, ageUpCost) : true));
-    this.hud.setStrategicActionLabel("use-instant-wave", `즉시 웨이브\n토큰 ${this.player.instantWaveTokens}`);
+    this.hud.setStrategicActionEnabled("age-up", this.devModeEnabled || (ageUpCost ? canAfford(localTeam.resources, ageUpCost) : true));
+    this.hud.setStrategicActionLabel("use-instant-wave", `즉시 웨이브\n토큰 ${localTeam.instantWaveTokens}`);
 
     this.hud.setCaptureActionLabel("rebuild-defense-tower", "타워 재건");
-    const rebuildTowerCost = getDefenseTowerBuildCost(this.player.ageId);
+    const rebuildTowerCost = getDefenseTowerBuildCost(localTeam.ageId);
     this.hud.setCaptureActionCost("rebuild-defense-tower", rebuildTowerCost);
-    this.hud.setCaptureActionEnabled("rebuild-defense-tower", this.devModeEnabled || canAfford(this.player.resources, rebuildTowerCost));
+    this.hud.setCaptureActionEnabled("rebuild-defense-tower", this.devModeEnabled || canAfford(localTeam.resources, rebuildTowerCost));
     this.hud.setCaptureActionLabel("build-defense-tower", "타워");
-    const buildTowerCost = getBuildingCost("defense_tower", this.player.ageId);
+    const buildTowerCost = getBuildingCost("defense_tower", localTeam.ageId);
     this.hud.setCaptureActionCost("build-defense-tower", buildTowerCost);
-    this.hud.setCaptureActionEnabled("build-defense-tower", this.devModeEnabled || canAfford(this.player.resources, buildTowerCost));
+    this.hud.setCaptureActionEnabled("build-defense-tower", this.devModeEnabled || canAfford(localTeam.resources, buildTowerCost));
     this.hud.setCaptureActionLabel("build-supply-depot", "병참");
-    const supplyDepotCost = getBuildingCost("supply_depot", this.player.ageId);
+    const supplyDepotCost = getBuildingCost("supply_depot", localTeam.ageId);
     this.hud.setCaptureActionCost("build-supply-depot", supplyDepotCost);
-    this.hud.setCaptureActionEnabled("build-supply-depot", this.devModeEnabled || canAfford(this.player.resources, supplyDepotCost));
+    this.hud.setCaptureActionEnabled("build-supply-depot", this.devModeEnabled || canAfford(localTeam.resources, supplyDepotCost));
     this.hud.setCaptureActionLabel("build-mint", "조달소");
-    const mintCost = getBuildingCost("mint", this.player.ageId);
+    const mintCost = getBuildingCost("mint", localTeam.ageId);
     this.hud.setCaptureActionCost("build-mint", mintCost);
-    this.hud.setCaptureActionEnabled("build-mint", this.devModeEnabled || canAfford(this.player.resources, mintCost));
+    this.hud.setCaptureActionEnabled("build-mint", this.devModeEnabled || canAfford(localTeam.resources, mintCost));
     this.hud.setCaptureActionLabel("dismantle", "폐기");
     const dismantleCost = { gold: DISMANTLE_COST_GOLD };
     this.hud.setCaptureActionCost("dismantle", dismantleCost);
-    this.hud.setCaptureActionEnabled("dismantle", this.devModeEnabled || canAfford(this.player.resources, dismantleCost));
+    this.hud.setCaptureActionEnabled("dismantle", this.devModeEnabled || canAfford(localTeam.resources, dismantleCost));
   }
 
   private toggleDevMode(): void {
@@ -4810,6 +5180,227 @@ export class LaneBattleScene extends Phaser.Scene {
       })
       .filter((value): value is string => value !== null);
     return shortages.length > 0 ? shortages.join(", ") + " 부족" : "자원 부족";
+  }
+
+  /**
+   * Plain-data view of everything that decides the outcome of the battle.
+   *
+   * Deliberately excludes presentation (sprite positions, `visualProgress`,
+   * walk cycles): two clients rendering at different frame rates are not
+   * desynced, and including those fields would report that they are. See
+   * `simulationState.ts` for where that line is drawn and why.
+   */
+  /**
+   * Schedules a local command. Selection-dependent actions resolve their target
+   * *here*, on the machine that has the selection, so what travels is a
+   * self-contained instruction.
+   */
+  private issueCommand(command: BattleCommand): void {
+    // Networked play schedules further ahead so the command can reach the peer
+    // before the tick it belongs to comes up.
+    //
+    // The +1 matters: stepping tick T already sent the frame for T + delay, so
+    // a command issued during tick T must land no earlier than T + delay + 1 or
+    // its frame has sailed and only this client will ever run it — which shows
+    // up as a desync a second later rather than as a lost click.
+    const delay = this.lockstep ? this.lockstep.inputDelayTicks + 1 : 1 + LOCAL_INPUT_DELAY_TICKS;
+    this.simulation.enqueueCommand({
+      tick: this.simTick + delay,
+      team: this.match?.localTeam ?? "player",
+      command,
+    });
+  }
+
+  private issueSelectedPointBuild(buildingId: BuildingId): void {
+    const pointId = this.selectedCapturePointId;
+    if (pointId === null) {
+      this.hud.setInfo("먼저 거점을 선택하십시오");
+      this.audio.playSfx("sfx.ui.cancel", { eventKey: "build:no-point" });
+      return;
+    }
+    this.issueCommand({ type: "build", pointId, buildingId });
+  }
+
+  private issueSelectedPointDismantle(): void {
+    const pointId = this.selectedCapturePointId;
+    if (pointId === null) return;
+    this.issueCommand({ type: "dismantle", pointId });
+  }
+
+  private issueSelectedTowerCommand(): void {
+    const towerId = this.selectedDefenseTowerId;
+    if (towerId === null) return;
+    this.issueCommand({ type: "rebuild-tower", towerId });
+  }
+
+  /**
+   * The single place a command changes the world. A remote peer's commands will
+   * arrive here too, which is why nothing in it may read local UI state.
+   */
+  /** The team whose command is being applied right now. */
+  private get acting(): TeamState {
+    return this.actingTeamId === "enemy" ? this.enemy : this.player;
+  }
+
+  private get actingResearch(): TeamResearchState {
+    return this.actingTeamId === "enemy" ? this.enemyResearchState : this.playerResearchState;
+  }
+
+  /**
+   * The side this client plays; in single-player always the left-hand team.
+   *
+   * Anything the viewer sees or controls must go through this rather than
+   * `player`/`enemy` directly. Those two name *positions on the map* — left and
+   * right — which is right for simulation rules but wrong for the UI: taking
+   * `"player"` to mean "me" left the right-hand player unable to open their own
+   * base and being told they had won when they had lost.
+   */
+  private get localTeamId(): TeamId {
+    return this.match?.localTeam === "enemy" ? "enemy" : "player";
+  }
+
+  private get localTeamState(): TeamState {
+    return this.localTeamId === "enemy" ? this.enemy : this.player;
+  }
+
+  private get localResearchState(): TeamResearchState {
+    return this.localTeamId === "enemy" ? this.enemyResearchState : this.playerResearchState;
+  }
+
+  private applyCommand(team: CommandTeam, command: BattleCommand): void {
+    const previousActing = this.actingTeamId;
+    this.actingTeamId = team;
+    try {
+      this.dispatchCommand(command);
+    } finally {
+      this.actingTeamId = previousActing;
+    }
+  }
+
+  private dispatchCommand(command: BattleCommand): void {
+    switch (command.type) {
+      case "hire-worker": this.hireWorker(); return;
+      case "hire-research-worker": this.hireResearchWorker(); return;
+      case "shift-worker": this.shiftWorker(command.role as WorkerRole, command.delta); return;
+      case "instant-wave": this.tryUseInstantWaveToken(this.acting); return;
+      case "advance-age": this.tryAgeUpPlayer(); return;
+      case "apply-research": this.applyPlayerResearchDraft(); return;
+      case "build": this.buildAtPoint(command.pointId, command.buildingId as BuildingId); return;
+      case "dismantle": this.dismantlePoint(command.pointId); return;
+      case "rebuild-tower": this.rebuildDefenseTower(command.towerId); return;
+    }
+  }
+
+  /**
+   * Sends this client's frame for the tick that is `inputDelayTicks` ahead, plus
+   * a periodic state hash.
+   *
+   * A frame goes out every tick even when it carries no commands: silence is
+   * indistinguishable from a stalled peer, and the other side's barrier would
+   * never open.
+   */
+  private exchangeLockstepFrame(): void {
+    if (!this.lockstep || !this.relay) return;
+    const targetTick = this.lockstep.scheduleTickFor(this.simTick);
+    const outgoing = this.simulation.peekCommands(targetTick).map((entry) => entry.command);
+    const hash = this.lockstep.shouldHashAt(this.simTick)
+      ? { tick: this.simTick, value: hashSimulationState(this.captureSimulationState()) }
+      : undefined;
+    if (hash) this.lockstep.recordLocalHash(hash.tick, hash.value);
+    this.relay.sendFrame(this.lockstep.buildLocalFrame(targetTick, outgoing, hash));
+  }
+
+  /** Surfaces waiting-for-opponent and desync states, which must never be silent. */
+  /**
+   * Runs every frame, so it must describe the current state rather than
+   * announce a change — including clearing the line once the stall is over.
+   */
+  private reportNetworkState(): void {
+    if (this.matchEndedReason) {
+      this.hud.setNetworkStatus(this.matchEndedReason, { color: "#ff8f8f" });
+      return;
+    }
+    const desync = this.lockstep?.getDesync();
+    if (desync) {
+      this.hud.setNetworkStatus(
+        `동기화 오류 (tick ${desync.tick}) — 대전을 계속할 수 없습니다`,
+        { color: "#ff8f8f" },
+      );
+      return;
+    }
+    // A known dropout is more informative than the generic stall it also
+    // causes, so it wins; both clear on their own once the peer is back.
+    if (this.opponentWaitingReason) {
+      this.hud.setNetworkStatus(this.opponentWaitingReason, { color: "#ffd67a" });
+      return;
+    }
+    this.hud.setNetworkStatus(this.netStalled ? "상대를 기다리는 중..." : null);
+  }
+
+  private captureSimulationState(): SimulationStateView {
+    const team = (state: TeamState) => ({
+      ageId: state.ageId as string,
+      baseHp: state.baseHp,
+      baseMaxHp: state.baseMaxHp,
+      nextWaveInSec: state.nextWaveInSec,
+      instantWaveTokens: state.instantWaveTokens,
+      resources: { ...state.resources } as unknown as Record<string, number>,
+      workers: { ...state.workers } as unknown as Record<string, number>,
+    });
+    return {
+      tick: this.simTick,
+      elapsedSec: this.elapsedSec,
+      rngState: this.simRandom.getState(),
+      player: team(this.player),
+      enemy: team(this.enemy),
+      units: this.units.map((unit) => ({
+        id: unit.id,
+        team: unit.team as string,
+        unitId: unit.unitId as string,
+        role: unit.role as string,
+        laneId: unit.laneId,
+        progress: unit.progress,
+        laneRow: unit.laneRow,
+        hp: unit.hp,
+        maxHp: unit.maxHp,
+        attack: unit.attack,
+        defense: unit.defense,
+        range: unit.range,
+        speed: unit.speed,
+        attackCooldownSec: unit.attackCooldownSec,
+        attackTimerSec: unit.attackTimerSec,
+        attackAnimTime: unit.attackAnimTime,
+        attackFacingLockSec: unit.attackFacingLockSec,
+        combatFacingHoldSec: unit.combatFacingHoldSec,
+        attackTargetKind: unit.attackTargetKind as string,
+        attackSequence: unit.attackSequence,
+        manaCurrent: unit.manaCurrent,
+        manaMax: unit.manaMax,
+        attrition: unit.attrition,
+        targetId: unit.targetId ?? -1,
+      })),
+      capturePoints: this.capturePoints.map((point) => ({
+        id: point.id,
+        owner: point.owner as string,
+        control: point.control,
+        buildingId: (point.buildingId ?? "") as string,
+        buildingLevel: point.buildingLevel,
+        attackTimerSec: point.attackTimerSec,
+        incomeTimerSec: point.incomeTimerSec,
+        supplyTimerSec: point.supplyTimerSec,
+        manaCurrent: point.manaCurrent,
+      })),
+      defenseTowers: this.defenseTowers.map((tower) => ({
+        id: tower.id,
+        owner: tower.owner as string,
+        built: tower.built,
+        hp: tower.hp,
+        maxHp: tower.maxHp,
+        defense: tower.defense,
+        attackTimerSec: tower.attackTimerSec,
+        buildRemainingSec: tower.buildRemainingSec,
+      })),
+    };
   }
 
   private publishDebug(): void {
@@ -4953,7 +5544,9 @@ export class LaneBattleScene extends Phaser.Scene {
         bronze: createTowerAttackPattern("bronze"),
       },
       verification: {
-        seed: this.verificationSeed,
+        seed: this.activeSeed,
+        mode: this.gameMode,
+        opponentName: this.match?.opponentName ?? null,
         terrainMode: this.terrainMode,
         prototypePreset: this.prototypePresetId,
         scalePreset: this.scalePresetId,

@@ -1,0 +1,41 @@
+# Warcrest PvP relay — 104 production unit.
+#
+# The 104 server's fixed rule (documents/ENVIRONMENT_META.md in the
+# stock_predict repo) is that production runs under systemd only, never as a
+# foreground process. This unit exists so the relay follows that rule rather
+# than being started by hand and disappearing on the next reboot.
+#
+# Install:
+#   sudo cp /data/projects/warcrest/tools/relay/warcrest-relay.service \
+#           /etc/systemd/system/warcrest-relay.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now warcrest-relay.service
+#
+# ExecStart points at the conda interpreter rather than /usr/bin/node: 104 has
+# no system Node package and installing one needs root, so the runtime lives in
+# a user-scoped env (see docs/deploy/relay-104.md). If that env is ever rebuilt
+# somewhere else, this line has to move with it.
+
+[Unit]
+Description=Warcrest PvP lockstep relay
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=gilgarad
+WorkingDirectory=/data/projects/warcrest
+Environment=RELAY_PORT=8790
+# Loopback only: nginx terminates TLS and is the sole client, so this port is
+# never reachable from outside the host and no firewall rule is needed.
+Environment=RELAY_HOST=127.0.0.1
+ExecStart=/home/gilgarad/miniconda3/envs/warcrest/bin/node --experimental-strip-types tools/relay/relayServer.ts
+Restart=always
+RestartSec=3
+# The relay holds no game state: a restart drops matches in progress but
+# corrupts nothing, so restarting freely is the right policy.
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

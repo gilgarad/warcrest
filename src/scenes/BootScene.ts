@@ -6,6 +6,10 @@ import { GAME_SUBTITLE, GAME_TAGLINE, GAME_TITLE } from "../data/gameMeta";
 import { createParallaxBackground, type ParallaxBackground } from "../gfx/parallax";
 import { areLaneBattleAssetsReady, queueLaneBattleAssets } from "./laneBattleAssetPreload";
 import { getAudioSystem } from "../systems/audio";
+import { RelayMatchService } from "../systems/net/relayMatchService";
+import { isMixedContentRelay, resolveRelayUrl } from "../config/relayUrl";
+import type { MatchDescriptor } from "../systems/net/matchTypes";
+import { OnlineLobbyPanel } from "../ui/OnlineLobbyPanel";
 
 export class BootScene extends Phaser.Scene {
   private bg!: ParallaxBackground;
@@ -21,6 +25,10 @@ export class BootScene extends Phaser.Scene {
   private difficultyLabel?: Phaser.GameObjects.Text;
   private difficultyButtons: { rect: Phaser.GameObjects.Rectangle; text: Phaser.GameObjects.Text }[] = [];
   private startBattle?: (difficultyId: DifficultyId) => Promise<void>;
+  private startOnlineMatch?: (match: MatchDescriptor) => void;
+  private onlineButton?: { rect: Phaser.GameObjects.Rectangle; text: Phaser.GameObjects.Text };
+  private lobby?: OnlineLobbyPanel;
+  private relayService?: RelayMatchService;
 
   constructor() {
     super("boot");
@@ -167,6 +175,8 @@ export class BootScene extends Phaser.Scene {
       return { rect, text };
     });
 
+    this.buildOnlineButton(width / 2, rowY + boxHeight / 2 + 42);
+
     let starting = false;
     this.startBattle = async (difficultyId: DifficultyId) => {
       if (starting) return;
@@ -182,7 +192,20 @@ export class BootScene extends Phaser.Scene {
       audio.resetDirector("preparation");
       this.scene.stop("gameover");
       this.scene.stop("run");
-      this.scene.start("run", { difficultyId });
+      this.scene.start("run", { difficultyId, mode: "single" });
+    };
+
+    this.startOnlineMatch = (match: MatchDescriptor) => {
+      audio.resetDirector("preparation");
+      this.scene.stop("gameover");
+      this.scene.stop("run");
+      // Same scene, same simulation — only the opponent source differs.
+      this.scene.start("run", {
+        difficultyId: DIFFICULTIES[0].id,
+        mode: match.mode,
+        match,
+        relay: this.relayService ?? null,
+      });
     };
 
     this.events.once("shutdown", () => {
@@ -194,6 +217,49 @@ export class BootScene extends Phaser.Scene {
 
   update(): void {
     this.bg.update();
+  }
+
+  /**
+   * "온라인 대전" entry point. Sits under the difficulty row because difficulty
+   * only applies to the single-player AI — an online match has a human on the
+   * other side, so it takes no difficulty setting.
+   */
+  private buildOnlineButton(x: number, y: number): void {
+    const rect = this.add
+      .rectangle(x, y, 274, 46, 0x16233a, 0.94)
+      .setStrokeStyle(2, 0x6aa9e0, 0.7)
+      .setVisible(false);
+    const text = this.add
+      .text(x, y, "온라인 대전", {
+        fontFamily: "Georgia, serif", fontSize: "20px", color: "#bfe2ff",
+      })
+      .setOrigin(0.5)
+      .setVisible(false);
+    rect.on("pointerover", () => rect.setFillStyle(0x1f3454, 0.98));
+    rect.on("pointerout", () => rect.setFillStyle(0x16233a, 0.94));
+    rect.on("pointerdown", () => void this.openLobby());
+    this.onlineButton = { rect, text };
+  }
+
+  private async openLobby(): Promise<void> {
+    if (!this.battleAssetsReady || this.lobby?.isOpen()) return;
+    if (!this.lobby) {
+      const relayUrl = resolveRelayUrl();
+      if (isMixedContentRelay(relayUrl)) {
+        // Fail loudly here rather than letting the browser block the socket and
+        // report an opaque connection error.
+        console.warn(`[warcrest] HTTPS 페이지에서 ws:// 릴레이(${relayUrl})는 차단됩니다. wss:// 주소가 필요합니다.`);
+      }
+      this.relayService = new RelayMatchService(relayUrl);
+      this.lobby = new OnlineLobbyPanel(this, this.relayService, {
+        onMatchReady: (match) => {
+          this.lobby?.hide();
+          this.startOnlineMatch?.(match);
+        },
+        onClose: () => { /* panel tears itself down */ },
+      });
+    }
+    await this.lobby.show();
   }
 
   private prepareBattleAssets(): void {
@@ -234,6 +300,8 @@ export class BootScene extends Phaser.Scene {
       rect.setVisible(true).setInteractive({ useHandCursor: true });
       text.setVisible(true);
     });
+    this.onlineButton?.rect.setVisible(true).setInteractive({ useHandCursor: true });
+    this.onlineButton?.text.setVisible(true);
     if (this.autoStart) {
       this.time.delayedCall(60, () => void this.startBattle?.(DIFFICULTIES[0].id));
       return;
