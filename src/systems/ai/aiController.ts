@@ -2,7 +2,7 @@ import { BUILDING_DEFINITIONS, getBuildingCost } from "../lane-capture/captureRu
 import { DEFENSE_TOWER_BUILD_DURATION_SEC, getDefenseTowerBuildCost } from "../lane-capture/defenseTowerRules";
 import { BASE_WORKER_COST, getResearchWorkerDirectCost, AI_INSTANT_WAVE_MIN_REMAINING_SEC } from "../../data/balance";
 import { canAfford, payCost, shouldAdvanceAiAge, type TeamState } from "../lane-economy/laneEconomy";
-import { shouldAiUseInstantWave, tickWaveClock } from "../lane-economy/laneWaveRules";
+import { shouldAiUseInstantWave } from "../lane-economy/laneWaveRules";
 import {
   createAiEconomyState,
   pickNeediestResourceRole,
@@ -40,9 +40,12 @@ export class AiController {
     Object.assign(this.economyState, createAiEconomyState());
   }
 
-  tick(deltaSec: number): void {
+  tick(): void {
     const enemy = this.host.getEnemyTeam();
-    tickWaveClock(enemy, deltaSec);
+    // The wave clock is deliberately not advanced here. It is simulation rather
+    // than a decision -- it has to run whichever side a person is playing -- so
+    // the scene ticks both teams' clocks. Owning it here meant the right-hand
+    // clock stopped the moment PvP switched the AI off.
     this.tickEconomy();
     if (this.shouldAgeUp()) this.host.advanceAge(enemy);
     if (shouldAiUseInstantWave(enemy, AI_INSTANT_WAVE_MIN_REMAINING_SEC)) {

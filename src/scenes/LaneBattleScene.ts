@@ -953,7 +953,7 @@ export class LaneBattleScene extends Phaser.Scene {
     // In PvP the enemy is a person: their commands arrive over the relay, so
     // running the AI as well would have both clients simulating a different
     // opponent and diverging immediately.
-    if (!this.lockstep) this.aiController.tick(deltaSec);
+    if (!this.lockstep) this.aiController.tick();
     this.tickWaves(deltaSec);
     this.tickCombat(deltaSec);
     this.tickCapturePoints(deltaSec);
@@ -2229,17 +2229,30 @@ export class LaneBattleScene extends Phaser.Scene {
       [this.player, this.enemy],
       this.workerAccumulator,
       deltaSec,
-      (team) => (team.id === "enemy" ? this.difficulty.enemyProductionMultiplier : 1),
+      // Same reasoning as the research floor: no production bonus for the
+      // right-hand side when a person is playing it.
+      (team) => (team.id === "enemy" && this.gameMode !== "pvp" ? this.difficulty.enemyProductionMultiplier : 1),
     );
   }
 
+  /**
+   * Advances both teams' wave clocks.
+   *
+   * The clock is simulation, not a decision, so it has to run whoever is
+   * playing the side. It used to be advanced here for the left team and inside
+   * the AI controller for the right one — invisible while every right-hand side
+   * was an AI, and then PvP switched the AI off. The right-hand player's clock
+   * simply stopped: waves never arrived, and since the instant-wave cooldown is
+   * measured by the same clock, that button was permanently "cooling down" too.
+   */
   private tickWaves(deltaSec: number): void {
-    const playerClock = tickWaveClock(this.player, deltaSec);
-    if (playerClock.prepareWarning) {
-      this.audio.playSfx("sfx.wave.prepare", { eventKey: `wave:prepare:${Math.floor(this.elapsedSec)}` });
+    for (const team of [this.player, this.enemy]) {
+      const clock = tickWaveClock(team, deltaSec);
+      if (clock.prepareWarning && team.id === this.localTeamId) {
+        this.audio.playSfx("sfx.wave.prepare", { eventKey: `wave:prepare:${Math.floor(this.elapsedSec)}` });
+      }
+      if (clock.due) this.trySpawnWave(team, false);
     }
-    if (playerClock.due) this.trySpawnWave(this.player, false);
-    if (this.enemy.nextWaveInSec <= 0) this.trySpawnWave(this.enemy, false);
   }
 
   private tickCombat(deltaSec: number): void {
@@ -4223,11 +4236,15 @@ export class LaneBattleScene extends Phaser.Scene {
     this.effects.unitDied(unit.id);
     this.units = this.units.filter((entry) => entry.id !== unit.id);
 
+    // The bounty scales with the age of the unit that died, and goes to the
+    // other side. The toast anchor is passed for both, because the viewer may
+    // be either of them -- passing it only on the left branch meant the
+    // right-hand player never saw a kill reward.
+    const KILL_TOAST = { x: 108, y: 156 };
     if (unit.team === "enemy") {
-      const reward = this.rollKillResourceReward(this.enemy.ageId);
-      this.applyKillResourceReward(this.player, reward, 108, 156);
+      this.applyKillResourceReward(this.player, this.rollKillResourceReward(this.enemy.ageId), KILL_TOAST.x, KILL_TOAST.y);
     } else {
-      this.applyKillResourceReward(this.enemy, this.rollKillResourceReward(this.player.ageId));
+      this.applyKillResourceReward(this.enemy, this.rollKillResourceReward(this.player.ageId), KILL_TOAST.x, KILL_TOAST.y);
     }
   }
 
@@ -4301,7 +4318,7 @@ export class LaneBattleScene extends Phaser.Scene {
       team.id === "player" ? DEFAULT_PLAYER_WAVE_SPAWN_PROGRESS : DEFAULT_ENEMY_WAVE_SPAWN_PROGRESS,
     );
     resetWaveClock(team);
-    if (team.id === "player") {
+    if (team.id === this.localTeamId) {
       this.audio.playSfx("sfx.wave.start", { eventKey: "wave:opening" });
       this.audio.setDirectorState("battle-low");
       this.audioWiring.recordCombatEvent(this.elapsedSec);
@@ -4490,7 +4507,12 @@ export class LaneBattleScene extends Phaser.Scene {
     productionAgeId = team === "player" ? this.player.selectedProductionAgeId : this.enemy.selectedProductionAgeId,
   ): void {
     const researchState = team === "player" ? this.playerResearchState : this.enemyResearchState;
-    const researchLevelFloor = team === "enemy" ? this.difficulty.enemyResearchLevelFloor : 0;
+    // Difficulty handicaps describe the AI, so they stop at the edge of
+    // single-player. Applying them in PvP would hand one human a research
+    // floor the other never gets, purely for sitting on the right.
+    const researchLevelFloor = this.gameMode === "pvp" || team !== "enemy"
+      ? 0
+      : this.difficulty.enemyResearchLevelFloor;
     const stats = resolveSpawnUnitStats(unitId, productionAgeId, researchState, researchLevelFloor);
     const pos = this.progressToScreen(progress, laneRow, laneId);
     const initialFacingDirection: UnitFacingDirection = team === "player" ? "e" : "w";
@@ -4961,13 +4983,17 @@ export class LaneBattleScene extends Phaser.Scene {
   private tryUseInstantWaveToken(team: TeamState): void {
     const eligibility = getInstantWaveEligibility(team);
     if (eligibility === "no-token") {
-      if (team.id === "player") this.effects.notice("즉시 웨이브 토큰이 없습니다");
-      if (team.id === "player") this.effects.globalSfx("sfx.ui.hireFail", "wave:instant:no-token");
+      if (team.id === this.localTeamId) {
+        this.effects.notice("즉시 웨이브 토큰이 없습니다");
+        this.effects.globalSfx("sfx.ui.hireFail", "wave:instant:no-token");
+      }
       return;
     }
     if (eligibility === "cooldown") {
-      if (team.id === "player") this.effects.notice("직전 웨이브 후 5초 뒤 사용 가능");
-      if (team.id === "player") this.effects.globalSfx("sfx.ui.cancel", "wave:instant:cooldown");
+      if (team.id === this.localTeamId) {
+        this.effects.notice("직전 웨이브 후 5초 뒤 사용 가능");
+        this.effects.globalSfx("sfx.ui.cancel", "wave:instant:cooldown");
+      }
       return;
     }
     if (this.trySpawnWave(team, true)) team.instantWaveTokens -= 1;
