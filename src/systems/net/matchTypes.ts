@@ -47,6 +47,14 @@ export type MatchmakingStatus =
  * lobby UI changing.
  */
 export interface MatchService {
+  /**
+   * Establish the connection, if the implementation has one.
+   *
+   * Called when the lobby opens rather than when a button is pressed: a relay
+   * can only recognise a returning player after that player has identified
+   * themselves, so the socket has to exist before anyone asks for a match.
+   */
+  connect(): Promise<void>;
   getFriends(): Promise<FriendSummary[]>;
   addFriend(name: string): Promise<FriendSummary>;
   removeFriend(id: string): Promise<void>;

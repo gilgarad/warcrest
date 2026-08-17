@@ -16,6 +16,24 @@ const PLAYER_ID_STORAGE_KEY = "warcrest.playerId.v1";
  * `waiting` is recoverable and `left` is not, and the difference matters to the
  * player: one asks them to hold on, the other ends the match.
  */
+/**
+ * A match the relay is handing back after a reconnect.
+ *
+ * `frames` is every frame both sides sent while the match ran, in arrival
+ * order. The returning client lost its own state as well as the opponent's, so
+ * replaying only one side's commands would not rebuild the game -- the seed plus
+ * this list is the whole match. `truncated` means the relay's log hit its cap
+ * and the history is incomplete, which makes resuming impossible rather than
+ * merely lossy.
+ */
+export interface RejoinedMatch {
+  seed: string;
+  localTeam: "player" | "enemy";
+  opponentName: string;
+  frames: LockstepFrame[];
+  truncated: boolean;
+}
+
 export type OpponentPresence =
   | { state: "waiting"; reason: string; graceSec: number }
   | { state: "returned"; opponentName: string };
@@ -44,6 +62,7 @@ export class RelayMatchService implements MatchService {
   private pending: { resolve: (m: MatchDescriptor) => void; reject: (e: Error) => void } | null = null;
   private opponentLeft: ((reason: string) => void) | null = null;
   private opponentPresence: ((presence: OpponentPresence) => void) | null = null;
+  private rejoined: ((match: RejoinedMatch) => void) | null = null;
 
   constructor(
     private readonly url: string,
@@ -168,6 +187,16 @@ export class RelayMatchService implements MatchService {
     this.opponentPresence = listener;
   }
 
+  /**
+   * The relay recognised this client and is handing back the match it left.
+   *
+   * Registered on the service rather than the battle scene because it arrives
+   * before any scene exists -- reconnecting means the game is at the menu.
+   */
+  onRejoin(listener: (match: RejoinedMatch) => void): void {
+    this.rejoined = listener;
+  }
+
   sendFrame(frame: LockstepFrame): void {
     this.send({ type: "frame", frame });
   }
@@ -199,6 +228,18 @@ export class RelayMatchService implements MatchService {
       if (!frame) return;
       if (this.frameListeners.size === 0) this.bufferedFrames.push(frame);
       else this.frameListeners.forEach((listener) => listener(frame));
+      return;
+    }
+    if (message.type === "rejoined") {
+      const frames = Array.isArray(message.frames) ? (message.frames as LockstepFrame[]) : [];
+      this.bufferedFrames = [];
+      this.rejoined?.({
+        seed: String(message.seed),
+        localTeam: message.localTeam === "enemy" ? "enemy" : "player",
+        opponentName: String(message.opponentName ?? "상대"),
+        frames,
+        truncated: message.truncated === true,
+      });
       return;
     }
     if (message.type === "opponent-disconnected") {

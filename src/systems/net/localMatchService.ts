@@ -20,6 +20,9 @@ const FRIENDS_STORAGE_KEY = "warcrest.friends.v1";
  * lobby UI — that is the point of `MatchService`.
  */
 export class LocalMatchService implements MatchService {
+  /** Nothing to connect to; a stand-in has no server behind it. */
+  async connect(): Promise<void> {}
+
   private listeners = new Set<(status: MatchmakingStatus) => void>();
   private pending: ReturnType<typeof setTimeout> | null = null;
   /** Rejector for the in-flight request, so `cancel()` settles it rather than

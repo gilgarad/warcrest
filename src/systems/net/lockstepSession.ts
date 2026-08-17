@@ -47,6 +47,8 @@ export class LockstepSession {
   private readonly localHashes = new Map<number, number>();
   private readonly remoteHashes = new Map<number, number>();
   private desync: DesyncReport | null = null;
+  /** Highest tick whose commands are already known from a reconnect replay. */
+  private replayHorizon = 0;
 
   constructor(
     private readonly localTeam: CommandTeam,
@@ -92,7 +94,25 @@ export class LockstepSession {
   canAdvance(tick: number): boolean {
     if (this.desync) return false;
     if (tick <= this.options.inputDelayTicks) return true;
+    if (tick <= this.replayHorizon) return true;
     return this.remoteFrames.has(tick);
+  }
+
+  /**
+   * Opens the barrier across ticks replayed from the relay's frame log after a
+   * reconnect.
+   *
+   * Those ticks' commands are already known in full, for both sides, so there
+   * is nothing left to wait for. The usual "has the peer's frame arrived?" test
+   * would refuse to advance, because replayed commands go straight into the
+   * simulation's queue rather than arriving as remote frames.
+   */
+  allowReplayThrough(tick: number): void {
+    this.replayHorizon = Math.max(this.replayHorizon, tick);
+  }
+
+  get replayThrough(): number {
+    return this.replayHorizon;
   }
 
   /** Commands to apply on a tick, local and remote together. */
