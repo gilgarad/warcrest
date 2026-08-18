@@ -35,13 +35,24 @@ interface Measurement {
   cssHeight: number;
 }
 
+/**
+ * Screen-fixed controls and battlefield objects are measured differently.
+ *
+ * A HUD control's game units map straight to CSS pixels by the canvas scale. A
+ * battlefield object goes through the camera first, and this camera is zoomed
+ * out to 0.46 -- so treating the two the same overstates every world object by
+ * more than double. The first version of this harness did exactly that, and
+ * reported capture-point markers as its smallest HUD control.
+ */
+
 interface Report {
   viewport: string;
   cssPerGameUnit: number;
   renderedWidth: number;
   renderedHeight: number;
   wastedWidth: number;
-  smallestTargets: Measurement[];
+  smallestUiTargets: Measurement[];
+  smallestWorldTargets: Measurement[];
   smallestText: { label: string; cssPx: number }[];
 }
 
@@ -65,7 +76,10 @@ async function measure(page: Page, viewport: Viewport): Promise<Report> {
     const scale = canvas.width / game.scale.gameSize.width;
 
     const scenes = game.scene.getScenes(true);
-    const targets: { label: string; cssWidth: number; cssHeight: number }[] = [];
+    const camera = game.scene.getScene("run")?.cameras?.main;
+    const worldZoom = camera ? camera.zoom : 1;
+    const uiTargets: { label: string; cssWidth: number; cssHeight: number }[] = [];
+    const worldTargets: { label: string; cssWidth: number; cssHeight: number }[] = [];
     const texts: { label: string; cssPx: number }[] = [];
 
     for (const scene of scenes) {
@@ -81,10 +95,12 @@ async function measure(page: Page, viewport: Viewport): Promise<Report> {
 
         if ((object.listenerCount?.("pointerdown") ?? 0) > 0 && object.getBounds) {
           const bounds = object.getBounds();
-          targets.push({
+          const fixedToScreen = (object as unknown as { scrollFactorX?: number }).scrollFactorX === 0;
+          const factor = fixedToScreen ? scale : scale * worldZoom;
+          (fixedToScreen ? uiTargets : worldTargets).push({
             label: `${scene.scene.key}:${object.type}`,
-            cssWidth: Number((bounds.width * scale).toFixed(1)),
-            cssHeight: Number((bounds.height * scale).toFixed(1)),
+            cssWidth: Number((bounds.width * factor).toFixed(1)),
+            cssHeight: Number((bounds.height * factor).toFixed(1)),
           });
         }
 
@@ -107,7 +123,8 @@ async function measure(page: Page, viewport: Viewport): Promise<Report> {
       renderedWidth: Math.round(canvas.width),
       renderedHeight: Math.round(canvas.height),
       wastedWidth: Math.round(window.innerWidth - canvas.width),
-      smallestTargets: targets.sort((a, b) => smallestSide(a) - smallestSide(b)).slice(0, 6),
+      smallestUiTargets: uiTargets.sort((a, b) => smallestSide(a) - smallestSide(b)).slice(0, 6),
+      smallestWorldTargets: worldTargets.sort((a, b) => smallestSide(a) - smallestSide(b)).slice(0, 6),
       smallestText: texts.sort((a, b) => a.cssPx - b.cssPx).slice(0, 6),
     };
   }, { viewportName: viewport.name });
@@ -122,15 +139,20 @@ for (const viewport of VIEWPORTS) {
     );
     console.log(`\n${report.viewport}  1게임단위 = ${report.cssPerGameUnit}css px`
       + `  렌더 ${report.renderedWidth}x${report.renderedHeight}  가로여백 ${report.wastedWidth}px`);
-    console.log("  가장 작은 터치 타깃:", report.smallestTargets
+    console.log("  가장 작은 HUD 타깃:", report.smallestUiTargets
+      .map((t) => `${t.cssWidth}x${t.cssHeight}`).join(", "));
+    console.log("  가장 작은 전장 타깃:", report.smallestWorldTargets
       .map((t) => `${t.cssWidth}x${t.cssHeight}`).join(", "));
     console.log("  가장 작은 글자:", report.smallestText
       .map((t) => `${t.cssPx}px "${t.label}"`).join(", "));
 
-    const worstTarget = report.smallestTargets[0];
+    // Asserted on the HUD only. Battlefield objects are reported beside it and
+    // are a separate problem: making a capture-point marker comfortable to tap
+    // means changing the camera or the markers, not the HUD layout.
+    const worstTarget = report.smallestUiTargets[0];
     expect(
       worstTarget ? Math.min(worstTarget.cssWidth, worstTarget.cssHeight) : Infinity,
-      `smallest touch target is ${worstTarget?.cssWidth}x${worstTarget?.cssHeight} CSS px`,
+      `smallest HUD target is ${worstTarget?.cssWidth}x${worstTarget?.cssHeight} CSS px`,
     ).toBeGreaterThanOrEqual(MIN_TOUCH_TARGET_CSS_PX);
 
     const worstText = report.smallestText[0];

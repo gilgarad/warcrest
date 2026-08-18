@@ -4,62 +4,94 @@
   "renderedWidth": 693,
   "renderedHeight": 390,
   "wastedWidth": 151,
-  "smallestTargets": [
+  "smallestUiTargets": [
+    {
+      "label": "run:Rectangle",
+      "cssWidth": 57.2,
+      "cssHeight": 44
+    },
+    {
+      "label": "run:Rectangle",
+      "cssWidth": 85.8,
+      "cssHeight": 44
+    },
+    {
+      "label": "run:Rectangle",
+      "cssWidth": 85.8,
+      "cssHeight": 44
+    },
+    {
+      "label": "run:Rectangle",
+      "cssWidth": 85.8,
+      "cssHeight": 44
+    },
+    {
+      "label": "run:Rectangle",
+      "cssWidth": 85.8,
+      "cssHeight": 44
+    },
+    {
+      "label": "run:Rectangle",
+      "cssWidth": 105.6,
+      "cssHeight": 44
+    }
+  ],
+  "smallestWorldTargets": [
     {
       "label": "run:Arc",
-      "cssWidth": 14.7,
-      "cssHeight": 14.7
-    },
-    {
-      "label": "run:Rectangle",
-      "cssWidth": 40.7,
-      "cssHeight": 14.7
-    },
-    {
-      "label": "run:Rectangle",
-      "cssWidth": 50.3,
-      "cssHeight": 21.7
+      "cssWidth": 6.8,
+      "cssHeight": 6.8
     },
     {
       "label": "run:Text",
-      "cssWidth": 62.8,
-      "cssHeight": 23.8
+      "cssWidth": 28.9,
+      "cssHeight": 11
     },
     {
       "label": "run:Text",
-      "cssWidth": 81,
-      "cssHeight": 23.8
+      "cssWidth": 37.3,
+      "cssHeight": 11
     },
     {
       "label": "run:Text",
-      "cssWidth": 142.6,
-      "cssHeight": 41.2
+      "cssWidth": 65.6,
+      "cssHeight": 18.9
+    },
+    {
+      "label": "run:Arc",
+      "cssWidth": 19.1,
+      "cssHeight": 19.1
+    },
+    {
+      "label": "run:Image",
+      "cssWidth": 129.3,
+      "cssHeight": 129.3
     }
   ],
   "smallestText": [
     {
-      "label": "10",
-      "cssPx": 5.2
+      "label": "시대 석기 시대",
+      "cssPx": 11.3
     },
     {
-      "label": "10",
-      "cssPx": 5.2
+      "label": "다음 웨이브 20초 | 적 20초",
+      "cssPx": 11.3
     },
     {
-      "label": "10",
-      "cssPx": 5.2
+      "label": "전장 병력 4 | 적 병력 4",
+      "cssPx": 11.3
     },
     {
-      "label": "50",
-      "cssPx": 5.2
+      "label": "즉시 웨이브 토큰 1",
+      "cssPx": 11.3
     },
     {
-      "label": "50",
-      "cssPx": 5.2
+      "label": "일꾼 0/4",
+      "cssPx": 11.3
     },
     {
-      "label": "50",
-      "cssPx": 5.2
+      "label": "일꾼 고용",
+      "cssPx": 11.3
     }
   ]
 }

@@ -181,7 +181,7 @@ export class LaneBattleHudView {
     if (!text) return;
     const toast = this.scene.add.text(672, 676, text, {
       fontFamily: "sans-serif",
-      fontSize: "20px",
+      fontSize: this.textPx(20),
       color: options.color ?? "#f4e6c5",
       stroke: "#132033",
       strokeThickness: 4,
@@ -219,7 +219,7 @@ export class LaneBattleHudView {
     if (!this.networkStatusText) {
       this.networkStatusText = this.scene.add.text(this.canvasWidth / 2, 168, "", {
         fontFamily: "sans-serif",
-        fontSize: "22px",
+        fontSize: this.textPx(22),
         color: "#f4e6c5",
         stroke: "#132033",
         strokeThickness: 5,
@@ -284,7 +284,7 @@ export class LaneBattleHudView {
     const x = this.resourceBarXs[index] ?? (this.canvasWidth / 2);
     const popup = this.scene.add.text(x + 62, 72, `+${delta}`, {
       fontFamily: "Georgia, serif",
-      fontSize: "25px",
+      fontSize: this.textPx(25),
       color: resourceId === "research" ? "#9df2ff" : "#8dffa8",
       stroke: "#08150c",
       strokeThickness: 4,
@@ -475,6 +475,21 @@ export class LaneBattleHudView {
    * than to fixed offsets is what lets the height change without the rows
    * walking off the screen.
    */
+  /**
+   * A font size that survives the screen it lands on.
+   *
+   * Returns the requested size on a desktop, where a game unit is a CSS pixel,
+   * and raises it on a phone, where 12 units reach the eye as 5 pixels. Same
+   * shape as `atLeastTouchable`: ask for what the design wants, get at least
+   * what is legible.
+   */
+  private textPx(baseUnits: number): string {
+    // Rounded up: rounding to nearest lands a unit short of the floor and the
+    // text measures 10.8 CSS px against an 11px minimum, which is a fail for no
+    // reason anyone can see.
+    return `${Math.ceil(Math.max(baseUnits, this.metrics.minBodyTextUnits))}px`;
+  }
+
   private computeActionGeometry(): void {
     const rowGap = 12;
     // Four, not a round number: it reproduces the desktop layout exactly, so
@@ -509,10 +524,10 @@ export class LaneBattleHudView {
       .setStrokeStyle(2, 0x476786, 0.42)
       .setDepth(this.depth + 2)
       .setScrollFactor(0);
-    this.ageText = this.scene.add.text(54, 38, "", { fontFamily: "sans-serif", fontSize: "19px", color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
-    this.waveText = this.scene.add.text(54, 64, "", { fontFamily: "sans-serif", fontSize: "19px", color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
-    this.baseText = this.scene.add.text(54, 90, "", { fontFamily: "sans-serif", fontSize: "19px", color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
-    this.tokensText = this.scene.add.text(54, 116, "", { fontFamily: "sans-serif", fontSize: "19px", color: "#f1d891" }).setDepth(this.depth + 3).setScrollFactor(0);
+    this.ageText = this.scene.add.text(54, 38, "", { fontFamily: "sans-serif", fontSize: this.textPx(19), color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
+    this.waveText = this.scene.add.text(54, 64, "", { fontFamily: "sans-serif", fontSize: this.textPx(19), color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
+    this.baseText = this.scene.add.text(54, 90, "", { fontFamily: "sans-serif", fontSize: this.textPx(19), color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
+    this.tokensText = this.scene.add.text(54, 116, "", { fontFamily: "sans-serif", fontSize: this.textPx(19), color: "#f1d891" }).setDepth(this.depth + 3).setScrollFactor(0);
 
     this.scene.add.rectangle(centerX + 98, 82, 1088, 92, 0x09131d, 0.64)
       .setStrokeStyle(1, 0x3f556f, 0.3)
@@ -535,7 +550,7 @@ export class LaneBattleHudView {
         resourceId,
         this.scene.add.text(resourceX - 2, 58, getResource(resourceId).label, {
           fontFamily: "sans-serif",
-          fontSize: "18px",
+          fontSize: this.textPx(18),
           color: resourceId === "research" ? "#b9f2ff" : "#aac1db",
         }).setDepth(this.depth + 4).setScrollFactor(0).setOrigin(0.5, 0.5),
       );
@@ -554,12 +569,12 @@ export class LaneBattleHudView {
     const workerTitleY = this.canvasHeight - 236;
     this.workerPanelTitle = this.scene.add.text(centerX, workerTitleY, "일꾼 배치", {
       fontFamily: "Georgia, serif",
-      fontSize: `${Math.round(16 * uiScale)}px`,
+      fontSize: this.textPx(Math.round(16 * uiScale)),
       color: "#f4e6c5",
     }).setDepth(this.depth + 3).setScrollFactor(0).setOrigin(0.5, 0);
     this.workerSummaryText = this.scene.add.text(centerX + 118, workerTitleY + 8, "0 / 0", {
       fontFamily: "Georgia, serif",
-      fontSize: `${Math.round(18 * uiScale)}px`,
+      fontSize: this.textPx(Math.round(18 * uiScale)),
       color: "#fff6dd",
     }).setOrigin(0, 0.5).setDepth(this.depth + 3).setScrollFactor(0);
     const rowLeftX = centerX - 176;
@@ -584,7 +599,7 @@ export class LaneBattleHudView {
     );
     this.researchSummaryText = this.scene.add.text(-1000, -1000, "", {
       fontFamily: "monospace",
-      fontSize: "18px",
+      fontSize: this.textPx(18),
       color: "#fff6dd",
     }).setVisible(false).setOrigin(0, 0.5).setDepth(this.depth + 3).setScrollFactor(0);
 
@@ -601,9 +616,9 @@ export class LaneBattleHudView {
     // shown on screen — `apply()` is still called from LaneBattleScene and
     // writes into them, so the objects must keep existing as harmless no-ops
     // rather than forcing every call site to change.
-    this.rosterText = this.scene.add.text(-1000, -1000, "", { fontFamily: "sans-serif", fontSize: "13px", color: "#d8e7f6" }).setVisible(false);
-    this.capturePanelTitle = this.scene.add.text(-1000, -1000, "", { fontFamily: "Georgia, serif", fontSize: "18px", color: "#f4e6c5" }).setVisible(false);
-    this.capturePanelBody = this.scene.add.text(-1000, -1000, "", { fontFamily: "sans-serif", fontSize: "14px", color: "#d8e7f6" }).setVisible(false);
+    this.rosterText = this.scene.add.text(-1000, -1000, "", { fontFamily: "sans-serif", fontSize: this.textPx(13), color: "#d8e7f6" }).setVisible(false);
+    this.capturePanelTitle = this.scene.add.text(-1000, -1000, "", { fontFamily: "Georgia, serif", fontSize: this.textPx(18), color: "#f4e6c5" }).setVisible(false);
+    this.capturePanelBody = this.scene.add.text(-1000, -1000, "", { fontFamily: "sans-serif", fontSize: this.textPx(14), color: "#d8e7f6" }).setVisible(false);
 
     const captureActionX = centerX + 256;
     const captureActionY = this.canvasHeight - 212;
@@ -618,8 +633,18 @@ export class LaneBattleHudView {
     this.captureActionButtons.set("build-supply-depot", this.createActionButton(captureActionX, captureActionY + captureActionGapY * 2, captureActionWidth, captureActionHeight, "병참", this.callbacks.buildSupplyDepot));
     this.captureActionButtons.set("build-mint", this.createActionButton(captureActionX, captureActionY + captureActionGapY * 3, captureActionWidth, captureActionHeight, "조달소", this.callbacks.buildMint));
     this.captureActionButtons.set("dismantle", this.createActionButton(captureActionX, captureActionY + captureActionGapY * 4, captureActionWidth, captureActionHeight, "폐기", this.callbacks.dismantle));
-    this.devToggleButton = this.createActionButton(42, 846, 94, 34, "DEV OFF", this.callbacks.toggleDevMode);
-    this.devResearchButton = this.createActionButton(42, 804, 94, 34, "연구 +25", this.callbacks.grantDevResearch);
+    // Sized like everything else, even though it only appears in development:
+    // a control that is on screen is a control a finger will find, and dropping
+    // it from the measurement to make the numbers pass would be measuring the
+    // wrong thing.
+    const devHeight = atLeastTouchable(this.metrics, 34);
+    const devWidth = Math.max(94, devHeight * 2.4);
+    // Bottom-left, inside the HUD band. Placed above it they became controls the
+    // scene did not consider part of the HUD, which is the fall-through bug the
+    // band model exists to prevent -- and the band test said so.
+    const devBottomY = this.canvasHeight - 4 - devHeight;
+    this.devToggleButton = this.createActionButton(42, devBottomY, devWidth, devHeight, "DEV OFF", this.callbacks.toggleDevMode);
+    this.devResearchButton = this.createActionButton(42, devBottomY - devHeight - 8, devWidth, devHeight, "연구 +25", this.callbacks.grantDevResearch);
     this.devResearchButton.rect.setVisible(false);
     this.devResearchButton.text.setVisible(false);
 
@@ -629,7 +654,7 @@ export class LaneBattleHudView {
     this.scene.add.rectangle(1116, 140, 180, 10, 0x000000, 0.14).setOrigin(0, 0.5).setStrokeStyle(2, 0x9cb1c8, 0.34).setDepth(this.depth + 2);
     this.audioSettingsPanel = new AudioSettingsPanel(this.scene, { depth: this.depth + 60, onVisibilityChange: this.callbacks.onAudioSettingsVisibilityChange });
     if (audioDebugEnabled) {
-      this.audioDebugText = this.scene.add.text(1160, 116, "", { fontFamily: "monospace", fontSize: "11px", color: "#d9f2ff", backgroundColor: "rgba(4, 13, 22, 0.84)", padding: { x: 9, y: 7 }, lineSpacing: 2 }).setDepth(this.depth + 50).setScrollFactor(0);
+      this.audioDebugText = this.scene.add.text(1160, 116, "", { fontFamily: "monospace", fontSize: this.textPx(11), color: "#d9f2ff", backgroundColor: "rgba(4, 13, 22, 0.84)", padding: { x: 9, y: 7 }, lineSpacing: 2 }).setDepth(this.depth + 50).setScrollFactor(0);
     }
     this.setDevMode(false);
   }
@@ -643,24 +668,30 @@ export class LaneBattleHudView {
     objects.push(icon);
     const value = this.scene.add.text(x + 16, y, "0", {
       fontFamily: "monospace",
-      fontSize: "18px",
+      fontSize: this.textPx(18),
       color: "#fff6dd",
     }).setOrigin(0, 0.5).setDepth(this.depth + 3).setScrollFactor(0);
     objects.push(value);
     if (role === "research" || role === "idle") {
       return { value, objects };
     }
-    const minus = this.scene.add.circle(x + 56, y, 11, 0x283a55, 0.95)
+    // Radius from the screen, not from the design: at 11 units these were the
+    // smallest thing in the HUD by some margin -- 9.5 CSS px on a phone, a fifth
+    // of a comfortable target. The spacing follows so they do not overlap.
+    const radius = atLeastTouchable(this.metrics, 22) / 2;
+    const minusX = x + 56 + (radius - 11);
+    const plusX = minusX + radius * 2 + 6;
+    const minus = this.scene.add.circle(minusX, y, radius, 0x283a55, 0.95)
       .setStrokeStyle(1, 0x7ea0c9)
       .setDepth(this.depth + 2)
       .setScrollFactor(0);
-    const plus = this.scene.add.circle(x + 84, y, 11, 0x283a55, 0.95)
+    const plus = this.scene.add.circle(plusX, y, radius, 0x283a55, 0.95)
       .setStrokeStyle(1, 0x7ea0c9)
       .setDepth(this.depth + 2)
       .setScrollFactor(0);
-    const minusLabel = this.scene.add.text(minus.x, minus.y - 1, "-", { fontFamily: "sans-serif", fontSize: "14px", color: "#ffffff" })
+    const minusLabel = this.scene.add.text(minus.x, minus.y - 1, "-", { fontFamily: "sans-serif", fontSize: this.textPx(14), color: "#ffffff" })
       .setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
-    const plusLabel = this.scene.add.text(plus.x, plus.y - 1, "+", { fontFamily: "sans-serif", fontSize: "14px", color: "#ffffff" })
+    const plusLabel = this.scene.add.text(plus.x, plus.y - 1, "+", { fontFamily: "sans-serif", fontSize: this.textPx(14), color: "#ffffff" })
       .setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
     minus.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.callbacks.shiftWorker(role, -1));
     plus.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.callbacks.shiftWorker(role, 1));
@@ -670,12 +701,12 @@ export class LaneBattleHudView {
 
   private createActionButton(x: number, y: number, width: number, height: number, label: string, onClick: () => void): ActionButton {
     const rect = this.scene.add.rectangle(x + width / 2, y + height / 2, width, height, 0x1d2d47, 0.95).setStrokeStyle(2, 0xd6b979, 0.65).setDepth(this.depth + 2).setScrollFactor(0);
-    const text = this.scene.add.text(rect.x, rect.y - height * 0.18, label, { fontFamily: "sans-serif", fontSize: "14px", color: "#f3f7fb", align: "center" }).setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
+    const text = this.scene.add.text(rect.x, rect.y - height * 0.18, label, { fontFamily: "sans-serif", fontSize: this.textPx(14), color: "#f3f7fb", align: "center" }).setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
     const costIcons: Phaser.GameObjects.Image[] = [];
     const costTexts: Phaser.GameObjects.Text[] = [];
     for (let i = 0; i < MAX_COST_ITEMS; i += 1) {
       costIcons.push(this.scene.add.image(0, 0, "icon-gold").setDisplaySize(17, 17).setDepth(this.depth + 3).setScrollFactor(0).setVisible(false));
-      costTexts.push(this.scene.add.text(0, 0, "", { fontFamily: "monospace", fontSize: "12px", color: "#d8e7f6" }).setOrigin(0, 0.5).setDepth(this.depth + 3).setScrollFactor(0).setVisible(false));
+      costTexts.push(this.scene.add.text(0, 0, "", { fontFamily: "monospace", fontSize: this.textPx(12), color: "#d8e7f6" }).setOrigin(0, 0.5).setDepth(this.depth + 3).setScrollFactor(0).setVisible(false));
     }
     rect.setInteractive({ useHandCursor: true });
     rect.on("pointerover", () => {

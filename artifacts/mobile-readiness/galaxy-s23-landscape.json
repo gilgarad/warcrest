@@ -4,62 +4,94 @@
   "renderedWidth": 699,
   "renderedHeight": 393,
   "wastedWidth": 155,
-  "smallestTargets": [
+  "smallestUiTargets": [
+    {
+      "label": "run:Rectangle",
+      "cssWidth": 57.6,
+      "cssHeight": 44
+    },
+    {
+      "label": "run:Rectangle",
+      "cssWidth": 86.5,
+      "cssHeight": 44
+    },
+    {
+      "label": "run:Rectangle",
+      "cssWidth": 86.5,
+      "cssHeight": 44
+    },
+    {
+      "label": "run:Rectangle",
+      "cssWidth": 86.5,
+      "cssHeight": 44
+    },
+    {
+      "label": "run:Rectangle",
+      "cssWidth": 86.5,
+      "cssHeight": 44
+    },
+    {
+      "label": "run:Rectangle",
+      "cssWidth": 105.6,
+      "cssHeight": 44
+    }
+  ],
+  "smallestWorldTargets": [
     {
       "label": "run:Arc",
-      "cssWidth": 9.6,
-      "cssHeight": 9.6
+      "cssWidth": 6.8,
+      "cssHeight": 6.8
+    },
+    {
+      "label": "run:Text",
+      "cssWidth": 29.1,
+      "cssHeight": 11
+    },
+    {
+      "label": "run:Text",
+      "cssWidth": 37.6,
+      "cssHeight": 11
+    },
+    {
+      "label": "run:Text",
+      "cssWidth": 66.1,
+      "cssHeight": 19.1
     },
     {
       "label": "run:Arc",
-      "cssWidth": 9.6,
-      "cssHeight": 9.6
+      "cssWidth": 19.3,
+      "cssHeight": 19.3
     },
     {
-      "label": "run:Arc",
-      "cssWidth": 9.6,
-      "cssHeight": 9.6
-    },
-    {
-      "label": "run:Arc",
-      "cssWidth": 9.6,
-      "cssHeight": 9.6
-    },
-    {
-      "label": "run:Arc",
-      "cssWidth": 9.6,
-      "cssHeight": 9.6
-    },
-    {
-      "label": "run:Arc",
-      "cssWidth": 9.6,
-      "cssHeight": 9.6
+      "label": "run:Image",
+      "cssWidth": 129.3,
+      "cssHeight": 129.3
     }
   ],
   "smallestText": [
     {
-      "label": "10",
-      "cssPx": 5.2
+      "label": "시대 석기 시대",
+      "cssPx": 11.4
     },
     {
-      "label": "10",
-      "cssPx": 5.2
+      "label": "다음 웨이브 20초 | 적 20초",
+      "cssPx": 11.4
     },
     {
-      "label": "10",
-      "cssPx": 5.2
+      "label": "전장 병력 4 | 적 병력 4",
+      "cssPx": 11.4
     },
     {
-      "label": "50",
-      "cssPx": 5.2
+      "label": "즉시 웨이브 토큰 1",
+      "cssPx": 11.4
     },
     {
-      "label": "50",
-      "cssPx": 5.2
+      "label": "일꾼 0/4",
+      "cssPx": 11.4
     },
     {
-      "label": "50",
-      "cssPx": 5.2
+      "label": "일꾼 고용",
+      "cssPx": 11.4
     }
   ]
 }

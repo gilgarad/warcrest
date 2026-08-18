@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { atLeastTouchable, measureScreen } from "./screenLayout";
 import { getAudioSystem, type CombatSfxMode } from "../systems/audio";
 
 interface AudioSettingsPanelOptions {
@@ -101,14 +102,19 @@ export class AudioSettingsPanel {
     });
     this.root.add([...reset, ...test]);
 
-    this.openRect = scene.add.rectangle(width - 102, 86, 116, 50, 0x162a42, 0.94)
+    // Sized for the screen like the rest of the HUD: at 116x50 units this button
+    // reached a phone as 50x22 CSS px, half a comfortable target.
+    const metrics = measureScreen(scene.scale.displaySize.width, scene.scale.displaySize.height);
+    const openHeight = atLeastTouchable(metrics, 50);
+    const openWidth = Math.max(116, openHeight * 2.3);
+    this.openRect = scene.add.rectangle(width - openWidth / 2 - 44, 86, openWidth, openHeight, 0x162a42, 0.94)
       .setStrokeStyle(2, 0xd0ad63, 0.72)
       .setDepth(options.depth)
       .setScrollFactor(0)
       .setInteractive({ useHandCursor: true });
     this.openText = scene.add.text(this.openRect.x, this.openRect.y, "소리", {
       fontFamily: "sans-serif",
-      fontSize: "22px",
+      fontSize: `${Math.ceil(Math.max(22, metrics.minBodyTextUnits))}px`,
       color: "#f4e7c8",
     }).setOrigin(0.5).setDepth(options.depth + 1).setScrollFactor(0);
     this.openRect.on("pointerover", () => {
