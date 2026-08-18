@@ -142,6 +142,7 @@ import {
 import { DeterministicRandom } from "../systems/sim/deterministicRandom";
 import type { GameMode, MatchDescriptor } from "../systems/net/matchTypes";
 import { DEFAULT_LOCKSTEP_OPTIONS, LockstepSession } from "../systems/net/lockstepSession";
+import { BASE_FIELD_ZOOM, fieldCameraZoom, measureScreen } from "../ui/screenLayout";
 import {
   disconnectVictorySummary,
   opponentWaitNotice,
@@ -233,7 +234,6 @@ const FRIENDLY_GAP = 0.011;
 const MIN_FRIENDLY_SPACING_PROGRESS = RANGE_TO_PROGRESS;
 const MIN_TOWER_STANDOFF_PROGRESS = 0.0036;
 const ENGAGE_GAP = 0.022;
-const FIELD_CAMERA_ZOOM = 0.46;
 const TOWER_W = 148;
 const TOWER_H = 176;
 /**
@@ -648,6 +648,14 @@ export class LaneBattleScene extends Phaser.Scene {
   /** Present only in a networked match; drives the tick barrier. */
   private lockstep: LockstepSession | null = null;
   private relay: RelayMatchService | null = null;
+  /**
+   * Battlefield zoom for this screen; smaller screens see more world.
+   *
+   * Assigned in `create`, not here: field initialisers run from the constructor,
+   * where a Scene has no `scale` yet, and reading it there throws before the
+   * game draws anything.
+   */
+  private fieldZoom = BASE_FIELD_ZOOM;
   private netStalled = false;
   /** When the current uninterrupted barrier wait began, or null if not waiting. */
   private netStallSinceMs: number | null = null;
@@ -793,7 +801,8 @@ export class LaneBattleScene extends Phaser.Scene {
     // `setupFieldDrag()` with the range we actually want; `_bounds` data
     // itself is otherwise unused elsewhere in this codebase.
     this.cameras.main.useBounds = false;
-    this.cameras.main.setZoom(FIELD_CAMERA_ZOOM);
+    this.fieldZoom = fieldCameraZoom(measureScreen(this.scale.displaySize.width, this.scale.displaySize.height));
+    this.cameras.main.setZoom(this.fieldZoom);
     // Progress runs 0 (left/"player" base) to 1 (right/"enemy" base), so a
     // fixed 0.22 opens the camera on the left base for both sides. Mirroring it
     // for the right-hand player is what makes them start looking at their own
@@ -5688,7 +5697,7 @@ export class LaneBattleScene extends Phaser.Scene {
         rules: {
           worldWidth: WORLD_W,
           worldHeight: WORLD_H,
-          cameraZoom: FIELD_CAMERA_ZOOM,
+          cameraZoom: this.fieldZoom,
           waveIntervalSec: WAVE_INTERVAL_SEC,
           unitProgressSpeed: UNIT_PROGRESS_SPEED,
           rangeToProgress: RANGE_TO_PROGRESS,

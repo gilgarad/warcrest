@@ -89,6 +89,26 @@ export function atLeastTouchable(metrics: ScreenMetrics, units: number): number 
   return Math.max(units, metrics.minTouchTargetUnits);
 }
 
+/** Camera zoom the battlefield is drawn at on a desktop. */
+export const BASE_FIELD_ZOOM = 0.46;
+
+/**
+ * How far to pull the camera back on this screen.
+ *
+ * The zoom was fixed, so a phone showed the same slice of world as a monitor
+ * through a window a fraction of the size: the player's own base filled the
+ * view and the opposing side was off-screen. Pulling back fits more of the
+ * battlefield in, at the cost of smaller units -- which is the right way round,
+ * because a lane game is unplayable if you cannot see the lane.
+ *
+ * Not pulled back proportionally to the screen. That would fit the whole map on
+ * a phone and leave the units as specks; this trades some of the loss.
+ */
+export function fieldCameraZoom(metrics: ScreenMetrics): number {
+  const pullback = metrics.deviceClass === "phone" ? 0.68 : metrics.deviceClass === "tablet" ? 0.85 : 1;
+  return BASE_FIELD_ZOOM * pullback;
+}
+
 export interface Insets {
   top: number;
   right: number;

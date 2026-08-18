@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { atLeastTouchable, measureScreen, type ScreenMetrics } from "../ui/screenLayout";
 import { assetUrl } from "../config/assetUrl";
 import { parseTerrainRenderMode } from "../config/prototypeVisualConfig";
 import { DIFFICULTIES, type DifficultyId } from "../data/difficulty";
@@ -12,6 +13,17 @@ import type { MatchDescriptor } from "../systems/net/matchTypes";
 import { OnlineLobbyPanel } from "../ui/OnlineLobbyPanel";
 
 export class BootScene extends Phaser.Scene {
+  /**
+   * The title screen was never sized for a phone: at 0.43 CSS pixels to the
+   * game unit its body text landed around five pixels, which is where the
+   * mobile pass first shows itself -- before a player ever reaches the game.
+   */
+  private metrics: ScreenMetrics = measureScreen(1600, 900);
+
+  private textPx(baseUnits: number): string {
+    return `${Math.ceil(Math.max(baseUnits, this.metrics.minBodyTextUnits))}px`;
+  }
+
   private bg!: ParallaxBackground;
   private battleAssetsReady = false;
   private pendingStart = false;
@@ -39,6 +51,10 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
+    // Measured here rather than in a field initialiser: a Scene has no `scale`
+    // in its constructor, so measuring there silently returns the desktop
+    // fallback and the phone sizing never happens.
+    this.metrics = measureScreen(this.scale.displaySize.width, this.scale.displaySize.height);
     const params = new URLSearchParams(window.location.search);
     if (params.get("golden") === "1") {
       this.scene.start("golden-reference");
@@ -71,7 +87,7 @@ export class BootScene extends Phaser.Scene {
     const crest = this.add.container(width / 2, height / 2 - 82);
     crest.add(this.add.text(0, -6, GAME_TITLE, {
       fontFamily: "Georgia, serif",
-      fontSize: "50px",
+      fontSize: this.textPx(50),
       color: "#fff3d3",
       stroke: "#2c1707",
       strokeThickness: 7,
@@ -80,7 +96,7 @@ export class BootScene extends Phaser.Scene {
     this.add
       .text(width / 2, height / 2 - 24, GAME_TAGLINE, {
         fontFamily: "serif",
-        fontSize: "18px",
+        fontSize: this.textPx(18),
         color: "#e7eefb",
       })
       .setOrigin(0.5, 0);
@@ -88,14 +104,14 @@ export class BootScene extends Phaser.Scene {
     this.add
       .text(width / 2, height / 2 + 6, GAME_SUBTITLE, {
         fontFamily: "serif",
-        fontSize: "15px",
+        fontSize: this.textPx(15),
         color: "#cbd8ea",
       })
       .setOrigin(0.5, 0);
 
     this.add.text(width / 2, height / 2 + 72, "웨이브, 거점, 시대 운영으로 북/남 전선을 함께 밀어붙이십시오.", {
       fontFamily: "sans-serif",
-      fontSize: "17px",
+      fontSize: this.textPx(17),
       color: "#e9f1fd",
       align: "center",
       wordWrap: { width: 440 },
@@ -107,7 +123,7 @@ export class BootScene extends Phaser.Scene {
     this.promptText = this.add
       .text(width / 2, height / 2 + 144, "전장 준비 중...", {
         fontFamily: "sans-serif",
-        fontSize: "20px",
+        fontSize: this.textPx(20),
         color: "#f7d46c",
       })
       .setOrigin(0.5, 0.5);
@@ -127,7 +143,7 @@ export class BootScene extends Phaser.Scene {
     this.progressText = this.add
       .text(width / 2 + barWidth / 2 + 28, barY, "0%", {
         fontFamily: "sans-serif",
-        fontSize: "13px",
+        fontSize: this.textPx(13),
         color: "#f7d46c",
         fontStyle: "bold",
       })
@@ -136,7 +152,7 @@ export class BootScene extends Phaser.Scene {
     this.hintText = this.add
       .text(width / 2, height / 2 + 202, "최초 접속 시 자산을 내려받는 데 최대 30초 정도 걸릴 수 있습니다.\n버튼이 나타날 때까지 잠시만 기다려주세요.", {
         fontFamily: "sans-serif",
-        fontSize: "11px",
+        fontSize: this.textPx(11),
         color: "#8fa3c2",
         align: "center",
         lineSpacing: 4,
@@ -147,14 +163,16 @@ export class BootScene extends Phaser.Scene {
     this.difficultyLabel = this.add
       .text(width / 2, height / 2 + 130, "난이도", {
         fontFamily: "Georgia, serif",
-        fontSize: "17px",
+        fontSize: this.textPx(17),
         color: "#f1e4c3",
       })
       .setOrigin(0.5, 0.5)
       .setVisible(false);
 
-    const boxWidth = 128;
-    const boxHeight = 76;
+    // 128x76 is already comfortable on a monitor, so `atLeastTouchable` leaves
+    // it alone there and only grows it where a finger would miss.
+    const boxWidth = atLeastTouchable(this.metrics, 128);
+    const boxHeight = atLeastTouchable(this.metrics, 76);
     const gap = 14;
     const totalWidth = DIFFICULTIES.length * boxWidth + (DIFFICULTIES.length - 1) * gap;
     const startX = width / 2 - totalWidth / 2 + boxWidth / 2;
@@ -166,7 +184,7 @@ export class BootScene extends Phaser.Scene {
         .setStrokeStyle(2, 0xd39f3f, 0.62)
         .setVisible(false);
       const text = this.add
-        .text(x, rowY, difficulty.label, { fontFamily: "sans-serif", fontSize: "20px", color: "#f7d46c" })
+        .text(x, rowY, difficulty.label, { fontFamily: "sans-serif", fontSize: this.textPx(20), color: "#f7d46c" })
         .setOrigin(0.5, 0.5)
         .setVisible(false);
       rect.on("pointerover", () => rect.setFillStyle(0x1c2d44, 0.96));
@@ -227,12 +245,12 @@ export class BootScene extends Phaser.Scene {
    */
   private buildOnlineButton(x: number, y: number): void {
     const rect = this.add
-      .rectangle(x, y, 274, 46, 0x16233a, 0.94)
+      .rectangle(x, y, atLeastTouchable(this.metrics, 274), atLeastTouchable(this.metrics, 46), 0x16233a, 0.94)
       .setStrokeStyle(2, 0x6aa9e0, 0.7)
       .setVisible(false);
     const text = this.add
       .text(x, y, "온라인 대전", {
-        fontFamily: "Georgia, serif", fontSize: "20px", color: "#bfe2ff",
+        fontFamily: "Georgia, serif", fontSize: this.textPx(20), color: "#bfe2ff",
       })
       .setOrigin(0.5)
       .setVisible(false);
