@@ -1,0 +1,65 @@
+{
+  "viewport": "Galaxy S23 landscape",
+  "cssPerGameUnit": 0.437,
+  "renderedWidth": 699,
+  "renderedHeight": 393,
+  "wastedWidth": 155,
+  "smallestTargets": [
+    {
+      "label": "run:Arc",
+      "cssWidth": 9.6,
+      "cssHeight": 9.6
+    },
+    {
+      "label": "run:Arc",
+      "cssWidth": 9.6,
+      "cssHeight": 9.6
+    },
+    {
+      "label": "run:Arc",
+      "cssWidth": 9.6,
+      "cssHeight": 9.6
+    },
+    {
+      "label": "run:Arc",
+      "cssWidth": 9.6,
+      "cssHeight": 9.6
+    },
+    {
+      "label": "run:Arc",
+      "cssWidth": 9.6,
+      "cssHeight": 9.6
+    },
+    {
+      "label": "run:Arc",
+      "cssWidth": 9.6,
+      "cssHeight": 9.6
+    }
+  ],
+  "smallestText": [
+    {
+      "label": "10",
+      "cssPx": 5.2
+    },
+    {
+      "label": "10",
+      "cssPx": 5.2
+    },
+    {
+      "label": "10",
+      "cssPx": 5.2
+    },
+    {
+      "label": "50",
+      "cssPx": 5.2
+    },
+    {
+      "label": "50",
+      "cssPx": 5.2
+    },
+    {
+      "label": "50",
+      "cssPx": 5.2
+    }
+  ]
+}

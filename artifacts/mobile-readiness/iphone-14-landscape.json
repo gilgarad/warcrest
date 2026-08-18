@@ -1,0 +1,65 @@
+{
+  "viewport": "iPhone 14 landscape",
+  "cssPerGameUnit": 0.433,
+  "renderedWidth": 693,
+  "renderedHeight": 390,
+  "wastedWidth": 151,
+  "smallestTargets": [
+    {
+      "label": "run:Arc",
+      "cssWidth": 9.5,
+      "cssHeight": 9.5
+    },
+    {
+      "label": "run:Arc",
+      "cssWidth": 9.5,
+      "cssHeight": 9.5
+    },
+    {
+      "label": "run:Arc",
+      "cssWidth": 9.5,
+      "cssHeight": 9.5
+    },
+    {
+      "label": "run:Arc",
+      "cssWidth": 9.5,
+      "cssHeight": 9.5
+    },
+    {
+      "label": "run:Arc",
+      "cssWidth": 9.5,
+      "cssHeight": 9.5
+    },
+    {
+      "label": "run:Arc",
+      "cssWidth": 9.5,
+      "cssHeight": 9.5
+    }
+  ],
+  "smallestText": [
+    {
+      "label": "10",
+      "cssPx": 5.2
+    },
+    {
+      "label": "10",
+      "cssPx": 5.2
+    },
+    {
+      "label": "10",
+      "cssPx": 5.2
+    },
+    {
+      "label": "50",
+      "cssPx": 5.2
+    },
+    {
+      "label": "50",
+      "cssPx": 5.2
+    },
+    {
+      "label": "50",
+      "cssPx": 5.2
+    }
+  ]
+}
