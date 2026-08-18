@@ -41,6 +41,21 @@ interface InfoMessageOptions {
   color?: string;
 }
 
+/**
+ * Screen rows the HUD occupies, in game units.
+ *
+ * The battle scene needs these to tell a press on the HUD from a tap on open
+ * ground. It used to carry its own guesses -- 250 and 640 -- which drifted from
+ * what the HUD actually draws: the top guess reached 94 units past the last HUD
+ * pixel, leaving a strip below the panel where taps did nothing at all.
+ *
+ * Measured from the drawn objects rather than derived from the art scale, since
+ * the interactive controls extend past the painted frame. `hud-bands.spec.ts`
+ * re-measures and fails if either number stops covering the HUD.
+ */
+const HUD_TOP_BAND_BOTTOM = 156;
+const HUD_BOTTOM_BAND_TOP = 660;
+
 const HUD_SOURCE_WIDTH = 1672;
 const HUD_TOP_SOURCE_HEIGHT = 160;
 const HUD_BOTTOM_SOURCE_HEIGHT = 220;
@@ -340,6 +355,16 @@ export class LaneBattleHudView {
   setDevToolsVisible(visible: boolean): void {
     this.devToolsVisible = visible;
     this.setDevMode(this.devToggleButton?.text.text === "DEV ON");
+  }
+
+  /**
+   * The two screen bands the HUD owns. Anything outside them is battlefield.
+   *
+   * One source of truth for both drawing and hit-testing: the scene asking the
+   * HUD where it is beats the scene remembering.
+   */
+  getUiBands(): { topBelow: number; bottomAbove: number } {
+    return { topBelow: HUD_TOP_BAND_BOTTOM, bottomAbove: HUD_BOTTOM_BAND_TOP };
   }
 
   getCompositionMetrics(): { topHeight: number; bottomHeight: number; openWorldHeight: number; openWorldRatio: number } {
