@@ -6,7 +6,7 @@ import { GAME_SUBTITLE, GAME_TAGLINE, GAME_TITLE } from "../data/gameMeta";
 import { createParallaxBackground, type ParallaxBackground } from "../gfx/parallax";
 import { areLaneBattleAssetsReady, queueLaneBattleAssets } from "./laneBattleAssetPreload";
 import { getAudioSystem } from "../systems/audio";
-import { RelayMatchService } from "../systems/net/relayMatchService";
+import { RelayMatchService, type RejoinedMatch } from "../systems/net/relayMatchService";
 import { isMixedContentRelay, resolveRelayUrl } from "../config/relayUrl";
 import type { MatchDescriptor } from "../systems/net/matchTypes";
 import { OnlineLobbyPanel } from "../ui/OnlineLobbyPanel";
@@ -25,7 +25,7 @@ export class BootScene extends Phaser.Scene {
   private difficultyLabel?: Phaser.GameObjects.Text;
   private difficultyButtons: { rect: Phaser.GameObjects.Rectangle; text: Phaser.GameObjects.Text }[] = [];
   private startBattle?: (difficultyId: DifficultyId) => Promise<void>;
-  private startOnlineMatch?: (match: MatchDescriptor) => void;
+  private startOnlineMatch?: (match: MatchDescriptor, resume?: RejoinedMatch) => void;
   private onlineButton?: { rect: Phaser.GameObjects.Rectangle; text: Phaser.GameObjects.Text };
   private lobby?: OnlineLobbyPanel;
   private relayService?: RelayMatchService;
@@ -195,7 +195,7 @@ export class BootScene extends Phaser.Scene {
       this.scene.start("run", { difficultyId, mode: "single" });
     };
 
-    this.startOnlineMatch = (match: MatchDescriptor) => {
+    this.startOnlineMatch = (match: MatchDescriptor, resume?: RejoinedMatch) => {
       audio.resetDirector("preparation");
       this.scene.stop("gameover");
       this.scene.stop("run");
@@ -205,6 +205,7 @@ export class BootScene extends Phaser.Scene {
         mode: match.mode,
         match,
         relay: this.relayService ?? null,
+        resume,
       });
     };
 
@@ -251,6 +252,20 @@ export class BootScene extends Phaser.Scene {
         console.warn(`[warcrest] HTTPS 페이지에서 ws:// 릴레이(${relayUrl})는 차단됩니다. wss:// 주소가 필요합니다.`);
       }
       this.relayService = new RelayMatchService(relayUrl);
+      // A reconnect is recognised as soon as the socket identifies itself, which
+      // is while the player is still looking at the lobby. Nothing was listening
+      // for it before, so the relay held their seat and handed back the match
+      // log to a client that dropped it on the floor.
+      this.relayService.onRejoin((resume) => {
+        this.lobby?.hide();
+        this.startOnlineMatch?.({
+          mode: "pvp",
+          seed: resume.seed,
+          opponentName: resume.opponentName,
+          localTeam: resume.localTeam,
+          matchKind: "auto",
+        }, resume);
+      });
       this.lobby = new OnlineLobbyPanel(this, this.relayService, {
         onMatchReady: (match) => {
           this.lobby?.hide();

@@ -59,6 +59,18 @@ export class OnlineLobbyPanel {
       if (status.state === "inviting") this.setStatus(`${status.friend.name} 님에게 대결을 신청했습니다...`);
     });
     await this.reloadFriends();
+    // Connect on open rather than waiting for a button.
+    //
+    // The relay can only recognise a returning player once that player has
+    // identified themselves, which needs a socket. Connecting lazily meant a
+    // reconnect went unnoticed until "상대 찾기" was pressed -- and pressing it
+    // asks to be matched with someone new, which is the opposite of resuming.
+    // It also means a dead relay is reported here instead of on the button.
+    try {
+      await this.service.connect();
+    } catch (error) {
+      this.setStatus(error instanceof Error ? error.message : "대전 서버에 연결하지 못했습니다");
+    }
   }
 
   hide(): void {

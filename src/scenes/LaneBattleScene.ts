@@ -147,7 +147,7 @@ import {
   opponentWaitNotice,
   type OpponentWait,
 } from "../systems/net/opponentPresenceNotice";
-import type { RelayMatchService } from "../systems/net/relayMatchService";
+import type { RejoinedMatch, RelayMatchService } from "../systems/net/relayMatchService";
 import { hashSimulationState } from "../systems/sim/simulationHash";
 import type { SimulationStateView } from "../systems/sim/simulationState";
 import {
@@ -655,6 +655,16 @@ export class LaneBattleScene extends Phaser.Scene {
   private opponentWait: OpponentWait | null = null;
   /** Guards against a second ending being started while the first is in flight. */
   private matchEnded = false;
+  /** Frame log handed back by the relay when this client reconnected. */
+  private resume?: RejoinedMatch;
+  /**
+   * True only while catching up through a reconnect replay.
+   *
+   * Read by the wall-clock parts of presentation, which must not run inside the
+   * catch-up: no real time passes there, so anything measured against it would
+   * fire hundreds of times in one frame.
+   */
+  private replaying = false;
   /**
    * How the simulation asks for sounds and floating text. The scene supplies a
    * renderer-backed implementation; a headless run uses the null one, which is
@@ -711,6 +721,7 @@ export class LaneBattleScene extends Phaser.Scene {
     mode?: GameMode;
     match?: MatchDescriptor;
     relay?: RelayMatchService | null;
+    resume?: RejoinedMatch;
   }): void {
     this.difficulty = getDifficulty(data?.difficultyId);
     // Single-player and PvP run this same scene and this same simulation; the
@@ -727,6 +738,7 @@ export class LaneBattleScene extends Phaser.Scene {
       : null;
     // A PvP match dictates the seed so both peers simulate identically.
     this.activeSeed = this.match?.seed ?? this.verificationSeed;
+    this.resume = data?.resume;
   }
 
   preload(): void {
@@ -826,8 +838,60 @@ export class LaneBattleScene extends Phaser.Scene {
     if (this.visualValidationScenario) this.setupVisualValidationScenario();
     this.setupFieldDrag();
     this.setupTerrainPrototypeControls();
+    if (this.resume) this.replayMatch(this.resume);
     this.refreshUi();
     this.publishDebug();
+  }
+
+  /**
+   * Rebuilds a match this client dropped out of, from the relay's frame log.
+   *
+   * The opening state comes from the seed, which `create` has already applied,
+   * so all that is missing is the input: every command both sides issued. Those
+   * go into the simulation's own queue, which applies each on the tick it was
+   * scheduled for, exactly as it would have live. Then the simulation is
+   * stepped, without any real time passing, until it reaches where the match
+   * had got to.
+   *
+   * Presentation is silenced for the duration. Replaying a minute of combat
+   * would otherwise fire a minute's worth of sounds and toasts at once, and the
+   * tweens started along the way would still be playing after the catch-up
+   * finished, so they are cleared.
+   */
+  private replayMatch(resume: RejoinedMatch): void {
+    if (resume.truncated) {
+      // The relay's log hit its cap, so the history is incomplete. Resuming
+      // from it would put the two clients in different games while telling the
+      // player everything is fine, which is worse than admitting the loss.
+      this.endMatchByDisconnect("대전 기록이 너무 길어 재개할 수 없습니다");
+      return;
+    }
+    let target = 0;
+    for (const frame of resume.frames) {
+      for (const entry of frame.commands) {
+        this.simulation.enqueueCommand(entry);
+        target = Math.max(target, entry.tick);
+      }
+      target = Math.max(target, frame.tick);
+    }
+    if (target <= 0) return;
+
+    this.lockstep?.allowReplayThrough(target);
+    const liveEffects = this.effects;
+    this.effects = NULL_PRESENTATION_EFFECTS;
+    this.replaying = true;
+    try {
+      while (this.simTick < target) this.simulation.step();
+    } finally {
+      this.replaying = false;
+      this.effects = liveEffects;
+    }
+    this.tweens.killAll();
+    // The tweens that drove these are gone, so nothing would ever clean them up.
+    this.activeProjectiles.forEach((projectile) => projectile.destroy());
+    this.activeProjectiles.clear();
+    this.units.forEach((unit) => this.syncUnitPresentation(unit));
+    this.hud.setInfo(`대전을 이어갑니다 (${target} tick)`);
   }
 
   update(_time: number, deltaMs: number): void {
@@ -4330,7 +4394,7 @@ export class LaneBattleScene extends Phaser.Scene {
       team.id === "player" ? DEFAULT_PLAYER_WAVE_SPAWN_PROGRESS : DEFAULT_ENEMY_WAVE_SPAWN_PROGRESS,
     );
     resetWaveClock(team);
-    if (team.id === this.localTeamId) {
+    if (team.id === this.localTeamId && !this.replaying) {
       this.audio.playSfx("sfx.wave.start", { eventKey: "wave:opening" });
       this.audio.setDirectorState("battle-low");
       this.audioWiring.recordCombatEvent(this.elapsedSec);
