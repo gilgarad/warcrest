@@ -2,26 +2,90 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Phone-first viewport.
+
+      `user-scalable=no` and `maximum-scale=1` are here because the game's own
+      gestures are drags and taps on a canvas: browser pinch-zoom and
+      double-tap-zoom fight them, and a mis-zoomed canvas cannot be recovered
+      from inside the page. `viewport-fit=cover` lets the canvas reach under a
+      notch, with the safe area handled below.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#111111" />
     <link rel="icon" type="image/png" href="%BASE_URL%assets/lane-units/stone-axeman-unit.png" />
     <title>Warcrest</title>
     <style>
-      html, body {
+      html,
+      body {
         margin: 0;
         padding: 0;
         background: #111;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
+        /* No page scrolling: the canvas is the whole document, and a stray
+           drag must not pull the page or trigger pull-to-refresh. */
+        overflow: hidden;
+        overscroll-behavior: none;
+        height: 100%;
       }
+
       #game {
+        /* Phaser's FIT scaler measures this element. It previously had no size
+           of its own, so the canvas was fitted against the wrong box and spilled
+           past the viewport on wider screens. */
+        width: 100vw;
+        height: 100vh;
+        /* dvh follows the mobile URL bar as it hides and shows; vh does not, and
+           the difference is a strip of the game sitting under browser chrome. */
+        height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         line-height: 0;
+        /* Gestures belong to the game, not to the browser. */
+        touch-action: none;
+      }
+
+      #game canvas {
+        touch-action: none;
+      }
+
+      /*
+        Portrait notice. The battlefield runs left to right between two bases,
+        so portrait has nothing useful to show; saying so beats rendering a
+        sliver of it.
+      */
+      #rotate-notice {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: max(24px, env(safe-area-inset-top)) 24px;
+        background: #0b1420;
+        color: #f1e4c3;
+        font-family: sans-serif;
+        font-size: 18px;
+        line-height: 1.6;
+        text-align: center;
+        z-index: 10;
+      }
+
+      @media (orientation: portrait) and (pointer: coarse) {
+        #rotate-notice {
+          display: flex;
+        }
       }
     </style>
   </head>
   <body>
     <div id="game"></div>
+    <div id="rotate-notice">기기를 가로로 돌려주세요</div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

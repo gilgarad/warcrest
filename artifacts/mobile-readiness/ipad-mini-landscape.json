@@ -1,65 +1,65 @@
 {
   "viewport": "iPad mini landscape",
-  "cssPerGameUnit": 0.827,
-  "renderedWidth": 1323,
-  "renderedHeight": 744,
-  "wastedWidth": -190,
+  "cssPerGameUnit": 0.708,
+  "renderedWidth": 1133,
+  "renderedHeight": 637,
+  "wastedWidth": 0,
   "smallestTargets": [
     {
       "label": "run:Arc",
-      "cssWidth": 18.2,
-      "cssHeight": 18.2
+      "cssWidth": 15.6,
+      "cssHeight": 15.6
     },
     {
       "label": "run:Arc",
-      "cssWidth": 18.2,
-      "cssHeight": 18.2
+      "cssWidth": 15.6,
+      "cssHeight": 15.6
     },
     {
       "label": "run:Arc",
-      "cssWidth": 18.2,
-      "cssHeight": 18.2
+      "cssWidth": 15.6,
+      "cssHeight": 15.6
     },
     {
       "label": "run:Arc",
-      "cssWidth": 18.2,
-      "cssHeight": 18.2
+      "cssWidth": 15.6,
+      "cssHeight": 15.6
     },
     {
       "label": "run:Arc",
-      "cssWidth": 18.2,
-      "cssHeight": 18.2
+      "cssWidth": 15.6,
+      "cssHeight": 15.6
     },
     {
       "label": "run:Arc",
-      "cssWidth": 18.2,
-      "cssHeight": 18.2
+      "cssWidth": 15.6,
+      "cssHeight": 15.6
     }
   ],
   "smallestText": [
     {
       "label": "10",
-      "cssPx": 9.9
+      "cssPx": 8.5
     },
     {
       "label": "10",
-      "cssPx": 9.9
+      "cssPx": 8.5
     },
     {
       "label": "10",
-      "cssPx": 9.9
+      "cssPx": 8.5
     },
     {
       "label": "50",
-      "cssPx": 9.9
+      "cssPx": 8.5
     },
     {
       "label": "50",
-      "cssPx": 9.9
+      "cssPx": 8.5
     },
     {
       "label": "50",
-      "cssPx": 9.9
+      "cssPx": 8.5
     }
   ]
 }
