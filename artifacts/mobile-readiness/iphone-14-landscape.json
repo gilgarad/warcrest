@@ -7,33 +7,33 @@
   "smallestTargets": [
     {
       "label": "run:Arc",
-      "cssWidth": 9.5,
-      "cssHeight": 9.5
+      "cssWidth": 14.7,
+      "cssHeight": 14.7
     },
     {
-      "label": "run:Arc",
-      "cssWidth": 9.5,
-      "cssHeight": 9.5
+      "label": "run:Rectangle",
+      "cssWidth": 40.7,
+      "cssHeight": 14.7
     },
     {
-      "label": "run:Arc",
-      "cssWidth": 9.5,
-      "cssHeight": 9.5
+      "label": "run:Rectangle",
+      "cssWidth": 57.2,
+      "cssHeight": 19.1
     },
     {
-      "label": "run:Arc",
-      "cssWidth": 9.5,
-      "cssHeight": 9.5
+      "label": "run:Rectangle",
+      "cssWidth": 85.8,
+      "cssHeight": 19.1
     },
     {
-      "label": "run:Arc",
-      "cssWidth": 9.5,
-      "cssHeight": 9.5
+      "label": "run:Rectangle",
+      "cssWidth": 85.8,
+      "cssHeight": 19.1
     },
     {
-      "label": "run:Arc",
-      "cssWidth": 9.5,
-      "cssHeight": 9.5
+      "label": "run:Rectangle",
+      "cssWidth": 85.8,
+      "cssHeight": 19.1
     }
   ],
   "smallestText": [

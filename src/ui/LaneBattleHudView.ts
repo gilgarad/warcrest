@@ -16,6 +16,8 @@ interface WorkerUiRow {
   value: Phaser.GameObjects.Text;
   minus?: Phaser.GameObjects.Arc;
   plus?: Phaser.GameObjects.Arc;
+  /** Every object the row drew, so the row can be shown or hidden as a unit. */
+  objects: (Phaser.GameObjects.GameObject & Phaser.GameObjects.Components.Visible)[];
 }
 
 interface ActionButton {
@@ -54,7 +56,16 @@ interface InfoMessageOptions {
  * re-measures and fails if either number stops covering the HUD.
  */
 const HUD_TOP_BAND_BOTTOM = 156;
-const HUD_BOTTOM_BAND_TOP = 660;
+/** Bottom band while the worker rows are showing. */
+const HUD_BOTTOM_BAND_TOP_EXPANDED = 660;
+/**
+ * Bottom band with the worker rows folded away.
+ *
+ * Folding them is what buys the space back: the rows are the tallest thing in
+ * the bottom band and the least often touched, so collapsing them hands 130
+ * units of screen -- 56 CSS pixels on a phone -- back to the battlefield.
+ */
+const HUD_BOTTOM_BAND_TOP_COLLAPSED = 790;
 
 const HUD_SOURCE_WIDTH = 1672;
 const HUD_TOP_SOURCE_HEIGHT = 160;
@@ -100,6 +111,17 @@ export class LaneBattleHudView {
   private playerBaseBar!: Phaser.GameObjects.Rectangle;
   private enemyBaseBar!: Phaser.GameObjects.Rectangle;
   private workerSummaryText?: Phaser.GameObjects.Text;
+  private workerPanelTitle?: Phaser.GameObjects.Text;
+  private workerChip?: ActionButton;
+  /**
+   * Worker allocation starts folded.
+   *
+   * It is set once and then rarely revisited, while occupying more of the
+   * bottom band than anything else -- the wrong trade for a permanent fixture,
+   * and an impossible one on a phone, where the whole HUD has room for three
+   * rows of touch-sized controls.
+   */
+  private workerPanelOpen = false;
   private researchSummaryText?: Phaser.GameObjects.Text;
   private audioDebugText?: Phaser.GameObjects.Text;
   private networkStatusText?: Phaser.GameObjects.Text;
@@ -120,6 +142,11 @@ export class LaneBattleHudView {
     audioDebugEnabled: boolean,
   ) {
     this.create(audioDebugEnabled);
+    // Built visible, then folded, so the fold path is the only one that has to
+    // know which objects belong to the rows.
+    this.workerRows.forEach((row) => row.objects.forEach((object) => object.setVisible(false)));
+    this.workerPanelTitle?.setVisible(false);
+    this.workerSummaryText?.setVisible(false);
   }
 
   /**
@@ -216,6 +243,9 @@ export class LaneBattleHudView {
       row.plus?.setFillStyle(worker.canIncrease ? 0x324a73 : 0x1d2634, 0.96);
     });
     this.workerSummaryText?.setText(`${snapshot.idleWorkersText} / ${snapshot.assignedWorkersText}`);
+    // The chip is the only worker readout while the rows are folded, so it
+    // carries the same figures rather than a bare icon.
+    this.workerChip?.text.setText(`일꾼 ${snapshot.idleWorkersText}/${snapshot.assignedWorkersText}`);
     this.researchSummaryText?.setText(`연구 ${snapshot.researchWorkersText}`);
     this.playerBaseBar.width = 180 * snapshot.playerBaseRatio;
     this.enemyBaseBar.width = 180 * snapshot.enemyBaseRatio;
@@ -364,7 +394,46 @@ export class LaneBattleHudView {
    * HUD where it is beats the scene remembering.
    */
   getUiBands(): { topBelow: number; bottomAbove: number } {
-    return { topBelow: HUD_TOP_BAND_BOTTOM, bottomAbove: HUD_BOTTOM_BAND_TOP };
+    return {
+      topBelow: HUD_TOP_BAND_BOTTOM,
+      bottomAbove: this.workerPanelOpen ? HUD_BOTTOM_BAND_TOP_EXPANDED : HUD_BOTTOM_BAND_TOP_COLLAPSED,
+    };
+  }
+
+  /**
+   * Every screen rectangle the HUD currently occupies.
+   *
+   * Regions rather than two fixed bands because the HUD changes shape: a panel
+   * that folds open reaches into what was battlefield a moment earlier, and a
+   * press there has to count as a press on the HUD. Getting that wrong is what
+   * closed the research panel underneath its own buttons.
+   */
+  getUiRegions(): { left: number; top: number; right: number; bottom: number }[] {
+    const bands = this.getUiBands();
+    return [
+      { left: 0, top: 0, right: this.canvasWidth, bottom: bands.topBelow },
+      { left: 0, top: bands.bottomAbove, right: this.canvasWidth, bottom: this.canvasHeight },
+    ];
+  }
+
+  isPointerOverUi(x: number, y: number): boolean {
+    return this.getUiRegions().some(
+      (region) => x >= region.left && x <= region.right && y >= region.top && y <= region.bottom,
+    );
+  }
+
+  private setWorkerPanelOpen(open: boolean): void {
+    if (this.workerPanelOpen === open) return;
+    this.workerPanelOpen = open;
+    this.workerRows.forEach((row) => row.objects.forEach((object) => object.setVisible(open)));
+    this.workerPanelTitle?.setVisible(open);
+    this.workerSummaryText?.setVisible(open);
+    this.audio.playSfx(open ? "sfx.ui.buildSelect" : "sfx.ui.cancel", { eventKey: `hud:workers:${open}` });
+  }
+
+  /** Folds the worker rows away; called when the player touches the field. */
+  closeWorkerPanel(): void {
+    this.setWorkerPanelOpen(false);
   }
 
   getCompositionMetrics(): { topHeight: number; bottomHeight: number; openWorldHeight: number; openWorldRatio: number } {
@@ -444,7 +513,7 @@ export class LaneBattleHudView {
     // touching the structure directly), so this space now hosts the actions
     // the player needs most often instead of sitting empty.
     const workerTitleY = this.canvasHeight - 236;
-    this.scene.add.text(centerX, workerTitleY, "일꾼 배치", {
+    this.workerPanelTitle = this.scene.add.text(centerX, workerTitleY, "일꾼 배치", {
       fontFamily: "Georgia, serif",
       fontSize: `${Math.round(16 * uiScale)}px`,
       color: "#f4e6c5",
@@ -463,6 +532,17 @@ export class LaneBattleHudView {
     this.workerRows.set("food", this.createWorkerRow("food", rowLeftX, topRowY + rowGapY));
     this.workerRows.set("metal", this.createWorkerRow("metal", rowRightX, topRowY + rowGapY));
     this.workerRows.set("research", this.createWorkerRow("research", rowLeftX, topRowY + rowGapY * 2));
+    // Placed on the same row as the hire buttons on purpose: the folded state
+    // has to be genuinely shorter, and a chip left where the rows were would
+    // give the band back nothing.
+    this.workerChip = this.createActionButton(
+      centerX - 326,
+      this.canvasHeight - 104,
+      132,
+      44,
+      "일꾼 0/0",
+      () => this.setWorkerPanelOpen(!this.workerPanelOpen),
+    );
     this.researchSummaryText = this.scene.add.text(-1000, -1000, "", {
       fontFamily: "monospace",
       fontSize: "18px",
@@ -512,17 +592,20 @@ export class LaneBattleHudView {
   }
 
   private createWorkerRow(role: WorkerRole, x: number, y: number): WorkerUiRow {
-    this.scene.add.image(x, y, getWorkerIconKey(role))
+    const objects: (Phaser.GameObjects.GameObject & Phaser.GameObjects.Components.Visible)[] = [];
+    const icon = this.scene.add.image(x, y, getWorkerIconKey(role))
       .setDisplaySize(20, 20)
       .setDepth(this.depth + 3)
       .setScrollFactor(0);
+    objects.push(icon);
     const value = this.scene.add.text(x + 16, y, "0", {
       fontFamily: "monospace",
       fontSize: "18px",
       color: "#fff6dd",
     }).setOrigin(0, 0.5).setDepth(this.depth + 3).setScrollFactor(0);
+    objects.push(value);
     if (role === "research" || role === "idle") {
-      return { value };
+      return { value, objects };
     }
     const minus = this.scene.add.circle(x + 56, y, 11, 0x283a55, 0.95)
       .setStrokeStyle(1, 0x7ea0c9)
@@ -532,13 +615,14 @@ export class LaneBattleHudView {
       .setStrokeStyle(1, 0x7ea0c9)
       .setDepth(this.depth + 2)
       .setScrollFactor(0);
-    this.scene.add.text(minus.x, minus.y - 1, "-", { fontFamily: "sans-serif", fontSize: "14px", color: "#ffffff" })
+    const minusLabel = this.scene.add.text(minus.x, minus.y - 1, "-", { fontFamily: "sans-serif", fontSize: "14px", color: "#ffffff" })
       .setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
-    this.scene.add.text(plus.x, plus.y - 1, "+", { fontFamily: "sans-serif", fontSize: "14px", color: "#ffffff" })
+    const plusLabel = this.scene.add.text(plus.x, plus.y - 1, "+", { fontFamily: "sans-serif", fontSize: "14px", color: "#ffffff" })
       .setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
     minus.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.callbacks.shiftWorker(role, -1));
     plus.setInteractive({ useHandCursor: true }).on("pointerdown", () => this.callbacks.shiftWorker(role, 1));
-    return { value, minus, plus };
+    objects.push(minus, plus, minusLabel, plusLabel);
+    return { value, minus, plus, objects };
   }
 
   private createActionButton(x: number, y: number, width: number, height: number, label: string, onClick: () => void): ActionButton {

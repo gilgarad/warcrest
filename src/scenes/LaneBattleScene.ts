@@ -1935,8 +1935,7 @@ export class LaneBattleScene extends Phaser.Scene {
     // Asked of the HUD rather than remembered here. The old literals had drifted
     // from what the HUD draws, leaving a dead strip below the top panel where
     // taps neither pressed anything nor reached the field.
-    const bands = this.hud.getUiBands();
-    if (pointer.y <= bands.topBelow || pointer.y >= bands.bottomAbove) return true;
+    if (this.hud.isPointerOverUi(pointer.x, pointer.y)) return true;
     // The base research panel is a modal in the middle of the screen, outside
     // the bands above. Without this a press on any of its buttons also counted
     // as a tap on open ground, which cleared the selection and closed the panel
@@ -3516,6 +3515,7 @@ export class LaneBattleScene extends Phaser.Scene {
     this.selectedDefenseTowerId = null;
     this.selectedMainBaseTeam = null;
     this.baseResearchPanel.setVisible(false);
+    this.hud.closeWorkerPanel();
     this.audio.playSfx("sfx.ui.cancel", { eventKey: "field:deselect" });
     this.refreshCapturePointVisuals();
     this.refreshDefenseTowerVisuals();
