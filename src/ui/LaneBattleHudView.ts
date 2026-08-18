@@ -6,6 +6,7 @@ import { getResource, type ResourceId } from "../data/resources";
 import type { AudioSystem } from "../systems/audio/audioSystem";
 import type { WorkerRole } from "../systems/lane-economy/laneEconomy";
 import { AudioSettingsPanel } from "./AudioSettingsPanel";
+import { atLeastTouchable, measureScreen, type ScreenMetrics } from "./screenLayout";
 import {
   getResourceIconKey,
   getWorkerIconKey,
@@ -122,6 +123,20 @@ export class LaneBattleHudView {
    * rows of touch-sized controls.
    */
   private workerPanelOpen = false;
+  /**
+   * How big the screen actually is, in the units a finger works in.
+   *
+   * Taken from the canvas rather than from the game's own 1600x900 space: those
+   * two are the same thing only on a desktop monitor, and the difference is the
+   * whole reason a 44-unit button is untappable on a phone.
+   */
+  private readonly metrics: ScreenMetrics;
+  /** Bottom band top for each fold state, computed from the laid-out controls. */
+  private bandTopCollapsed = HUD_BOTTOM_BAND_TOP_COLLAPSED;
+  private bandTopExpanded = HUD_BOTTOM_BAND_TOP_EXPANDED;
+  private actionRowTopY = 0;
+  private actionRowBottomY = 0;
+  private actionButtonHeight = 44;
   private researchSummaryText?: Phaser.GameObjects.Text;
   private audioDebugText?: Phaser.GameObjects.Text;
   private networkStatusText?: Phaser.GameObjects.Text;
@@ -141,6 +156,7 @@ export class LaneBattleHudView {
     private readonly depth: number,
     audioDebugEnabled: boolean,
   ) {
+    this.metrics = measureScreen(scene.scale.displaySize.width, scene.scale.displaySize.height);
     this.create(audioDebugEnabled);
     // Built visible, then folded, so the fold path is the only one that has to
     // know which objects belong to the rows.
@@ -396,7 +412,7 @@ export class LaneBattleHudView {
   getUiBands(): { topBelow: number; bottomAbove: number } {
     return {
       topBelow: HUD_TOP_BAND_BOTTOM,
-      bottomAbove: this.workerPanelOpen ? HUD_BOTTOM_BAND_TOP_EXPANDED : HUD_BOTTOM_BAND_TOP_COLLAPSED,
+      bottomAbove: this.workerPanelOpen ? this.bandTopExpanded : this.bandTopCollapsed,
     };
   }
 
@@ -449,7 +465,30 @@ export class LaneBattleHudView {
     };
   }
 
+  /**
+   * Bottom-anchored geometry for the action rows, worked out before anything is
+   * placed.
+   *
+   * `atLeastTouchable` returns 44 on a desktop -- the height these buttons
+   * already were, so that layout is untouched -- and about 102 on a phone, where
+   * 44 units reach the screen as 19 pixels. Anchoring to the bottom edge rather
+   * than to fixed offsets is what lets the height change without the rows
+   * walking off the screen.
+   */
+  private computeActionGeometry(): void {
+    const rowGap = 12;
+    // Four, not a round number: it reproduces the desktop layout exactly, so
+    // this change is invisible on a monitor and only phones move.
+    const bottomMargin = 4;
+    this.actionButtonHeight = atLeastTouchable(this.metrics, 44);
+    this.actionRowBottomY = this.canvasHeight - bottomMargin - this.actionButtonHeight;
+    this.actionRowTopY = this.actionRowBottomY - rowGap - this.actionButtonHeight;
+    // The band has to start above the tallest thing in it, whatever that is now.
+    this.bandTopCollapsed = this.actionRowTopY - 10;
+  }
+
   private create(audioDebugEnabled: boolean): void {
+    this.computeActionGeometry();
     const hudScale = this.canvasWidth / HUD_SOURCE_WIDTH;
     const bottomHeight = HUD_BOTTOM_SOURCE_HEIGHT * hudScale;
     const centerX = this.canvasWidth / 2;
@@ -537,9 +576,9 @@ export class LaneBattleHudView {
     // give the band back nothing.
     this.workerChip = this.createActionButton(
       centerX - 326,
-      this.canvasHeight - 104,
+      this.actionRowTopY,
       132,
-      44,
+      this.actionButtonHeight,
       "일꾼 0/0",
       () => this.setWorkerPanelOpen(!this.workerPanelOpen),
     );
@@ -549,10 +588,14 @@ export class LaneBattleHudView {
       color: "#fff6dd",
     }).setVisible(false).setOrigin(0, 0.5).setDepth(this.depth + 3).setScrollFactor(0);
 
-    this.strategicActionButtons.set("hire-worker", this.createActionButton(centerX - 182, this.canvasHeight - 104, 198, 44, "일꾼 고용", this.callbacks.hireWorker));
-    this.strategicActionButtons.set("hire-research-worker", this.createActionButton(centerX + 36, this.canvasHeight - 104, 198, 44, "연구 일꾼", this.callbacks.hireResearchWorker));
-    this.strategicActionButtons.set("use-instant-wave", this.createActionButton(centerX - 182, this.canvasHeight - 48, 198, 44, "즉시 웨이브", this.callbacks.useInstantWave));
-    this.strategicActionButtons.set("age-up", this.createActionButton(centerX + 36, this.canvasHeight - 48, 198, 44, "시대 업", this.callbacks.ageUp));
+    const buttonWidth = 198;
+    const buttonHeight = this.actionButtonHeight;
+    const actionRowTopY = this.actionRowTopY;
+    const actionRowBottomY = this.actionRowBottomY;
+    this.strategicActionButtons.set("hire-worker", this.createActionButton(centerX - 182, actionRowTopY, buttonWidth, buttonHeight, "일꾼 고용", this.callbacks.hireWorker));
+    this.strategicActionButtons.set("hire-research-worker", this.createActionButton(centerX + 36, actionRowTopY, buttonWidth, buttonHeight, "연구 일꾼", this.callbacks.hireResearchWorker));
+    this.strategicActionButtons.set("use-instant-wave", this.createActionButton(centerX - 182, actionRowBottomY, buttonWidth, buttonHeight, "즉시 웨이브", this.callbacks.useInstantWave));
+    this.strategicActionButtons.set("age-up", this.createActionButton(centerX + 36, actionRowBottomY, buttonWidth, buttonHeight, "시대 업", this.callbacks.ageUp));
 
     // capturePanelTitle/capturePanelBody/rosterText are kept alive but never
     // shown on screen — `apply()` is still called from LaneBattleScene and
