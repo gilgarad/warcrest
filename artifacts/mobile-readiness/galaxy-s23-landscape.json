@@ -44,6 +44,11 @@
     },
     {
       "label": "run:Text",
+      "cssWidth": 20.1,
+      "cssHeight": 5.7
+    },
+    {
+      "label": "run:Text",
       "cssWidth": 19.8,
       "cssHeight": 7.5
     },
@@ -58,14 +63,9 @@
       "cssHeight": 13.1
     },
     {
-      "label": "run:Text",
-      "cssWidth": 65.3,
-      "cssHeight": 18.8
-    },
-    {
       "label": "run:Image",
-      "cssWidth": 129.3,
-      "cssHeight": 129.3
+      "cssWidth": 38.4,
+      "cssHeight": 38.4
     }
   ],
   "smallestText": [

@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { atLeastTouchable, measureScreen, type ScreenMetrics } from "../ui/screenLayout";
+import { atLeastTouchable, measureScreen, splashPresentation, type ScreenMetrics } from "../ui/screenLayout";
 import { assetUrl } from "../config/assetUrl";
 import { parseTerrainRenderMode } from "../config/prototypeVisualConfig";
 import { DIFFICULTIES, type DifficultyId } from "../data/difficulty";
@@ -131,7 +131,11 @@ export class BootScene extends Phaser.Scene {
     // Explicitly behind the panel. The panel is drawn after the prose it frames
     // so it does not cover it, which puts it at a negative depth -- and without
     // this the splash would then sit on top of the panel and wash it out.
-    this.add.image(width / 2, height / 2, "warcrest-splash").setDisplaySize(width, height).setAlpha(0.3).setDepth(-2);
+    const splash = splashPresentation(this.metrics);
+    this.add.image(width / 2, height / 2, "warcrest-splash")
+      .setDisplaySize(width * splash.zoom, height * splash.zoom)
+      .setAlpha(splash.alpha)
+      .setDepth(-2);
     this.cameras.main.fadeIn(300, 8, 10, 18);
 
     this.add.rectangle(width / 2, height / 2, width, height, 0x081018, 0.68);

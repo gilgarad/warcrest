@@ -109,6 +109,26 @@ export function fieldCameraZoom(metrics: ScreenMetrics): number {
   return BASE_FIELD_ZOOM * pullback;
 }
 
+export interface SplashPresentation {
+  /** Multiplier on the fill size; above 1 crops into the painting. */
+  zoom: number;
+  alpha: number;
+}
+
+/**
+ * How to show the title painting on this screen.
+ *
+ * The splash is a detailed illustration stretched to fill. At desktop size that
+ * reads as atmosphere; squeezed onto a phone the same detail becomes noise
+ * competing with the menu on top of it. Cropping in shows fewer elements at a
+ * larger size, and fading it further lets the menu win.
+ */
+export function splashPresentation(metrics: ScreenMetrics): SplashPresentation {
+  if (metrics.deviceClass === "phone") return { zoom: 1.75, alpha: 0.18 };
+  if (metrics.deviceClass === "tablet") return { zoom: 1.3, alpha: 0.24 };
+  return { zoom: 1, alpha: 0.3 };
+}
+
 export interface Insets {
   top: number;
   right: number;

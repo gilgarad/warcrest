@@ -3773,8 +3773,23 @@ export class LaneBattleScene extends Phaser.Scene {
     return Math.max(0.01, bounds.width / CANVAS_W);
   }
 
+  /**
+   * A design size in CSS pixels, as world units.
+   *
+   * Converted against the reference presentation -- a 1600-wide canvas at the
+   * desktop zoom -- rather than against the live canvas and camera. Reading the
+   * live values pinned every structure and unit to a fixed size in physical
+   * pixels: on a phone, where the canvas is 0.43 of the design width, the main
+   * base came out 220 CSS px tall on a 390 px screen, over half the height. It
+   * also cancelled the camera: pulling back made everything grow in world units
+   * to keep its pixel size, so the view widened while the pieces stayed exactly
+   * as large and only appeared to move more slowly.
+   *
+   * Fixed world sizes mean the whole scene shrinks together, which is what
+   * scaling a view down is supposed to look like.
+   */
   private cssPxToWorld(cssPx: number): number {
-    return cssPx / Math.max(0.01, this.getCanvasCssScale() * this.cameras.main.zoom);
+    return cssPx / BASE_FIELD_ZOOM;
   }
 
   private snapWorldPointToCanvasPixel(x: number, y: number): Phaser.Math.Vector2 {
