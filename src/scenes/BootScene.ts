@@ -12,6 +12,19 @@ import { isMixedContentRelay, resolveRelayUrl } from "../config/relayUrl";
 import type { MatchDescriptor } from "../systems/net/matchTypes";
 import { OnlineLobbyPanel } from "../ui/OnlineLobbyPanel";
 
+interface MenuLayout {
+  panelWidth: number;
+  panelHeight: number;
+  panelCentreY: number;
+  boxWidth: number;
+  boxHeight: number;
+  labelY: number;
+  rowY: number;
+  onlineWidth: number;
+  onlineHeight: number;
+  onlineY: number;
+}
+
 export class BootScene extends Phaser.Scene {
   /**
    * The title screen was never sized for a phone: at 0.43 CSS pixels to the
@@ -19,6 +32,44 @@ export class BootScene extends Phaser.Scene {
    * mobile pass first shows itself -- before a player ever reaches the game.
    */
   private metrics: ScreenMetrics = measureScreen(1600, 900);
+  private menuLayout!: MenuLayout;
+
+  /**
+   * Vertical stack for the menu's lower half, and the panel that has to contain
+   * it.
+   *
+   * Worked out before anything is drawn, because the panel's height depends on
+   * how tall the controls turn out to be, and on a phone they are more than
+   * twice their desktop size.
+   */
+  private computeMenuLayout(height: number, contentBottom: number): MenuLayout {
+    const boxWidth = atLeastTouchable(this.metrics, 128);
+    const boxHeight = atLeastTouchable(this.metrics, 76);
+    const onlineWidth = atLeastTouchable(this.metrics, 274);
+    const onlineHeight = atLeastTouchable(this.metrics, 46);
+    const gap = 14;
+    const panelTop = height / 2 - 195;
+    // Below whatever the prose actually ended up occupying, never above the
+    // original position on a desktop where it already sat clear.
+    const labelY = Math.max(height / 2 + 118, contentBottom + 18);
+    const rowY = labelY + 26 + boxHeight / 2;
+    const onlineY = rowY + boxHeight / 2 + gap + onlineHeight / 2;
+    const panelBottom = onlineY + onlineHeight / 2 + 20;
+    // Wide enough for the row it has to hold, never narrower than it was.
+    const rowWidth = DIFFICULTIES.length * boxWidth + (DIFFICULTIES.length - 1) * gap;
+    return {
+      panelWidth: Math.max(560, rowWidth + 48, onlineWidth + 48),
+      panelHeight: panelBottom - panelTop,
+      panelCentreY: (panelTop + panelBottom) / 2,
+      boxWidth,
+      boxHeight,
+      labelY,
+      rowY,
+      onlineWidth,
+      onlineHeight,
+      onlineY,
+    };
+  }
 
   private textPx(baseUnits: number): string {
     return `${Math.ceil(Math.max(baseUnits, this.metrics.minBodyTextUnits))}px`;
@@ -77,11 +128,13 @@ export class BootScene extends Phaser.Scene {
     this.bg = createParallaxBackground(this);
     this.bg.far.setAlpha(0.02);
     this.bg.near.setAlpha(0.03);
-    this.add.image(width / 2, height / 2, "warcrest-splash").setDisplaySize(width, height).setAlpha(0.3);
+    // Explicitly behind the panel. The panel is drawn after the prose it frames
+    // so it does not cover it, which puts it at a negative depth -- and without
+    // this the splash would then sit on top of the panel and wash it out.
+    this.add.image(width / 2, height / 2, "warcrest-splash").setDisplaySize(width, height).setAlpha(0.3).setDepth(-2);
     this.cameras.main.fadeIn(300, 8, 10, 18);
 
     this.add.rectangle(width / 2, height / 2, width, height, 0x081018, 0.68);
-    this.add.rectangle(width / 2, height / 2 + 15, 560, 420, 0x0b1421, 0.86).setStrokeStyle(2, 0xcfa75f, 0.28);
     this.add.rectangle(width / 2, height / 2 - 104, 420, 1, 0xd2ab65, 0.34);
 
     const crest = this.add.container(width / 2, height / 2 - 82);
@@ -109,13 +162,24 @@ export class BootScene extends Phaser.Scene {
       })
       .setOrigin(0.5, 0);
 
-    this.add.text(width / 2, height / 2 + 72, "웨이브, 거점, 시대 운영으로 북/남 전선을 함께 밀어붙이십시오.", {
+    const hint = this.add.text(width / 2, height / 2 + 72, "웨이브, 거점, 시대 운영으로 북/남 전선을 함께 밀어붙이십시오.", {
       fontFamily: "sans-serif",
       fontSize: this.textPx(17),
       color: "#e9f1fd",
       align: "center",
       wordWrap: { width: 440 },
     }).setOrigin(0.5, 0);
+
+    // Laid out now that the tallest piece of prose has been measured. Its
+    // height is the thing that moves: the hint wraps to two or three lines
+    // depending on how large the text had to be for this screen, and guessing
+    // it is what put "난이도" on top of the last line.
+    const menu = this.computeMenuLayout(height, hint.getBounds().bottom);
+    this.menuLayout = menu;
+    // Drawn after the prose it frames, so it is pushed behind rather than over.
+    this.add.rectangle(width / 2, menu.panelCentreY, menu.panelWidth, menu.panelHeight, 0x0b1421, 0.86)
+      .setStrokeStyle(2, 0xcfa75f, 0.28)
+      .setDepth(-1);
 
     this.loadingBox = this.add
       .rectangle(width / 2, height / 2 + 178, 400, 112, 0x101a28, 0.92)
@@ -161,7 +225,7 @@ export class BootScene extends Phaser.Scene {
     this.tweens.add({ targets: this.promptText, alpha: 0.45, duration: 750, yoyo: true, repeat: -1 });
 
     this.difficultyLabel = this.add
-      .text(width / 2, height / 2 + 130, "난이도", {
+      .text(width / 2, this.menuLayout.labelY, "난이도", {
         fontFamily: "Georgia, serif",
         fontSize: this.textPx(17),
         color: "#f1e4c3",
@@ -171,12 +235,11 @@ export class BootScene extends Phaser.Scene {
 
     // 128x76 is already comfortable on a monitor, so `atLeastTouchable` leaves
     // it alone there and only grows it where a finger would miss.
-    const boxWidth = atLeastTouchable(this.metrics, 128);
-    const boxHeight = atLeastTouchable(this.metrics, 76);
+    const { boxWidth, boxHeight, rowY } = this.menuLayout;
     const gap = 14;
     const totalWidth = DIFFICULTIES.length * boxWidth + (DIFFICULTIES.length - 1) * gap;
     const startX = width / 2 - totalWidth / 2 + boxWidth / 2;
-    const rowY = height / 2 + 178;
+
     this.difficultyButtons = DIFFICULTIES.map((difficulty, index) => {
       const x = startX + index * (boxWidth + gap);
       const rect = this.add
@@ -193,7 +256,7 @@ export class BootScene extends Phaser.Scene {
       return { rect, text };
     });
 
-    this.buildOnlineButton(width / 2, rowY + boxHeight / 2 + 42);
+    this.buildOnlineButton(width / 2, this.menuLayout.onlineY);
 
     let starting = false;
     this.startBattle = async (difficultyId: DifficultyId) => {
@@ -245,7 +308,7 @@ export class BootScene extends Phaser.Scene {
    */
   private buildOnlineButton(x: number, y: number): void {
     const rect = this.add
-      .rectangle(x, y, atLeastTouchable(this.metrics, 274), atLeastTouchable(this.metrics, 46), 0x16233a, 0.94)
+      .rectangle(x, y, this.menuLayout.onlineWidth, this.menuLayout.onlineHeight, 0x16233a, 0.94)
       .setStrokeStyle(2, 0x6aa9e0, 0.7)
       .setVisible(false);
     const text = this.add
