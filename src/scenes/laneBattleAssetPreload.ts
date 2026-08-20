@@ -5,6 +5,7 @@ import { PROTOTYPE_TERRAIN_ASSETS } from "../gfx/battlefieldPrototypeRenderer";
 import { PRODUCTION_PROP_ASSETS } from "../presentation/terrain/productionPropRegistry";
 import { getProductionTerrainBaseKey, PRODUCTION_TERRAIN_ASSETS } from "../presentation/terrain/productionTerrainRegistry";
 import { PRODUCTION_STRUCTURE_ASSETS } from "../presentation/structures/productionStructureRegistry";
+import { UI_CHROME_ASSETS } from "../presentation/ui/uiChromeRegistry";
 import { UNIT_ANIMATION_ASSETS } from "../presentation/units/unitAnimationRegistry";
 
 const COMMON_IMAGE_ASSETS = [
@@ -31,6 +32,10 @@ export function queueLaneBattleAssets(scene: Phaser.Scene, terrainMode: TerrainR
     queued += queueImage(scene, asset.key, asset.path);
   });
   PRODUCTION_PROP_ASSETS.forEach((asset) => {
+    queued += queueImage(scene, asset.key, asset.path);
+  });
+
+  UI_CHROME_ASSETS.forEach((asset) => {
     queued += queueImage(scene, asset.key, asset.path);
   });
 

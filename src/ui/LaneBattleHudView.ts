@@ -7,6 +7,11 @@ import type { AudioSystem } from "../systems/audio/audioSystem";
 import type { WorkerRole } from "../systems/lane-economy/laneEconomy";
 import { AudioSettingsPanel } from "./AudioSettingsPanel";
 import {
+  UI_FRAME_CORNER,
+  getUiFrameKey,
+  type UiFrameId,
+} from "../presentation/ui/uiChromeRegistry";
+import {
   HUD_TOP_BAND_BOTTOM,
   atLeastTouchable,
   hudBottomBandTop,
@@ -28,10 +33,18 @@ interface WorkerUiRow {
 }
 
 interface ActionButton {
+  /**
+   * The drawn frame. Separate from `rect`, which stays as an invisible hit
+   * area: Phaser's nine-slice is not an input target, and keeping the two apart
+   * means the interaction wiring did not have to change.
+   */
+  frame: Phaser.GameObjects.NineSlice;
   rect: Phaser.GameObjects.Rectangle;
   text: Phaser.GameObjects.Text;
   costIcons: Phaser.GameObjects.Image[];
   costTexts: Phaser.GameObjects.Text[];
+  /** Tracked so hover does not light up a button that cannot be pressed. */
+  enabled?: boolean;
 }
 
 /** Max distinct resources shown in a single button's cost row (gold/wood/food/metal/research). */
@@ -97,6 +110,7 @@ export class LaneBattleHudView {
   private captureActionOriginX = 0;
   private captureActionOriginY = 0;
   private captureActionGapY = 56;
+  /** Set once the button height is known; see `create`. */
   /** Screen position of the selected structure, if any; see
    * `setCaptureActionAnchor`. */
   private captureActionAnchor: { x: number; y: number } | null = null;
@@ -301,7 +315,7 @@ export class LaneBattleHudView {
 
   getVisibleCaptureActions(): (CapturePointAction | DefenseTowerAction)[] {
     return [...this.captureActionButtons.entries()]
-      .filter(([, button]) => button.rect.visible && button.text.visible)
+      .filter(([, button]) => button.frame.visible && button.text.visible)
       .map(([action]) => action);
   }
 
@@ -326,7 +340,7 @@ export class LaneBattleHudView {
         y: button.rect.y,
         width: button.rect.width,
         height: button.rect.height,
-        visible: button.rect.visible,
+        visible: button.frame.visible,
       };
     };
     this.strategicActionButtons.forEach((button, id) => record(id, button));
@@ -347,8 +361,8 @@ export class LaneBattleHudView {
   setStrategicActionEnabled(actionId: StrategicActionId, enabled: boolean): void {
     const button = this.strategicActionButtons.get(actionId);
     if (!button) return;
-    button.rect.setFillStyle(enabled ? 0x1d2d47 : 0x3b2222, enabled ? 0.95 : 0.92);
-    button.rect.setStrokeStyle(2, enabled ? 0xd6b979 : 0xd07c7c, enabled ? 0.65 : 0.8);
+    button.enabled = enabled;
+    this.setActionFrame(button, enabled ? "button" : "button-danger");
     button.text.setColor(enabled ? "#f3f7fb" : "#ffd4d4");
   }
 
@@ -365,28 +379,31 @@ export class LaneBattleHudView {
   setCaptureActionEnabled(actionId: CapturePointAction | DefenseTowerAction, enabled: boolean): void {
     const button = this.captureActionButtons.get(actionId);
     if (!button) return;
-    button.rect.setFillStyle(enabled ? 0x1d2d47 : 0x3b2222, enabled ? 0.95 : 0.92);
-    button.rect.setStrokeStyle(2, enabled ? 0xd6b979 : 0xd07c7c, enabled ? 0.65 : 0.8);
+    button.enabled = enabled;
+    this.setActionFrame(button, enabled ? "button" : "button-danger");
     button.text.setColor(enabled ? "#f3f7fb" : "#ffd4d4");
   }
 
   setDevMode(active: boolean): void {
     if (!this.devToggleButton || !this.devResearchButton) return;
     if (!this.devToolsVisible) {
+      this.devToggleButton.frame.setVisible(false);
       this.devToggleButton.rect.setVisible(false);
       this.devToggleButton.text.setVisible(false);
+      this.devResearchButton.frame.setVisible(false);
       this.devResearchButton.rect.setVisible(false);
       this.devResearchButton.text.setVisible(false);
       this.devToggleButton.rect.disableInteractive();
       this.devResearchButton.rect.disableInteractive();
       return;
     }
-    this.devToggleButton.rect.setFillStyle(active ? 0x27503f : 0x3b2a2a, 0.96);
-    this.devToggleButton.rect.setStrokeStyle(2, active ? 0x9fe3c4 : 0xd79b9b, 0.75);
+    this.setActionFrame(this.devToggleButton, active ? "button-hover" : "button");
+    this.devToggleButton.frame.setVisible(true);
     this.devToggleButton.rect.setVisible(true);
     this.devToggleButton.text.setVisible(true);
     this.devToggleButton.text.setText(active ? "DEV ON" : "DEV OFF");
     this.devToggleButton.text.setColor(active ? "#eafff2" : "#ffe3e3");
+    this.devResearchButton.frame.setVisible(active);
     this.devResearchButton.rect.setVisible(active);
     this.devResearchButton.text.setVisible(active);
     this.devToggleButton.rect.setInteractive({ useHandCursor: true });
@@ -628,8 +645,12 @@ export class LaneBattleHudView {
     this.captureActionOriginX = captureActionX;
     this.captureActionOriginY = captureActionY;
     this.captureActionGapY = captureActionGapY;
-    const captureActionWidth = 198;
-    const captureActionHeight = 44;
+    // Sized for a finger like the rest. These were missed by the first touch
+    // pass because they are built on their own path, and on a phone they came
+    // out 19 CSS px tall -- less than half a comfortable target.
+    const captureActionWidth = 156;
+    const captureActionHeight = atLeastTouchable(this.metrics, 44);
+    this.captureActionGapY = captureActionHeight + 12;
     this.captureActionButtons.set("rebuild-defense-tower", this.createActionButton(captureActionX, captureActionY, captureActionWidth, captureActionHeight, "타워 재건", this.callbacks.rebuildDefenseTower));
     this.captureActionButtons.set("build-defense-tower", this.createActionButton(captureActionX, captureActionY + captureActionGapY, captureActionWidth, captureActionHeight, "타워", this.callbacks.buildDefenseTower));
     this.captureActionButtons.set("build-supply-depot", this.createActionButton(captureActionX, captureActionY + captureActionGapY * 2, captureActionWidth, captureActionHeight, "병참", this.callbacks.buildSupplyDepot));
@@ -647,8 +668,13 @@ export class LaneBattleHudView {
     const devBottomY = this.canvasHeight - 4 - devHeight;
     this.devToggleButton = this.createActionButton(42, devBottomY, devWidth, devHeight, "DEV OFF", this.callbacks.toggleDevMode);
     this.devResearchButton = this.createActionButton(42, devBottomY - devHeight - 8, devWidth, devHeight, "연구 +25", this.callbacks.grantDevResearch);
+    // Hidden and unclickable. The frame and the hit area are separate objects
+    // now, so hiding one without the other leaves an invisible button that
+    // still takes presses.
+    this.devResearchButton.frame.setVisible(false);
     this.devResearchButton.rect.setVisible(false);
     this.devResearchButton.text.setVisible(false);
+    this.devResearchButton.rect.disableInteractive();
 
     this.playerBaseBar = this.scene.add.rectangle(304, 140, 180, 10, 0x58c5ff, 1).setOrigin(0, 0.5).setDepth(this.depth + 3);
     this.enemyBaseBar = this.scene.add.rectangle(1116, 140, 180, 10, 0xff7b7b, 1).setOrigin(0, 0.5).setDepth(this.depth + 3);
@@ -701,8 +727,20 @@ export class LaneBattleHudView {
     return { value, minus, plus, objects };
   }
 
+  /** Swaps a button's drawn frame; the hit area never changes. */
+  private setActionFrame(button: ActionButton, frame: UiFrameId): void {
+    button.frame.setTexture(getUiFrameKey(frame));
+  }
+
   private createActionButton(x: number, y: number, width: number, height: number, label: string, onClick: () => void): ActionButton {
-    const rect = this.scene.add.rectangle(x + width / 2, y + height / 2, width, height, 0x1d2d47, 0.95).setStrokeStyle(2, 0xd6b979, 0.65).setDepth(this.depth + 2).setScrollFactor(0);
+    const frame = this.scene.add.nineslice(
+      x + width / 2, y + height / 2, getUiFrameKey("button"), undefined,
+      width, height, UI_FRAME_CORNER, UI_FRAME_CORNER, UI_FRAME_CORNER, UI_FRAME_CORNER,
+    ).setDepth(this.depth + 2).setScrollFactor(0);
+    // The old rectangle stays, invisible, purely as the input target.
+    const rect = this.scene.add.rectangle(x + width / 2, y + height / 2, width, height, 0x000000, 0)
+      .setDepth(this.depth + 2)
+      .setScrollFactor(0);
     const text = this.scene.add.text(rect.x, rect.y - height * 0.18, label, { fontFamily: "sans-serif", fontSize: this.textPx(14), color: "#f3f7fb", align: "center" }).setOrigin(0.5).setDepth(this.depth + 3).setScrollFactor(0);
     const costIcons: Phaser.GameObjects.Image[] = [];
     const costTexts: Phaser.GameObjects.Text[] = [];
@@ -710,18 +748,22 @@ export class LaneBattleHudView {
       costIcons.push(this.scene.add.image(0, 0, "icon-gold").setDisplaySize(17, 17).setDepth(this.depth + 3).setScrollFactor(0).setVisible(false));
       costTexts.push(this.scene.add.text(0, 0, "", { fontFamily: "monospace", fontSize: this.textPx(12), color: "#d8e7f6" }).setOrigin(0, 0.5).setDepth(this.depth + 3).setScrollFactor(0).setVisible(false));
     }
+    const button: ActionButton = { frame, rect, text, costIcons, costTexts };
     rect.setInteractive({ useHandCursor: true });
     rect.on("pointerover", () => {
-      rect.setFillStyle(0x274165, 0.98);
+      if (button.enabled) this.setActionFrame(button, "button-hover");
       this.audio.playSfx("sfx.ui.hover", { eventKey: `button:hover:${label}` });
     });
-    rect.on("pointerout", () => rect.setFillStyle(0x1d2d47, 0.95));
+    rect.on("pointerout", () => this.setActionFrame(button, button.enabled ? "button" : "button-disabled"));
     rect.on("pointerdown", () => {
-      rect.setFillStyle(0x37567f, 1);
-      this.scene.time.delayedCall(100, () => rect.setFillStyle(0x1d2d47, 0.95));
+      this.setActionFrame(button, "button-hover");
+      this.scene.time.delayedCall(
+        100,
+        () => this.setActionFrame(button, button.enabled ? "button" : "button-disabled"),
+      );
       onClick();
     });
-    return { rect, text, costIcons, costTexts };
+    return button;
   }
 
   /**
@@ -737,7 +779,11 @@ export class LaneBattleHudView {
     // button's own visibility here instead of unconditionally showing —
     // otherwise a hidden capture-action button's cost icons would still
     // render, floating with no button behind them.
-    const entries = button.rect.visible
+    // Asked of the frame, not the hit area. The two used to be one object; the
+    // hit area is now always "visible" because it is invisible by design, so
+    // testing it brought back exactly the floating cost icons this guard was
+    // written to prevent.
+    const entries = button.frame.visible
       ? (Object.entries(cost) as [ResourceId, number][]).filter(([, amount]) => (amount ?? 0) > 0)
       : [];
     const itemWidth = 42;
@@ -828,7 +874,10 @@ export class LaneBattleHudView {
    */
   isPointerOverActionButton(x: number, y: number): boolean {
     const hit = (button: ActionButton): boolean => {
-      if (!button.rect.visible) return false;
+      // The frame is what is shown; the hit area is invisible by design and
+      // would answer "yes" for a button that is not on screen, letting a hidden
+      // control swallow taps meant for the battlefield.
+      if (!button.frame.visible) return false;
       return Math.abs(x - button.rect.x) <= button.rect.width / 2
         && Math.abs(y - button.rect.y) <= button.rect.height / 2;
     };
@@ -843,6 +892,11 @@ export class LaneBattleHudView {
   }
 
   private setActionVisible(button: ActionButton, visible: boolean): void {
+    button.frame.setVisible(visible);
+    // The hit area is invisible by design, but its `visible` flag is still what
+    // everything else reads to mean "on screen". Leaving it true made hidden
+    // buttons count as present -- floating cost rows, and a mobile measurement
+    // that failed on controls nobody could see.
     button.rect.setVisible(visible);
     button.text.setVisible(visible);
     if (!visible) {
