@@ -33,11 +33,16 @@ LEGIBLE = Style(
     edge_alpha=105,
     edge_blur=0.0,
     materials={
-        "grass": Material("grass", "#4f7233", "#33501f", "#74a04a", "#9ac45f", grain=0.16, speckle=0.014),
-        "dirt": Material("dirt", "#7d5330", "#573820", "#a06f42", "#c08b55", grain=0.17, speckle=0.011),
-        "road": Material("road", "#9a7f5c", "#6f5a3f", "#bda183", "#d6bf9c", grain=0.14, speckle=0.008),
-        "stone": Material("stone", "#6b6d63", "#474941", "#8e9083", "#adafa0", grain=0.18, speckle=0.013),
-        "water": Material("water", "#2b5f80", "#1b4159", "#3f86ab", "#8fd0e8", grain=0.07, speckle=0.006, speckle_size=(1, 3)),
+        "grass": Material("grass", "#4f7233", "#33501f", "#74a04a", "#9ac45f", grain=0.16, speckle=0.010,
+                          decor="tuft", decor_density=0.006),
+        "dirt": Material("dirt", "#7d5330", "#573820", "#a06f42", "#c08b55", grain=0.17, speckle=0.008,
+                         decor="pebble", decor_density=0.005),
+        "road": Material("road", "#9a7f5c", "#6f5a3f", "#bda183", "#d6bf9c", grain=0.14, speckle=0.006,
+                         decor="rut", decor_density=0.030),
+        "stone": Material("stone", "#6b6d63", "#474941", "#8e9083", "#adafa0", grain=0.18, speckle=0.010,
+                          decor="crack", decor_density=0.020),
+        "water": Material("water", "#2b5f80", "#1b4159", "#3f86ab", "#8fd0e8", grain=0.07, speckle=0.004,
+                          speckle_size=(1, 3), decor="ripple", decor_density=0.020),
     },
 )
 

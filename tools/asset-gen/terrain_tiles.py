@@ -38,6 +38,11 @@ class Material:
     #: Density of the scattered detail marks (tufts, pebbles, ripples).
     speckle: float = 0.0
     speckle_size: tuple[int, int] = (1, 2)
+    #: Which decoration routine draws this surface's character.
+    decor: str = "none"
+    #: How much of it. Kept low on purpose: one texture serves every cell of a
+    #: given material and mask, so anything bold repeats visibly across a field.
+    decor_density: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -101,10 +106,66 @@ def surface(material: Material, size: int, rng: random.Random) -> Image.Image:
     return image
 
 
+def decorate(image: Image.Image, material: Material, size: int, rng: random.Random) -> None:
+    """Draws the marks that give a surface its character.
+
+    Deliberately small and sparse. A single texture is reused for every cell of
+    the same material and mask, so a bold mark becomes a visible grid of itself
+    across open ground; the large features belong to the prop layer, which is
+    placed at world positions and does not repeat.
+    """
+    if material.decor == "none" or material.decor_density <= 0:
+        return
+    draw = ImageDraw.Draw(image, "RGBA")
+    count = max(1, int(size * size * material.decor_density / (SS * SS)))
+
+    if material.decor == "tuft":
+        # Short blades leaning off vertical, in pairs, so grass reads as growth
+        # rather than as noise.
+        for _ in range(count):
+            x, y = rng.randrange(size), rng.randrange(size)
+            height = rng.randint(3, 6) * SS
+            for offset in (-SS, SS):
+                lean = rng.uniform(-0.35, 0.35) * height
+                draw.line([(x + offset, y), (x + offset + lean, y - height)],
+                          fill=(*_hex(material.accent), 150), width=max(1, SS // 2))
+    elif material.decor == "pebble":
+        for _ in range(count):
+            x, y = rng.randrange(size), rng.randrange(size)
+            r = rng.randint(1, 3) * SS // 2
+            draw.ellipse([x - r, y - r, x + r, y + r], fill=(*_hex(material.light), 190))
+            draw.arc([x - r, y - r, x + r, y + r], 200, 340, fill=(*_hex(material.shade), 160))
+    elif material.decor == "rut":
+        # Long shallow streaks along the road, the tracks that make a road read
+        # as travelled rather than as a stripe of paint.
+        for _ in range(max(2, count // 6)):
+            y = rng.randrange(size)
+            length = rng.randint(size // 3, size)
+            x = rng.randrange(max(1, size - length))
+            shade = material.shade if rng.random() < 0.6 else material.light
+            draw.line([(x, y), (x + length, y + rng.randint(-SS, SS))],
+                      fill=(*_hex(shade), 90), width=max(1, SS // 2))
+    elif material.decor == "ripple":
+        for _ in range(max(2, count // 3)):
+            y = rng.randrange(size)
+            length = rng.randint(size // 5, size // 2)
+            x = rng.randrange(max(1, size - length))
+            draw.arc([x, y, x + length, y + rng.randint(2, 5) * SS], 200, 340,
+                     fill=(*_hex(material.accent), 130), width=max(1, SS // 2))
+    elif material.decor == "crack":
+        for _ in range(max(1, count // 8)):
+            x, y = rng.randrange(size), rng.randrange(size)
+            for _ in range(rng.randint(2, 4)):
+                nx, ny = x + rng.randint(-8, 8) * SS, y + rng.randint(-8, 8) * SS
+                draw.line([(x, y), (nx, ny)], fill=(*_hex(material.shade), 120), width=max(1, SS // 2))
+                x, y = nx, ny
+
+
 def tile(style: Style, material: Material, mask: int, seed: int) -> Image.Image:
     rng = random.Random(seed)
     big = TILE * SS
     texture = surface(material, big, rng)
+    decorate(texture, material, big, rng)
 
     shape = Image.new("L", (big, big), 0)
     points = corner_points(mask, big)
@@ -144,12 +205,25 @@ def tile(style: Style, material: Material, mask: int, seed: int) -> Image.Image:
     return out.resize((TILE, TILE), Image.LANCZOS)
 
 
+#: How many interchangeable versions of the full tile to cut.
+#:
+#: One texture per material was reused for every cell of open ground, so the
+#: decoration lined up into a visible grid of itself -- the tufts read as a
+#: planted lattice rather than as grass. Variants break that up. Only the full
+#: tile needs them: partial tiles appear along edges in short runs, where the
+#: eye has nothing to line them up against.
+BASE_VARIANTS = 4
+
+
 def write_set(style: Style, out_dir: Path) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     written = 0
     for name, material in style.materials.items():
-        tile(style, material, 15, hash((style.name, name, 15)) & 0xFFFF).save(out_dir / f"{name}-base.png")
-        written += 1
+        for variant in range(BASE_VARIANTS):
+            image = tile(style, material, 15, hash((style.name, name, "base", variant)) & 0xFFFF)
+            suffix = "" if variant == 0 else f"-v{variant}"
+            image.save(out_dir / f"{name}-base{suffix}.png")
+            written += 1
         for mask in range(16):
             image = tile(style, material, mask, hash((style.name, name, mask)) & 0xFFFF)
             image.save(out_dir / f"{name}-transition-{mask:02d}.png")

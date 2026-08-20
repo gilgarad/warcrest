@@ -13,7 +13,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 sys.path.insert(0, str(Path(__file__).parent))
-from terrain_tiles import TILE, Style, tile  # noqa: E402
+from terrain_tiles import BASE_VARIANTS, TILE, Style, tile  # noqa: E402
 from styles import ALL  # noqa: E402
 
 COLS, ROWS = 14, 8
@@ -47,10 +47,14 @@ def render(style: Style, scale: int) -> Image.Image:
     # Grass first as a full ground layer. Partial tiles only cover part of their
     # cell, so without something underneath the uncovered corners show through
     # as holes -- which is exactly what the first draft did.
-    ground = tile(style, style.materials["grass"], 15, 1).resize((size, size), Image.LANCZOS)
+    grounds = [
+        tile(style, style.materials["grass"], 15, hash((style.name, "grass", "base", v)) & 0xFFFF)
+        .resize((size, size), Image.LANCZOS)
+        for v in range(BASE_VARIANTS)
+    ]
     for row in range(ROWS):
         for col in range(COLS):
-            canvas.alpha_composite(ground, (col * size, row * size))
+            canvas.alpha_composite(grounds[(col * 7 + row * 13) % BASE_VARIANTS], (col * size, row * size))
     order = ["dirt", "road", "water"]
     cache: dict[tuple[str, int], Image.Image] = {}
     for material in order:
@@ -59,9 +63,11 @@ def render(style: Style, scale: int) -> Image.Image:
                 mask = corners_for(col, row, material)
                 if mask == 0:
                     continue
-                key = (material, mask)
+                variant = (col * 7 + row * 13) % BASE_VARIANTS if mask == 15 else 0
+                key = (material, mask, variant)
                 if key not in cache:
-                    img = tile(style, style.materials[material], mask, hash(key) & 0xFFFF)
+                    seed = hash((style.name, material, "base", variant)) if mask == 15 else hash((material, mask))
+                    img = tile(style, style.materials[material], mask, seed & 0xFFFF)
                     cache[key] = img.resize((size, size), Image.LANCZOS)
                 canvas.alpha_composite(cache[key], (col * size, row * size))
     return canvas
