@@ -176,7 +176,16 @@ const CENTRAL_PATCH_COLUMNS = 8;
 const CENTRAL_PATCH_ROWS = 8;
 
 const LANE_PATCH_ROWS = 8;
-const LANE_PATCH_CELL_HEIGHT = 96;
+/**
+ * Height of one terrain row, which sets how wide a lane's ground is.
+ *
+ * Widened with the compact map: the battlefield is what the player watches, and
+ * at 96 the roads were thin ribbons across a lot of empty green. The end
+ * segments now overlap between the two lanes, which is correct -- they meet at
+ * the keeps anyway -- while the middle keeps about 114 units of grass between
+ * them.
+ */
+const LANE_PATCH_CELL_HEIGHT = 112;
 const LANE_PATCH_TARGET_CELL_WIDTH = 148;
 const LANE_PATCH_OVERLAP = 240;
 
@@ -521,15 +530,18 @@ const DAY3_THREE_FRONTS_PROPS: TerrainPropSpec[] = [
 ];
 
 const TWO_LANE_PATCH_ROWS = [10, 10, 8, 8, 8, 8, 10, 10] as const;
+// One row wider at the core than before. `stoneHalfRows` is the paved road the
+// units actually walk on, and at one row it was narrower than the figures
+// standing on it.
 const TWO_LANE_BANDS: readonly TerrainBandProfile[] = [
+  { stoneHalfRows: 3, dirtHalfRows: 4 },
+  { stoneHalfRows: 3, dirtHalfRows: 4 },
   { stoneHalfRows: 2, dirtHalfRows: 4 },
+  { stoneHalfRows: 2, dirtHalfRows: 3 },
+  { stoneHalfRows: 2, dirtHalfRows: 3 },
   { stoneHalfRows: 2, dirtHalfRows: 4 },
-  { stoneHalfRows: 1, dirtHalfRows: 4 },
-  { stoneHalfRows: 1, dirtHalfRows: 3 },
-  { stoneHalfRows: 1, dirtHalfRows: 3 },
-  { stoneHalfRows: 1, dirtHalfRows: 4 },
-  { stoneHalfRows: 2, dirtHalfRows: 4 },
-  { stoneHalfRows: 2, dirtHalfRows: 4 },
+  { stoneHalfRows: 3, dirtHalfRows: 4 },
+  { stoneHalfRows: 3, dirtHalfRows: 4 },
 ];
 
 const TWO_LANE_STRUCTURE_SOCKETS: StructureSocketSpec[] = [

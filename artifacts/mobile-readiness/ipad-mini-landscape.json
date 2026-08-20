@@ -39,33 +39,33 @@
   "smallestWorldTargets": [
     {
       "label": "run:Arc",
-      "cssWidth": 5.5,
-      "cssHeight": 5.5
+      "cssWidth": 5.4,
+      "cssHeight": 5.4
     },
     {
       "label": "run:Text",
-      "cssWidth": 23.8,
-      "cssHeight": 6.8
+      "cssWidth": 23.3,
+      "cssHeight": 6.7
     },
     {
       "label": "run:Text",
-      "cssWidth": 23.5,
-      "cssHeight": 8.9
+      "cssWidth": 23,
+      "cssHeight": 8.7
     },
     {
       "label": "run:Text",
-      "cssWidth": 30.3,
-      "cssHeight": 8.9
+      "cssWidth": 29.6,
+      "cssHeight": 8.7
     },
     {
       "label": "run:Arc",
-      "cssWidth": 15.6,
-      "cssHeight": 15.6
+      "cssWidth": 15.2,
+      "cssHeight": 15.2
     },
     {
       "label": "run:Image",
-      "cssWidth": 45.6,
-      "cssHeight": 45.6
+      "cssWidth": 44.6,
+      "cssHeight": 44.6
     }
   ],
   "smallestText": [

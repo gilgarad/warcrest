@@ -103,8 +103,11 @@ export const PROTOTYPE_SCALE_PRESETS: Record<ScalePresetId, PrototypeScaleConfig
   },
   recommended: {
     id: "recommended",
-    normalUnitCssHeight: 100,
-    supportUnitCssHeight: 116,
+    // Raised with the compact map. The field now fits on a phone in one frame,
+    // which left the fighting looking small inside all that open country; these
+    // are the largest figures the camera can still frame both keeps around.
+    normalUnitCssHeight: 122,
+    supportUnitCssHeight: 140,
     largeUnitCssHeight: 122,
     captureTowerCssHeight: 144,
     fixedFortressCssHeight: 162,
