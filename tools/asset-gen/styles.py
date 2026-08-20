@@ -29,9 +29,14 @@ HERITAGE = Style(
 LEGIBLE = Style(
     name="legible",
     label="B. 명료 — 대비를 올려 작은 화면에서 형태 유지",
-    edge_width=2.4,
-    edge_alpha=105,
-    edge_blur=0.0,
+    # Softer than the draft called for. A single tile carried the firm rim well,
+    # but the lane curves through band after band of transition tiles, and in
+    # game those rims stacked into contour lines -- the field read as a terraced
+    # hillside rather than a road across grass. The palette carries the contrast;
+    # the rim only has to say "this sits on top of that".
+    edge_width=1.5,
+    edge_alpha=52,
+    edge_blur=0.6,
     materials={
         "grass": Material("grass", "#4f7233", "#33501f", "#74a04a", "#9ac45f", grain=0.16, speckle=0.010,
                           decor="tuft", decor_density=0.006),

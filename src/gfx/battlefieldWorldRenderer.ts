@@ -10,6 +10,7 @@ import {
   getPatchMaterialMask,
   getProductionTerrainBaseKey,
   getProductionTerrainTextureKey,
+  getTerrainBaseVariant,
   includesDirtShoulder,
   includesRoad,
   type ProductionTerrainMaterial,
@@ -160,7 +161,13 @@ export class BattlefieldWorldRenderer {
     for (let row = 0; row < patch.rows; row += 1) {
       for (let column = 0; column < patch.columns; column += 1) {
         const mask = getPatchMaterialMask(patch, column, row, includesMaterial);
-        const textureKey = getProductionTerrainTextureKey(material, mask);
+        // Variant from the cell's own coordinates, so open ground stops
+        // repeating one texture and the field still rebuilds identically.
+        const textureKey = getProductionTerrainTextureKey(
+          material,
+          mask,
+          getTerrainBaseVariant(column, row),
+        );
         if (!textureKey) continue;
         const localX = (column - (patch.columns - 1) / 2) * patch.cellWidth;
         const localY = (row - (patch.rows - 1) / 2) * patch.cellHeight;
