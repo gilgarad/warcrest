@@ -107,11 +107,11 @@ export const HUD_TOP_BAND_BOTTOM = 156;
  */
 export function hudBottomBandTop(metrics: ScreenMetrics, workerPanelOpen: boolean): number {
   if (workerPanelOpen) return 660;
+  // One row, since the actions became icons. It used to be two, and the row
+  // that folding them away saved goes straight back to the battlefield.
   const buttonHeight = atLeastTouchable(metrics, 44);
   const bottomMargin = 4;
-  const rowGap = 12;
-  const actionRowTop = GAME_HEIGHT - bottomMargin - buttonHeight - rowGap - buttonHeight;
-  return actionRowTop - 10;
+  return GAME_HEIGHT - bottomMargin - buttonHeight - 10;
 }
 
 /** Screen rows left for the battlefield once the HUD has taken its bands. */

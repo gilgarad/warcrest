@@ -7,27 +7,27 @@
   "smallestUiTargets": [
     {
       "label": "run:Rectangle",
-      "cssWidth": 57.2,
+      "cssWidth": 44,
       "cssHeight": 44
     },
     {
       "label": "run:Rectangle",
-      "cssWidth": 67.6,
+      "cssWidth": 44,
       "cssHeight": 44
     },
     {
       "label": "run:Rectangle",
-      "cssWidth": 67.6,
+      "cssWidth": 44,
       "cssHeight": 44
     },
     {
       "label": "run:Rectangle",
-      "cssWidth": 67.6,
+      "cssWidth": 44,
       "cssHeight": 44
     },
     {
       "label": "run:Rectangle",
-      "cssWidth": 67.6,
+      "cssWidth": 44,
       "cssHeight": 44
     },
     {
@@ -39,33 +39,33 @@
   "smallestWorldTargets": [
     {
       "label": "run:Arc",
-      "cssWidth": 2.6,
-      "cssHeight": 2.6
+      "cssWidth": 3.1,
+      "cssHeight": 3.1
     },
     {
       "label": "run:Text",
-      "cssWidth": 11.1,
-      "cssHeight": 3.2
+      "cssWidth": 13.6,
+      "cssHeight": 3.9
     },
     {
       "label": "run:Text",
-      "cssWidth": 11,
-      "cssHeight": 4.2
+      "cssWidth": 13.4,
+      "cssHeight": 5.1
     },
     {
       "label": "run:Text",
-      "cssWidth": 14.2,
-      "cssHeight": 4.2
+      "cssWidth": 17.3,
+      "cssHeight": 5.1
     },
     {
       "label": "run:Arc",
-      "cssWidth": 7.3,
-      "cssHeight": 7.3
+      "cssWidth": 8.9,
+      "cssHeight": 8.9
     },
     {
       "label": "run:Image",
-      "cssWidth": 21.3,
-      "cssHeight": 21.3
+      "cssWidth": 26,
+      "cssHeight": 26
     }
   ],
   "smallestText": [
@@ -86,11 +86,11 @@
       "cssPx": 11.3
     },
     {
-      "label": "일꾼 0/4",
+      "label": "DEV OFF",
       "cssPx": 11.3
     },
     {
-      "label": "일꾼 고용",
+      "label": "금",
       "cssPx": 11.3
     }
   ]

@@ -657,6 +657,13 @@ export const TWO_LANE_MAP_CANDIDATE_SPEC: BattlefieldMapSpec = {
  *
  * The geometry is shared by every player. Two people in the same match must be
  * on the same battlefield, so this cannot vary by device; only the camera does.
+ *
+ * The south lane sits further out than the north one. That asymmetry is
+ * deliberate and it is about the HUD, not the map: the top band takes 156 units
+ * of screen and the bottom band takes about 115, so the space left for the field
+ * is not centred on it. Pushing the south lane down fills the room that is
+ * actually there, and the camera frames content rather than the world's middle,
+ * so the result still reads as centred.
  */
 export const COMPACT_TWO_LANE_NORTH_PATH_NODES: LanePathNodeSpec[] = [
   { progress: 0.00, position: { x: 2120, y: 1980 } },
@@ -672,13 +679,13 @@ export const COMPACT_TWO_LANE_NORTH_PATH_NODES: LanePathNodeSpec[] = [
 
 export const COMPACT_TWO_LANE_SOUTH_PATH_NODES: LanePathNodeSpec[] = [
   { progress: 0.00, position: { x: 2120, y: 1980 } },
-  { progress: 0.09, position: { x: 2300, y: 2211 } },
-  { progress: 0.21, position: { x: 2636, y: 2310 } },
-  { progress: 0.35, position: { x: 3140, y: 2350 } },
-  { progress: 0.50, position: { x: 3728, y: 2350 } },
-  { progress: 0.65, position: { x: 4256, y: 2326 } },
-  { progress: 0.79, position: { x: 4652, y: 2277 } },
-  { progress: 0.91, position: { x: 4892, y: 2211 } },
+  { progress: 0.09, position: { x: 2300, y: 2380 } },
+  { progress: 0.21, position: { x: 2636, y: 2551 } },
+  { progress: 0.35, position: { x: 3140, y: 2620 } },
+  { progress: 0.50, position: { x: 3728, y: 2620 } },
+  { progress: 0.65, position: { x: 4256, y: 2578 } },
+  { progress: 0.79, position: { x: 4652, y: 2494 } },
+  { progress: 0.91, position: { x: 4892, y: 2380 } },
   { progress: 1.00, position: { x: 5000, y: 1980 } },
 ];
 

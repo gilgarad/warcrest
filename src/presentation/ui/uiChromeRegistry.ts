@@ -29,3 +29,26 @@ export const UI_CHROME_ASSETS = FRAMES.map((frame) => ({
   key: getUiFrameKey(frame),
   path: `${ASSET_ROOT}/${frame}.png`,
 }));
+
+export type UiIconId = "hire-worker" | "hire-research-worker" | "use-instant-wave" | "age-up" | "workers";
+
+const ICONS: readonly UiIconId[] = [
+  "hire-worker", "hire-research-worker", "use-instant-wave", "age-up", "workers",
+];
+
+export function getUiIconKey(icon: UiIconId): string {
+  return `ui-icon-${icon}`;
+}
+
+/**
+ * Action icons.
+ *
+ * The strategic actions were text buttons two rows deep, which is the most
+ * expensive way to spend a phone's bottom band: the whole HUD has room for about
+ * three rows of touch-sized controls and those took two of them. One row of
+ * icons says the same thing.
+ */
+export const UI_ICON_ASSETS = ICONS.map((icon) => ({
+  key: getUiIconKey(icon),
+  path: `${ASSET_ROOT}/icons/${icon}.png`,
+}));

@@ -29,7 +29,12 @@ const state = (page: Page) => page.evaluate(() => {
   }) as Phaser.GameObjects.Text[];
   return {
     bands: scene.hud.getUiBands(),
-    chip: labels.find((t) => /^일꾼 \d+\/\d+$/.test(t.text))?.text ?? null,
+    // Found by its icon: the chip carries no text now that the bottom row is
+    // icons, so a label-based search finds nothing.
+    chipPresent: scene.children.list.some((child) => {
+      const image = child as Phaser.GameObjects.Image;
+      return image.texture?.key === "ui-icon-workers" && image.visible;
+    }),
     titleShown: labels.some((t) => t.text === "일꾼 배치"),
     // A point that is battlefield when folded and HUD when open.
     midBandIsUi: scene.hud.isPointerOverUi(800, 700),
@@ -51,13 +56,13 @@ async function pressChip(page: Page): Promise<void> {
   const point = await page.evaluate(() => {
     const game = (window as unknown as { __warcrestGame: Phaser.Game }).__warcrestGame;
     const scene = game.scene.getScene("run");
-    // Matched on the chip's exact readout, not on a prefix: once the panel is
-    // open the "일꾼 배치" title shares that prefix, and clicking the title --
-    // which is not interactive -- looks exactly like the fold failing.
+    // Located by its icon rather than its label. The bottom row became icon
+    // buttons, so there is no text on it to match -- and the "일꾼 배치" panel
+    // title, which is not interactive, is the only thing a label search finds.
     const chip = scene.children.list.find((child) => {
-      const text = child as Phaser.GameObjects.Text;
-      return typeof text.text === "string" && /^일꾼 \d+\/\d+$/.test(text.text) && text.visible;
-    }) as Phaser.GameObjects.Text;
+      const image = child as Phaser.GameObjects.Image;
+      return image.texture?.key === "ui-icon-workers" && image.visible;
+    }) as Phaser.GameObjects.Image;
     const bounds = chip.getBounds();
     const canvas = game.canvas.getBoundingClientRect();
     const scale = canvas.width / game.scale.gameSize.width;
@@ -72,7 +77,7 @@ test("the worker rows fold, and the band follows", async ({ page }) => {
 
   const folded = await state(page);
   expect(folded.titleShown, "worker rows are showing before anything was pressed").toBe(false);
-  expect(folded.chip, "no worker chip to press").toMatch(/^일꾼 \d+\/\d+$/);
+  expect(folded.chipPresent, "no worker chip to press").toBe(true);
   expect(folded.midBandIsUi, "folded HUD still claims the space the rows had").toBe(false);
   await page.screenshot({ path: `${DIR}/folded.png` });
 

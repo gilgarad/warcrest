@@ -9,7 +9,9 @@ import { AudioSettingsPanel } from "./AudioSettingsPanel";
 import {
   UI_FRAME_CORNER,
   getUiFrameKey,
+  getUiIconKey,
   type UiFrameId,
+  type UiIconId,
 } from "../presentation/ui/uiChromeRegistry";
 import {
   HUD_TOP_BAND_BOTTOM,
@@ -45,6 +47,10 @@ interface ActionButton {
   costTexts: Phaser.GameObjects.Text[];
   /** Tracked so hover does not light up a button that cannot be pressed. */
   enabled?: boolean;
+  /** Present on icon buttons; shown and hidden with the frame. */
+  icon?: Phaser.GameObjects.Image;
+  /** What the icon stands for, for anything that needs to name it. */
+  label?: string;
 }
 
 /** Max distinct resources shown in a single button's cost row (gold/wood/food/metal/research). */
@@ -147,7 +153,6 @@ export class LaneBattleHudView {
   /** Bottom band top for each fold state, computed from the laid-out controls. */
   private bandTopCollapsed = HUD_BOTTOM_BAND_TOP_COLLAPSED;
   private bandTopExpanded = HUD_BOTTOM_BAND_TOP_EXPANDED;
-  private actionRowTopY = 0;
   private actionRowBottomY = 0;
   private actionButtonHeight = 44;
   private researchSummaryText?: Phaser.GameObjects.Text;
@@ -507,13 +512,11 @@ export class LaneBattleHudView {
   }
 
   private computeActionGeometry(): void {
-    const rowGap = 12;
     // Four, not a round number: it reproduces the desktop layout exactly, so
     // this change is invisible on a monitor and only phones move.
     const bottomMargin = 4;
     this.actionButtonHeight = atLeastTouchable(this.metrics, 44);
     this.actionRowBottomY = this.canvasHeight - bottomMargin - this.actionButtonHeight;
-    this.actionRowTopY = this.actionRowBottomY - rowGap - this.actionButtonHeight;
     // The band has to start above the tallest thing in it, whatever that is now.
     this.bandTopCollapsed = hudBottomBandTop(this.metrics, false);
   }
@@ -605,14 +608,6 @@ export class LaneBattleHudView {
     // Placed on the same row as the hire buttons on purpose: the folded state
     // has to be genuinely shorter, and a chip left where the rows were would
     // give the band back nothing.
-    this.workerChip = this.createActionButton(
-      centerX - 326,
-      this.actionRowTopY,
-      132,
-      this.actionButtonHeight,
-      "일꾼 0/0",
-      () => this.setWorkerPanelOpen(!this.workerPanelOpen),
-    );
     this.researchSummaryText = this.scene.add.text(-1000, -1000, "", {
       fontFamily: "monospace",
       fontSize: this.textPx(18),
@@ -622,14 +617,32 @@ export class LaneBattleHudView {
     // Narrower than before. Height is held at the touch floor because that is
     // what a finger needs, but the width was well past it -- 198 units is 86 CSS
     // px on a phone -- and the block read as heavy for its content.
-    const buttonWidth = 156;
-    const buttonHeight = this.actionButtonHeight;
-    const actionRowTopY = this.actionRowTopY;
-    const actionRowBottomY = this.actionRowBottomY;
-    this.strategicActionButtons.set("hire-worker", this.createActionButton(centerX - 182, actionRowTopY, buttonWidth, buttonHeight, "일꾼 고용", this.callbacks.hireWorker));
-    this.strategicActionButtons.set("hire-research-worker", this.createActionButton(centerX - 182 + buttonWidth + 12, actionRowTopY, buttonWidth, buttonHeight, "연구 일꾼", this.callbacks.hireResearchWorker));
-    this.strategicActionButtons.set("use-instant-wave", this.createActionButton(centerX - 182, actionRowBottomY, buttonWidth, buttonHeight, "즉시 웨이브", this.callbacks.useInstantWave));
-    this.strategicActionButtons.set("age-up", this.createActionButton(centerX - 182 + buttonWidth + 12, actionRowBottomY, buttonWidth, buttonHeight, "시대 업", this.callbacks.ageUp));
+    // One row of square icon buttons along the bottom.
+    //
+    // These were four labelled buttons stacked two deep, which on a phone spent
+    // two of the three rows the whole HUD has. An icon says the same thing in a
+    // square, and the row it saves goes back to the battlefield.
+    const iconSize = this.actionButtonHeight;
+    const iconGap = 10;
+    const strategic: [StrategicActionId, UiIconId, string, () => void][] = [
+      ["hire-worker", "hire-worker", "일꾼 고용", this.callbacks.hireWorker],
+      ["hire-research-worker", "hire-research-worker", "연구 일꾼", this.callbacks.hireResearchWorker],
+      ["use-instant-wave", "use-instant-wave", "즉시 웨이브", this.callbacks.useInstantWave],
+      ["age-up", "age-up", "시대 업", this.callbacks.ageUp],
+    ];
+    // Right-aligned: the left of the bottom band holds the dev controls, and
+    // the player's own keep sits behind that corner of the field.
+    const rowWidth = (strategic.length + 1) * iconSize + strategic.length * iconGap;
+    let iconX = this.canvasWidth - 24 - rowWidth;
+    this.workerChip = this.createIconButton(
+      iconX, this.actionRowBottomY, iconSize, "workers", "일꾼 배치",
+      () => this.setWorkerPanelOpen(!this.workerPanelOpen),
+    );
+    iconX += iconSize + iconGap;
+    for (const [id, icon, label, handler] of strategic) {
+      this.strategicActionButtons.set(id, this.createIconButton(iconX, this.actionRowBottomY, iconSize, icon, label, handler));
+      iconX += iconSize + iconGap;
+    }
 
     // capturePanelTitle/capturePanelBody/rosterText are kept alive but never
     // shown on screen — `apply()` is still called from LaneBattleScene and
@@ -732,6 +745,41 @@ export class LaneBattleHudView {
     button.frame.setTexture(getUiFrameKey(frame));
   }
 
+  /**
+   * A square button carrying an icon instead of a label.
+   *
+   * Built on the same frame and hit area as the text buttons, so state,
+   * visibility and cost rows keep working unchanged; only what is drawn inside
+   * is different.
+   */
+  private createIconButton(
+    x: number,
+    y: number,
+    size: number,
+    icon: UiIconId,
+    label: string,
+    onClick: () => void,
+  ): ActionButton {
+    const button = this.createActionButton(x, y, size, size, "", onClick);
+    // Nearest, like the terrain: these are 32px symbols and smoothing turns
+    // them back into the blur they were drawn to avoid.
+    this.scene.textures.get(getUiIconKey(icon)).setFilter(Phaser.Textures.FilterMode.NEAREST);
+    button.icon = this.scene.add.image(button.rect.x, button.rect.y - size * 0.08, getUiIconKey(icon))
+      .setDisplaySize(size * 0.56, size * 0.56)
+      .setDepth(this.depth + 3)
+      .setScrollFactor(0);
+    button.label = label;
+    // The icon is the label. Keeping the text as well printed "일꾼 고용" across
+    // the drawing, and the cost row -- five items at forty-two units each --
+    // ran three times the width of the square it sits in.
+    //
+    // Nothing is lost that the player needs: an action they cannot afford wears
+    // the danger frame, and the instant-wave token count is already on the
+    // status panel.
+    button.text.setVisible(false);
+    return button;
+  }
+
   private createActionButton(x: number, y: number, width: number, height: number, label: string, onClick: () => void): ActionButton {
     const frame = this.scene.add.nineslice(
       x + width / 2, y + height / 2, getUiFrameKey("button"), undefined,
@@ -783,7 +831,7 @@ export class LaneBattleHudView {
     // hit area is now always "visible" because it is invisible by design, so
     // testing it brought back exactly the floating cost icons this guard was
     // written to prevent.
-    const entries = button.frame.visible
+    const entries = button.frame.visible && !button.icon
       ? (Object.entries(cost) as [ResourceId, number][]).filter(([, amount]) => (amount ?? 0) > 0)
       : [];
     const itemWidth = 42;
@@ -893,11 +941,16 @@ export class LaneBattleHudView {
 
   private setActionVisible(button: ActionButton, visible: boolean): void {
     button.frame.setVisible(visible);
+    button.icon?.setVisible(visible);
     // The hit area is invisible by design, but its `visible` flag is still what
     // everything else reads to mean "on screen". Leaving it true made hidden
     // buttons count as present -- floating cost rows, and a mobile measurement
     // that failed on controls nobody could see.
     button.rect.setVisible(visible);
+    if (button.icon) {
+      // An icon button has no label of its own to show.
+      button.text.setVisible(false);
+    }
     button.text.setVisible(visible);
     if (!visible) {
       button.costIcons.forEach((icon) => icon.setVisible(false));

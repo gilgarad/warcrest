@@ -7,27 +7,27 @@
   "smallestUiTargets": [
     {
       "label": "run:Rectangle",
-      "cssWidth": 93.5,
+      "cssWidth": 44,
       "cssHeight": 44
     },
     {
       "label": "run:Rectangle",
-      "cssWidth": 110.5,
+      "cssWidth": 44,
       "cssHeight": 44
     },
     {
       "label": "run:Rectangle",
-      "cssWidth": 110.5,
+      "cssWidth": 44,
       "cssHeight": 44
     },
     {
       "label": "run:Rectangle",
-      "cssWidth": 110.5,
+      "cssWidth": 44,
       "cssHeight": 44
     },
     {
       "label": "run:Rectangle",
-      "cssWidth": 110.5,
+      "cssWidth": 44,
       "cssHeight": 44
     },
     {
@@ -39,59 +39,59 @@
   "smallestWorldTargets": [
     {
       "label": "run:Arc",
-      "cssWidth": 4.9,
-      "cssHeight": 4.9
+      "cssWidth": 5.5,
+      "cssHeight": 5.5
     },
     {
       "label": "run:Text",
-      "cssWidth": 21,
-      "cssHeight": 6
+      "cssWidth": 23.6,
+      "cssHeight": 6.7
     },
     {
       "label": "run:Text",
-      "cssWidth": 20.7,
-      "cssHeight": 7.9
+      "cssWidth": 23.3,
+      "cssHeight": 8.8
     },
     {
       "label": "run:Text",
-      "cssWidth": 26.7,
-      "cssHeight": 7.9
+      "cssWidth": 30,
+      "cssHeight": 8.8
     },
     {
       "label": "run:Arc",
-      "cssWidth": 13.7,
-      "cssHeight": 13.7
+      "cssWidth": 15.4,
+      "cssHeight": 15.4
     },
     {
       "label": "run:Image",
-      "cssWidth": 40.2,
-      "cssHeight": 40.2
+      "cssWidth": 45.2,
+      "cssHeight": 45.2
     }
   ],
   "smallestText": [
     {
-      "label": "일꾼 0/4",
+      "label": "DEV OFF",
       "cssPx": 11.3
     },
     {
-      "label": "일꾼 고용",
-      "cssPx": 11.3
+      "label": "금",
+      "cssPx": 12.7
     },
     {
-      "label": "10",
-      "cssPx": 11.3
+      "label": "목재",
+      "cssPx": 12.7
     },
     {
-      "label": "10",
-      "cssPx": 11.3
+      "label": "식량",
+      "cssPx": 12.7
     },
     {
-      "label": "10",
-      "cssPx": 11.3
+      "label": "금속",
+      "cssPx": 12.7
     },
     {
-      "label": "연구 일꾼",
-      "cssPx": 11.3
+      "label": "연구",
+      "cssPx": 12.7
     }
   ]
 }
