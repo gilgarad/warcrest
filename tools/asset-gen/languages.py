@@ -93,13 +93,15 @@ def _pixel_surface(ramp: Ramp, kind: str, rng: random.Random) -> Image.Image:
             draw.point((x, min(res - 1, y + 1)), fill=ramp.rgb(steps - 1))
     elif kind == "road":
         # Cobbles: small blocks with a lit top edge and a dark underside.
-        for _ in range(res // 3):
+        # Sparse on purpose -- at the size the field is drawn, one mark per few
+        # pixels stops reading as stone and starts reading as static.
+        for _ in range(max(2, res // 6)):
             x, y = rng.randrange(res - 2), rng.randrange(res - 2)
             draw.rectangle([x, y, x + 1, y + 1], fill=ramp.rgb(steps - 1))
             draw.point((x, y), fill=ramp.rgb(steps))
             draw.point((x + 1, y + 1), fill=ramp.rgb(0))
     elif kind == "dirt":
-        for _ in range(res // 3):
+        for _ in range(max(2, res // 6)):
             x, y = rng.randrange(res), rng.randrange(res)
             draw.point((x, y), fill=ramp.rgb(0))
             if rng.random() < 0.5:
@@ -195,6 +197,8 @@ class Language:
     edge_color: str = "#101820"
     #: A lit lip just inside the cut, which reads as thickness.
     bevel_alpha: int = 0
+    #: Width of the dithered band along a cut, in pixels. Zero cuts hard.
+    dither_edge: int = 0
 
 
 def _ramp(*tones: str) -> Ramp:
@@ -203,7 +207,8 @@ def _ramp(*tones: str) -> Ramp:
 
 PIXEL = Language(
     name="pixel", label="1. 픽셀 — 저해상도 램프 + 정렬 디더, 덩어리로 된 모티프",
-    surface="pixel", edge_alpha=120, edge_width=1.0, edge_blur=0.0, bevel_alpha=70,
+    surface="pixel", edge_alpha=70, edge_width=1.0, edge_blur=0.0, bevel_alpha=40,
+    dither_edge=5,
     ramps={
         "grass": _ramp("#243b1c", "#365427", "#4a6f33", "#659143", "#8ab857"),
         "dirt": _ramp("#3d2a19", "#5a3d24", "#7a5432", "#9c6d43", "#bd8b5c"),
@@ -255,6 +260,39 @@ def corner_points(mask: int, size: int) -> list[tuple[float, float]]:
     return table.get(mask, [])
 
 
+def _dither_edge(shape: Image.Image, band: int) -> Image.Image:
+    """Replaces a hard polygon edge with a dithered one.
+
+    The tile set cuts materials at forty-five degrees, and the previous art hid
+    those cuts under soft blends. Hard-edged pixel tiles cannot blend, so the
+    cuts came back as a jagged patchwork of triangles across the ground.
+
+    Dithering is how pixel art has always answered this: a band along the cut
+    where the two materials interleave through a fixed pattern, which the eye
+    reads as a gradual change rather than as a seam.
+    """
+    blurred = shape.filter(ImageFilter.GaussianBlur(band))
+    out = Image.new("L", shape.size, 0)
+    src = blurred.load()
+    dst = out.load()
+    hard = shape.load()
+    for y in range(shape.size[1]):
+        for x in range(shape.size[0]):
+            value = src[x, y] / 255
+            if value >= 0.97:
+                dst[x, y] = 255
+            elif value <= 0.03:
+                dst[x, y] = 0
+            else:
+                threshold = (BAYER[y % 4][x % 4] + 0.5) / 16
+                dst[x, y] = 255 if value > threshold else 0
+            # Never let the dither eat into the tile's own borders, which are
+            # shared with the neighbour and must stay solid.
+            if hard[x, y] == 255 and (x in (0, shape.size[0] - 1) or y in (0, shape.size[1] - 1)):
+                dst[x, y] = 255
+    return out
+
+
 def make_tile(language: Language, material: str, mask: int, seed: int) -> Image.Image:
     rng = random.Random(seed)
     texture = SURFACES[language.surface](language.ramps[material], material, rng)
@@ -265,6 +303,8 @@ def make_tile(language: Language, material: str, mask: int, seed: int) -> Image.
     points = corner_points(mask, TILE)
     if points:
         ImageDraw.Draw(shape).polygon(points, fill=255)
+        if language.dither_edge:
+            shape = _dither_edge(shape, language.dither_edge)
 
     out = Image.new("RGBA", (TILE, TILE), (0, 0, 0, 0))
     out.paste(texture, (0, 0), shape)
