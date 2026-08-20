@@ -1292,6 +1292,10 @@ export class LaneBattleScene extends Phaser.Scene {
   private setupFieldDrag(): void {
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => {
       if (this.isPointerOnUi(pointer)) return;
+      // Nothing to pan to when the whole battlefield is already on screen, and
+      // panning anyway only slides it off centre and shows the empty ground
+      // outside the play area. The framing is the composition; leave it alone.
+      if (this.mapFitsOnScreen()) return;
       this.isDraggingField = true;
     });
     this.input.on("pointerup", (pointer: Phaser.Input.Pointer) => {
@@ -3804,7 +3808,7 @@ export class LaneBattleScene extends Phaser.Scene {
    */
   /** Centre of the lane layout, in world coordinates. */
   private mapCentre(): Phaser.Math.Vector2 {
-    const box = this.laneBounds();
+    const box = this.contentBounds();
     return new Phaser.Math.Vector2((box.left + box.right) / 2, (box.top + box.bottom) / 2);
   }
 
@@ -3818,26 +3822,44 @@ export class LaneBattleScene extends Phaser.Scene {
     };
   }
 
-  /** Whether the lanes fit inside the strip of screen the HUD leaves. */
+  /**
+   * The world rectangle the battlefield actually occupies, bases included.
+   *
+   * The lane path is only where feet go. A main base is drawn from that point
+   * and reaches roughly 480 units up and 340 to each side, so framing to the
+   * path alone cropped both bases at the screen edges -- which is what "the map
+   * fits" was quietly claiming while half a castle sat outside the view.
+   */
+  private contentBounds(): { left: number; right: number; top: number; bottom: number } {
+    const lanes = this.laneBounds();
+    const baseVisibleHeight = this.cssPxToWorld(220);
+    const baseHalfWidth = baseVisibleHeight / MAIN_BASE_VISIBLE_HEIGHT_RATIO / 2;
+    // Units stand on the lane and are drawn upward from it.
+    const unitHeight = this.cssPxToWorld(this.scaleVisualConfig.normalUnitCssHeight);
+    // A little air beyond the content. Fitting it exactly puts the castles flush
+    // against the screen edges, where flags and corners read as cut off even
+    // though the arithmetic says they are inside.
+    const breathingRoom = 90;
+    return {
+      left: lanes.left - baseHalfWidth - breathingRoom,
+      right: lanes.right + baseHalfWidth + breathingRoom,
+      top: Math.min(lanes.top - unitHeight, 1980 - baseVisibleHeight) - breathingRoom / 2,
+      bottom: lanes.bottom + unitHeight * 0.4 + breathingRoom / 2,
+    };
+  }
+
+  /** Whether the battlefield fits inside the strip of screen the HUD leaves. */
   private mapFitsOnScreen(): boolean {
-    const box = this.laneBounds();
+    const box = this.contentBounds();
     const metrics = measureScreen(this.scale.displaySize.width, this.scale.displaySize.height);
     return (box.right - box.left) * this.fieldZoom <= CANVAS_W
       && (box.bottom - box.top) * this.fieldZoom <= fieldBandHeightUnits(metrics);
   }
 
   private resolveFieldZoom(): number {
-    const box = this.laneBounds();
-    // Margin for what stands on the lane rather than the lane itself: a base is
-    // far taller than the path node it sits on, and a unit clipped in half is
-    // as good as off-screen.
-    const marginX = 300;
-    const marginY = 200;
+    const box = this.contentBounds();
     return fitFieldZoom(
-      {
-        width: box.right - box.left + marginX * 2,
-        height: box.bottom - box.top + marginY * 2,
-      },
+      { width: box.right - box.left, height: box.bottom - box.top },
       fieldBandHeightUnits(measureScreen(this.scale.displaySize.width, this.scale.displaySize.height)),
     );
   }

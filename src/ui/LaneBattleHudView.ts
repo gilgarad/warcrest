@@ -602,14 +602,17 @@ export class LaneBattleHudView {
       color: "#fff6dd",
     }).setVisible(false).setOrigin(0, 0.5).setDepth(this.depth + 3).setScrollFactor(0);
 
-    const buttonWidth = 198;
+    // Narrower than before. Height is held at the touch floor because that is
+    // what a finger needs, but the width was well past it -- 198 units is 86 CSS
+    // px on a phone -- and the block read as heavy for its content.
+    const buttonWidth = 156;
     const buttonHeight = this.actionButtonHeight;
     const actionRowTopY = this.actionRowTopY;
     const actionRowBottomY = this.actionRowBottomY;
     this.strategicActionButtons.set("hire-worker", this.createActionButton(centerX - 182, actionRowTopY, buttonWidth, buttonHeight, "일꾼 고용", this.callbacks.hireWorker));
-    this.strategicActionButtons.set("hire-research-worker", this.createActionButton(centerX + 36, actionRowTopY, buttonWidth, buttonHeight, "연구 일꾼", this.callbacks.hireResearchWorker));
+    this.strategicActionButtons.set("hire-research-worker", this.createActionButton(centerX - 182 + buttonWidth + 12, actionRowTopY, buttonWidth, buttonHeight, "연구 일꾼", this.callbacks.hireResearchWorker));
     this.strategicActionButtons.set("use-instant-wave", this.createActionButton(centerX - 182, actionRowBottomY, buttonWidth, buttonHeight, "즉시 웨이브", this.callbacks.useInstantWave));
-    this.strategicActionButtons.set("age-up", this.createActionButton(centerX + 36, actionRowBottomY, buttonWidth, buttonHeight, "시대 업", this.callbacks.ageUp));
+    this.strategicActionButtons.set("age-up", this.createActionButton(centerX - 182 + buttonWidth + 12, actionRowBottomY, buttonWidth, buttonHeight, "시대 업", this.callbacks.ageUp));
 
     // capturePanelTitle/capturePanelBody/rosterText are kept alive but never
     // shown on screen — `apply()` is still called from LaneBattleScene and

@@ -12,22 +12,22 @@
     },
     {
       "label": "run:Rectangle",
-      "cssWidth": 86.5,
+      "cssWidth": 68.1,
       "cssHeight": 44
     },
     {
       "label": "run:Rectangle",
-      "cssWidth": 86.5,
+      "cssWidth": 68.1,
       "cssHeight": 44
     },
     {
       "label": "run:Rectangle",
-      "cssWidth": 86.5,
+      "cssWidth": 68.1,
       "cssHeight": 44
     },
     {
       "label": "run:Rectangle",
-      "cssWidth": 86.5,
+      "cssWidth": 68.1,
       "cssHeight": 44
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "label": "run:Text",
-      "cssWidth": 11.2,
+      "cssWidth": 11.3,
       "cssHeight": 3.2
     },
     {
@@ -59,8 +59,8 @@
     },
     {
       "label": "run:Arc",
-      "cssWidth": 7.3,
-      "cssHeight": 7.3
+      "cssWidth": 7.4,
+      "cssHeight": 7.4
     },
     {
       "label": "run:Image",

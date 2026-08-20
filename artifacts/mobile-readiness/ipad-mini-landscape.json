@@ -12,22 +12,22 @@
     },
     {
       "label": "run:Rectangle",
-      "cssWidth": 140.2,
+      "cssWidth": 110.5,
       "cssHeight": 44
     },
     {
       "label": "run:Rectangle",
-      "cssWidth": 140.2,
+      "cssWidth": 110.5,
       "cssHeight": 44
     },
     {
       "label": "run:Rectangle",
-      "cssWidth": 140.2,
+      "cssWidth": 110.5,
       "cssHeight": 44
     },
     {
       "label": "run:Rectangle",
-      "cssWidth": 140.2,
+      "cssWidth": 110.5,
       "cssHeight": 44
     },
     {
@@ -39,8 +39,8 @@
   "smallestWorldTargets": [
     {
       "label": "run:Arc",
-      "cssWidth": 4.8,
-      "cssHeight": 4.8
+      "cssWidth": 4.9,
+      "cssHeight": 4.9
     },
     {
       "label": "run:Text",
@@ -50,12 +50,12 @@
     {
       "label": "run:Text",
       "cssWidth": 20.7,
-      "cssHeight": 7.8
+      "cssHeight": 7.9
     },
     {
       "label": "run:Text",
       "cssWidth": 26.7,
-      "cssHeight": 7.8
+      "cssHeight": 7.9
     },
     {
       "label": "run:Arc",
@@ -64,8 +64,8 @@
     },
     {
       "label": "run:Image",
-      "cssWidth": 40.1,
-      "cssHeight": 40.1
+      "cssWidth": 40.2,
+      "cssHeight": 40.2
     }
   ],
   "smallestText": [
