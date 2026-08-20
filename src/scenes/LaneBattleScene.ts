@@ -142,6 +142,7 @@ import {
 import { DeterministicRandom } from "../systems/sim/deterministicRandom";
 import type { GameMode, MatchDescriptor } from "../systems/net/matchTypes";
 import { DEFAULT_LOCKSTEP_OPTIONS, LockstepSession } from "../systems/net/lockstepSession";
+import { TERRAIN_VIGNETTE_KEY } from "../presentation/terrain/productionTerrainRegistry";
 import { BASE_FIELD_ZOOM, fieldBandHeightUnits, fitFieldZoom, measureScreen } from "../ui/screenLayout";
 import {
   disconnectVictorySummary,
@@ -838,6 +839,18 @@ export class LaneBattleScene extends Phaser.Scene {
     this.drawBattlefield();
     this.worldObjects.push(...this.children.list);
     this.createUi();
+    // Vignette on the UI camera, not the world.
+    //
+    // Drawn across the world it did nothing -- the camera frames the middle of a
+    // 7000x3900 map, so the fade sat off-screen entirely. Fixed to the camera
+    // with `setScrollFactor(0)` it did worse: scroll factor pins the position
+    // but the camera's 0.43 zoom still shrinks it, so a 1600x900 gradient landed
+    // as a 685x385 rectangle sitting over the battlefield. The UI camera draws
+    // at 1:1, which is the whole reason the HUD looks right, and is where
+    // anything measured in screen pixels belongs.
+    this.add.image(CANVAS_W / 2, CANVAS_H / 2, TERRAIN_VIGNETTE_KEY)
+      .setDisplaySize(CANVAS_W, CANVAS_H)
+      .setDepth(DEPTH_UI - 1);
     this.uiObjects.push(...this.children.list.filter((obj) => !this.worldObjects.includes(obj)));
     this.uiCamera = this.cameras.add(0, 0, CANVAS_W, CANVAS_H);
     this.uiCamera.setZoom(1);

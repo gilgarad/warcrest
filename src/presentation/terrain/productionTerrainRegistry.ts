@@ -17,6 +17,15 @@ const ASSET_ROOT = assetUrl("assets/production/terrain");
  */
 export const TERRAIN_BASE_VARIANTS = 4;
 
+/** Open country outside the lanes, and the fall-off around the whole world. */
+export const TERRAIN_FIELD_KEY = "production-terrain-field";
+export const TERRAIN_VIGNETTE_KEY = "production-terrain-vignette";
+
+export const PRODUCTION_TERRAIN_EXTRA_ASSETS = [
+  { key: TERRAIN_FIELD_KEY, path: `${ASSET_ROOT}/field-base.png` },
+  { key: TERRAIN_VIGNETTE_KEY, path: `${ASSET_ROOT}/world-vignette.png` },
+];
+
 export const PRODUCTION_TERRAIN_ASSETS = MATERIALS.flatMap((material) => [
   ...Array.from({ length: TERRAIN_BASE_VARIANTS }, (_, variant) => ({
     key: getProductionTerrainBaseKey(material, variant),
@@ -26,7 +35,7 @@ export const PRODUCTION_TERRAIN_ASSETS = MATERIALS.flatMap((material) => [
     key: getProductionTerrainTransitionKey(material, mask),
     path: `${ASSET_ROOT}/${material}-transition-${String(mask).padStart(2, "0")}.png`,
   })),
-]);
+]).concat(PRODUCTION_TERRAIN_EXTRA_ASSETS);
 
 export function getProductionTerrainBaseKey(
   material: ProductionTerrainMaterial,

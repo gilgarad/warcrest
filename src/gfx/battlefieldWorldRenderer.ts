@@ -7,6 +7,7 @@ import type {
 } from "../data/battlefieldMaps";
 import type { StructureGroundPresentation } from "./battlefieldPrototypeRenderer";
 import {
+  TERRAIN_FIELD_KEY,
   getPatchMaterialMask,
   getProductionTerrainBaseKey,
   getProductionTerrainTextureKey,
@@ -85,7 +86,7 @@ export class BattlefieldWorldRenderer {
           row * chunkSize + height / 2,
           width,
           height,
-          getProductionTerrainBaseKey("grass"),
+          TERRAIN_FIELD_KEY,
         )
           .setTilePosition(column * chunkSize, row * chunkSize)
           .setDepth(SURFACE_DEPTH);

@@ -229,3 +229,92 @@ def write_set(style: Style, out_dir: Path) -> int:
             image.save(out_dir / f"{name}-transition-{mask:02d}.png")
             written += 1
     return written
+
+
+FIELD_SIZE = 512
+
+
+def field_texture(style: Style, size: int = FIELD_SIZE, seed: int = 20260819) -> Image.Image:
+    """One large patch of open country, for the ground outside the lanes.
+
+    The world outside the battlefield was a single 64px tile repeated across
+    seven thousand units, which reads as wallpaper: the same blade of grass
+    every centimetre. Composing a larger patch from the variants and scattering
+    over the whole thing pushes the repeat out to where the eye stops noticing
+    it, at a cost of one texture.
+
+    Drawn with wraparound so the patch tiles seamlessly -- a mark that runs off
+    one edge continues on the other, instead of being cut in half at every
+    seam.
+    """
+    rng = random.Random(seed)
+    grass = style.materials["grass"]
+    patch = Image.new("RGBA", (size, size))
+    cells = size // TILE
+    variants = [tile(style, grass, 15, hash((style.name, "grass", "base", v)) & 0xFFFF)
+                for v in range(BASE_VARIANTS)]
+    for row in range(cells):
+        for col in range(cells):
+            patch.alpha_composite(variants[rng.randrange(len(variants))], (col * TILE, row * TILE))
+
+    scatter = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    pen = ImageDraw.Draw(scatter, "RGBA")
+
+    def wrapped(draw_at) -> None:
+        """Runs a drawing call at every wrapped offset, so marks cross seams."""
+        for dx in (-size, 0, size):
+            for dy in (-size, 0, size):
+                draw_at(dx, dy)
+
+    # Clumps of paler growth, the patchiness that stops a lawn reading as felt.
+    for _ in range(int(size * size / 5200)):
+        x, y = rng.randrange(size), rng.randrange(size)
+        radius = rng.randint(14, 34)
+        tint = (*_hex(grass.light), 46)
+        wrapped(lambda dx, dy, x=x, y=y, r=radius, t=tint:
+                pen.ellipse([x - r + dx, y - r * 0.6 + dy, x + r + dx, y + r * 0.6 + dy], fill=t))
+
+    # Bare scuffs where the ground shows through.
+    for _ in range(int(size * size / 11000)):
+        x, y = rng.randrange(size), rng.randrange(size)
+        radius = rng.randint(7, 16)
+        tint = (*_hex(style.materials["dirt"].base), 58)
+        wrapped(lambda dx, dy, x=x, y=y, r=radius, t=tint:
+                pen.ellipse([x - r + dx, y - r * 0.55 + dy, x + r + dx, y + r * 0.55 + dy], fill=t))
+
+    # A few small stones, for something with an edge to catch the light.
+    for _ in range(int(size * size / 14000)):
+        x, y = rng.randrange(size), rng.randrange(size)
+        radius = rng.randint(2, 4)
+        wrapped(lambda dx, dy, x=x, y=y, r=radius:
+                pen.ellipse([x - r + dx, y - r + dy, x + r + dx, y + r + dy],
+                            fill=(*_hex(style.materials["stone"].light), 170)))
+
+    return Image.alpha_composite(patch, scatter)
+
+
+def vignette(width: int = 1600, height: int = 900, strength: int = 76) -> Image.Image:
+    """A soft darkening toward the edges of the screen.
+
+    Cut at the canvas aspect ratio rather than square. A square gradient
+    stretched to 16:9 stops being radial, and the seam where the flat middle
+    meets the fall-off turns into a visible rectangle sitting over the
+    battlefield -- which is worse than no vignette at all.
+
+    The camera no longer moves, so whatever sits at the edge of the screen sits
+    there for the whole match. Letting it recede keeps the eye on the two keeps
+    and the road between them.
+    """
+    image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    pixels = image.load()
+    cx, cy = (width - 1) / 2, (height - 1) / 2
+    for y in range(height):
+        ny = (y - cy) / cy
+        for x in range(width):
+            nx = (x - cx) / cx
+            distance = min(1.0, (nx * nx + ny * ny) ** 0.5)
+            # Untouched through the middle, then easing in slowly. The long tail
+            # is what keeps the boundary from reading as an edge.
+            fade = 0.0 if distance <= 0.58 else ((distance - 0.58) / 0.42) ** 2.4
+            pixels[x, y] = (6, 12, 18, int(fade * strength))
+    return image.filter(ImageFilter.GaussianBlur(6))
