@@ -7,7 +7,9 @@ import type {
 } from "../data/battlefieldMaps";
 import type { StructureGroundPresentation } from "./battlefieldPrototypeRenderer";
 import {
+  PRODUCTION_TERRAIN_ASSETS,
   TERRAIN_FIELD_KEY,
+  TERRAIN_VIGNETTE_KEY,
   getPatchMaterialMask,
   getProductionTerrainBaseKey,
   getProductionTerrainTextureKey,
@@ -45,6 +47,7 @@ export class BattlefieldWorldRenderer {
   ) {}
 
   create(): void {
+    this.applyPixelFiltering();
     this.createOpaqueGroundChunks();
     this.mapSpec.terrainPatches.forEach((patch) => this.createLaneSurface(patch));
     this.mapSpec.structureSockets.forEach((socket) => this.createStructureGround(socket));
@@ -71,6 +74,25 @@ export class BattlefieldWorldRenderer {
 
   getSocketPresentation(socketId: string): StructureGroundPresentation | undefined {
     return this.socketPresentations.get(socketId);
+  }
+
+  /**
+   * Draws the terrain textures with hard pixel edges.
+   *
+   * The tiles are pixel art: a sixteen-pixel motif blown up four times, whose
+   * whole character is in the edges. Phaser smooths textures by default, which
+   * turns the blades and cobbles back into the blur they were drawn to replace.
+   * Applied per texture rather than by turning on the game-wide pixel-art flag,
+   * because the unit sprites are high-resolution art being scaled down and want
+   * the smoothing.
+   */
+  private applyPixelFiltering(): void {
+    for (const asset of PRODUCTION_TERRAIN_ASSETS) {
+      const texture = this.scene.textures.get(asset.key);
+      if (texture && asset.key !== TERRAIN_VIGNETTE_KEY) {
+        texture.setFilter(Phaser.Textures.FilterMode.NEAREST);
+      }
+    }
   }
 
   private createOpaqueGroundChunks(): void {

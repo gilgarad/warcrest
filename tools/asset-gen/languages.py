@@ -304,3 +304,91 @@ def make_tile(language: Language, material: str, mask: int, seed: int) -> Image.
             Image.new("RGBA", (TILE, TILE), (*rgb, language.edge_alpha)),
             Image.new("RGBA", (TILE, TILE), (0, 0, 0, 0)), rim))
     return out
+
+
+BASE_VARIANTS = 4
+FIELD_SIZE = 512
+
+
+def write_set(language: Language, out_dir) -> int:
+    """Cuts a language's whole tile set into a folder."""
+    from pathlib import Path
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    written = 0
+    for material in language.ramps:
+        for variant in range(BASE_VARIANTS):
+            image = make_tile(language, material, 15, hash((language.name, material, "base", variant)) & 0xFFFF)
+            suffix = "" if variant == 0 else f"-v{variant}"
+            image.save(out / f"{material}-base{suffix}.png")
+            written += 1
+        for mask in range(16):
+            image = make_tile(language, material, mask, hash((language.name, material, mask)) & 0xFFFF)
+            image.save(out / f"{material}-transition-{mask:02d}.png")
+            written += 1
+    return written
+
+
+def field_texture(language: Language, size: int = FIELD_SIZE, seed: int = 20260819) -> Image.Image:
+    """Open country outside the lanes, in the language's own idiom.
+
+    Composed from the base variants and then scattered over as a whole, with
+    wraparound, so the repeat sits at 512 rather than at 64 and no mark is cut
+    in half at a seam.
+    """
+    rng = random.Random(seed)
+    patch = Image.new("RGBA", (size, size))
+    cells = size // TILE
+    variants = [make_tile(language, "grass", 15, hash((language.name, "grass", "base", v)) & 0xFFFF)
+                for v in range(BASE_VARIANTS)]
+    for row in range(cells):
+        for col in range(cells):
+            patch.alpha_composite(variants[rng.randrange(len(variants))], (col * TILE, row * TILE))
+
+    grass = language.ramps["grass"]
+    dirt = language.ramps["dirt"]
+    stone = language.ramps["stone"]
+    scatter = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    pen = ImageDraw.Draw(scatter, "RGBA")
+
+    def wrapped(call) -> None:
+        for dx in (-size, 0, size):
+            for dy in (-size, 0, size):
+                call(dx, dy)
+
+    # Blocks rather than blobs: at this resolution the language is made of
+    # rectangles, and a soft ellipse would read as a different material.
+    for _ in range(size * size // 4200):
+        x, y = rng.randrange(size), rng.randrange(size)
+        w, h = rng.randint(8, 26), rng.randint(4, 12)
+        tone = (*grass.rgb(4 if rng.random() < 0.6 else 1), 70)
+        wrapped(lambda dx, dy, x=x, y=y, w=w, h=h, t=tone:
+                pen.rectangle([x + dx, y + dy, x + w + dx, y + h + dy], fill=t))
+    for _ in range(size * size // 12000):
+        x, y = rng.randrange(size), rng.randrange(size)
+        w, h = rng.randint(6, 14), rng.randint(4, 9)
+        tone = (*dirt.rgb(2), 90)
+        wrapped(lambda dx, dy, x=x, y=y, w=w, h=h, t=tone:
+                pen.rectangle([x + dx, y + dy, x + w + dx, y + h + dy], fill=t))
+    for _ in range(size * size // 16000):
+        x, y = rng.randrange(size), rng.randrange(size)
+        s = rng.randint(2, 4)
+        wrapped(lambda dx, dy, x=x, y=y, s=s:
+                pen.rectangle([x + dx, y + dy, x + s + dx, y + s + dy],
+                              fill=(*stone.rgb(4), 200)))
+    return Image.alpha_composite(patch, scatter)
+
+
+def vignette(width: int = 1600, height: int = 900, strength: int = 76) -> Image.Image:
+    """Soft fall-off at the screen edges; cut at the canvas aspect ratio."""
+    image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    pixels = image.load()
+    cx, cy = (width - 1) / 2, (height - 1) / 2
+    for y in range(height):
+        ny = (y - cy) / cy
+        for x in range(width):
+            nx = (x - cx) / cx
+            distance = min(1.0, (nx * nx + ny * ny) ** 0.5)
+            fade = 0.0 if distance <= 0.58 else ((distance - 0.58) / 0.42) ** 2.4
+            pixels[x, y] = (6, 12, 18, int(fade * strength))
+    return image.filter(ImageFilter.GaussianBlur(6))
