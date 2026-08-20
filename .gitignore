@@ -22,3 +22,6 @@ __pycache__/
 
 # Scratch output from local image generation; not part of the build.
 tmp/
+
+# Generated review images; the generator that makes them is what is tracked.
+artifacts/
