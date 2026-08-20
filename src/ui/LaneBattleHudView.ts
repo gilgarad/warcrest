@@ -16,6 +16,7 @@ import {
 import {
   HUD_TOP_BAND_BOTTOM,
   atLeastTouchable,
+  audioButtonBox,
   hudBottomBandTop,
   measureScreen,
   type ScreenMetrics,
@@ -527,55 +528,55 @@ export class LaneBattleHudView {
     const bottomHeight = HUD_BOTTOM_SOURCE_HEIGHT * hudScale;
     const centerX = this.canvasWidth / 2;
     const uiScale = 1.24;
-    this.scene.add.image(0, 0, "war-table-hud").setOrigin(0, 0).setScale(hudScale).setCrop(0, 0, HUD_SOURCE_WIDTH, HUD_TOP_SOURCE_HEIGHT).setDepth(this.depth).setScrollFactor(0).setAlpha(0.18);
+    // The old top was a full-width slab: a painted band, a 148-unit dark
+    // rectangle across the whole screen, two divider rules, and a second panel
+    // behind the resources. It hid a third of the battlefield to show four
+    // lines of text and five numbers.
+    //
+    // What is left is the pieces themselves -- a status panel sized to its text
+    // and one small frame per resource -- with the field visible between them.
     this.scene.add.image(0, this.canvasHeight - bottomHeight, "war-table-hud").setOrigin(0, 0).setScale(hudScale).setCrop(0, 721, HUD_SOURCE_WIDTH, HUD_BOTTOM_SOURCE_HEIGHT).setDepth(this.depth).setScrollFactor(0);
-    this.scene.add.rectangle(centerX, 82, this.canvasWidth - 32, 148, 0x081119, 0.84)
-      .setStrokeStyle(2, 0x233448, 0.54)
-      .setDepth(this.depth + 1)
-      .setScrollFactor(0);
-    this.scene.add.rectangle(centerX, 28, this.canvasWidth - 72, 2, 0x557aa6, 0.28)
-      .setDepth(this.depth + 2)
-      .setScrollFactor(0);
-    this.scene.add.rectangle(centerX, 136, this.canvasWidth - 72, 2, 0xd0b073, 0.16)
-      .setDepth(this.depth + 2)
-      .setScrollFactor(0);
-    this.scene.add.rectangle(184, 82, 290, 124, 0x0b1621, 0.86)
-      .setStrokeStyle(2, 0x476786, 0.42)
-      .setDepth(this.depth + 2)
-      .setScrollFactor(0);
-    this.ageText = this.scene.add.text(54, 38, "", { fontFamily: "sans-serif", fontSize: this.textPx(19), color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
-    this.waveText = this.scene.add.text(54, 64, "", { fontFamily: "sans-serif", fontSize: this.textPx(19), color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
-    this.baseText = this.scene.add.text(54, 90, "", { fontFamily: "sans-serif", fontSize: this.textPx(19), color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
-    this.tokensText = this.scene.add.text(54, 116, "", { fontFamily: "sans-serif", fontSize: this.textPx(19), color: "#f1d891" }).setDepth(this.depth + 3).setScrollFactor(0);
 
-    this.scene.add.rectangle(centerX + 98, 82, 1088, 92, 0x09131d, 0.64)
-      .setStrokeStyle(1, 0x3f556f, 0.3)
-      .setDepth(this.depth + 2)
-      .setScrollFactor(0);
-    const resourceBoxWidth = 190;
-    const resourceGap = 18;
+    const statusWidth = 300;
+    const statusHeight = 104;
+    this.framePanel(12 + statusWidth / 2, 10 + statusHeight / 2, statusWidth, statusHeight);
+    this.ageText = this.scene.add.text(28, 20, "", { fontFamily: "sans-serif", fontSize: this.textPx(17), color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
+    this.waveText = this.scene.add.text(28, 44, "", { fontFamily: "sans-serif", fontSize: this.textPx(17), color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
+    this.baseText = this.scene.add.text(28, 68, "", { fontFamily: "sans-serif", fontSize: this.textPx(17), color: "#dce8f4" }).setDepth(this.depth + 3).setScrollFactor(0);
+    this.tokensText = this.scene.add.text(28, 92, "", { fontFamily: "sans-serif", fontSize: this.textPx(17), color: "#f1d891" }).setDepth(this.depth + 3).setScrollFactor(0);
+
+    const resourceBoxWidth = 150;
+    const resourceGap = 10;
     const resourceTotalWidth = resourceBoxWidth * MVP_ACTIVE_RESOURCE_IDS.length + resourceGap * (MVP_ACTIVE_RESOURCE_IDS.length - 1);
-    const resourceStartX = centerX + 90 - resourceTotalWidth / 2 + resourceBoxWidth / 2;
+    // Right-aligned, ending clear of the sound button. The row grows away from
+    // the status panel rather than into it as resources are unlocked, and the
+    // button's box is asked for rather than assumed -- working it out here as
+    // well is how the last two chips ended up underneath it.
+    const audio = audioButtonBox(this.metrics);
+    const resourceRight = audio.left - 12;
+    const resourceStartX = resourceRight - resourceTotalWidth + resourceBoxWidth / 2;
+    const resourceCentreY = 10 + 62 / 2;
     this.resourceBarXs.length = 0;
     MVP_ACTIVE_RESOURCE_IDS.forEach((resourceId, index) => {
       const resourceX = resourceStartX + index * (resourceBoxWidth + resourceGap);
       this.resourceBarXs.push(resourceX);
-      this.scene.add.rectangle(resourceX, 82, resourceBoxWidth, 72, 0x101c28, 0.84)
-        .setStrokeStyle(1, resourceId === "research" ? 0x63a9bb : 0x5c6f88, 0.42)
-        .setDepth(this.depth + 3)
-        .setScrollFactor(0);
-      this.scene.add.image(resourceX - 60, 82, getResourceIconKey(resourceId)).setDisplaySize(36, 36).setAlpha(0.98).setDepth(this.depth + 4).setScrollFactor(0);
+      this.framePanel(resourceX, resourceCentreY, resourceBoxWidth, 62);
+      this.scene.add.image(resourceX - resourceBoxWidth / 2 + 26, resourceCentreY, getResourceIconKey(resourceId))
+        .setDisplaySize(32, 32).setDepth(this.depth + 4).setScrollFactor(0);
+      // The label is dropped: the icon already says which resource this is, and
+      // a word above the number was most of what made the old bar so tall. It
+      // stays in the map so the update path does not have to know.
       this.resourceLabelTexts.set(
         resourceId,
-        this.scene.add.text(resourceX - 2, 58, getResource(resourceId).label, {
+        this.scene.add.text(-1000, -1000, getResource(resourceId).label, {
           fontFamily: "sans-serif",
-          fontSize: this.textPx(18),
-          color: resourceId === "research" ? "#b9f2ff" : "#aac1db",
-        }).setDepth(this.depth + 4).setScrollFactor(0).setOrigin(0.5, 0.5),
+          fontSize: this.textPx(14),
+          color: "#aac1db",
+        }).setVisible(false).setDepth(this.depth + 4).setScrollFactor(0),
       );
-      this.resourceTexts.set(resourceId, this.scene.add.text(resourceX + 6, 94, "", {
+      this.resourceTexts.set(resourceId, this.scene.add.text(resourceX + 14, resourceCentreY, "", {
         fontFamily: "Georgia, serif",
-        fontSize: resourceId === "research" ? "38px" : "42px",
+        fontSize: this.textPx(30),
         color: resourceId === "research" ? "#d2fbff" : "#f5fbff",
       }).setDepth(this.depth + 4).setScrollFactor(0).setOrigin(0.5, 0.5));
     });
@@ -752,6 +753,14 @@ export class LaneBattleHudView {
    * visibility and cost rows keep working unchanged; only what is drawn inside
    * is different.
    */
+  /** A framed panel with nothing in it; the contents are placed separately. */
+  private framePanel(centreX: number, centreY: number, width: number, height: number): Phaser.GameObjects.NineSlice {
+    return this.scene.add.nineslice(
+      centreX, centreY, getUiFrameKey("panel"), undefined,
+      width, height, UI_FRAME_CORNER, UI_FRAME_CORNER, UI_FRAME_CORNER, UI_FRAME_CORNER,
+    ).setDepth(this.depth + 2).setScrollFactor(0);
+  }
+
   private createIconButton(
     x: number,
     y: number,

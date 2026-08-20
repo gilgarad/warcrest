@@ -92,8 +92,30 @@ export function atLeastTouchable(metrics: ScreenMetrics, units: number): number 
 /** Camera zoom the battlefield is drawn at on a desktop. */
 export const BASE_FIELD_ZOOM = 0.46;
 
-/** Screen row the top HUD band reaches down to. */
-export const HUD_TOP_BAND_BOTTOM = 156;
+/**
+ * The sound button's box.
+ *
+ * Shared because two files place things against it: the audio panel draws it,
+ * and the HUD has to end its resource row before it starts. They used to work
+ * it out separately, and the resource chips ended up underneath it.
+ */
+export function audioButtonBox(metrics: ScreenMetrics): {
+  width: number; height: number; right: number; left: number;
+} {
+  const height = atLeastTouchable(metrics, 50);
+  const width = Math.max(116, height * 2.3);
+  const right = GAME_WIDTH - 20;
+  return { width, height, right, left: right - width };
+}
+
+/**
+ * Screen row the top HUD band reaches down to.
+ *
+ * Came down when the top lost its full-width slab: what is up there now is a
+ * status panel, a row of resource chips and the sound button, and the band only
+ * has to cover those. `hud-bands.spec.ts` re-measures and fails if it stops.
+ */
+export const HUD_TOP_BAND_BOTTOM = 150;
 
 /**
  * Where the bottom HUD band starts, for a given fold state.

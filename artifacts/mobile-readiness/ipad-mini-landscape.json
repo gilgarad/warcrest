@@ -44,28 +44,28 @@
     },
     {
       "label": "run:Text",
-      "cssWidth": 23.6,
-      "cssHeight": 6.7
+      "cssWidth": 23.8,
+      "cssHeight": 6.8
     },
     {
       "label": "run:Text",
-      "cssWidth": 23.3,
-      "cssHeight": 8.8
+      "cssWidth": 23.5,
+      "cssHeight": 8.9
     },
     {
       "label": "run:Text",
-      "cssWidth": 30,
-      "cssHeight": 8.8
+      "cssWidth": 30.3,
+      "cssHeight": 8.9
     },
     {
       "label": "run:Arc",
-      "cssWidth": 15.4,
-      "cssHeight": 15.4
+      "cssWidth": 15.6,
+      "cssHeight": 15.6
     },
     {
       "label": "run:Image",
-      "cssWidth": 45.2,
-      "cssHeight": 45.2
+      "cssWidth": 45.6,
+      "cssHeight": 45.6
     }
   ],
   "smallestText": [
@@ -74,24 +74,24 @@
       "cssPx": 11.3
     },
     {
-      "label": "금",
-      "cssPx": 12.7
+      "label": "시대 석기 시대",
+      "cssPx": 12
     },
     {
-      "label": "목재",
-      "cssPx": 12.7
+      "label": "다음 웨이브 20초 | 적 20초",
+      "cssPx": 12
     },
     {
-      "label": "식량",
-      "cssPx": 12.7
+      "label": "전장 병력 4 | 적 병력 4",
+      "cssPx": 12
     },
     {
-      "label": "금속",
-      "cssPx": 12.7
+      "label": "즉시 웨이브 토큰 1",
+      "cssPx": 12
     },
     {
-      "label": "연구",
-      "cssPx": 12.7
+      "label": "소리",
+      "cssPx": 15.6
     }
   ]
 }

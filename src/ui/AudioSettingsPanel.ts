@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { atLeastTouchable, measureScreen } from "./screenLayout";
+import { audioButtonBox, measureScreen } from "./screenLayout";
 import { getAudioSystem, type CombatSfxMode } from "../systems/audio";
 
 interface AudioSettingsPanelOptions {
@@ -105,9 +105,8 @@ export class AudioSettingsPanel {
     // Sized for the screen like the rest of the HUD: at 116x50 units this button
     // reached a phone as 50x22 CSS px, half a comfortable target.
     const metrics = measureScreen(scene.scale.displaySize.width, scene.scale.displaySize.height);
-    const openHeight = atLeastTouchable(metrics, 50);
-    const openWidth = Math.max(116, openHeight * 2.3);
-    this.openRect = scene.add.rectangle(width - openWidth / 2 - 44, 86, openWidth, openHeight, 0x162a42, 0.94)
+    const box = audioButtonBox(metrics);
+    this.openRect = scene.add.rectangle(box.left + box.width / 2, 10 + box.height / 2, box.width, box.height, 0x162a42, 0.94)
       .setStrokeStyle(2, 0xd0ad63, 0.72)
       .setDepth(options.depth)
       .setScrollFactor(0)

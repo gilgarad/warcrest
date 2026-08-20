@@ -44,18 +44,18 @@
     },
     {
       "label": "run:Text",
+      "cssWidth": 13.8,
+      "cssHeight": 4
+    },
+    {
+      "label": "run:Text",
       "cssWidth": 13.7,
-      "cssHeight": 3.9
+      "cssHeight": 5.2
     },
     {
       "label": "run:Text",
-      "cssWidth": 13.5,
-      "cssHeight": 5.1
-    },
-    {
-      "label": "run:Text",
-      "cssWidth": 17.5,
-      "cssHeight": 5.1
+      "cssWidth": 17.6,
+      "cssHeight": 5.2
     },
     {
       "label": "run:Arc",
@@ -64,8 +64,8 @@
     },
     {
       "label": "run:Image",
-      "cssWidth": 26.2,
-      "cssHeight": 26.2
+      "cssWidth": 26.5,
+      "cssHeight": 26.5
     }
   ],
   "smallestText": [
@@ -90,7 +90,7 @@
       "cssPx": 11.4
     },
     {
-      "label": "금",
+      "label": "소리",
       "cssPx": 11.4
     }
   ]
