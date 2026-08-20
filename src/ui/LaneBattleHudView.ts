@@ -6,7 +6,13 @@ import { getResource, type ResourceId } from "../data/resources";
 import type { AudioSystem } from "../systems/audio/audioSystem";
 import type { WorkerRole } from "../systems/lane-economy/laneEconomy";
 import { AudioSettingsPanel } from "./AudioSettingsPanel";
-import { atLeastTouchable, measureScreen, type ScreenMetrics } from "./screenLayout";
+import {
+  HUD_TOP_BAND_BOTTOM,
+  atLeastTouchable,
+  hudBottomBandTop,
+  measureScreen,
+  type ScreenMetrics,
+} from "./screenLayout";
 import {
   getResourceIconKey,
   getWorkerIconKey,
@@ -45,19 +51,12 @@ interface InfoMessageOptions {
 }
 
 /**
- * Screen rows the HUD occupies, in game units.
+ * Bottom band while the worker rows are showing.
  *
- * The battle scene needs these to tell a press on the HUD from a tap on open
- * ground. It used to carry its own guesses -- 250 and 640 -- which drifted from
- * what the HUD actually draws: the top guess reached 94 units past the last HUD
- * pixel, leaving a strip below the panel where taps did nothing at all.
- *
- * Measured from the drawn objects rather than derived from the art scale, since
- * the interactive controls extend past the painted frame. `hud-bands.spec.ts`
- * re-measures and fails if either number stops covering the HUD.
+ * The top band and the folded bottom band live in `screenLayout`, because the
+ * camera needs them before this view exists. `hud-bands.spec.ts` re-measures the
+ * drawn objects and fails if any of these stop covering the HUD.
  */
-const HUD_TOP_BAND_BOTTOM = 156;
-/** Bottom band while the worker rows are showing. */
 const HUD_BOTTOM_BAND_TOP_EXPANDED = 660;
 /**
  * Bottom band with the worker rows folded away.
@@ -499,7 +498,7 @@ export class LaneBattleHudView {
     this.actionRowBottomY = this.canvasHeight - bottomMargin - this.actionButtonHeight;
     this.actionRowTopY = this.actionRowBottomY - rowGap - this.actionButtonHeight;
     // The band has to start above the tallest thing in it, whatever that is now.
-    this.bandTopCollapsed = this.actionRowTopY - 10;
+    this.bandTopCollapsed = hudBottomBandTop(this.metrics, false);
   }
 
   private create(audioDebugEnabled: boolean): void {

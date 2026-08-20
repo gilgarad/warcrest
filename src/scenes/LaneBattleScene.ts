@@ -142,7 +142,7 @@ import {
 import { DeterministicRandom } from "../systems/sim/deterministicRandom";
 import type { GameMode, MatchDescriptor } from "../systems/net/matchTypes";
 import { DEFAULT_LOCKSTEP_OPTIONS, LockstepSession } from "../systems/net/lockstepSession";
-import { BASE_FIELD_ZOOM, fieldCameraZoom, measureScreen } from "../ui/screenLayout";
+import { BASE_FIELD_ZOOM, fieldBandHeightUnits, fitFieldZoom, measureScreen } from "../ui/screenLayout";
 import {
   disconnectVictorySummary,
   opponentWaitNotice,
@@ -801,7 +801,7 @@ export class LaneBattleScene extends Phaser.Scene {
     // `setupFieldDrag()` with the range we actually want; `_bounds` data
     // itself is otherwise unused elsewhere in this codebase.
     this.cameras.main.useBounds = false;
-    this.fieldZoom = fieldCameraZoom(measureScreen(this.scale.displaySize.width, this.scale.displaySize.height));
+    this.fieldZoom = this.resolveFieldZoom();
     this.cameras.main.setZoom(this.fieldZoom);
     // Progress runs 0 (left/"player" base) to 1 (right/"enemy" base), so a
     // fixed 0.22 opens the camera on the left base for both sides. Mirroring it
@@ -811,7 +811,13 @@ export class LaneBattleScene extends Phaser.Scene {
     const search = new URLSearchParams(window.location.search);
     const homeProgress = this.match?.localTeam === "enemy" ? 1 - 0.22 : 0.22;
     const initialProgress = search.get("camera") === "central" ? CENTRAL_CAPTURE_PROGRESS : homeProgress;
-    const initialFocus = this.progressToScreen(initialProgress, 0);
+    // Once the whole battlefield fits, opening on your own base is the wrong
+    // shot: it pushes half of what you can see off the edge for no reason. The
+    // home-base framing only earns its place on a layout too wide to take in.
+    const fitted = this.mapFitsOnScreen();
+    const initialFocus = fitted
+      ? this.mapCentre()
+      : this.progressToScreen(initialProgress, 0);
     this.focusCameraOn(initialFocus.x, initialFocus.y);
 
     this.createUiIconTextures();
@@ -3788,6 +3794,54 @@ export class LaneBattleScene extends Phaser.Scene {
    * Fixed world sizes mean the whole scene shrinks together, which is what
    * scaling a view down is supposed to look like.
    */
+  /**
+   * Zoom that fits the whole battlefield into the strip left between the HUD
+   * bands, with room for the pieces standing on it.
+   *
+   * The box is measured from the map rather than assumed, so a change to the
+   * lane layout moves the camera with it instead of leaving the two to drift
+   * apart.
+   */
+  /** Centre of the lane layout, in world coordinates. */
+  private mapCentre(): Phaser.Math.Vector2 {
+    const box = this.laneBounds();
+    return new Phaser.Math.Vector2((box.left + box.right) / 2, (box.top + box.bottom) / 2);
+  }
+
+  private laneBounds(): { left: number; right: number; top: number; bottom: number } {
+    const points = this.mapSpec.lanes.flatMap((lane) => lane.path.map((node) => node.position));
+    const xs = points.map((point) => point.x);
+    const ys = points.map((point) => point.y);
+    return {
+      left: Math.min(...xs), right: Math.max(...xs),
+      top: Math.min(...ys), bottom: Math.max(...ys),
+    };
+  }
+
+  /** Whether the lanes fit inside the strip of screen the HUD leaves. */
+  private mapFitsOnScreen(): boolean {
+    const box = this.laneBounds();
+    const metrics = measureScreen(this.scale.displaySize.width, this.scale.displaySize.height);
+    return (box.right - box.left) * this.fieldZoom <= CANVAS_W
+      && (box.bottom - box.top) * this.fieldZoom <= fieldBandHeightUnits(metrics);
+  }
+
+  private resolveFieldZoom(): number {
+    const box = this.laneBounds();
+    // Margin for what stands on the lane rather than the lane itself: a base is
+    // far taller than the path node it sits on, and a unit clipped in half is
+    // as good as off-screen.
+    const marginX = 300;
+    const marginY = 200;
+    return fitFieldZoom(
+      {
+        width: box.right - box.left + marginX * 2,
+        height: box.bottom - box.top + marginY * 2,
+      },
+      fieldBandHeightUnits(measureScreen(this.scale.displaySize.width, this.scale.displaySize.height)),
+    );
+  }
+
   private cssPxToWorld(cssPx: number): number {
     return cssPx / BASE_FIELD_ZOOM;
   }

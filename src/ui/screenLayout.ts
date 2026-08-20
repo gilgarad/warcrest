@@ -92,21 +92,57 @@ export function atLeastTouchable(metrics: ScreenMetrics, units: number): number 
 /** Camera zoom the battlefield is drawn at on a desktop. */
 export const BASE_FIELD_ZOOM = 0.46;
 
+/** Screen row the top HUD band reaches down to. */
+export const HUD_TOP_BAND_BOTTOM = 156;
+
 /**
- * How far to pull the camera back on this screen.
+ * Where the bottom HUD band starts, for a given fold state.
  *
- * The zoom was fixed, so a phone showed the same slice of world as a monitor
- * through a window a fraction of the size: the player's own base filled the
- * view and the opposing side was off-screen. Pulling back fits more of the
- * battlefield in, at the cost of smaller units -- which is the right way round,
- * because a lane game is unplayable if you cannot see the lane.
- *
- * Not pulled back proportionally to the screen. That would fit the whole map on
- * a phone and leave the units as specks; this trades some of the loss.
+ * Lives here rather than in the HUD because two things need it and they are
+ * built at different times: the HUD to know its own shape, and the camera to
+ * know how much screen is left for the battlefield. The camera is set up long
+ * before the HUD exists, so asking the HUD would mean reading a field that is
+ * still undefined -- and copying the numbers across would put them back on
+ * separate paths to drift apart on.
  */
-export function fieldCameraZoom(metrics: ScreenMetrics): number {
-  const pullback = metrics.deviceClass === "phone" ? 0.68 : metrics.deviceClass === "tablet" ? 0.85 : 1;
-  return BASE_FIELD_ZOOM * pullback;
+export function hudBottomBandTop(metrics: ScreenMetrics, workerPanelOpen: boolean): number {
+  if (workerPanelOpen) return 660;
+  const buttonHeight = atLeastTouchable(metrics, 44);
+  const bottomMargin = 4;
+  const rowGap = 12;
+  const actionRowTop = GAME_HEIGHT - bottomMargin - buttonHeight - rowGap - buttonHeight;
+  return actionRowTop - 10;
+}
+
+/** Screen rows left for the battlefield once the HUD has taken its bands. */
+export function fieldBandHeightUnits(metrics: ScreenMetrics): number {
+  return hudBottomBandTop(metrics, false) - HUD_TOP_BAND_BOTTOM;
+}
+
+/** The world box the camera must always be able to show. */
+export interface MustSeeBox {
+  width: number;
+  height: number;
+}
+
+/**
+ * Zoom that fits the battlefield into the strip of screen left between the HUD
+ * bands.
+ *
+ * Derived rather than chosen. A fixed zoom cannot be right for both a monitor
+ * and a phone -- the same number showed a desktop the whole field and a phone a
+ * corner of it -- and hand-tuning a second constant per device class just moves
+ * the guess. Stating what has to be visible and solving for the zoom means the
+ * answer follows the map: tighten the layout and the units get bigger on their
+ * own, which is exactly the trade being made.
+ *
+ * Capped at the desktop zoom so a large monitor does not magnify the field past
+ * the scale the art was drawn for.
+ */
+export function fitFieldZoom(mustSee: MustSeeBox, fieldHeightUnits: number): number {
+  const byWidth = GAME_WIDTH / Math.max(1, mustSee.width);
+  const byHeight = Math.max(1, fieldHeightUnits) / Math.max(1, mustSee.height);
+  return Math.min(BASE_FIELD_ZOOM, byWidth, byHeight);
 }
 
 export interface SplashPresentation {

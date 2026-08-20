@@ -103,7 +103,8 @@ export type BattlefieldMapId =
   | "warcrest-full-lane-hybrid-v1"
   | "warcrest-day2-player-front-v1"
   | "warcrest-day3-three-fronts-v1"
-  | "warcrest-two-lane-v1";
+  | "warcrest-two-lane-v1"
+  | "warcrest-two-lane-compact-v1";
 
 /**
  * Centred in the 7000x3900 world: each endpoint now sits 1122px from its own
@@ -641,14 +642,94 @@ export const TWO_LANE_MAP_CANDIDATE_SPEC: BattlefieldMapSpec = {
   terrainProps: TWO_LANE_PROPS,
 };
 
+/**
+ * Compact two-lane layout, built for a phone held sideways.
+ *
+ * Same shape as `warcrest-two-lane-v1`, scaled about the midfield: 0.60 across
+ * and 0.33 vertically. The vertical squeeze is the point -- the original lanes
+ * sit 2240 units apart, and a phone's battlefield strip only shows about 1650,
+ * so the two fronts could never be on screen together. At 740 apart they fit
+ * with room for the units standing in them.
+ *
+ * Shrinking the map is what buys bigger units: the camera fits a smaller box, so
+ * everything in it is drawn larger. A phone goes from 0.31 to 0.45 zoom -- units
+ * about 1.44x -- while a desktop lands back on 0.46, where it already was.
+ *
+ * The geometry is shared by every player. Two people in the same match must be
+ * on the same battlefield, so this cannot vary by device; only the camera does.
+ */
+export const COMPACT_TWO_LANE_NORTH_PATH_NODES: LanePathNodeSpec[] = [
+  { progress: 0.00, position: { x: 2120, y: 1980 } },
+  { progress: 0.09, position: { x: 2300, y: 1749 } },
+  { progress: 0.21, position: { x: 2636, y: 1650 } },
+  { progress: 0.35, position: { x: 3140, y: 1610 } },
+  { progress: 0.50, position: { x: 3728, y: 1610 } },
+  { progress: 0.65, position: { x: 4256, y: 1634 } },
+  { progress: 0.79, position: { x: 4652, y: 1683 } },
+  { progress: 0.91, position: { x: 4892, y: 1749 } },
+  { progress: 1.00, position: { x: 5000, y: 1980 } },
+];
+
+export const COMPACT_TWO_LANE_SOUTH_PATH_NODES: LanePathNodeSpec[] = [
+  { progress: 0.00, position: { x: 2120, y: 1980 } },
+  { progress: 0.09, position: { x: 2300, y: 2211 } },
+  { progress: 0.21, position: { x: 2636, y: 2310 } },
+  { progress: 0.35, position: { x: 3140, y: 2350 } },
+  { progress: 0.50, position: { x: 3728, y: 2350 } },
+  { progress: 0.65, position: { x: 4256, y: 2326 } },
+  { progress: 0.79, position: { x: 4652, y: 2277 } },
+  { progress: 0.91, position: { x: 4892, y: 2211 } },
+  { progress: 1.00, position: { x: 5000, y: 1980 } },
+];
+
+const COMPACT_TWO_LANE_STRUCTURE_SOCKETS: StructureSocketSpec[] = [
+  createStructureSocketForPath(NORTH_LANE_ID, COMPACT_TWO_LANE_NORTH_PATH_NODES, "north-capture-player", "capture-point", 0.18),
+  createStructureSocketForPath(NORTH_LANE_ID, COMPACT_TWO_LANE_NORTH_PATH_NODES, "north-tower-player", "defense-tower", 0.38, { teamOwner: "player", linkedSocketId: "north-capture-player" }),
+  createStructureSocketForPath(NORTH_LANE_ID, COMPACT_TWO_LANE_NORTH_PATH_NODES, "north-tower-enemy", "defense-tower", 0.62, { teamOwner: "enemy", linkedSocketId: "north-capture-enemy" }),
+  createStructureSocketForPath(NORTH_LANE_ID, COMPACT_TWO_LANE_NORTH_PATH_NODES, "north-capture-enemy", "capture-point", 0.82),
+  createStructureSocketForPath(SOUTH_LANE_ID, COMPACT_TWO_LANE_SOUTH_PATH_NODES, "south-capture-player", "capture-point", 0.18),
+  createStructureSocketForPath(SOUTH_LANE_ID, COMPACT_TWO_LANE_SOUTH_PATH_NODES, "south-tower-player", "defense-tower", 0.38, { teamOwner: "player", linkedSocketId: "south-capture-player" }),
+  createStructureSocketForPath(SOUTH_LANE_ID, COMPACT_TWO_LANE_SOUTH_PATH_NODES, "south-tower-enemy", "defense-tower", 0.62, { teamOwner: "enemy", linkedSocketId: "south-capture-enemy" }),
+  createStructureSocketForPath(SOUTH_LANE_ID, COMPACT_TWO_LANE_SOUTH_PATH_NODES, "south-capture-enemy", "capture-point", 0.82),
+];
+
+export const COMPACT_TWO_LANE_MAP_SPEC: BattlefieldMapSpec = {
+  schemaVersion: 2,
+  id: "warcrest-two-lane-compact-v1",
+  lanes: [
+    { id: NORTH_LANE_ID, role: "north", path: COMPACT_TWO_LANE_NORTH_PATH_NODES },
+    { id: SOUTH_LANE_ID, role: "south", path: COMPACT_TWO_LANE_SOUTH_PATH_NODES },
+  ],
+  terrainPatches: [
+    ...createLaneTerrainPatchesForPath(
+      NORTH_LANE_ID,
+      COMPACT_TWO_LANE_NORTH_PATH_NODES,
+      TWO_LANE_PATCH_ROWS,
+      TWO_LANE_BANDS,
+      "compact-two-lane-north-segment",
+    ),
+    ...createLaneTerrainPatchesForPath(
+      SOUTH_LANE_ID,
+      COMPACT_TWO_LANE_SOUTH_PATH_NODES,
+      TWO_LANE_PATCH_ROWS,
+      TWO_LANE_BANDS,
+      "compact-two-lane-south-segment",
+    ),
+  ],
+  structureSockets: COMPACT_TWO_LANE_STRUCTURE_SOCKETS,
+  terrainProps: TWO_LANE_PROPS,
+};
+
 export const BATTLEFIELD_MAP_SPECS: readonly BattlefieldMapSpec[] = [
   LANE_BATTLEFIELD_MAP_SPEC,
   DAY2_PLAYER_FRONT_MAP_CANDIDATE_SPEC,
   DAY3_THREE_FRONTS_MAP_CANDIDATE_SPEC,
   TWO_LANE_MAP_CANDIDATE_SPEC,
+  COMPACT_TWO_LANE_MAP_SPEC,
 ];
 
-export const DEFAULT_BATTLEFIELD_MAP_SPEC = TWO_LANE_MAP_CANDIDATE_SPEC;
+// The wide original stays available by id for comparison.
+export const DEFAULT_BATTLEFIELD_MAP_SPEC = COMPACT_TWO_LANE_MAP_SPEC;
 
 export function getBattlefieldMapSpec(mapId?: string | null): BattlefieldMapSpec {
   return BATTLEFIELD_MAP_SPECS.find((spec) => spec.id === mapId) ?? DEFAULT_BATTLEFIELD_MAP_SPEC;
